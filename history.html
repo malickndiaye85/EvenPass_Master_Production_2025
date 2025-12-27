@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvenPass - Historique des Scans</title>
+    <script src="/env-config.js"></script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#F97316">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            color: #F97316;
+        }
+
+        .back-btn {
+            background: #3d3d3d;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #4d4d4d;
+            transform: translateX(-5px);
+        }
+
+        .scan-card {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #3d3d3d;
+            transition: all 0.3s;
+        }
+
+        .scan-card:hover {
+            border-color: #F97316;
+            transform: translateX(5px);
+        }
+
+        .scan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .scan-title {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .scan-time {
+            color: #9ca3af;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .scan-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-label {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #3d3d3d;
+            border-top: 3px solid #F97316;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #3d3d3d;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #F97316;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/scanner.html" class="back-btn">
+            ← Retour au scanner
+        </a>
+
+        <div class="header">
+            <div class="logo">Even<span>Pass</span></div>
+            <p style="color: #9ca3af; margin-top: 10px; font-weight: 600;">Historique des scans</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-scans">0</div>
+                <div class="stat-label">Total Scans</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="today-scans">0</div>
+                <div class="stat-label">Aujourd'hui</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hour-scans">0</div>
+                <div class="stat-label">Cette heure</div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Chargement de l'historique...</p>
+        </div>
+
+        <div id="scans-container"></div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <h3>Aucun scan enregistré</h3>
+            <p>Les scans apparaîtront ici une fois que vous aurez commencé à scanner des billets.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: window.ENV.FIREBASE_API_KEY,
+            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
+            projectId: window.ENV.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV.FIREBASE_APP_ID
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const scansRef = ref(db, 'evenpass/scans');
+        const scansQuery = query(scansRef, orderByChild('timestamp'), limitToLast(100));
+
+        onValue(scansQuery, (snapshot) => {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('scans-container');
+            const emptyState = document.getElementById('empty-state');
+
+            loading.style.display = 'none';
+
+            if (!snapshot.exists()) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            const scans = [];
+            snapshot.forEach((child) => {
+                scans.push({ id: child.key, ...child.val() });
+            });
+
+            scans.reverse();
+
+            updateStats(scans);
+
+            container.innerHTML = scans.map(scan => `
+                <div class="scan-card">
+                    <div class="scan-header">
+                        <div class="scan-title">${scan.eventName || 'Événement'}</div>
+                        <div class="scan-time">${formatTime(scan.timestamp)}</div>
+                    </div>
+                    <div class="scan-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Catégorie</div>
+                            <div class="detail-value">${scan.category || 'Standard'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Contrôleur</div>
+                            <div class="detail-value">${scan.controller || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ID Billet</div>
+                            <div class="detail-value" style="font-family: monospace; font-size: 12px;">${scan.ticketId.substring(0, 8)}...</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Date complète</div>
+                            <div class="detail-value">${formatFullDate(scan.timestamp)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        });
+
+        function updateStats(scans) {
+            const now = Date.now();
+            const today = new Date().setHours(0, 0, 0, 0);
+            const currentHour = new Date().setMinutes(0, 0, 0);
+
+            document.getElementById('total-scans').textContent = scans.length;
+            document.getElementById('today-scans').textContent = scans.filter(s => s.timestamp >= today).length;
+            document.getElementById('hour-scans').textContent = scans.filter(s => s.timestamp >= currentHour).length;
+        }
+
+        function formatTime(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'À l\'instant';
+            if (minutes < 60) return `Il y a ${minutes}m`;
+            if (hours < 24) return `Il y a ${hours}h`;
+            return `Il y a ${days}j`;
+        }
+
+        function formatFullDate(timestamp) {
+            return new Date(timestamp).toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>

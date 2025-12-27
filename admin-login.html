@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - EvenPass</title>
+    <script>
+        window.ENV = {
+            FIREBASE_API_KEY: 'AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo',
+            FIREBASE_AUTH_DOMAIN: 'evenpasssenegal.firebaseapp.com',
+            FIREBASE_DATABASE_URL: 'https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app',
+            FIREBASE_PROJECT_ID: 'evenpasssenegal',
+            FIREBASE_STORAGE_BUCKET: 'evenpasssenegal.firebasestorage.app',
+            FIREBASE_MESSAGING_SENDER_ID: '882782977052',
+            FIREBASE_APP_ID: '1:882782977052:web:1f2ea147010066017cf3d9',
+            ADMIN_UID: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'
+        };
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 48px 36px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            background: #f97316;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #e5e7eb;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #f97316;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        input::placeholder {
+            color: #6b7280;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #f97316;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #ea580c;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #f97316;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            color: #fca5a5;
+            font-size: 14px;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .security-badge {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .security-badge svg {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+            color: #10b981;
+        }
+
+        .security-badge span {
+            color: #9ca3af;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <div class="logo-icon">🎫</div>
+                <h1>Admin Access</h1>
+                <p class="subtitle">Accès réservé au personnel autorisé</p>
+            </div>
+
+            <div id="errorMessage" class="error"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="admin@evenpass.sn"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    Se connecter
+                </button>
+            </form>
+
+            <a href="/" class="back-link">← Retour à l'accueil</a>
+
+            <div class="security-badge">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <span>Connexion sécurisée Firebase</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            FIREBASE_API_KEY: 'AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo',
+            FIREBASE_AUTH_DOMAIN: 'evenpasssenegal.firebaseapp.com',
+            FIREBASE_DATABASE_URL: 'https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app',
+            FIREBASE_PROJECT_ID: 'evenpasssenegal',
+            FIREBASE_STORAGE_BUCKET: 'evenpasssenegal.firebasestorage.app',
+            FIREBASE_MESSAGING_SENDER_ID: '882782977052',
+            FIREBASE_APP_ID: '1:882782977052:web:1f2ea147010066017cf3d9',
+            ADMIN_UID: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        console.log("Firebase Admin Initialized", firebaseConfig);
+
+        const ADMIN_UID = "Tnq8Isi0fATmidMwEuVrw1SAJkI3";
+
+        const errorMessage = document.getElementById('errorMessage');
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            if (isLoading) {
+                submitBtn.innerHTML = '<span class="loading"></span>Connexion...';
+            } else {
+                submitBtn.innerHTML = 'Se connecter';
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (user.uid === ADMIN_UID) {
+                    window.location.href = '/admin-finance.html';
+                } else {
+                    showError('Accès refusé : Vous n\'êtes pas autorisé à accéder à cette zone.');
+                    auth.signOut().then(() => {
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                    });
+                }
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setLoading(true);
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                if (user.uid === ADMIN_UID) {
+                    window.location.href = '/admin-finance.html';
+                } else {
+                    showError('Accès refusé : Cet compte n\'est pas autorisé.');
+                    await auth.signOut();
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                let message = 'Erreur de connexion. Veuillez réessayer.';
+
+                if (error.code === 'auth/invalid-credential') {
+                    message = 'Email ou mot de passe incorrect.';
+                } else if (error.code === 'auth/user-not-found') {
+                    message = 'Aucun compte trouvé avec cet email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    message = 'Mot de passe incorrect.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    message = 'Trop de tentatives. Veuillez réessayer plus tard.';
+                }
+
+                showError(message);
+                setLoading(false);
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            errorMessage.style.display = 'none';
+        });
+
+        passwordInput.addEventListener('input', () => {
+            errorMessage.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
