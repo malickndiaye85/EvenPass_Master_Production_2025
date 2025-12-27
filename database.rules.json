@@ -1,0 +1,81 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "finances": {
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    },
+
+    "logs": {
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    },
+
+    "systemLogs": {
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    },
+
+    "events": {
+      ".read": true,
+      "$eventId": {
+        ".write": "auth != null && (data.child('organizerId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+
+        "tickets": {
+          ".read": true,
+          ".write": "auth != null && (root.child('events').child($eventId).child('organizerId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+        },
+
+        "scans": {
+          ".read": "auth != null && (root.child('events').child($eventId).child('organizerId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".write": "auth != null && (root.child('events').child($eventId).child('organizerId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+        },
+
+        "attendees": {
+          ".read": "auth != null && (root.child('events').child($eventId).child('organizerId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+        }
+      }
+    },
+
+    "orders": {
+      "$orderId": {
+        ".read": "auth != null && (data.child('userId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+        ".write": "auth != null && (!data.exists() && newData.child('userId').val() === auth.uid) || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+      }
+    },
+
+    "users": {
+      "$userId": {
+        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+        ".write": "auth != null && (auth.uid === $userId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+      }
+    },
+
+    "organizers": {
+      ".read": true,
+      "$organizerId": {
+        ".write": "auth != null && (auth.uid === $organizerId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+      }
+    },
+
+    "payments": {
+      "$paymentId": {
+        ".read": "auth != null && (data.child('userId').val() === auth.uid || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+      }
+    },
+
+    "statistics": {
+      ".read": "auth != null",
+      ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    },
+
+    "config": {
+      ".read": true,
+      ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    }
+  }
+}

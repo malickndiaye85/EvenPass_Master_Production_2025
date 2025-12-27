@@ -1,0 +1,182 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function - Admin Finance UID
+    function isAdminFinance() {
+      return request.auth != null && request.auth.uid == 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+    }
+
+    // Helper function - Authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function - Event owner
+    function isEventOwner(eventId) {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid;
+    }
+
+    // ============================================
+    // FINANCES COLLECTION - ADMIN ONLY
+    // ============================================
+    match /finances/{document=**} {
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // LOGS SYSTÈME - ADMIN ONLY
+    // ============================================
+    match /logs/{document=**} {
+      allow read, write: if isAdminFinance();
+    }
+
+    match /systemLogs/{document=**} {
+      allow read, write: if isAdminFinance();
+    }
+
+    match /auditLogs/{document=**} {
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // EVENTS COLLECTION
+    // ============================================
+    match /events/{eventId} {
+      // Public : Lecture seule des événements disponibles
+      allow read: if true;
+
+      // Organisateurs : Création de nouveaux événements
+      allow create: if isAuthenticated() &&
+                      request.resource.data.organizerId == request.auth.uid;
+
+      // Organisateurs : Modification de leurs propres événements
+      allow update: if isEventOwner(eventId) || isAdminFinance();
+
+      // Organisateurs : Suppression de leurs propres événements
+      allow delete: if isEventOwner(eventId) || isAdminFinance();
+
+      // ============================================
+      // TICKETS SOUS-COLLECTION
+      // ============================================
+      match /tickets/{ticketId} {
+        // Public : Lecture des tickets disponibles
+        allow read: if true;
+
+        // Organisateur : Gestion des tickets de son événement
+        allow write: if isEventOwner(eventId) || isAdminFinance();
+      }
+
+      // ============================================
+      // SCANS SOUS-COLLECTION
+      // ============================================
+      match /scans/{scanId} {
+        // Organisateur : Lecture et écriture des scans de son événement
+        allow read, write: if isEventOwner(eventId) || isAdminFinance();
+      }
+
+      // ============================================
+      // ATTENDEES SOUS-COLLECTION
+      // ============================================
+      match /attendees/{attendeeId} {
+        // Organisateur : Lecture des participants de son événement
+        allow read: if isEventOwner(eventId) || isAdminFinance();
+
+        // Création lors de l'achat de ticket
+        allow create: if isAuthenticated();
+
+        // Modification interdite sauf admin
+        allow update, delete: if isAdminFinance();
+      }
+    }
+
+    // ============================================
+    // ORDERS COLLECTION (Commandes)
+    // ============================================
+    match /orders/{orderId} {
+      // Utilisateur : Lecture de ses propres commandes
+      allow read: if isAuthenticated() &&
+                    resource.data.userId == request.auth.uid;
+
+      // Création lors de l'achat
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // USERS COLLECTION (Profils)
+    // ============================================
+    match /users/{userId} {
+      // Utilisateur : Lecture et modification de son propre profil
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // ORGANIZERS COLLECTION
+    // ============================================
+    match /organizers/{organizerId} {
+      // Lecture publique des profils organisateurs
+      allow read: if true;
+
+      // Organisateur : Modification de son propre profil
+      allow write: if isAuthenticated() && request.auth.uid == organizerId;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // PAYMENTS COLLECTION
+    // ============================================
+    match /payments/{paymentId} {
+      // Utilisateur : Lecture de ses propres paiements
+      allow read: if isAuthenticated() &&
+                    resource.data.userId == request.auth.uid;
+
+      // Création lors du paiement
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid;
+
+      // Admin Finance : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // STATISTICS COLLECTION
+    // ============================================
+    match /statistics/{document=**} {
+      // Lecture pour les organisateurs de leurs propres stats
+      allow read: if isAuthenticated();
+
+      // Écriture interdite sauf admin
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // CONFIGURATION SYSTÈME
+    // ============================================
+    match /config/{document=**} {
+      // Lecture publique de la configuration
+      allow read: if true;
+
+      // Modification admin uniquement
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // BLOCAGE PAR DÉFAUT
+    // ============================================
+    // Toute autre collection est bloquée par défaut
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
