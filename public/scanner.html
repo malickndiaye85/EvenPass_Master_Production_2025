@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPscan - Scanner EvenPass</title>
+    <script src="/env-config.js"></script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#F97316">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            color: #F97316;
+        }
+
+        .session-status {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #3d3d3d;
+            text-align: center;
+        }
+
+        .session-status.locked {
+            border-color: #ef4444;
+        }
+
+        .session-status.active {
+            border-color: #22c55e;
+        }
+
+        .scanner-container {
+            background: #2d2d2d;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #3d3d3d;
+        }
+
+        #qr-reader {
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #1a1a1a;
+            min-height: 300px;
+        }
+
+        .result-card {
+            background: #2d2d2d;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #3d3d3d;
+            display: none;
+        }
+
+        .result-card.success {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #1a4d2e 0%, #2d2d2d 100%);
+        }
+
+        .result-card.error {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #4d1a1a 0%, #2d2d2d 100%);
+        }
+
+        .result-card h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #F97316;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ea580c;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: #3d3d3d;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #4d4d4d;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #3d3d3d;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #9ca3af;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-weight: 900;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #3d3d3d;
+            border-top: 3px solid #F97316;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .status-valid {
+            background: #22c55e;
+            color: white;
+        }
+
+        .status-invalid {
+            background: #ef4444;
+            color: white;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">EP<span>scan</span></div>
+            <p style="color: #9ca3af; margin-top: 10px; font-weight: 600;">Scanner EvenPass</p>
+        </div>
+
+        <div id="session-status" class="session-status locked">
+            <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
+            <p style="font-size: 12px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
+        </div>
+
+        <div class="scanner-container" id="scanner-container" style="display: none;">
+            <div id="qr-reader"></div>
+        </div>
+
+        <div id="result" class="result-card">
+            <h2 id="result-title"></h2>
+            <div id="result-content"></div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/history.html" class="btn btn-secondary">Historique</a>
+            <a href="/dashboard-scans-controleurs.html" class="btn btn-secondary">Dashboard</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: window.ENV.FIREBASE_API_KEY,
+            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
+            projectId: window.ENV.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV.FIREBASE_APP_ID
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const controllerId = urlParams.get('controller');
+
+        let currentSession = null;
+        let html5QrCode = null;
+
+        if (!controllerId) {
+            document.getElementById('session-status').innerHTML = `
+                <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #ef4444;">❌ ERREUR D'ENRÔLEMENT</p>
+                <p style="font-size: 12px; color: #9ca3af;">Scanner le QR d'enrôlement depuis l'Ops Manager</p>
+            `;
+        } else {
+            localStorage.setItem('controllerId', controllerId);
+
+            onValue(ref(db, `evenpass/controllers/${controllerId}`), (snapshot) => {
+                const controller = snapshot.val();
+                if (controller && controller.status === 'active') {
+                    checkActiveSession();
+                } else {
+                    document.getElementById('session-status').className = 'session-status locked';
+                    document.getElementById('session-status').innerHTML = `
+                        <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #ef4444;">⚠️ AGENT SUSPENDU</p>
+                        <p style="font-size: 12px; color: #9ca3af;">Contactez l'Ops Manager</p>
+                    `;
+                    document.getElementById('scanner-container').style.display = 'none';
+                }
+            });
+        }
+
+        function checkActiveSession() {
+            const sessionsRef = ref(db, 'evenpass/sessions');
+            onValue(sessionsRef, (snapshot) => {
+                const sessions = snapshot.val();
+                let activeSession = null;
+
+                if (sessions) {
+                    Object.entries(sessions).forEach(([key, session]) => {
+                        if (session.controllerId === controllerId && session.status === 'active') {
+                            activeSession = session;
+                        }
+                    });
+                }
+
+                if (activeSession) {
+                    currentSession = activeSession;
+                    get(ref(db, `evenpass/events/${activeSession.eventId}`)).then((eventSnapshot) => {
+                        const event = eventSnapshot.val();
+                        document.getElementById('session-status').className = 'session-status active';
+                        document.getElementById('session-status').innerHTML = `
+                            <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #22c55e;">✓ SESSION ACTIVE</p>
+                            <p style="font-size: 12px; color: #9ca3af;">Événement: ${event?.name || 'N/A'}</p>
+                        `;
+                        document.getElementById('scanner-container').style.display = 'block';
+                        initScanner();
+                    });
+                } else {
+                    document.getElementById('session-status').className = 'session-status locked';
+                    document.getElementById('session-status').innerHTML = `
+                        <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
+                        <p style="font-size: 12px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
+                    `;
+                    document.getElementById('scanner-container').style.display = 'none';
+                }
+            });
+        }
+
+        function initScanner() {
+            if (html5QrCode) return;
+
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            ).catch(err => {
+                console.error('Erreur démarrage scanner:', err);
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            if (!currentSession) {
+                alert('Session expirée. Veuillez réactiver depuis l\'Ops Manager.');
+                return;
+            }
+            console.log('QR Code scanné:', decodedText);
+            validateTicket(decodedText);
+        }
+
+        async function validateTicket(ticketId) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('result-title');
+            const resultContent = document.getElementById('result-content');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-card';
+            resultContent.innerHTML = '<div class="loading"><div class="spinner"></div><p>Vérification en cours...</p></div>';
+
+            try {
+                const ticketRef = ref(db, `evenpass/tickets/${ticketId}`);
+                const snapshot = await get(ticketRef);
+
+                if (!snapshot.exists()) {
+                    showError('Billet invalide', 'Ce billet n\'existe pas dans notre système.');
+                    return;
+                }
+
+                const ticket = snapshot.val();
+
+                if (ticket.scanned) {
+                    showError('Billet déjà scanné', `Ce billet a déjà été scanné le ${new Date(ticket.scannedAt).toLocaleString('fr-FR')}`);
+                    return;
+                }
+
+                await update(ticketRef, {
+                    scanned: true,
+                    scannedAt: Date.now(),
+                    scannedBy: 'Contrôleur'
+                });
+
+                const scanHistoryRef = ref(db, `evenpass/scans/${Date.now()}`);
+                await update(scanHistoryRef, {
+                    ticketId,
+                    eventId: currentSession.eventId,
+                    eventName: ticket.eventName || 'Événement',
+                    category: ticket.category || 'Standard',
+                    timestamp: Date.now(),
+                    controllerId: controllerId,
+                    controller: `Agent ${controllerId.substring(0, 8)}`
+                });
+
+                showSuccess(ticket);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Erreur de connexion', 'Impossible de vérifier le billet. Veuillez réessayer.');
+            }
+        }
+
+        function showSuccess(ticket) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('result-title');
+            const resultContent = document.getElementById('result-content');
+
+            resultDiv.className = 'result-card success';
+            resultTitle.innerHTML = '✓ Billet Valide';
+            resultContent.innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">Événement</span>
+                    <span class="info-value">${ticket.eventName || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Catégorie</span>
+                    <span class="info-value">${ticket.category || 'Standard'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Prix</span>
+                    <span class="info-value">${ticket.price ? ticket.price.toLocaleString() + ' FCFA' : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Statut</span>
+                    <span class="status-badge status-valid">ACCÈS AUTORISÉ</span>
+                </div>
+                <button class="btn btn-primary" onclick="location.reload()">Scanner un autre billet</button>
+            `;
+        }
+
+        function showError(title, message) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('result-title');
+            const resultContent = document.getElementById('result-content');
+
+            resultDiv.className = 'result-card error';
+            resultTitle.innerHTML = '✗ ' + title;
+            resultContent.innerHTML = `
+                <p style="margin-bottom: 20px; color: #fca5a5;">${message}</p>
+                <div class="info-row">
+                    <span class="info-label">Statut</span>
+                    <span class="status-badge status-invalid">ACCÈS REFUSÉ</span>
+                </div>
+                <button class="btn btn-primary" onclick="location.reload()">Scanner un autre billet</button>
+            `;
+        }
+
+        function onScanError(errorMessage) {
+            console.log('Erreur de scan:', errorMessage);
+        }
+
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+        };
+
+        const html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+            .catch(err => {
+                console.error('Erreur de démarrage:', err);
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result-title').innerHTML = 'Erreur de caméra';
+                document.getElementById('result-content').innerHTML = '<p>Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès.</p>';
+            });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</body>
+</html>
