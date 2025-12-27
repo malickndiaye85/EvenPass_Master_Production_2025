@@ -1,9 +1,0 @@
-/assets/* /assets/:splat 200
-/admin-login.html /admin-login.html 200
-/admin-finance.html /admin-finance.html 200
-/dashboard-scans-controleurs.html /dashboard-scans-controleurs.html 200
-/history.html /history.html 200
-/ops-manager.html /ops-manager.html 200
-/scanner.html /scanner.html 200
-/unregister-sw.html /unregister-sw.html 200
-/* /index.html 200
