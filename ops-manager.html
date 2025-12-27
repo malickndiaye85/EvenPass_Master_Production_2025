@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvenPass | Ops Manager</title>
+    <script src="/env-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .glass-card {
+            background: rgba(31, 31, 31, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+        .glow-orange {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .glow-green {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+    <header class="glass-card border-b border-orange-500/30 p-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">
+                    <span class="text-white">EVEN</span><span class="text-orange-500">PASS</span>
+                    <span class="text-gray-400 text-sm font-normal ml-3">| Ops Manager</span>
+                </h1>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Centre de Commandement Terrain</p>
+            </div>
+            <button onclick="window.location.href='/admin-finance.html'" class="glass-card hover:bg-gray-700 px-6 py-3 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Admin Finance
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <!-- Section Événements Actifs -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-black mb-6 flex items-center gap-3 text-green-400">
+                <i class="fas fa-calendar-check"></i> Événements Actifs
+            </h2>
+            <div id="active-events" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <!-- Section Registre des Contrôleurs -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black flex items-center gap-3 text-blue-400">
+                    <i class="fas fa-user-shield"></i> Registre des Contrôleurs
+                </h2>
+                <button onclick="showAddControllerModal()" class="bg-orange-500 hover:bg-orange-600 glow-orange px-6 py-3 rounded-lg font-black text-sm uppercase tracking-wider transition">
+                    <i class="fas fa-plus mr-2"></i> Ajouter un Agent
+                </button>
+            </div>
+            <div class="glass-card rounded-xl overflow-hidden glow-blue">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-black/50 text-gray-300 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="p-4 font-black">Agent</th>
+                            <th class="p-4 font-black">Contact</th>
+                            <th class="p-4 font-black">CNI / PDA</th>
+                            <th class="p-4 font-black">Statut</th>
+                            <th class="p-4 font-black">QR Enrôlement</th>
+                            <th class="p-4 font-black">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="controllers-table" class="text-sm">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section Monitoring Live -->
+        <section>
+            <h2 class="text-2xl font-black mb-6 flex items-center gap-3 text-purple-400">
+                <i class="fas fa-chart-line"></i> Monitoring Live par Événement
+            </h2>
+            <div id="monitoring-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Ajout Contrôleur -->
+    <div id="addControllerModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-2xl p-8 max-w-md w-full glow-orange">
+            <h3 class="text-3xl font-black mb-6 text-orange-500">Nouvel Agent</h3>
+            <form id="controllerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Nom *</label>
+                    <input type="text" id="lastName" required class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Prénom *</label>
+                    <input type="text" id="firstName" required class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Téléphone *</label>
+                    <input type="tel" id="phone" required class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">N° CNI *</label>
+                    <input type="text" id="cni" required class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">N° Série PDA</label>
+                    <input type="text" id="pdaSerial" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white">
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 py-3 rounded font-bold transition">
+                        Enregistrer
+                    </button>
+                    <button type="button" onclick="hideAddControllerModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal QR Code -->
+    <div id="qrModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-2xl p-8 max-w-md w-full text-center glow-orange">
+            <h3 class="text-3xl font-black mb-4 text-orange-500">QR Code d'Enrôlement</h3>
+            <p class="text-sm text-gray-400 mb-6" id="qrAgentName"></p>
+            <div id="qrcode" class="flex justify-center mb-6 bg-white p-4 rounded-xl"></div>
+            <p class="text-xs text-gray-400 mb-6">Scanner ce QR pour installer EPscan sur le terminal de l'agent</p>
+            <button onclick="hideQRModal()" class="bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded font-bold transition">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Activation Session -->
+    <div id="sessionModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-2xl p-8 max-w-md w-full glow-green">
+            <h3 class="text-3xl font-black mb-6 text-green-400">Activer Session Agent</h3>
+            <p class="text-gray-300 mb-6" id="sessionAgentInfo"></p>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">Sélectionner l'Événement</label>
+                <select id="sessionEventSelect" class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded text-white">
+                    <option value="">-- Choisir un événement --</option>
+                </select>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="activateSession()" class="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded font-bold transition">
+                    <i class="fas fa-check mr-2"></i> Activer
+                </button>
+                <button onclick="hideSessionModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, set, push, update, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: window.ENV.FIREBASE_API_KEY,
+            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
+            projectId: window.ENV.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV.FIREBASE_APP_ID
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        const ADMIN_UID = window.ENV.ADMIN_UID;
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user || user.uid !== ADMIN_UID) {
+                alert('Accès refusé : Vous devez être connecté en tant qu\'administrateur');
+                window.location.href = '/';
+                return;
+            }
+        });
+
+        let activeEvents = [];
+        let currentControllerId = null;
+
+        onValue(ref(db, 'evenpass/events'), (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('active-events');
+            container.innerHTML = '';
+            activeEvents = [];
+
+            if (data) {
+                Object.entries(data).forEach(([id, event]) => {
+                    if (event.status === 'active') {
+                        activeEvents.push({ id, ...event });
+                        container.innerHTML += `
+                            <div class="glass-card p-6 rounded-xl border-l-4 border-green-500 glow-green hover:scale-105 transition-transform">
+                                <h3 class="font-black text-xl text-green-400">${event.name || 'Sans titre'}</h3>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <p class="flex items-center gap-2"><i class="fas fa-calendar text-orange-500"></i> ${event.date || 'Non définie'}</p>
+                                    <p class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-orange-500"></i> ${event.venue || 'Non défini'}</p>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="px-3 py-1 bg-green-600/20 border border-green-500 rounded-lg text-xs font-black uppercase tracking-wider">ACTIF</span>
+                                    <span class="text-xs text-gray-400">Validé Admin Finance</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                populateEventSelect();
+            }
+
+            if (activeEvents.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-12">Aucun événement actif. En attente de validation Admin Finance.</p>';
+            }
+        });
+
+        function populateEventSelect() {
+            const select = document.getElementById('sessionEventSelect');
+            select.innerHTML = '<option value="">-- Choisir un événement --</option>';
+            activeEvents.forEach(event => {
+                select.innerHTML += `<option value="${event.id}">${event.name} - ${event.date}</option>`;
+            });
+        }
+
+        onValue(ref(db, 'evenpass/controllers'), (snapshot) => {
+            const data = snapshot.val();
+            const tbody = document.getElementById('controllers-table');
+            tbody.innerHTML = '';
+
+            if (data) {
+                Object.entries(data).forEach(([id, controller]) => {
+                    const statusBadge = controller.status === 'active'
+                        ? '<span class="px-3 py-1 bg-green-600/20 border border-green-500 rounded-lg text-xs font-black text-green-400 uppercase tracking-wider">ACTIF</span>'
+                        : '<span class="px-3 py-1 bg-red-600/20 border border-red-500 rounded-lg text-xs font-black text-red-400 uppercase tracking-wider">SUSPENDU</span>';
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                            <td class="p-4">
+                                <div class="font-black text-white">${controller.lastName} ${controller.firstName}</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-xs font-semibold">${controller.email || 'N/A'}</div>
+                                <div class="text-xs text-gray-400">${controller.phone}</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-xs font-semibold">CNI: ${controller.cni}</div>
+                                <div class="text-xs text-gray-400">PDA: ${controller.pdaSerial || 'N/A'}</div>
+                            </td>
+                            <td class="p-4">${statusBadge}</td>
+                            <td class="p-4">
+                                <button onclick="showQRCode('${id}', '${controller.firstName} ${controller.lastName}')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs transition">
+                                    <i class="fas fa-qrcode"></i> Générer
+                                </button>
+                            </td>
+                            <td class="p-4">
+                                <button onclick="showSessionActivation('${id}', '${controller.firstName} ${controller.lastName}')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs mr-2 transition">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button onclick="toggleControllerStatus('${id}', '${controller.status}')" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-xs mr-2 transition">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                <button onclick="deleteController('${id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400">Aucun contrôleur enregistré</td></tr>';
+            }
+        });
+
+        onValue(ref(db, 'evenpass/scans'), (snapshot) => {
+            const scans = snapshot.val() || {};
+            const container = document.getElementById('monitoring-grid');
+            container.innerHTML = '';
+
+            const eventStats = {};
+
+            Object.values(scans).forEach(scan => {
+                if (!eventStats[scan.eventId]) {
+                    eventStats[scan.eventId] = { total: 0, byController: {} };
+                }
+                eventStats[scan.eventId].total++;
+
+                if (scan.controllerId) {
+                    if (!eventStats[scan.eventId].byController[scan.controllerId]) {
+                        eventStats[scan.eventId].byController[scan.controllerId] = 0;
+                    }
+                    eventStats[scan.eventId].byController[scan.controllerId]++;
+                }
+            });
+
+            if (activeEvents.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-12">Aucun événement à monitorer</p>';
+                return;
+            }
+
+            activeEvents.forEach(event => {
+                const stats = eventStats[event.id] || { total: 0, byController: {} };
+
+                let controllersList = '<p class="text-xs text-gray-400 mt-2">Aucun scan enregistré</p>';
+                if (Object.keys(stats.byController).length > 0) {
+                    controllersList = '<div class="mt-3 space-y-1">';
+                    Object.entries(stats.byController).forEach(([controllerId, count]) => {
+                        controllersList += `<div class="text-xs flex justify-between"><span>Agent ${controllerId.substring(0, 8)}...</span><span class="text-orange-400 font-bold">${count} scans</span></div>`;
+                    });
+                    controllersList += '</div>';
+                }
+
+                container.innerHTML += `
+                    <div class="glass-card p-6 rounded-xl border border-purple-500/30 glow-purple hover:scale-105 transition-transform">
+                        <h3 class="font-black text-xl mb-2 text-white">${event.name}</h3>
+                        <div class="text-5xl font-black text-green-400 mb-2">${stats.total}</div>
+                        <p class="text-sm text-gray-400 uppercase tracking-wider">Scans Totaux</p>
+                        ${controllersList}
+                    </div>
+                `;
+            });
+        });
+
+        window.showAddControllerModal = () => {
+            document.getElementById('addControllerModal').classList.remove('hidden');
+        };
+
+        window.hideAddControllerModal = () => {
+            document.getElementById('addControllerModal').classList.add('hidden');
+            document.getElementById('controllerForm').reset();
+        };
+
+        document.getElementById('controllerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const controllerData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                cni: document.getElementById('cni').value,
+                pdaSerial: document.getElementById('pdaSerial').value,
+                status: 'active',
+                createdAt: Date.now(),
+                createdBy: auth.currentUser?.uid || 'admin'
+            };
+
+            try {
+                const newControllerRef = push(ref(db, 'evenpass/controllers'));
+                await set(newControllerRef, controllerData);
+                alert('✓ Agent enregistré avec succès');
+                hideAddControllerModal();
+            } catch (error) {
+                console.error('Error adding controller:', error);
+                alert('Erreur lors de l\'enregistrement');
+            }
+        });
+
+        window.showQRCode = (controllerId, agentName) => {
+            document.getElementById('qrAgentName').textContent = agentName;
+            document.getElementById('qrcode').innerHTML = '';
+
+            const enrollmentUrl = `${window.location.origin}/scanner.html?controller=${controllerId}`;
+
+            new QRCode(document.getElementById('qrcode'), {
+                text: enrollmentUrl,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+            });
+
+            document.getElementById('qrModal').classList.remove('hidden');
+        };
+
+        window.hideQRModal = () => {
+            document.getElementById('qrModal').classList.add('hidden');
+        };
+
+        window.showSessionActivation = (controllerId, agentName) => {
+            currentControllerId = controllerId;
+            document.getElementById('sessionAgentInfo').textContent = `Agent: ${agentName}`;
+            document.getElementById('sessionModal').classList.remove('hidden');
+        };
+
+        window.hideSessionModal = () => {
+            document.getElementById('sessionModal').classList.add('hidden');
+            currentControllerId = null;
+        };
+
+        window.activateSession = async () => {
+            const eventId = document.getElementById('sessionEventSelect').value;
+
+            if (!eventId || !currentControllerId) {
+                alert('Veuillez sélectionner un événement');
+                return;
+            }
+
+            try {
+                const sessionData = {
+                    controllerId: currentControllerId,
+                    eventId: eventId,
+                    activatedAt: Date.now(),
+                    activatedBy: auth.currentUser?.uid || 'admin',
+                    status: 'active'
+                };
+
+                await set(ref(db, `evenpass/sessions/${currentControllerId}_${eventId}`), sessionData);
+                alert('✓ Session activée ! L\'agent peut maintenant scanner pour cet événement.');
+                hideSessionModal();
+            } catch (error) {
+                console.error('Error activating session:', error);
+                alert('Erreur lors de l\'activation');
+            }
+        };
+
+        window.toggleControllerStatus = async (id, currentStatus) => {
+            const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+            try {
+                await update(ref(db, `evenpass/controllers/${id}`), { status: newStatus });
+                alert(`Agent ${newStatus === 'active' ? 'activé' : 'suspendu'}`);
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Erreur lors de la mise à jour');
+            }
+        };
+
+        window.deleteController = async (id) => {
+            if (confirm('Supprimer cet agent définitivement ?')) {
+                try {
+                    await remove(ref(db, `evenpass/controllers/${id}`));
+                    alert('Agent supprimé');
+                } catch (error) {
+                    console.error('Error deleting controller:', error);
+                    alert('Erreur lors de la suppression');
+                }
+            }
+        };
+    </script>
+
+</body>
+</html>
