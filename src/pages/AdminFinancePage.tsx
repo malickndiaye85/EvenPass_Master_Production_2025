@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, XCircle, Clock, Users } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, XCircle, Clock, Users, Zap, Calendar, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/SupabaseAuthContext';
-import type { PayoutRequest, FinancialTransaction } from '../types';
+import type { PayoutRequest, FinancialTransaction, Event } from '../types';
 
 export default function AdminFinancePage() {
   const { user } = useAuth();
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
+  const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState({
     totalSales: 0,
     platformCommission: 0,
@@ -16,6 +17,7 @@ export default function AdminFinancePage() {
   });
   const [loading, setLoading] = useState(true);
   const [selectedPayout, setSelectedPayout] = useState<PayoutRequest | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function AdminFinancePage() {
 
   const loadData = async () => {
     try {
-      const [payoutsRes, transactionsRes] = await Promise.all([
+      const [payoutsRes, transactionsRes, eventsRes] = await Promise.all([
         supabase
           .from('payout_requests')
           .select(`
@@ -36,11 +38,21 @@ export default function AdminFinancePage() {
           .from('financial_transactions')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100)
+          .limit(100),
+        supabase
+          .from('events')
+          .select(`
+            *,
+            organizer:organizers(organization_name),
+            category:event_categories(name_fr)
+          `)
+          .eq('workflow_status', 'pending')
+          .order('created_at', { ascending: false })
       ]);
 
       if (payoutsRes.data) setPayouts(payoutsRes.data as any);
       if (transactionsRes.data) setTransactions(transactionsRes.data);
+      if (eventsRes.data) setPendingEvents(eventsRes.data as Event[]);
 
       const totalSales = transactionsRes.data
         ?.filter(t => t.transaction_type === 'ticket_sale')
@@ -63,6 +75,34 @@ export default function AdminFinancePage() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMasterGo = async (eventId: string) => {
+    if (!confirm('Approuver cet événement et le débloquer pour les opérations ?')) {
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({
+          workflow_status: 'approved',
+          approved_by: user?.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', eventId);
+
+      if (error) throw error;
+      alert('Événement approuvé avec succès! Les opérations logistiques peuvent maintenant être configurées.');
+      setSelectedEvent(null);
+      loadData();
+    } catch (error) {
+      console.error('Error approving event:', error);
+      alert('Erreur lors de l\'approbation');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -167,6 +207,69 @@ export default function AdminFinancePage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {pendingEvents.length > 0 && (
+          <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 border-2 border-orange-500 rounded-2xl p-6 mb-8">
+            <div className="flex items-center mb-6">
+              <Zap className="w-8 h-8 text-orange-400 mr-3" />
+              <div>
+                <h2 className="text-2xl font-black text-white">Événements en attente de validation</h2>
+                <p className="text-orange-200 text-sm">Utilisez "Master GO" pour débloquer les opérations logistiques</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden hover:border-orange-500 transition-all cursor-pointer"
+                  onClick={() => setSelectedEvent(event)}
+                >
+                  <div className="relative h-32 bg-slate-800">
+                    {event.cover_image_url ? (
+                      <img
+                        src={event.cover_image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Calendar className="w-12 h-12 text-slate-600" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-yellow-600 text-white text-xs font-bold rounded-full animate-pulse">
+                      PENDING
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-white font-bold mb-2 line-clamp-1">{event.title}</h3>
+                    <div className="space-y-1 text-sm text-slate-400 mb-3">
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-2" />
+                        {new Date(event.start_date).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-2" />
+                        {event.venue_city}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMasterGo(event.id);
+                      }}
+                      disabled={processing}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-black transition-all disabled:opacity-50 shadow-lg shadow-green-500/30 flex items-center justify-center"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      MASTER GO
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-6 text-white">
             <div className="flex items-center justify-between mb-4">

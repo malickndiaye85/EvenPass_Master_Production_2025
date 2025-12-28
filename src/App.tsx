@@ -66,14 +66,8 @@ function AppRoutes() {
         }
       />
 
-      <Route
-        path="/scan"
-        element={
-          <ProtectedRoute>
-            <EPscanPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/scan" element={<EPscanPage />} />
+      <Route path="/scan/activate/:activationToken" element={<EPscanPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
