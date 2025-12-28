@@ -1,6 +1,6 @@
 import { defineConfig, Plugin, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 const buildTimestamp = Date.now();
@@ -11,13 +11,6 @@ const inlineEnvPlugin = (): Plugin => {
     apply: 'build',
     closeBundle() {
       const distPath = join(__dirname, 'dist');
-
-      // Check if dist directory exists
-      if (!existsSync(distPath)) {
-        console.log('⚠ dist directory not found, skipping env injection');
-        return;
-      }
-
       const env = loadEnv('production', process.cwd(), '');
 
       const envScript = `
@@ -71,13 +64,6 @@ const swVersionPlugin = (): Plugin => {
     apply: 'build',
     closeBundle() {
       const swPath = join(__dirname, 'dist', 'sw.js');
-
-      // Check if sw.js exists
-      if (!existsSync(swPath)) {
-        console.log('⚠ sw.js not found in dist, skipping versioning');
-        return;
-      }
-
       try {
         let content = readFileSync(swPath, 'utf-8');
 
