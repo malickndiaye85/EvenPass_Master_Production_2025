@@ -1,54 +1,91 @@
-import React, { useState } from 'react';
-import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import HomePage from './components/HomePage';
-import EventDetailPage from './components/EventDetailPage';
-import LoginPage from './components/LoginPage';
-import OrganizerDashboard from './components/OrganizerDashboard';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SupabaseAuthProvider, useAuth } from './context/SupabaseAuthContext';
+import HomePageNew from './pages/HomePageNew';
+import EventDetailPage from './pages/EventDetailPage';
+import SuccessPage from './pages/SuccessPage';
+import ErrorPage from './pages/ErrorPage';
+import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
+import AdminFinancePage from './pages/AdminFinancePage';
+import OpsManagerPage from './pages/OpsManagerPage';
+import EPscanPage from './pages/EPscanPage';
 
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
+  const { user, loading } = useAuth();
 
-  const handleNavigate = (page: string, eventId?: string) => {
-    setCurrentPage(page);
-    if (eventId) {
-      setSelectedEventId(eventId);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage onNavigate={handleNavigate} />;
-      case 'event':
-        return selectedEventId ? (
-          <EventDetailPage eventId={selectedEventId} onNavigate={handleNavigate} />
-        ) : (
-          <HomePage onNavigate={handleNavigate} />
-        );
-      case 'login':
-        return <LoginPage onNavigate={handleNavigate} />;
-      case 'dashboard':
-        return <OrganizerDashboard onNavigate={handleNavigate} />;
-      default:
-        return <HomePage onNavigate={handleNavigate} />;
-    }
-  };
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AppRoutes() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
-          <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
-          {renderPage()}
-          <Footer />
-        </div>
-      </AuthProvider>
-    </ThemeProvider>
-  );
-};
+    <Routes>
+      <Route path="/" element={<HomePageNew />} />
+      <Route path="/event/:slug" element={<EventDetailPage />} />
+      <Route path="/success" element={<SuccessPage />} />
+      <Route path="/error" element={<ErrorPage />} />
 
-export default App;
+      <Route
+        path="/organizer/dashboard"
+        element={
+          <ProtectedRoute requiredRole="organizer">
+            <OrganizerDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/finance"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminFinancePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/ops"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <OpsManagerPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/scan"
+        element={
+          <ProtectedRoute>
+            <EPscanPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <SupabaseAuthProvider>
+        <AppRoutes />
+      </SupabaseAuthProvider>
+    </BrowserRouter>
+  );
+}
