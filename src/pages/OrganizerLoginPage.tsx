@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Ticket, Mail, Lock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/SupabaseAuthContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 import { supabase } from '../lib/supabase';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,32 +18,32 @@ export default function OrganizerLoginPage() {
     setLoading(true);
 
     try {
-      const { error: signInError, data } = await signIn(email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (signInError) {
-        setError('Email ou mot de passe incorrect');
+      const { data: organizerData, error: fetchError } = await supabase
+        .from('organizers')
+        .select('*')
+        .eq('user_id', user.uid)
+        .maybeSingle();
+
+      if (fetchError || !organizerData) {
+        setError('Compte organisateur non trouvé');
+        await auth.signOut();
         setLoading(false);
         return;
       }
 
-      if (data?.user) {
-        const { data: organizerData, error: fetchError } = await supabase
-          .from('organizers')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (fetchError || !organizerData) {
-          setError('Compte organisateur non trouvé');
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
-        }
-
-        navigate('/organizer/dashboard');
+      if (!organizerData.is_active) {
+        setError('Compte organisateur inactif');
+        await auth.signOut();
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError('Une erreur est survenue');
+
+      navigate('/organizer/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Email ou mot de passe incorrect');
       setLoading(false);
     }
   };

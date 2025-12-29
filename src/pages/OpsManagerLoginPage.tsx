@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Settings, Mail, Lock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/SupabaseAuthContext';
-import { supabase } from '../lib/supabase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+
+const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
 
 export default function OpsManagerLoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,32 +19,19 @@ export default function OpsManagerLoginPage() {
     setLoading(true);
 
     try {
-      const { error: signInError, data } = await signIn(email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (signInError) {
-        setError('Email ou mot de passe incorrect');
+      if (user.uid !== ADMIN_UID) {
+        setError('Accès non autorisé - UID admin requis');
+        await auth.signOut();
         setLoading(false);
         return;
       }
 
-      if (data?.user) {
-        const { data: adminData, error: fetchError } = await supabase
-          .from('admin_users')
-          .select('role, is_active')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (fetchError || !adminData || !adminData.is_active) {
-          setError('Accès non autorisé - Compte admin non trouvé');
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
-        }
-
-        navigate('/admin/ops');
-      }
-    } catch (err) {
-      setError('Une erreur est survenue');
+      navigate('/admin/ops');
+    } catch (err: any) {
+      setError(err.message || 'Email ou mot de passe incorrect');
       setLoading(false);
     }
   };
