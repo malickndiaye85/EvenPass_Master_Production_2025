@@ -13,15 +13,28 @@ import {
   Clock,
   Users,
   Shield,
-  Zap
+  Zap,
+  Sun,
+  Moon,
+  Music,
+  Trophy,
+  Mic2,
+  Utensils,
+  Briefcase,
+  PartyPopper,
+  AlertCircle,
+  Star,
+  Flame
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/SupabaseAuthContext';
+import { useTheme } from '../context/ThemeContext';
 import type { Event, EventCategory } from '../types';
 
 export default function HomePageNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<EventCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -74,117 +87,275 @@ export default function HomePageNew() {
     event.venue_city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('musique') || name.includes('music')) return Music;
+    if (name.includes('sport')) return Trophy;
+    if (name.includes('conférence') || name.includes('conference')) return Briefcase;
+    if (name.includes('festival')) return PartyPopper;
+    if (name.includes('théâtre') || name.includes('theater')) return Mic2;
+    if (name.includes('gastronomie') || name.includes('food')) return Utensils;
+    return Sparkles;
+  };
+
+  const getAvailabilityBadge = (event: Event) => {
+    const totalTickets = event.ticket_types?.reduce((sum, t) => sum + t.quantity_available, 0) || 0;
+    const soldTickets = event.ticket_types?.reduce((sum, t) => sum + (t.quantity_available - t.quantity_available), 0) || 0;
+    const availabilityPercent = totalTickets > 0 ? ((totalTickets - soldTickets) / totalTickets) * 100 : 100;
+
+    if (availabilityPercent < 10) {
+      return { text: 'Dernières places', color: 'bg-red-500', icon: Flame };
+    } else if (availabilityPercent < 30) {
+      return { text: 'Bientôt complet', color: 'bg-orange-500', icon: AlertCircle };
+    }
+    return null;
+  };
+
+  const isNewEvent = (eventDate: string) => {
+    const daysSinceCreation = (Date.now() - new Date(eventDate).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSinceCreation <= 7;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <header className="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+    <div className={`min-h-screen transition-colors duration-500 ${
+      isDark
+        ? 'bg-[#050505]'
+        : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
+    }`}>
+      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+        isDark
+          ? 'bg-black/60 border-amber-900/20'
+          : 'bg-white/60 border-slate-200/60'
+      } backdrop-blur-2xl border-b`}>
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-red-600 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-white" />
+              <div className="relative group">
+                <div className={`absolute -inset-0.5 rounded-2xl blur opacity-70 group-hover:opacity-100 transition ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600'
+                    : 'bg-gradient-to-r from-orange-400 to-pink-500'
+                }`}></div>
+                <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700'
+                    : 'bg-gradient-to-br from-orange-400 via-red-500 to-pink-500'
+                }`}>
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 bg-clip-text text-transparent">
+                <h1 className={`text-2xl font-black tracking-tight ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
+                    : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
+                }`}>
                   EvenPass
                 </h1>
-                <p className="text-xs text-slate-500">La billetterie premium du Sénégal</p>
+                <p className={`text-xs font-medium ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
+                  Premium Events • Sénégal
+                </p>
               </div>
             </div>
-            <button
-              onClick={() => navigate('/organizer/dashboard')}
-              className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all font-medium shadow-lg shadow-orange-500/30"
-            >
-              Connexion
-            </button>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className={`p-3 rounded-2xl transition-all duration-300 ${
+                  isDark
+                    ? 'bg-amber-900/30 hover:bg-amber-800/40 text-amber-400 border border-amber-800/40'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                }`}
+                aria-label="Toggle theme"
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
+              <button
+                onClick={() => navigate('/organizer/dashboard')}
+                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-lg ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-900/40'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
+                }`}
+              >
+                Connexion
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-pink-500/10"></div>
+      <section className="relative overflow-hidden py-20 sm:py-32">
+        <div className={`absolute inset-0 ${
+          isDark
+            ? 'bg-gradient-to-br from-amber-950/20 via-transparent to-orange-950/20'
+            : 'bg-gradient-to-br from-orange-50 via-transparent to-pink-50'
+        }`}></div>
+
         <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(251, 146, 60, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%)',
+          backgroundImage: isDark
+            ? 'radial-gradient(circle at 20% 50%, rgba(217, 119, 6, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(234, 88, 12, 0.15) 0%, transparent 50%)'
+            : 'radial-gradient(circle at 20% 50%, rgba(251, 146, 60, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%)',
         }}></div>
 
-        <div className="relative max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700 mb-6">
-              <Zap className="w-4 h-4 text-orange-400 mr-2" />
-              <span className="text-sm text-slate-300">Nouvelle expérience de billetterie</span>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className={`inline-flex items-center px-5 py-2.5 rounded-full border mb-8 ${
+              isDark
+                ? 'bg-amber-950/40 backdrop-blur-xl border-amber-800/40'
+                : 'bg-white/80 backdrop-blur-xl border-slate-200 shadow-lg'
+            }`}>
+              <Zap className={`w-4 h-4 mr-2 ${isDark ? 'text-amber-400' : 'text-orange-500'}`} />
+              <span className={`text-sm font-semibold ${isDark ? 'text-amber-300' : 'text-slate-700'}`}>
+                Nouvelle expérience de billetterie
+              </span>
             </div>
 
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
-              <span className="block">Gënaa Yomb</span>
-              <span className="block bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 bg-clip-text text-transparent">
+            <h2 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] ${
+              isDark ? 'text-white' : 'text-slate-900'
+            }`}>
+              <span className="block animate-fade-in">Gënaa Yomb</span>
+              <span className={`block animate-fade-in animation-delay-200 ${
+                isDark
+                  ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
+                  : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
+              }`}>
                 Gënaa Wóor
               </span>
-              <span className="block">Gënaa Gaaw</span>
+              <span className="block animate-fade-in animation-delay-400">Gënaa Gaaw</span>
             </h2>
 
-            <p className="text-xl text-slate-300 mb-4 max-w-2xl mx-auto">
-              La plateforme premium pour découvrir et réserver vos événements au Sénégal
+            <p className={`text-xl sm:text-2xl mb-3 max-w-3xl mx-auto font-medium ${
+              isDark ? 'text-amber-100/80' : 'text-slate-600'
+            }`}>
+              La plateforme premium pour vos événements au Sénégal
             </p>
-            <p className="text-sm text-slate-400 mb-12">
+            <p className={`text-sm mb-12 ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
               Concerts • Lutte • Théâtre • Sport • Culture
             </p>
 
-            <div className="max-w-3xl mx-auto relative mb-12">
-              <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-400 w-6 h-6" />
-              <input
-                type="text"
-                placeholder="Rechercher un événement, artiste ou lieu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-16 pr-6 py-5 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-700 rounded-2xl text-white text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-xl"
-              />
+            <div className="max-w-3xl mx-auto relative mb-16">
+              <div className={`absolute -inset-1 rounded-[32px] blur-xl opacity-30 ${
+                isDark
+                  ? 'bg-gradient-to-r from-amber-600 to-orange-600'
+                  : 'bg-gradient-to-r from-orange-400 to-pink-400'
+              }`}></div>
+              <div className="relative">
+                <Search className={`absolute left-7 top-1/2 transform -translate-y-1/2 w-6 h-6 ${
+                  isDark ? 'text-amber-500' : 'text-slate-400'
+                }`} />
+                <input
+                  type="text"
+                  placeholder="Rechercher un événement, artiste ou lieu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full pl-16 pr-6 py-6 rounded-[32px] text-lg font-medium border-2 transition-all shadow-2xl backdrop-blur-xl focus:outline-none focus:scale-[1.02] ${
+                    isDark
+                      ? 'bg-black/40 border-amber-800/40 text-amber-50 placeholder-amber-500/40 focus:border-amber-600 focus:shadow-amber-900/40'
+                      : 'bg-white/90 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-orange-400 focus:shadow-orange-500/20'
+                  }`}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
               <button
                 onClick={() => navigate('/')}
-                className="group relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 rounded-2xl p-6 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/20"
+                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
+                    : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-orange-300 shadow-lg hover:shadow-2xl'
+                }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all"></div>
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-600/10 to-orange-600/10'
+                    : 'bg-gradient-to-br from-orange-100/50 to-pink-100/50'
+                }`}></div>
                 <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                    <Ticket className="w-7 h-7 text-white" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
+                    isDark
+                      ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                      : 'bg-gradient-to-br from-orange-500 to-red-600'
+                  } shadow-lg`}>
+                    <Ticket className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Acheter des billets</h3>
-                  <p className="text-sm text-slate-400">Découvrez et réservez vos événements</p>
-                  <ArrowRight className="w-5 h-5 text-orange-400 mx-auto mt-4 group-hover:translate-x-2 transition-transform" />
+                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                    Acheter des billets
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
+                    Découvrez et réservez vos événements
+                  </p>
+                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
+                    isDark ? 'text-amber-400' : 'text-orange-500'
+                  }`} />
                 </div>
               </button>
 
               <button
                 onClick={() => user?.role === 'organizer' ? navigate('/organizer/dashboard') : alert('Connectez-vous en tant qu\'organisateur')}
-                className="group relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 rounded-2xl p-6 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20"
+                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
+                    : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-blue-300 shadow-lg hover:shadow-2xl'
+                }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/10 transition-all"></div>
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-blue-600/10 to-cyan-600/10'
+                    : 'bg-gradient-to-br from-blue-100/50 to-cyan-100/50'
+                }`}></div>
                 <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                    <Plus className="w-7 h-7 text-white" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
+                    isDark
+                      ? 'bg-gradient-to-br from-blue-500 to-cyan-600'
+                      : 'bg-gradient-to-br from-blue-500 to-cyan-600'
+                  } shadow-lg`}>
+                    <Plus className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Créer un événement</h3>
-                  <p className="text-sm text-slate-400">Organisez votre prochain événement</p>
-                  <ArrowRight className="w-5 h-5 text-blue-400 mx-auto mt-4 group-hover:translate-x-2 transition-transform" />
+                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                    Créer un événement
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
+                    Organisez votre prochain événement
+                  </p>
+                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
+                    isDark ? 'text-blue-400' : 'text-blue-500'
+                  }`} />
                 </div>
               </button>
 
               <button
                 onClick={() => navigate('/scan')}
-                className="group relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 rounded-2xl p-6 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20"
+                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border sm:col-span-2 lg:col-span-1 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
+                    : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-green-300 shadow-lg hover:shadow-2xl'
+                }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/10 group-hover:to-emerald-500/10 transition-all"></div>
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-green-600/10 to-emerald-600/10'
+                    : 'bg-gradient-to-br from-green-100/50 to-emerald-100/50'
+                }`}></div>
                 <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                    <Scan className="w-7 h-7 text-white" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
+                    isDark
+                      ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+                      : 'bg-gradient-to-br from-green-500 to-emerald-600'
+                  } shadow-lg`}>
+                    <Scan className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Scanner des billets</h3>
-                  <p className="text-sm text-slate-400">Contrôlez les accès événements</p>
-                  <ArrowRight className="w-5 h-5 text-green-400 mx-auto mt-4 group-hover:translate-x-2 transition-transform" />
+                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                    Scanner des billets
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
+                    Contrôlez les accès événements
+                  </p>
+                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
+                    isDark ? 'text-green-400' : 'text-green-500'
+                  }`} />
                 </div>
               </button>
             </div>
@@ -192,132 +363,187 @@ export default function HomePageNew() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-slate-950 to-slate-900 py-4">
+      <section className={`py-6 border-y ${
+        isDark ? 'bg-black/40 border-amber-900/20' : 'bg-slate-50/50 border-slate-200/60'
+      } backdrop-blur-xl`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center space-x-8 text-slate-400 text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-8 text-sm">
             <div className="flex items-center">
-              <Shield className="w-5 h-5 mr-2 text-green-500" />
-              <span>Paiement sécurisé</span>
+              <Shield className={`w-5 h-5 mr-2 ${isDark ? 'text-green-400' : 'text-green-500'}`} />
+              <span className={isDark ? 'text-amber-200/80' : 'text-slate-600'}>Paiement sécurisé</span>
             </div>
             <div className="flex items-center">
-              <Users className="w-5 h-5 mr-2 text-blue-500" />
-              <span>+10,000 utilisateurs</span>
+              <Users className={`w-5 h-5 mr-2 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} />
+              <span className={isDark ? 'text-amber-200/80' : 'text-slate-600'}>+10,000 utilisateurs</span>
             </div>
             <div className="flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-orange-500" />
-              <span>Billetterie premium</span>
+              <Sparkles className={`w-5 h-5 mr-2 ${isDark ? 'text-amber-400' : 'text-orange-500'}`} />
+              <span className={isDark ? 'text-amber-200/80' : 'text-slate-600'}>Billetterie premium</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-slate-900">
+      <section className={`py-16 ${isDark ? 'bg-[#050505]' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-white">Parcourir par catégorie</h3>
+          <div className="flex items-center justify-between mb-10">
+            <h3 className={`text-3xl font-black ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+              Parcourir par catégorie
+            </h3>
           </div>
 
-          <div className="flex flex-wrap gap-3 mb-12">
+          <div className="flex flex-wrap gap-3 mb-16">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`group relative px-8 py-3 rounded-xl font-semibold transition-all ${
+              className={`group relative px-8 py-4 rounded-3xl font-bold transition-all duration-300 border ${
                 selectedCategory === null
-                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/30 scale-105'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+                  ? isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-black border-transparent shadow-2xl shadow-amber-900/40 scale-105'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white border-transparent shadow-2xl shadow-orange-500/30 scale-105'
+                  : isDark
+                    ? 'bg-amber-950/40 text-amber-200 border-amber-800/40 hover:bg-amber-900/40 hover:border-amber-700'
+                    : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
               }`}
             >
-              <span className="relative z-10">Tous les événements</span>
+              <span className="relative z-10 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Tous
+              </span>
             </button>
 
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`group relative px-8 py-3 rounded-xl font-semibold transition-all border ${
-                  selectedCategory === category.id
-                    ? 'text-white scale-105 shadow-lg'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border-slate-700'
-                }`}
-                style={{
-                  backgroundColor: selectedCategory === category.id ? category.color : undefined,
-                  borderColor: selectedCategory === category.id ? category.color : undefined,
-                  boxShadow: selectedCategory === category.id ? `0 10px 30px -10px ${category.color}50` : undefined,
-                }}
-              >
-                <span className="relative z-10">{category.name_fr}</span>
-              </button>
-            ))}
+            {categories.map((category) => {
+              const Icon = getCategoryIcon(category.name_fr);
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`group relative px-8 py-4 rounded-3xl font-bold transition-all duration-300 border ${
+                    selectedCategory === category.id
+                      ? 'text-white scale-105 shadow-2xl border-transparent'
+                      : isDark
+                        ? 'bg-amber-950/40 text-amber-200 border-amber-800/40 hover:bg-amber-900/40 hover:border-amber-700'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                  }`}
+                  style={{
+                    backgroundColor: selectedCategory === category.id ? category.color : undefined,
+                    boxShadow: selectedCategory === category.id ? `0 20px 40px -15px ${category.color}80` : undefined,
+                  }}
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {category.name_fr}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-slate-400 mt-4">Chargement des événements...</p>
+            <div className="text-center py-32">
+              <div className={`inline-block w-20 h-20 border-4 border-t-transparent rounded-full animate-spin ${
+                isDark ? 'border-amber-600' : 'border-orange-500'
+              }`}></div>
+              <p className={`mt-6 text-lg font-medium ${isDark ? 'text-amber-300/60' : 'text-slate-500'}`}>
+                Chargement des événements...
+              </p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredEvents.map((event) => {
                   const minPrice = event.ticket_types && event.ticket_types.length > 0
                     ? Math.min(...event.ticket_types.map(t => t.price))
                     : 0;
+                  const availabilityBadge = getAvailabilityBadge(event);
+                  const isNew = isNewEvent(event.created_at || event.start_date);
 
                   return (
                     <div
                       key={event.id}
-                      className="group relative bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-orange-500 transition-all cursor-pointer hover:shadow-2xl hover:shadow-orange-500/20 hover:-translate-y-2"
+                      className={`group relative rounded-[32px] overflow-hidden border-2 transition-all duration-500 cursor-pointer hover:-translate-y-3 hover:shadow-2xl ${
+                        isDark
+                          ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600 hover:shadow-amber-900/40'
+                          : 'bg-white border-slate-200 hover:border-orange-300 hover:shadow-orange-500/20'
+                      }`}
                       onClick={() => navigate(`/event/${event.slug}`)}
                     >
-                      <div className="relative h-56 bg-slate-700 overflow-hidden">
+                      <div className="relative h-64 bg-slate-700 overflow-hidden">
                         {event.cover_image_url ? (
                           <img
                             src={event.cover_image_url}
                             alt={event.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
-                            <Calendar className="w-20 h-20 text-slate-600" />
+                          <div className={`w-full h-full flex items-center justify-center ${
+                            isDark ? 'bg-gradient-to-br from-amber-900/40 to-orange-900/40' : 'bg-gradient-to-br from-slate-200 to-slate-300'
+                          }`}>
+                            <Calendar className={`w-20 h-20 ${isDark ? 'text-amber-700/40' : 'text-slate-400'}`} />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-60"></div>
+                        <div className={`absolute inset-0 ${
+                          isDark
+                            ? 'bg-gradient-to-t from-black via-black/50 to-transparent'
+                            : 'bg-gradient-to-t from-white via-white/50 to-transparent'
+                        } opacity-80`}></div>
 
-                        {event.is_featured && (
-                          <div className="absolute top-4 right-4 px-3 py-1.5 bg-gradient-to-r from-orange-600 to-red-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            À LA UNE
-                          </div>
-                        )}
+                        <div className="absolute top-4 right-4 flex flex-col gap-2">
+                          {event.is_featured && (
+                            <div className={`px-4 py-2 rounded-2xl text-xs font-black shadow-lg flex items-center backdrop-blur-xl ${
+                              isDark
+                                ? 'bg-amber-600/90 text-black'
+                                : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white'
+                            }`}>
+                              <Star className="w-3 h-3 mr-1.5 fill-current" />
+                              À LA UNE
+                            </div>
+                          )}
+                          {isNew && (
+                            <div className={`px-4 py-2 rounded-2xl text-xs font-black shadow-lg flex items-center backdrop-blur-xl ${
+                              isDark
+                                ? 'bg-green-600/90 text-black'
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                            }`}>
+                              <Sparkles className="w-3 h-3 mr-1.5" />
+                              NOUVEAU
+                            </div>
+                          )}
+                          {availabilityBadge && (
+                            <div className={`${availabilityBadge.color} px-4 py-2 rounded-2xl text-xs font-black text-white shadow-lg flex items-center backdrop-blur-xl animate-pulse`}>
+                              <availabilityBadge.icon className="w-3 h-3 mr-1.5" />
+                              {availabilityBadge.text}
+                            </div>
+                          )}
+                        </div>
 
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span
-                              className="px-3 py-1 text-xs font-bold rounded-full shadow-lg backdrop-blur-sm"
-                              style={{
-                                backgroundColor: event.category?.color || '#FF6B35',
-                                color: 'white',
-                              }}
-                            >
-                              {event.category?.name_fr}
-                            </span>
-                            {event.is_free && (
-                              <span className="px-3 py-1 text-xs font-bold bg-green-600 text-white rounded-full shadow-lg">
-                                GRATUIT
-                              </span>
-                            )}
-                          </div>
+                        <div className="absolute bottom-4 left-4">
+                          <span
+                            className="px-4 py-2 text-xs font-black rounded-2xl shadow-lg backdrop-blur-xl"
+                            style={{
+                              backgroundColor: event.category?.color || '#FF6B35',
+                              color: 'white',
+                            }}
+                          >
+                            {event.category?.name_fr}
+                          </span>
                         </div>
                       </div>
 
                       <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-orange-400 transition-colors">
+                        <h3 className={`text-xl font-black mb-4 line-clamp-2 transition-colors ${
+                          isDark
+                            ? 'text-amber-50 group-hover:text-amber-400'
+                            : 'text-slate-900 group-hover:text-orange-600'
+                        }`}>
                           {event.title}
                         </h3>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm text-slate-400">
-                            <Calendar className="w-4 h-4 mr-3 text-orange-500 flex-shrink-0" />
-                            <span className="font-medium">
+                        <div className="space-y-3 mb-5">
+                          <div className="flex items-center text-sm">
+                            <Calendar className={`w-4 h-4 mr-3 flex-shrink-0 ${
+                              isDark ? 'text-amber-400' : 'text-orange-500'
+                            }`} />
+                            <span className={`font-semibold ${isDark ? 'text-amber-200/80' : 'text-slate-600'}`}>
                               {new Date(event.start_date).toLocaleDateString('fr-FR', {
                                 weekday: 'long',
                                 day: 'numeric',
@@ -326,32 +552,65 @@ export default function HomePageNew() {
                               })}
                             </span>
                           </div>
-                          <div className="flex items-center text-sm text-slate-400">
-                            <Clock className="w-4 h-4 mr-3 text-blue-500 flex-shrink-0" />
-                            <span className="font-medium">
+                          <div className="flex items-center text-sm">
+                            <Clock className={`w-4 h-4 mr-3 flex-shrink-0 ${
+                              isDark ? 'text-blue-400' : 'text-blue-500'
+                            }`} />
+                            <span className={`font-semibold ${isDark ? 'text-amber-200/80' : 'text-slate-600'}`}>
                               {new Date(event.start_date).toLocaleTimeString('fr-FR', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </span>
                           </div>
-                          <div className="flex items-center text-sm text-slate-400">
-                            <MapPin className="w-4 h-4 mr-3 text-red-500 flex-shrink-0" />
-                            <span className="font-medium">{event.venue_name}, {event.venue_city}</span>
+                          <div className="flex items-center text-sm">
+                            <MapPin className={`w-4 h-4 mr-3 flex-shrink-0 ${
+                              isDark ? 'text-red-400' : 'text-red-500'
+                            }`} />
+                            <span className={`font-semibold ${isDark ? 'text-amber-200/80' : 'text-slate-600'}`}>
+                              {event.venue_name}, {event.venue_city}
+                            </span>
                           </div>
                         </div>
 
                         {!event.is_free && minPrice > 0 && (
-                          <div className="pt-4 border-t border-slate-700">
+                          <div className={`pt-5 border-t ${isDark ? 'border-amber-900/30' : 'border-slate-200'}`}>
                             <div className="flex items-end justify-between">
                               <div>
-                                <p className="text-xs text-slate-400 mb-1">À partir de</p>
-                                <p className="text-2xl font-black text-transparent bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text">
-                                  {minPrice.toLocaleString()} FCFA
+                                <p className={`text-xs mb-1 font-semibold ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
+                                  À partir de
+                                </p>
+                                <p className={`text-3xl font-black ${
+                                  isDark
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent'
+                                    : 'bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent'
+                                }`}>
+                                  {minPrice.toLocaleString()} F
                                 </p>
                               </div>
-                              <button className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold text-sm hover:from-orange-700 hover:to-red-700 transition-all shadow-lg shadow-orange-500/30 group-hover:scale-105">
+                              <button className={`px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg group-hover:scale-110 ${
+                                isDark
+                                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-900/40'
+                                  : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
+                              }`}>
                                 Réserver
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {event.is_free && (
+                          <div className={`pt-5 border-t ${isDark ? 'border-amber-900/30' : 'border-slate-200'}`}>
+                            <div className="flex items-center justify-between">
+                              <span className="px-5 py-2.5 text-sm font-black bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-lg">
+                                ENTRÉE GRATUITE
+                              </span>
+                              <button className={`px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg group-hover:scale-110 ${
+                                isDark
+                                  ? 'bg-amber-950/60 hover:bg-amber-900/60 text-amber-200 border-2 border-amber-800/40'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border-2 border-slate-200'
+                              }`}>
+                                Inscription
                               </button>
                             </div>
                           </div>
@@ -363,12 +622,18 @@ export default function HomePageNew() {
               </div>
 
               {filteredEvents.length === 0 && (
-                <div className="text-center py-20">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-800 rounded-full mb-6">
-                    <Calendar className="w-10 h-10 text-slate-600" />
+                <div className="text-center py-32">
+                  <div className={`inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-8 ${
+                    isDark ? 'bg-amber-950/40' : 'bg-slate-100'
+                  }`}>
+                    <Calendar className={`w-12 h-12 ${isDark ? 'text-amber-700/40' : 'text-slate-400'}`} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-300 mb-2">Aucun événement trouvé</h3>
-                  <p className="text-slate-500">Essayez de modifier vos critères de recherche ou votre catégorie</p>
+                  <h3 className={`text-3xl font-black mb-3 ${isDark ? 'text-amber-200' : 'text-slate-800'}`}>
+                    Aucun événement trouvé
+                  </h3>
+                  <p className={isDark ? 'text-amber-500/60' : 'text-slate-500'}>
+                    Essayez de modifier vos critères de recherche
+                  </p>
                 </div>
               )}
             </>
@@ -376,78 +641,135 @@ export default function HomePageNew() {
         </div>
       </section>
 
-      <footer className="bg-slate-950 border-t border-slate-800 mt-20">
-        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <footer className={`border-t mt-24 ${
+        isDark ? 'bg-black/60 border-amber-900/20' : 'bg-slate-50 border-slate-200'
+      } backdrop-blur-xl`}>
+        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-red-600 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-white" />
+              <div className="flex items-center space-x-3 mb-5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  isDark
+                    ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                    : 'bg-gradient-to-br from-orange-500 to-pink-600'
+                }`}>
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 bg-clip-text text-transparent">
+                  <h1 className={`text-2xl font-black ${
+                    isDark
+                      ? 'bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent'
+                      : 'bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent'
+                  }`}>
                     EvenPass
                   </h1>
-                  <p className="text-xs text-slate-500">Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw</p>
+                  <p className={`text-xs font-medium ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
+                    Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw
+                  </p>
                 </div>
               </div>
-              <p className="text-slate-400 text-sm mb-4">
+              <p className={`text-sm leading-relaxed ${isDark ? 'text-amber-200/60' : 'text-slate-600'}`}>
                 La plateforme premium de billetterie événementielle au Sénégal.
                 Découvrez, réservez et vivez des expériences uniques.
               </p>
             </div>
 
             <div>
-              <h3 className="text-white font-bold mb-4">Accès Rapide</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className={`font-black mb-4 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                Accès Rapide
+              </h3>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <button onClick={() => navigate('/')} className="text-slate-400 hover:text-orange-400 transition-colors">
+                  <button
+                    onClick={() => navigate('/')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                    }`}
+                  >
                     Événements
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => navigate('/organizer/dashboard')} className="text-slate-400 hover:text-orange-400 transition-colors">
-                    Dashboard Organisateur
+                  <button
+                    onClick={() => navigate('/organizer/dashboard')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                    }`}
+                  >
+                    Organisateur
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => navigate('/scan')} className="text-slate-400 hover:text-orange-400 transition-colors">
+                  <button
+                    onClick={() => navigate('/scan')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                    }`}
+                  >
                     Scanner
                   </button>
                 </li>
               </ul>
             </div>
 
-            <div>
-              <h3 className="text-white font-bold mb-4">Administration</h3>
-              <ul className="space-y-2 text-sm">
+            <div className="opacity-0 hover:opacity-100 transition-opacity duration-500">
+              <h3 className={`font-black mb-4 text-xs ${isDark ? 'text-amber-900/40' : 'text-slate-400'}`}>
+                Administration
+              </h3>
+              <ul className="space-y-3 text-xs">
                 <li>
-                  <button onClick={() => navigate('/admin/finance')} className="text-slate-400 hover:text-orange-400 transition-colors">
-                    Admin Finance
+                  <button
+                    onClick={() => navigate('/admin/finance')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    Finance
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => navigate('/admin/ops')} className="text-slate-400 hover:text-orange-400 transition-colors">
+                  <button
+                    onClick={() => navigate('/admin/ops')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
                     Ops Manager
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate('/scan')}
+                    className={`transition-colors ${
+                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    EPscan
                   </button>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-slate-800">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-slate-500 text-sm mb-4 md:mb-0">
+          <div className={`pt-8 border-t ${isDark ? 'border-amber-900/20' : 'border-slate-200'}`}>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className={`text-sm ${isDark ? 'text-amber-500/40' : 'text-slate-500'}`}>
                 &copy; 2025 EvenPass. Tous droits réservés.
               </p>
-              <div className="flex items-center space-x-6 text-sm">
-                <a href="#" className="text-slate-400 hover:text-orange-400 transition-colors">
-                  Conditions d'utilisation
+              <div className="flex items-center gap-6 text-sm">
+                <a href="#" className={`transition-colors ${
+                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                }`}>
+                  Conditions
                 </a>
-                <a href="#" className="text-slate-400 hover:text-orange-400 transition-colors">
+                <a href="#" className={`transition-colors ${
+                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                }`}>
                   Confidentialité
                 </a>
-                <a href="#" className="text-slate-400 hover:text-orange-400 transition-colors">
+                <a href="#" className={`transition-colors ${
+                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
+                }`}>
                   Support
                 </a>
               </div>
@@ -455,6 +777,33 @@ export default function HomePageNew() {
           </div>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out forwards;
+        }
+
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+          opacity: 0;
+        }
+
+        .animation-delay-400 {
+          animation-delay: 0.4s;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   );
 }
