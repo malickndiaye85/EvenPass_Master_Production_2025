@@ -6,9 +6,13 @@ import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
 import ErrorPage from './pages/ErrorPage';
 import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
+import OrganizerLoginPage from './pages/OrganizerLoginPage';
 import AdminFinancePage from './pages/AdminFinancePage';
+import AdminFinanceLoginPage from './pages/AdminFinanceLoginPage';
 import OpsManagerPage from './pages/OpsManagerPage';
+import OpsManagerLoginPage from './pages/OpsManagerLoginPage';
 import EPscanPage from './pages/EPscanPage';
+import EPscanLoginPage from './pages/EPscanLoginPage';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const { user, loading } = useAuth();
@@ -40,6 +44,7 @@ function AppRoutes() {
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
 
+      <Route path="/organizer/login" element={<OrganizerLoginPage />} />
       <Route
         path="/organizer/dashboard"
         element={
@@ -49,6 +54,7 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/admin/finance/login" element={<AdminFinanceLoginPage />} />
       <Route
         path="/admin/finance"
         element={
@@ -58,6 +64,7 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/admin/ops/login" element={<OpsManagerLoginPage />} />
       <Route
         path="/admin/ops"
         element={
@@ -67,6 +74,7 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/scan/login" element={<EPscanLoginPage />} />
       <Route path="/scan" element={<EPscanPage />} />
       <Route path="/scan/activate/:activationToken" element={<EPscanPage />} />
 

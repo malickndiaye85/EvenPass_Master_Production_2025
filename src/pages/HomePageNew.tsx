@@ -172,14 +172,10 @@ export default function HomePageNew() {
               </button>
 
               <button
-                onClick={() => navigate('/organizer/dashboard')}
-                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-lg ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-900/40'
-                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
-                }`}
+                onClick={() => navigate('/organizer/login')}
+                className="px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-[#0F0F0F] shadow-[#FF7A00]/30 hover:scale-[1.02]"
               >
-                Connexion
+                Espace Organisateur
               </button>
             </div>
           </div>
@@ -294,7 +290,7 @@ export default function HomePageNew() {
               </button>
 
               <button
-                onClick={() => user?.role === 'organizer' ? navigate('/organizer/dashboard') : alert('Connectez-vous en tant qu\'organisateur')}
+                onClick={() => user?.role === 'organizer' ? navigate('/organizer/dashboard') : navigate('/organizer/login')}
                 className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border ${
                   isDark
                     ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
@@ -712,39 +708,27 @@ export default function HomePageNew() {
               </ul>
             </div>
 
-            <div className="opacity-0 hover:opacity-100 transition-opacity duration-500">
-              <h3 className={`font-black mb-4 text-xs ${isDark ? 'text-amber-900/40' : 'text-slate-400'}`}>
-                Administration
+            <div>
+              <h3 className={`font-black mb-4 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                Support
               </h3>
-              <ul className="space-y-3 text-xs">
+              <ul className="space-y-3 text-sm">
                 <li>
                   <button
-                    onClick={() => navigate('/admin/finance')}
                     className={`transition-colors ${
-                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
+                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
                     }`}
                   >
-                    Finance
+                    Aide
                   </button>
                 </li>
                 <li>
                   <button
-                    onClick={() => navigate('/admin/ops')}
                     className={`transition-colors ${
-                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
+                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
                     }`}
                   >
-                    Ops Manager
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => navigate('/scan')}
-                    className={`transition-colors ${
-                      isDark ? 'text-amber-900/40 hover:text-amber-700' : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    EPscan
+                    CGU
                   </button>
                 </li>
               </ul>
@@ -752,26 +736,26 @@ export default function HomePageNew() {
           </div>
 
           <div className={`pt-8 border-t ${isDark ? 'border-amber-900/20' : 'border-slate-200'}`}>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex justify-between items-center">
               <p className={`text-sm ${isDark ? 'text-amber-500/40' : 'text-slate-500'}`}>
                 &copy; 2025 EvenPass. Tous droits réservés.
               </p>
-              <div className="flex items-center gap-6 text-sm">
-                <a href="#" className={`transition-colors ${
-                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
-                }`}>
-                  Conditions
-                </a>
-                <a href="#" className={`transition-colors ${
-                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
-                }`}>
-                  Confidentialité
-                </a>
-                <a href="#" className={`transition-colors ${
-                  isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
-                }`}>
-                  Support
-                </a>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/admin/finance/login')}
+                  className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-all hover:scale-125 shadow-lg hover:shadow-green-500/50"
+                  aria-label="Admin Finance"
+                />
+                <button
+                  onClick={() => navigate('/admin/ops/login')}
+                  className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-all hover:scale-125 shadow-lg hover:shadow-yellow-500/50"
+                  aria-label="Ops Manager"
+                />
+                <button
+                  onClick={() => navigate('/scan/login')}
+                  className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-all hover:scale-125 shadow-lg hover:shadow-red-500/50"
+                  aria-label="EPscan"
+                />
               </div>
             </div>
           </div>
