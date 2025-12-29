@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, CheckCircle, XCircle, Clock, Users, Zap, Calendar, MapPin } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/SupabaseAuthContext';
+import { useAuth } from '../context/MockAuthContext';
+import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 import type { PayoutRequest, FinancialTransaction, Event } from '../types';
 
 export default function AdminFinancePage() {
@@ -26,51 +26,19 @@ export default function AdminFinancePage() {
 
   const loadData = async () => {
     try {
-      const [payoutsRes, transactionsRes, eventsRes] = await Promise.all([
-        supabase
-          .from('payout_requests')
-          .select(`
-            *,
-            organizer:organizers(organization_name, contact_email, contact_phone)
-          `)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('financial_transactions')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100),
-        supabase
-          .from('events')
-          .select(`
-            *,
-            organizer:organizers(organization_name),
-            category:event_categories(name_fr)
-          `)
-          .eq('workflow_status', 'pending')
-          .order('created_at', { ascending: false })
-      ]);
+      console.log('[MOCK DATA] Loading admin finance...');
 
-      if (payoutsRes.data) setPayouts(payoutsRes.data as any);
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
-      if (eventsRes.data) setPendingEvents(eventsRes.data as Event[]);
+      setPayouts(mockPayouts as any);
+      setTransactions([]);
+      setPendingEvents(mockEvents.filter(e => e.status === 'draft') as Event[]);
 
-      const totalSales = transactionsRes.data
-        ?.filter(t => t.transaction_type === 'ticket_sale')
-        .reduce((sum, t) => sum + t.amount, 0) || 0;
-
-      const platformCommission = transactionsRes.data
-        ?.filter(t => t.transaction_type === 'commission')
-        .reduce((sum, t) => sum + t.amount, 0) || 0;
-
-      const payoutFees = transactionsRes.data
-        ?.filter(t => t.transaction_type === 'payout_fee')
-        .reduce((sum, t) => sum + t.amount, 0) || 0;
-
-      const organizerPayouts = transactionsRes.data
-        ?.filter(t => t.transaction_type === 'organizer_payout')
-        .reduce((sum, t) => sum + t.amount, 0) || 0;
+      const totalSales = mockStats.totalRevenue;
+      const platformCommission = totalSales * 0.05;
+      const payoutFees = mockStats.pendingPayouts * 0.015;
+      const organizerPayouts = 0;
 
       setStats({ totalSales, platformCommission, payoutFees, organizerPayouts });
+      console.log('[MOCK DATA] Loaded admin finance data');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -85,23 +53,15 @@ export default function AdminFinancePage() {
 
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          workflow_status: 'approved',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString(),
-        })
-        .eq('id', eventId);
-
-      if (error) throw error;
-      alert('Événement approuvé avec succès! Les opérations logistiques peuvent maintenant être configurées.');
-      setSelectedEvent(null);
-      loadData();
+      console.log('[MOCK] Approving event:', eventId);
+      setTimeout(() => {
+        alert('Événement approuvé avec succès! (Mode Test)');
+        setSelectedEvent(null);
+        loadData();
+        setProcessing(false);
+      }, 1000);
     } catch (error) {
       console.error('Error approving event:', error);
-      alert('Erreur lors de l\'approbation');
-    } finally {
       setProcessing(false);
     }
   };
@@ -109,23 +69,16 @@ export default function AdminFinancePage() {
   const handleApprove = async (payoutId: string) => {
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('payout_requests')
-        .update({
-          status: 'approved',
-          processed_by: user?.id,
-          processed_at: new Date().toISOString(),
-        })
-        .eq('id', payoutId);
-
-      if (error) throw error;
-      alert('Payout approuvé avec succès');
-      setSelectedPayout(null);
-      loadData();
+      console.log('[MOCK] Approving payout:', payoutId);
+      setTimeout(() => {
+        alert('Payout approuvé avec succès! (Mode Test)');
+        setSelectedPayout(null);
+        loadData();
+        setProcessing(false);
+      }, 1000);
     } catch (error) {
       console.error('Error approving payout:', error);
       alert('Erreur lors de l\'approbation');
-    } finally {
       setProcessing(false);
     }
   };
@@ -136,6 +89,23 @@ export default function AdminFinancePage() {
       return;
     }
 
+    setProcessing(true);
+    try {
+      console.log('[MOCK] Rejecting payout:', payoutId, reason);
+      setTimeout(() => {
+        alert('Payout rejeté! (Mode Test)');
+        setSelectedPayout(null);
+        loadData();
+        setProcessing(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error rejecting payout:', error);
+      alert('Erreur lors du rejet');
+      setProcessing(false);
+    }
+  };
+
+  const handleOldReject = async (payoutId: string, reason: string) => {
     setProcessing(true);
     try {
       const { error } = await supabase

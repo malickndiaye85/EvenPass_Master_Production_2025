@@ -26,9 +26,9 @@ import {
   Star,
   Flame
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/SupabaseAuthContext';
+import { useAuth } from '../context/MockAuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { mockEvents, mockCategories } from '../lib/mockData';
 import type { Event, EventCategory } from '../types';
 
 export default function HomePageNew() {
@@ -48,33 +48,23 @@ export default function HomePageNew() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const { data: categoriesData } = await supabase
-        .from('event_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order');
+      console.log('[MOCK DATA] Loading categories and events...');
 
-      if (categoriesData) setCategories(categoriesData);
+      setCategories(mockCategories as EventCategory[]);
 
-      let query = supabase
-        .from('events')
-        .select(`
-          *,
-          category:event_categories(*),
-          organizer:organizers(*),
-          ticket_types(*)
-        `)
-        .eq('status', 'published')
-        .gte('start_date', new Date().toISOString())
-        .order('start_date');
+      let filteredEvents = mockEvents.filter(event =>
+        event.status === 'published' &&
+        new Date(event.start_date) >= new Date()
+      );
 
       if (selectedCategory) {
-        query = query.eq('category_id', selectedCategory);
+        filteredEvents = filteredEvents.filter(event =>
+          event.category_id === selectedCategory
+        );
       }
 
-      const { data: eventsData } = await query.limit(12);
-
-      if (eventsData) setEvents(eventsData as Event[]);
+      setEvents(filteredEvents as Event[]);
+      console.log('[MOCK DATA] Loaded', filteredEvents.length, 'events');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

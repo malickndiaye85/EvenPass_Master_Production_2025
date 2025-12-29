@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { FirebaseAuthProvider, useAuth } from './context/FirebaseAuthContext';
+import { MockAuthProvider, useAuth } from './context/MockAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import HomePageNew from './pages/HomePageNew';
 import EventDetailPage from './pages/EventDetailPage';
@@ -83,9 +83,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <FirebaseAuthProvider>
+        <MockAuthProvider>
           <AppRoutes />
-        </FirebaseAuthProvider>
+        </MockAuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

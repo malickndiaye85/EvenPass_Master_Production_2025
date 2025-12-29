@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Calendar, Wallet, ArrowUpCircle, Clock, CheckCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/SupabaseAuthContext';
+import { useAuth } from '../context/MockAuthContext';
+import { mockEvents, mockStats, mockPayouts } from '../lib/mockData';
 import type { OrganizerBalance, PayoutRequest, Event } from '../types';
 
 export default function OrganizerDashboardPage() {
@@ -26,27 +26,25 @@ export default function OrganizerDashboardPage() {
     if (!user?.organizer) return;
 
     try {
-      const [balanceRes, payoutsRes, eventsRes] = await Promise.all([
-        supabase
-          .from('organizer_balances')
-          .select('*')
-          .eq('organizer_id', user.organizer.id)
-          .maybeSingle(),
-        supabase
-          .from('payout_requests')
-          .select('*')
-          .eq('organizer_id', user.organizer.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('events')
-          .select('*, ticket_types(*)')
-          .eq('organizer_id', user.organizer.id)
-          .order('start_date', { ascending: false })
-      ]);
+      console.log('[MOCK DATA] Loading organizer dashboard...');
 
-      if (balanceRes.data) setBalance(balanceRes.data);
-      if (payoutsRes.data) setPayouts(payoutsRes.data);
-      if (eventsRes.data) setEvents(eventsRes.data as Event[]);
+      const mockBalance: OrganizerBalance = {
+        id: '1',
+        organizer_id: user.organizer.id,
+        available_balance: mockStats.totalRevenue - mockStats.pendingPayouts,
+        pending_balance: mockStats.pendingPayouts,
+        total_earnings: mockStats.totalRevenue,
+        total_paid_out: 0,
+        currency: 'XOF',
+        last_payout_date: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setBalance(mockBalance);
+      setPayouts(mockPayouts as PayoutRequest[]);
+      setEvents(mockEvents.filter(e => e.organizer_id === user.organizer?.id) as Event[]);
+      console.log('[MOCK DATA] Loaded organizer data');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -65,35 +63,19 @@ export default function OrganizerDashboardPage() {
 
     setProcessing(true);
     try {
-      const { data: payoutNumber } = await supabase.rpc('generate_payout_number');
+      console.log('[MOCK] Creating payout request:', { amount, method: payoutMethod, phone: payoutPhone });
 
-      const technicalFees = amount * 0.015;
-      const netAmount = amount - technicalFees;
-
-      const { error } = await supabase
-        .from('payout_requests')
-        .insert({
-          organizer_id: user.organizer.id,
-          request_number: payoutNumber,
-          amount_requested: amount,
-          technical_fees: technicalFees,
-          net_amount: netAmount,
-          payment_method: payoutMethod,
-          payment_details: { phone: payoutPhone },
-          status: 'pending',
-        });
-
-      if (error) throw error;
-
-      alert('Demande de payout créée avec succès!');
-      setShowPayoutModal(false);
-      setPayoutAmount('');
-      setPayoutPhone('');
-      loadData();
+      setTimeout(() => {
+        alert('Demande de payout créée avec succès! (Mode Test)');
+        setShowPayoutModal(false);
+        setPayoutAmount('');
+        setPayoutPhone('');
+        loadData();
+        setProcessing(false);
+      }, 1000);
     } catch (error) {
       console.error('Error creating payout:', error);
       alert('Erreur lors de la création de la demande');
-    } finally {
       setProcessing(false);
     }
   };
