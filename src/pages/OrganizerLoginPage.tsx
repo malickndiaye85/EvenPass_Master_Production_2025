@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Ticket, Mail, Lock, AlertCircle } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/MockAuthContext';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,25 +17,10 @@ export default function OrganizerLoginPage() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const { error: signInError } = await signIn(email, password);
 
-      const { data: organizerData, error: fetchError } = await supabase
-        .from('organizers')
-        .select('*')
-        .eq('user_id', user.uid)
-        .maybeSingle();
-
-      if (fetchError || !organizerData) {
-        setError('Compte organisateur non trouvé');
-        await auth.signOut();
-        setLoading(false);
-        return;
-      }
-
-      if (!organizerData.is_active) {
-        setError('Compte organisateur inactif');
-        await auth.signOut();
+      if (signInError) {
+        setError(signInError.message);
         setLoading(false);
         return;
       }

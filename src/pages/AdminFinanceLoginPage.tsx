@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, DollarSign, Mail, Lock, AlertCircle } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-
-const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
+import { useAuth } from '../context/MockAuthContext';
 
 export default function AdminFinanceLoginPage() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,19 +17,17 @@ export default function AdminFinanceLoginPage() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const { error: signInError } = await signIn(email, password);
 
-      if (user.uid !== ADMIN_UID) {
-        setError('Accès non autorisé - UID admin requis');
-        await auth.signOut();
+      if (signInError) {
+        setError(signInError.message);
         setLoading(false);
         return;
       }
 
       navigate('/admin/finance');
     } catch (err: any) {
-      setError(err.message || 'Email ou mot de passe incorrect');
+      setError('Erreur de connexion');
       setLoading(false);
     }
   };

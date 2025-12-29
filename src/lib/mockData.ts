@@ -320,3 +320,92 @@ export const mockPayouts = [
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
+
+export const mockUsers = {
+  admin: {
+    id: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3',
+    email: 'admin@evenpass.sn',
+    role: 'admin',
+    full_name: 'Admin EvenPass',
+    permissions: ['finance', 'ops_manager', 'scanner', 'all_access']
+  },
+  organizer: {
+    id: 'org-user-1',
+    email: 'organisateur@evenpass.sn',
+    role: 'organizer',
+    full_name: 'Organisateur Test',
+    organization_id: '1'
+  }
+};
+
+export const mockFinanceStats = {
+  totalRevenue: 45680000,
+  pendingPayouts: 8750000,
+  completedPayouts: 36930000,
+  totalTransactions: 2847,
+  revenueThisMonth: 12400000,
+  revenueLastMonth: 9850000,
+  averageTicketPrice: 16050,
+  topEvents: [
+    { event_name: 'Youssou N\'Dour Live Concert', revenue: 18250000, tickets_sold: 365 },
+    { event_name: 'Tech Summit Dakar 2025', revenue: 11700000, tickets_sold: 780 },
+    { event_name: 'Marathon de Dakar', revenue: 8430000, tickets_sold: 526 },
+  ],
+  revenueByPaymentMethod: [
+    { method: 'Orange Money', amount: 22340000, percentage: 48.9 },
+    { method: 'Wave', amount: 18120000, percentage: 39.7 },
+    { method: 'Carte Bancaire', amount: 5220000, percentage: 11.4 },
+  ]
+};
+
+export const mockOpsStats = {
+  totalEvents: 42,
+  activeEvents: 12,
+  draftEvents: 5,
+  completedEvents: 25,
+  totalOrganizers: 18,
+  verifiedOrganizers: 15,
+  pendingVerifications: 3,
+  totalTicketsSold: 8934,
+  totalCapacity: 15670,
+  occupancyRate: 57,
+  recentActivities: [
+    { action: 'Nouvel événement créé', organizer: 'EventPro Sénégal', event: 'Concert Wally Seck', time: '2h' },
+    { action: 'Organisateur vérifié', organizer: 'Culture Dakar', time: '5h' },
+    { action: 'Événement publié', organizer: 'Sports Events', event: 'Match de Basketball', time: '1j' },
+  ]
+};
+
+export const mockScanStats = {
+  totalScans: 1247,
+  validScans: 1189,
+  invalidScans: 58,
+  duplicateScans: 12,
+  scansToday: 234,
+  scansThisWeek: 892,
+  peakScanTime: '19h00 - 20h00',
+  averageScanTime: '2.3s',
+  recentScans: [
+    {
+      ticket_reference: 'EP-20250115-001',
+      event: 'Youssou N\'Dour Concert',
+      type: 'VIP',
+      status: 'valid',
+      scanned_at: new Date(Date.now() - 2 * 60 * 1000).toISOString()
+    },
+    {
+      ticket_reference: 'EP-20250116-045',
+      event: 'Tech Summit Dakar',
+      type: 'Standard',
+      status: 'valid',
+      scanned_at: new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    },
+    {
+      ticket_reference: 'EP-20250114-089',
+      event: 'Marathon de Dakar',
+      type: 'Participant',
+      status: 'duplicate',
+      scanned_at: new Date(Date.now() - 8 * 60 * 1000).toISOString()
+    },
+  ]
+};
