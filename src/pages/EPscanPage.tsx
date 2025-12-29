@@ -9,9 +9,11 @@ import {
   MapPin,
   AlertTriangle,
   Zap,
-  Users
+  Users,
+  Smartphone
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { deviceFingerprintService } from '../lib/deviceFingerprint';
 
 interface ScanSession {
   id: string;
@@ -52,34 +54,41 @@ export default function EPscanPage() {
   const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null);
   const [stats, setStats] = useState({ totalScans: 0, validScans: 0, deniedScans: 0 });
   const [hardwareId, setHardwareId] = useState('');
+  const [deviceInfo, setDeviceInfo] = useState('');
 
   useEffect(() => {
-    generateHardwareId();
-    if (activationToken) {
-      activateSession();
-    } else {
-      checkExistingSession();
-    }
+    initializeDevice();
   }, [activationToken]);
 
-  const generateHardwareId = () => {
-    const userAgent = navigator.userAgent;
-    const screenRes = `${window.screen.width}x${window.screen.height}`;
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const hwId = btoa(`${userAgent}-${screenRes}-${timezone}`).substring(0, 32);
-    setHardwareId(hwId);
+  const initializeDevice = async () => {
+    try {
+      const fingerprint = await deviceFingerprintService.getDeviceFingerprint();
+      const info = deviceFingerprintService.getDeviceInfo();
+      setHardwareId(fingerprint);
+      setDeviceInfo(info);
+
+      if (activationToken) {
+        activateSession(fingerprint);
+      } else {
+        checkExistingSession(fingerprint);
+      }
+    } catch (error) {
+      console.error('Error initializing device fingerprint:', error);
+      alert('Erreur d\'initialisation du périphérique');
+      setLoading(false);
+    }
   };
 
-  const checkExistingSession = async () => {
+  const checkExistingSession = async (fingerprint: string) => {
     const sessionToken = localStorage.getItem('epscan_session_token');
     if (sessionToken) {
-      await loadSession(sessionToken);
+      await loadSession(sessionToken, fingerprint);
     } else {
       setLoading(false);
     }
   };
 
-  const loadSession = async (sessionToken: string) => {
+  const loadSession = async (sessionToken: string, fingerprint: string) => {
     try {
       const { data, error } = await supabase
         .from('scan_sessions')
@@ -96,6 +105,14 @@ export default function EPscanPage() {
       if (error) throw error;
 
       if (data) {
+        if (data.hardware_id_verified !== fingerprint) {
+          alert('Périphérique non autorisé. Cette session a été créée sur un autre appareil.');
+          localStorage.removeItem('epscan_session_token');
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+
         if (new Date(data.expires_at) < new Date()) {
           await supabase
             .from('scan_sessions')
@@ -116,7 +133,7 @@ export default function EPscanPage() {
     }
   };
 
-  const activateSession = async () => {
+  const activateSession = async (fingerprint: string) => {
     setActivating(true);
     try {
       const { data: assignment, error: assignmentError } = await supabase
@@ -137,8 +154,8 @@ export default function EPscanPage() {
       }
 
       if (assignment.controller.equipment_hardware_id &&
-          assignment.controller.equipment_hardware_id !== hardwareId) {
-        alert('Équipement non autorisé. Veuillez utiliser l\'appareil enregistré.');
+          assignment.controller.equipment_hardware_id !== fingerprint) {
+        alert('Équipement non autorisé.\n\nCette activation nécessite l\'appareil déjà enregistré pour ce contrôleur.\n\nUUID Requis: ' + assignment.controller.equipment_hardware_id + '\nUUID Actuel: ' + fingerprint);
         navigate('/');
         return;
       }
@@ -146,8 +163,10 @@ export default function EPscanPage() {
       if (!assignment.controller.equipment_hardware_id) {
         await supabase
           .from('controllers')
-          .update({ equipment_hardware_id: hardwareId })
+          .update({ equipment_hardware_id: fingerprint })
           .eq('id', assignment.controller_id);
+
+        alert('Appareil enregistré avec succès!\n\nUUID: ' + fingerprint + '\n\nCet UUID est maintenant lié de manière permanente à ce contrôleur.');
       }
 
       const eventEndDate = new Date(assignment.event.end_date || assignment.event.start_date);
@@ -163,7 +182,7 @@ export default function EPscanPage() {
           event_id: assignment.event_id,
           zone_id: assignment.zone_id,
           session_token: sessionToken,
-          hardware_id_verified: hardwareId,
+          hardware_id_verified: fingerprint,
           expires_at: eventEndDate.toISOString(),
         })
         .select()
@@ -180,7 +199,7 @@ export default function EPscanPage() {
         .eq('id', assignment.id);
 
       localStorage.setItem('epscan_session_token', sessionToken);
-      await loadSession(sessionToken);
+      await loadSession(sessionToken, fingerprint);
     } catch (error) {
       console.error('Error activating session:', error);
       alert('Erreur lors de l\'activation');
@@ -519,10 +538,35 @@ export default function EPscanPage() {
           </button>
         </div>
 
-        <div className="mt-6 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-          <div className="flex items-center text-xs text-slate-400">
-            <Shield className="w-4 h-4 mr-2" />
-            <span>Session sécurisée • Hardware ID: {hardwareId.substring(0, 12)}...</span>
+        <div className="mt-6 space-y-3">
+          <div className="p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+            <div className="flex items-start">
+              <Smartphone className="w-5 h-5 mr-3 text-green-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-green-300 mb-1">Périphérique Autorisé</p>
+                <p className="text-xs text-green-200/80 font-mono break-all">
+                  UUID: {hardwareId}
+                </p>
+                <p className="text-xs text-green-200/60 mt-2">
+                  Cet UUID unique est stocké de manière permanente dans IndexedDB et lie ce contrôleur à cet appareil.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <div className="flex items-center text-xs text-slate-400 mb-2">
+              <Shield className="w-4 h-4 mr-2" />
+              <span className="font-bold">Sécurité Hardware</span>
+            </div>
+            <details className="text-xs text-slate-500">
+              <summary className="cursor-pointer hover:text-slate-400 select-none">
+                Informations du périphérique
+              </summary>
+              <pre className="mt-2 p-2 bg-slate-900/50 rounded text-[10px] overflow-x-auto">
+                {deviceInfo}
+              </pre>
+            </details>
           </div>
         </div>
       </div>
