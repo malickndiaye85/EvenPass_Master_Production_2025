@@ -73,11 +73,12 @@ export default function HomePageNew() {
   };
 
   const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.venue_city.toLowerCase().includes(searchQuery.toLowerCase())
+    event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.venue_city?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getCategoryIcon = (categoryName: string) => {
+    if (!categoryName) return Sparkles;
     const name = categoryName.toLowerCase();
     if (name.includes('musique') || name.includes('music')) return Music;
     if (name.includes('sport')) return Trophy;
