@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SupabaseAuthProvider, useAuth } from './context/SupabaseAuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import HomePageNew from './pages/HomePageNew';
 import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
@@ -77,9 +78,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <SupabaseAuthProvider>
-        <AppRoutes />
-      </SupabaseAuthProvider>
+      <ThemeProvider>
+        <SupabaseAuthProvider>
+          <AppRoutes />
+        </SupabaseAuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
