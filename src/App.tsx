@@ -14,22 +14,18 @@ import OpsManagerLoginPage from './pages/OpsManagerLoginPage';
 import EPscanPage from './pages/EPscanPage';
 import EPscanLoginPage from './pages/EPscanLoginPage';
 
-function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#FF7A00] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }
 
@@ -48,7 +44,7 @@ function AppRoutes() {
       <Route
         path="/organizer/dashboard"
         element={
-          <ProtectedRoute requiredRole="organizer">
+          <ProtectedRoute>
             <OrganizerDashboardPage />
           </ProtectedRoute>
         }
@@ -58,7 +54,7 @@ function AppRoutes() {
       <Route
         path="/admin/finance"
         element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute>
             <AdminFinancePage />
           </ProtectedRoute>
         }
@@ -68,7 +64,7 @@ function AppRoutes() {
       <Route
         path="/admin/ops"
         element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute>
             <OpsManagerPage />
           </ProtectedRoute>
         }
