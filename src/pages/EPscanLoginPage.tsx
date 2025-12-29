@@ -27,14 +27,14 @@ export default function EPscanLoginPage() {
       }
 
       if (data?.user) {
-        const { data: userData, error: fetchError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', data.user.id)
+        const { data: adminData, error: fetchError } = await supabase
+          .from('admin_users')
+          .select('role, is_active')
+          .eq('user_id', data.user.id)
           .maybeSingle();
 
-        if (fetchError || !userData || userData.role !== 'admin') {
-          setError('Accès non autorisé');
+        if (fetchError || !adminData || !adminData.is_active) {
+          setError('Accès non autorisé - Compte admin non trouvé');
           await supabase.auth.signOut();
           setLoading(false);
           return;
