@@ -55,8 +55,21 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-gray-800 pt-8">
-          <div className="flex justify-between items-center">
-            <p className="text-gray-500">&copy; 2025 EvenPass. Tous droits réservés.</p>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-gray-400 text-sm text-center md:text-left">
+              <p className="mb-2">
+                <span className="text-gray-300 font-semibold">Support:</span>{' '}
+                <a href="tel:+221771392926" className="text-orange-500 hover:text-orange-400 transition-colors">
+                  77 139 29 26
+                </a>
+                {' '}<span className="text-gray-600">|</span>{' '}
+                <span className="text-gray-300 font-semibold">Contact:</span>{' '}
+                <a href="mailto:contact@evenpass.sn" className="text-orange-500 hover:text-orange-400 transition-colors">
+                  contact@evenpass.sn
+                </a>
+              </p>
+              <p className="text-gray-500">&copy; 2026 EvenPass. Tous droits réservés.</p>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => window.location.href = '/admin/finance/login'}
