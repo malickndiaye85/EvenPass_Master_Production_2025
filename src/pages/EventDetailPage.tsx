@@ -19,6 +19,8 @@ export default function EventDetailPage() {
     customer_phone: '',
     payment_method: 'wave',
   });
+  const [contactMethod, setContactMethod] = useState<'whatsapp' | 'email'>('whatsapp');
+  const [checkingPhone, setCheckingPhone] = useState(false);
 
   useEffect(() => {
     loadEvent();
@@ -65,6 +67,9 @@ export default function EventDetailPage() {
   const updateQuantity = (ticketTypeId: string, newQuantity: number) => {
     if (newQuantity === 0) {
       setCart(cart.filter(item => item.ticket_type.id !== ticketTypeId));
+    } else if (newQuantity > 3) {
+      alert('Maximum 3 billets par catégorie');
+      return;
     } else {
       setCart(cart.map(item =>
         item.ticket_type.id === ticketTypeId
@@ -79,8 +84,38 @@ export default function EventDetailPage() {
   const handleCheckout = async () => {
     if (!event || cart.length === 0) return;
 
+    if (!checkoutForm.customer_phone) {
+      alert('Veuillez saisir votre numéro de téléphone');
+      return;
+    }
+
+    if (contactMethod === 'email' && !checkoutForm.customer_email) {
+      alert('Veuillez saisir votre adresse email');
+      return;
+    }
+
     setProcessing(true);
+    setCheckingPhone(true);
+
     try {
+      const { data: existingBookings, error: checkError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('event_id', event.id)
+        .eq('customer_phone', checkoutForm.customer_phone)
+        .in('status', ['confirmed', 'pending']);
+
+      if (checkError) throw checkError;
+
+      if (existingBookings && existingBookings.length > 0) {
+        setProcessing(false);
+        setCheckingPhone(false);
+        alert('⚠️ Ce numéro de téléphone a déjà effectué un achat pour cet événement.\n\nLimite : 1 transaction par numéro pour éviter les abus.\n\nSi vous avez besoin d\'aide, contactez le support.');
+        return;
+      }
+
+      setCheckingPhone(false);
+
       const { data: bookingNumber } = await supabase.rpc('generate_booking_number');
 
       const { data: booking, error: bookingError } = await supabase
@@ -327,8 +362,8 @@ export default function EventDetailPage() {
                             </span>
                             <button
                               onClick={() => updateQuantity(ticketType.id, cart.find(item => item.ticket_type.id === ticketType.id)!.quantity + 1)}
-                              className="w-10 h-10 bg-orange-600 hover:bg-orange-700 rounded-lg flex items-center justify-center text-white transition-colors"
-                              disabled={cart.find(item => item.ticket_type.id === ticketType.id)!.quantity >= ticketType.max_per_booking}
+                              className="w-10 h-10 bg-orange-600 hover:bg-orange-700 rounded-lg flex items-center justify-center text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={cart.find(item => item.ticket_type.id === ticketType.id)!.quantity >= 3}
                             >
                               <Plus className="w-5 h-5" />
                             </button>
@@ -344,7 +379,7 @@ export default function EventDetailPage() {
                         )}
 
                         <p className="text-xs text-slate-400 mt-2">
-                          {ticketType.quantity_total - ticketType.quantity_sold} places restantes
+                          {ticketType.quantity_total - ticketType.quantity_sold} places restantes • Max 3 billets/catégorie
                         </p>
                       </div>
                     ))}
@@ -392,39 +427,91 @@ export default function EventDetailPage() {
 
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Nom complet</label>
-                <input
-                  type="text"
-                  value={checkoutForm.customer_name}
-                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_name: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="Votre nom"
-                  disabled={processing}
-                />
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Recevoir les billets par *
+                </label>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => setContactMethod('whatsapp')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      contactMethod === 'whatsapp'
+                        ? 'border-green-500 bg-green-500/10'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                    disabled={processing}
+                  >
+                    <div className="text-2xl mb-1">💬</div>
+                    <div className="text-white font-bold text-sm">WhatsApp</div>
+                    <div className="text-xs text-slate-400">Recommandé</div>
+                  </button>
+                  <button
+                    onClick={() => setContactMethod('email')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      contactMethod === 'email'
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                    disabled={processing}
+                  >
+                    <div className="text-2xl mb-1">✉️</div>
+                    <div className="text-white font-bold text-sm">Email</div>
+                    <div className="text-xs text-slate-400">Alternative</div>
+                  </button>
+                </div>
+
+                {contactMethod === 'whatsapp' ? (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Numéro WhatsApp *
+                    </label>
+                    <input
+                      type="tel"
+                      value={checkoutForm.customer_phone}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_phone: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      placeholder="+221 77 123 45 67"
+                      disabled={processing}
+                    />
+                    <p className="text-xs text-slate-400 mt-2">
+                      Vos billets seront envoyés sur WhatsApp
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Adresse Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={checkoutForm.customer_email}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_email: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      placeholder="votre@email.com"
+                      disabled={processing}
+                    />
+                    <p className="text-xs text-slate-400 mt-2">
+                      Vos billets seront envoyés par email
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={checkoutForm.customer_email}
-                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_email: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="votre@email.com"
-                  disabled={processing}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Téléphone</label>
-                <input
-                  type="tel"
-                  value={checkoutForm.customer_phone}
-                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_phone: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="77 123 45 67"
-                  disabled={processing}
-                />
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">🔒</div>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-400 mb-1">
+                      Protection Anti-Raffle
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      • Maximum 3 billets par catégorie
+                      <br />
+                      • 1 transaction par numéro de téléphone
+                      <br />
+                      • Vérification automatique des achats
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -473,10 +560,14 @@ export default function EventDetailPage() {
 
               <button
                 onClick={handleCheckout}
-                disabled={processing || !checkoutForm.customer_name || !checkoutForm.customer_email || !checkoutForm.customer_phone}
+                disabled={
+                  processing ||
+                  !checkoutForm.customer_phone ||
+                  (contactMethod === 'email' && !checkoutForm.customer_email)
+                }
                 className="w-full px-6 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {processing ? 'Traitement...' : 'Confirmer le paiement'}
+                {checkingPhone ? 'Vérification...' : processing ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>
           </div>

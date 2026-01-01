@@ -5,6 +5,8 @@ import HomePageNew from './pages/HomePageNew';
 import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
 import ErrorPage from './pages/ErrorPage';
+import HowItWorksPage from './pages/HowItWorksPage';
+import ForOrganizersPage from './pages/ForOrganizersPage';
 import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
 import OrganizerSignupPage from './pages/OrganizerSignupPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
@@ -41,6 +43,8 @@ function AppRoutes() {
       <Route path="/event/:slug" element={<EventDetailPage />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
+      <Route path="/how-it-works" element={<HowItWorksPage />} />
+      <Route path="/for-organizers" element={<ForOrganizersPage />} />
 
       <Route path="/organizer/signup" element={<OrganizerSignupPage />} />
       <Route path="/organizer/login" element={<OrganizerLoginPage />} />
