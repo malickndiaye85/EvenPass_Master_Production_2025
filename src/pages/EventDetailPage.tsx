@@ -322,7 +322,7 @@ export default function EventDetailPage() {
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 sticky top-24">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <ShoppingCart className="w-6 h-6 mr-2" />
-                Réserver
+                ACHETER
               </h2>
 
               {event.is_free ? (

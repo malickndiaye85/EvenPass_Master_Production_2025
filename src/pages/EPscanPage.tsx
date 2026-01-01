@@ -7,16 +7,22 @@ import {
   Clock,
   MapPin,
   AlertTriangle,
-  Activity
+  Activity,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/MockAuthContext';
 import { mockScanStats } from '../lib/mockData';
+
+const zoneColors = ['#22C55E', '#EAB308', '#EF4444'];
+const zoneNames = ['VIP Premium', 'Tribune Honneur', 'Pelouse Populaire'];
+const accessGates = ['Entrée VIP Nord', 'Porte Tribune Est', 'Porte Pelouse Sud'];
 
 export default function EPscanPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [scanInput, setScanInput] = useState('');
   const [lastScanResult, setLastScanResult] = useState<any>(null);
+  const [showFullScreenZone, setShowFullScreenZone] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 500);
@@ -27,22 +33,68 @@ export default function EPscanPage() {
     if (!scanInput.trim()) return;
 
     const isValid = Math.random() > 0.2;
+    const zoneIndex = Math.floor(Math.random() * 3);
 
-    setLastScanResult({
+    const result = {
       success: isValid,
       message: isValid ? 'Billet valide' : 'Billet invalide',
       ticket_reference: scanInput,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: new Date().toISOString(),
+      zone_name: isValid ? zoneNames[zoneIndex] : null,
+      zone_color: isValid ? zoneColors[zoneIndex] : null,
+      access_gate: isValid ? accessGates[zoneIndex] : null,
+      holder_name: isValid ? 'Client Test' : null
+    };
 
+    setLastScanResult(result);
     setScanInput('');
-    setTimeout(() => setLastScanResult(null), 5000);
+
+    if (isValid) {
+      setShowFullScreenZone(true);
+      setTimeout(() => {
+        setShowFullScreenZone(false);
+        setTimeout(() => setLastScanResult(null), 2000);
+      }, 3000);
+    } else {
+      setTimeout(() => setLastScanResult(null), 5000);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#FF0000] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (showFullScreenZone && lastScanResult?.zone_color) {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 animate-pulse"
+        style={{ backgroundColor: lastScanResult.zone_color }}
+      >
+        <CheckCircle className="w-32 h-32 text-white mb-8 drop-shadow-2xl animate-bounce" />
+        <h1 className="text-6xl md:text-8xl font-black text-white text-center mb-8 drop-shadow-2xl">
+          {lastScanResult.zone_name}
+        </h1>
+        <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border-4 border-white max-w-2xl w-full">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <MapPin className="w-12 h-12 text-white" />
+            <ArrowRight className="w-12 h-12 text-white animate-pulse" />
+            <div className="text-center">
+              <p className="text-4xl font-black text-white drop-shadow-lg">
+                {lastScanResult.access_gate}
+              </p>
+            </div>
+          </div>
+          <p className="text-2xl text-white text-center font-bold mt-4">
+            Diriger vers cette entrée →
+          </p>
+        </div>
+        <p className="text-xl text-white mt-8 font-semibold opacity-80">
+          Spectateur: {lastScanResult.holder_name}
+        </p>
       </div>
     );
   }
@@ -131,7 +183,7 @@ export default function EPscanPage() {
             </button>
           </form>
 
-          {lastScanResult && (
+          {lastScanResult && !showFullScreenZone && (
             <div className={`mt-6 p-6 rounded-lg border-2 ${
               lastScanResult.success
                 ? 'bg-green-500/10 border-green-500'
@@ -143,7 +195,7 @@ export default function EPscanPage() {
                 ) : (
                   <XCircle className="w-8 h-8 text-red-500" />
                 )}
-                <div>
+                <div className="flex-1">
                   <p className={`font-bold text-lg ${
                     lastScanResult.success ? 'text-green-500' : 'text-red-500'
                   }`}>
@@ -152,6 +204,21 @@ export default function EPscanPage() {
                   <p className="text-sm text-[#B5B5B5] mt-1">
                     Référence: {lastScanResult.ticket_reference}
                   </p>
+                  {lastScanResult.success && lastScanResult.zone_name && (
+                    <div className="mt-3 pt-3 border-t border-[#3A3A3A]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="w-4 h-4 rounded-full border-2 border-white"
+                          style={{ backgroundColor: lastScanResult.zone_color }}
+                        />
+                        <p className="text-white font-bold">{lastScanResult.zone_name}</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#B5B5B5]">
+                        <MapPin className="w-4 h-4" />
+                        <p className="text-sm">{lastScanResult.access_gate}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

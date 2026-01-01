@@ -272,7 +272,7 @@ export default function HomePageNew() {
                     Acheter des billets
                   </h3>
                   <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
-                    Découvrez et réservez vos événements
+                    Découvrez et achetez vos billets
                   </p>
                   <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
                     isDark ? 'text-amber-400' : 'text-orange-500'
@@ -547,7 +547,7 @@ export default function HomePageNew() {
                                   ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-900/40'
                                   : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
                               }`}>
-                                Réserver
+                                ACHETER
                               </button>
                             </div>
                           </div>
@@ -624,7 +624,7 @@ export default function HomePageNew() {
               </div>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-amber-200/60' : 'text-slate-600'}`}>
                 La plateforme premium de billetterie événementielle au Sénégal.
-                Découvrez, réservez et vivez des expériences uniques.
+                Découvrez, achetez et vivez des expériences uniques.
               </p>
             </div>
 
