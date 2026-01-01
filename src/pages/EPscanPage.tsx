@@ -58,11 +58,13 @@ export default function EPscanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<any>(null);
   const [currentGate, setCurrentGate] = useState<string>('Gate A');
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastScanTimeRef = useRef<number>(0);
+  const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     initializePage();
@@ -160,6 +162,9 @@ export default function EPscanPage() {
         { facingMode: 'environment' },
         config,
         (decodedText) => {
+          if (isProcessingScan) {
+            return;
+          }
           const now = Date.now();
           if (now - lastScanTimeRef.current < 2000) {
             return;
@@ -224,8 +229,9 @@ export default function EPscanPage() {
   };
 
   const handleScan = async (qrCode: string) => {
-    if (!qrCode.trim()) return;
+    if (!qrCode.trim() || isProcessingScan) return;
 
+    setIsProcessingScan(true);
     const startTime = Date.now();
     const trimmedCode = qrCode.trim();
 
@@ -338,10 +344,16 @@ export default function EPscanPage() {
     } catch (error) {
       console.error('Scan error:', error);
       showError('Erreur de validation');
+    } finally {
+      setTimeout(() => setIsProcessingScan(false), 2000);
     }
   };
 
   const showError = (message: string) => {
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
+
     setLastScanResult({
       success: false,
       message,
@@ -360,12 +372,19 @@ export default function EPscanPage() {
     setShowFlash('error');
     vibrate([300, 100, 300]);
     playSound(400, 200, 2);
-    setTimeout(() => setShowFlash(null), 1500);
+    flashTimeoutRef.current = setTimeout(() => {
+      setShowFlash(null);
+      flashTimeoutRef.current = null;
+    }, 1500);
   };
 
   const processScanResult = (result: ScanResult, startTime: number) => {
     const scanDuration = Date.now() - startTime;
     console.log(`⚡ Scan completed in ${scanDuration}ms`);
+
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
 
     const newStats: ScanStats = {
       totalScans: scanStats.totalScans + 1,
@@ -381,13 +400,19 @@ export default function EPscanPage() {
       setShowFlash('success');
       vibrate(200);
       playSound(1200, 100);
-      setTimeout(() => setShowFlash(null), 1500);
+      flashTimeoutRef.current = setTimeout(() => {
+        setShowFlash(null);
+        flashTimeoutRef.current = null;
+      }, 1500);
       setTimeout(() => setLastScanResult(null), 5000);
     } else {
       setShowFlash('error');
       vibrate([300, 100, 300]);
       playSound(400, 200, 2);
-      setTimeout(() => setShowFlash(null), 1500);
+      flashTimeoutRef.current = setTimeout(() => {
+        setShowFlash(null);
+        flashTimeoutRef.current = null;
+      }, 1500);
       setTimeout(() => setLastScanResult(null), 8000);
     }
   };
@@ -451,8 +476,24 @@ export default function EPscanPage() {
               {isOnline ? 'En ligne' : 'Hors ligne'}
             </span>
           </div>
-          <div className="text-xs text-white/90 font-medium">
-            {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-white/90 font-medium">
+              {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <button
+              onClick={() => {
+                if (confirm('Voulez-vous terminer votre session de scan ?')) {
+                  localStorage.removeItem('epscan_event_id');
+                  localStorage.removeItem('epscan_gate');
+                  window.location.href = '/';
+                }
+              }}
+              className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-400/50 rounded-full transition-all"
+              title="Terminer la session"
+            >
+              <span className="text-xs text-white font-bold">OFF</span>
+            </button>
           </div>
         </div>
 
