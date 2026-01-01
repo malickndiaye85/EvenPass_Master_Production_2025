@@ -96,7 +96,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <span className="text-orange-500 italic">Gënaa Gaaw</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-12 font-medium">
-            Découvrez et réservez vos événements en quelques clics
+            Découvrez et achetez vos billets en quelques clics
           </p>
 
           <div className="mb-16 flex justify-center">
