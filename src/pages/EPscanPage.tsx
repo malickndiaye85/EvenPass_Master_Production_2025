@@ -345,7 +345,6 @@ export default function EPscanPage() {
     } catch (error) {
       console.error('Scan error:', error);
       showError('Erreur de validation');
-      setTimeout(() => setIsProcessingScan(false), 3000);
     }
   };
 
@@ -374,9 +373,9 @@ export default function EPscanPage() {
     playSound(400, 200, 2);
     flashTimeoutRef.current = setTimeout(() => {
       setShowFlash(null);
+      setIsProcessingScan(false);
       flashTimeoutRef.current = null;
-      setTimeout(() => setIsProcessingScan(false), 500);
-    }, 1500);
+    }, 2000);
   };
 
   const processScanResult = (result: ScanResult, startTime: number) => {
@@ -403,9 +402,9 @@ export default function EPscanPage() {
       playSound(1200, 100);
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
+        setIsProcessingScan(false);
         flashTimeoutRef.current = null;
-        setTimeout(() => setIsProcessingScan(false), 500);
-      }, 1500);
+      }, 2000);
       setTimeout(() => setLastScanResult(null), 5000);
     } else {
       setShowFlash('error');
@@ -413,9 +412,9 @@ export default function EPscanPage() {
       playSound(400, 200, 2);
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
+        setIsProcessingScan(false);
         flashTimeoutRef.current = null;
-        setTimeout(() => setIsProcessingScan(false), 500);
-      }, 1500);
+      }, 2000);
       setTimeout(() => setLastScanResult(null), 8000);
     }
   };
@@ -492,10 +491,10 @@ export default function EPscanPage() {
                   window.location.href = '/';
                 }
               }}
-              className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-400/50 rounded-full transition-all"
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 border-2 border-white rounded-full transition-all shadow-lg shadow-red-500/50 animate-pulse"
               title="Terminer la session"
             >
-              <span className="text-xs text-white font-bold">OFF</span>
+              <span className="text-sm text-white font-black uppercase">OFF</span>
             </button>
           </div>
         </div>

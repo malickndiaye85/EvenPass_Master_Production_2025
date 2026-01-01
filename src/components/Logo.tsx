@@ -1,43 +1,54 @@
-import { Sparkles } from 'lucide-react';
-
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
-  variant?: 'light' | 'dark';
+  variant?: 'default' | 'monochrome';
   className?: string;
 }
 
-export default function Logo({ size = 'md', showText = true, variant = 'light', className = '' }: LogoProps) {
+export default function Logo({ size = 'md', showText = true, variant = 'default', className = '' }: LogoProps) {
   const sizes = {
-    sm: { icon: 'w-8 h-8', text: 'text-lg' },
-    md: { icon: 'w-12 h-12', text: 'text-2xl' },
-    lg: { icon: 'w-16 h-16', text: 'text-3xl' }
+    sm: { container: 'w-8 h-8', text: 'text-lg', icon: 'w-4 h-4' },
+    md: { container: 'w-12 h-12', text: 'text-2xl', icon: 'w-6 h-6' },
+    lg: { container: 'w-16 h-16', text: 'text-3xl', icon: 'w-8 h-8' },
+    xl: { container: 'w-20 h-20', text: 'text-4xl', icon: 'w-10 h-10' }
   };
 
   const sizeClasses = sizes[size];
 
   return (
-    <div className={`flex items-center space-x-3 group ${className}`}>
-      <div className="relative">
-        <div className={`absolute -inset-0.5 rounded-2xl blur opacity-70 group-hover:opacity-100 transition ${
-          variant === 'dark' ? 'bg-gradient-to-r from-amber-600 to-orange-600' : 'bg-gradient-to-r from-orange-400 to-pink-500'
-        }`}></div>
-        <div className={`relative ${sizeClasses.icon} rounded-2xl flex items-center justify-center ${
-          variant === 'dark'
-            ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700'
-            : 'bg-gradient-to-br from-orange-400 via-red-500 to-pink-500'
-        }`}>
-          <Sparkles className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-6 h-6' : 'w-8 h-8'} text-white`} />
+    <div className={`flex items-center space-x-3 ${className}`}>
+      <div className="relative group">
+        <div className={`${sizeClasses.container} relative rounded-lg flex items-center justify-center ${
+          variant === 'monochrome'
+            ? 'bg-black border-2 border-black'
+            : 'bg-black'
+        } shadow-2xl group-hover:shadow-[#FF5F05]/30 transition-all duration-300`}>
+          <svg
+            className={sizeClasses.icon}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="4" y="4" width="6" height="6" fill={variant === 'monochrome' ? 'white' : '#FF5F05'} />
+            <rect x="14" y="4" width="6" height="6" fill={variant === 'monochrome' ? 'white' : '#FF5F05'} />
+            <rect x="4" y="14" width="6" height="6" fill={variant === 'monochrome' ? 'white' : '#FF5F05'} />
+            <rect x="14" y="14" width="6" height="6" fill="white" />
+            <rect x="9" y="9" width="6" height="6" fill="white" />
+          </svg>
         </div>
+        {variant === 'default' && (
+          <div className="absolute -inset-1 bg-gradient-to-br from-[#FF5F05] to-[#FF8C42] rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity -z-10"></div>
+        )}
       </div>
       {showText && (
-        <h1 className={`${sizeClasses.text} font-black tracking-tight ${
-          variant === 'dark'
-            ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
-            : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
-        }`}>
-          EvenPass
-        </h1>
+        <div className={`${sizeClasses.text} font-black tracking-tighter leading-none flex items-center`}>
+          <span className={variant === 'monochrome' ? 'text-white' : 'text-[#FF5F05]'}>
+            Even
+          </span>
+          <span className={variant === 'monochrome' ? 'text-white' : 'text-black'}>
+            Pass
+          </span>
+        </div>
       )}
     </div>
   );

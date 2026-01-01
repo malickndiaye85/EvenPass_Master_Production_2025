@@ -29,7 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
           className="cursor-pointer"
           onClick={() => onNavigate('home')}
         >
-          <Logo size="md" variant={isDark ? 'dark' : 'light'} />
+          <Logo size="md" variant="default" />
         </div>
 
         <div className="flex items-center gap-4">

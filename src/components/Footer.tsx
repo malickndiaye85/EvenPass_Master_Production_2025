@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="mb-6">
-              <Logo size="lg" variant="dark" />
+              <Logo size="lg" variant="monochrome" />
             </div>
             <p className="text-gray-400 leading-relaxed">
               La plateforme de référence pour découvrir et acheter vos billets d'événements au Sénégal. N°1 sur la billetterie digitale et la gestion des événements en temps réel au Sénégal et en Afrique de l'Ouest.

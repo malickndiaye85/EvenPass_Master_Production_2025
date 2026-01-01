@@ -122,7 +122,7 @@ export default function HomePageNew() {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <Logo size="md" variant={isDark ? 'dark' : 'light'} />
+              <Logo size="md" variant="default" />
               <p className={`text-xs font-medium ml-16 -mt-1 ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
                 Premium Events • Sénégal
               </p>
@@ -260,10 +260,10 @@ export default function HomePageNew() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
               <button
                 onClick={() => navigate('/')}
-                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border ${
+                className={`group relative overflow-hidden rounded-3xl p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
                   isDark
                     ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-orange-300 shadow-lg hover:shadow-2xl'
@@ -275,20 +275,20 @@ export default function HomePageNew() {
                     : 'bg-gradient-to-br from-orange-100/50 to-pink-100/50'
                 }`}></div>
                 <div className="relative">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
+                  <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                     isDark
                       ? 'bg-gradient-to-br from-amber-500 to-orange-600'
                       : 'bg-gradient-to-br from-orange-500 to-red-600'
-                  } shadow-lg`}>
-                    <Ticket className="w-8 h-8 text-white" />
+                  } shadow-xl`}>
+                    <Ticket className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                  <h3 className={`text-xl font-black mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
                     Acheter des billets
                   </h3>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
-                    Découvrez et achetez vos billets
+                  <p className={`text-sm mb-5 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
+                    Découvrez et achetez vos billets pour les meilleurs événements
                   </p>
-                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
+                  <ArrowRight className={`w-6 h-6 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
                     isDark ? 'text-amber-400' : 'text-orange-500'
                   }`} />
                 </div>
@@ -296,9 +296,9 @@ export default function HomePageNew() {
 
               <button
                 onClick={() => user?.role === 'organizer' ? navigate('/organizer/dashboard') : navigate('/organizer/login')}
-                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border ${
+                className={`group relative overflow-hidden rounded-3xl p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
                   isDark
-                    ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
+                    ? 'bg-gradient-to-br from-blue-950/40 to-cyan-950/40 backdrop-blur-xl border-blue-800/40 hover:border-blue-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-blue-300 shadow-lg hover:shadow-2xl'
                 }`}
               >
@@ -308,20 +308,20 @@ export default function HomePageNew() {
                     : 'bg-gradient-to-br from-blue-100/50 to-cyan-100/50'
                 }`}></div>
                 <div className="relative">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
+                  <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                     isDark
                       ? 'bg-gradient-to-br from-blue-500 to-cyan-600'
                       : 'bg-gradient-to-br from-blue-500 to-cyan-600'
-                  } shadow-lg`}>
-                    <Plus className="w-8 h-8 text-white" />
+                  } shadow-xl`}>
+                    <Plus className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
+                  <h3 className={`text-xl font-black mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
                     Créer un événement
                   </h3>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
-                    Organisez votre prochain événement
+                  <p className={`text-sm mb-5 ${isDark ? 'text-blue-300/60' : 'text-slate-600'}`}>
+                    Organisez et gérez vos événements en toute simplicité
                   </p>
-                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
+                  <ArrowRight className={`w-6 h-6 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
                     isDark ? 'text-blue-400' : 'text-blue-500'
                   }`} />
                 </div>
