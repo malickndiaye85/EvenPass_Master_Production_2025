@@ -312,39 +312,6 @@ export default function HomePageNew() {
                   }`} />
                 </div>
               </button>
-
-              <button
-                onClick={() => navigate('/scan')}
-                className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] border sm:col-span-2 lg:col-span-1 ${
-                  isDark
-                    ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
-                    : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-green-300 shadow-lg hover:shadow-2xl'
-                }`}
-              >
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                  isDark
-                    ? 'bg-gradient-to-br from-green-600/10 to-emerald-600/10'
-                    : 'bg-gradient-to-br from-green-100/50 to-emerald-100/50'
-                }`}></div>
-                <div className="relative">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:scale-110 transition-transform duration-300 ${
-                    isDark
-                      ? 'bg-gradient-to-br from-green-500 to-emerald-600'
-                      : 'bg-gradient-to-br from-green-500 to-emerald-600'
-                  } shadow-lg`}>
-                    <Scan className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
-                    Scanner des billets
-                  </h3>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-amber-300/60' : 'text-slate-600'}`}>
-                    Contrôlez les accès événements
-                  </p>
-                  <ArrowRight className={`w-5 h-5 mx-auto group-hover:translate-x-2 transition-transform duration-300 ${
-                    isDark ? 'text-green-400' : 'text-green-500'
-                  }`} />
-                </div>
-              </button>
             </div>
           </div>
         </div>

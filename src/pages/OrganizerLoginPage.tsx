@@ -148,19 +148,21 @@ export default function OrganizerLoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center space-y-3">
-            <p className="text-sm text-[#B5B5B5]">
-              Pas encore organisateur ?{' '}
+          <div className="mt-8 text-center space-y-4">
+            <div className="border-t border-[#2A2A2A] pt-6">
+              <p className="text-[#B5B5B5] mb-4 text-lg">
+                Pas encore organisateur ?
+              </p>
               <button
                 onClick={() => navigate('/organizer/signup')}
-                className="text-[#FF7A00] hover:underline font-bold"
+                className="w-full px-8 py-4 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-2xl font-black text-lg transition-all shadow-lg shadow-[#FF5F05]/30 hover:scale-[1.02]"
               >
-                Créer un compte
+                Créer un compte organisateur
               </button>
-            </p>
+            </div>
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-[#B5B5B5] hover:text-[#FF7A00] transition-colors block w-full"
+              className="text-sm text-[#B5B5B5] hover:text-[#FF7A00] transition-colors block w-full pt-4"
             >
               Retour à l'accueil
             </button>

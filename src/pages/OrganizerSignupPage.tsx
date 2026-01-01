@@ -15,12 +15,12 @@ export default function OrganizerSignupPage() {
     password: '',
     phone: '',
     organization_name: '',
-    organization_type: 'individual' as 'individual' | 'company' | 'association' | 'ngo',
+    organization_type: 'individual' as 'individual' | 'company',
     description: '',
     contact_email: '',
     contact_phone: '',
     merchant_number: '',
-    merchant_provider: 'wave' as 'wave' | 'orange_money' | 'free_money',
+    merchant_provider: 'wave' as 'wave' | 'orange_money',
     website: '',
     city: '',
   });
@@ -132,14 +132,11 @@ export default function OrganizerSignupPage() {
   const organizationTypes = [
     { value: 'individual', label: 'Individuel', description: 'Artiste solo, freelance' },
     { value: 'company', label: 'Entreprise', description: 'Société commerciale' },
-    { value: 'association', label: 'Association', description: 'Organisation à but non lucratif' },
-    { value: 'ngo', label: 'ONG', description: 'Organisation non gouvernementale' },
   ];
 
   const merchantProviders = [
-    { value: 'wave', label: 'Wave', icon: '📱' },
-    { value: 'orange_money', label: 'Orange Money', icon: '🟠' },
-    { value: 'free_money', label: 'Free Money', icon: '💙' },
+    { value: 'wave', label: 'Wave', logo: '/wave-icon.jpg' },
+    { value: 'orange_money', label: 'Orange Money', logo: '/orange-money-icon.jpg' },
   ];
 
   return (
@@ -280,7 +277,7 @@ export default function OrganizerSignupPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
                     <Building2 className="w-4 h-4 inline mr-2" />
-                    Nom de l'organisation *
+                    Nom de structure *
                   </label>
                   <input
                     type="text"
@@ -288,7 +285,7 @@ export default function OrganizerSignupPage() {
                     value={formData.organization_name}
                     onChange={(e) => setFormData({ ...formData, organization_name: e.target.value })}
                     className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                    placeholder="Nom de votre organisation"
+                    placeholder="Nom de votre structure"
                   />
                 </div>
 
@@ -427,19 +424,25 @@ export default function OrganizerSignupPage() {
                     <Wallet className="w-4 h-4 inline mr-2" />
                     Opérateur Mobile Money *
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-4">
                     {merchantProviders.map((provider) => (
                       <button
                         key={provider.value}
                         type="button"
                         onClick={() => setFormData({ ...formData, merchant_provider: provider.value as any })}
-                        className={`p-4 rounded-lg border-2 text-center transition-all ${
+                        className={`p-6 rounded-lg border-2 text-center transition-all ${
                           formData.merchant_provider === provider.value
                             ? 'border-[#FF5F05] bg-[#FF5F05]/10'
                             : 'border-[#2A2A2A] hover:border-[#B5B5B5]'
                         }`}
                       >
-                        <div className="text-3xl mb-2">{provider.icon}</div>
+                        <div className="flex items-center justify-center mb-3">
+                          <img
+                            src={provider.logo}
+                            alt={provider.label}
+                            className="h-12 w-auto object-contain"
+                          />
+                        </div>
                         <p className="text-sm font-bold text-white">{provider.label}</p>
                       </button>
                     ))}
@@ -467,7 +470,7 @@ export default function OrganizerSignupPage() {
                 <div className="border-t border-[#2A2A2A] pt-6">
                   <h3 className="text-lg font-bold text-white mb-4">
                     <Upload className="w-5 h-5 inline mr-2" />
-                    Documents de vérification (KYC)
+                    Documents de vérification
                   </h3>
 
                   <div className="space-y-4">
@@ -484,7 +487,7 @@ export default function OrganizerSignupPage() {
                       />
                     </div>
 
-                    {(formData.organization_type === 'company' || formData.organization_type === 'ngo') && (
+                    {formData.organization_type === 'company' && (
                       <div>
                         <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
                           Registre de commerce / Récépissé
