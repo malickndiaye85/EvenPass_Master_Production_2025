@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut, Package } from 'lucide-react';
 import { useAuth } from '../context/MockAuthContext';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
+import BulkSalesModal from '../components/BulkSalesModal';
 
 interface PayoutRequest {
   id: string;
@@ -52,6 +53,7 @@ export default function AdminFinancePage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification'>('payouts');
+  const [showBulkSalesModal, setShowBulkSalesModal] = useState(false);
 
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
@@ -179,13 +181,22 @@ export default function AdminFinancePage() {
             <h1 className="text-3xl font-bold text-white">💰 Admin Finance</h1>
             <p className="text-[#B5B5B5] mt-1">Gestion des flux financiers 5% / 1.5% / 93.5%</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Déconnexion
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowBulkSalesModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-xl transition-all font-black flex items-center gap-2 shadow-lg shadow-[#FF5F05]/30"
+            >
+              <Package className="w-5 h-5" />
+              Vente de Bloc / Dotation
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Déconnexion
+            </button>
+          </div>
         </div>
       </header>
 
@@ -259,7 +270,17 @@ export default function AdminFinancePage() {
               <span className="text-sm opacity-90 font-bold">100%</span>
             </div>
             <p className="text-3xl font-bold mb-1">{formatAmount(stats.totalSales)} FCFA</p>
-            <p className="text-sm opacity-75">Ventes Totales</p>
+            <p className="text-sm opacity-75 mb-2">Ventes Totales</p>
+            <div className="text-xs opacity-70 space-y-1 pt-2 border-t border-white/20">
+              <div className="flex justify-between">
+                <span>Web (OM/Wave):</span>
+                <span className="font-semibold">{formatAmount(stats.totalSales * 0.7)} F</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Bloc Admin:</span>
+                <span className="font-semibold">{formatAmount(stats.totalSales * 0.3)} F</span>
+              </div>
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-[#FF5F05] to-red-600 rounded-xl p-6 text-white shadow-lg">
@@ -268,7 +289,10 @@ export default function AdminFinancePage() {
               <span className="text-sm opacity-90 font-bold">5%</span>
             </div>
             <p className="text-3xl font-bold mb-1">{formatAmount(stats.platformCommission)} FCFA</p>
-            <p className="text-sm opacity-75">Commission EvenPass</p>
+            <p className="text-sm opacity-75 mb-2">Commission EvenPass</p>
+            <div className="text-xs opacity-70 pt-2 border-t border-white/20">
+              <p>Sur Web + Bloc (100%)</p>
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-yellow-600 to-amber-600 rounded-xl p-6 text-white shadow-lg">
@@ -277,7 +301,11 @@ export default function AdminFinancePage() {
               <span className="text-sm opacity-90 font-bold">1.5%</span>
             </div>
             <p className="text-3xl font-bold mb-1">{formatAmount(stats.payoutFees)} FCFA</p>
-            <p className="text-sm opacity-75">Frais Techniques Payouts</p>
+            <p className="text-sm opacity-75 mb-2">Frais Passerelle</p>
+            <div className="text-xs opacity-70 pt-2 border-t border-white/20">
+              <p>Uniquement sur Ventes Web</p>
+              <p className="text-[10px] mt-1">(Bloc = 0% frais)</p>
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
@@ -286,7 +314,10 @@ export default function AdminFinancePage() {
               <span className="text-sm opacity-90 font-bold">93.5%</span>
             </div>
             <p className="text-3xl font-bold mb-1">{formatAmount(stats.organizerPayouts)} FCFA</p>
-            <p className="text-sm opacity-75">Versé aux Organisateurs</p>
+            <p className="text-sm opacity-75 mb-2">Net Organisateurs</p>
+            <div className="text-xs opacity-70 pt-2 border-t border-white/20">
+              <p>Total - Commission - Frais</p>
+            </div>
           </div>
         </div>
 
@@ -623,6 +654,16 @@ export default function AdminFinancePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showBulkSalesModal && (
+        <BulkSalesModal
+          onClose={() => setShowBulkSalesModal(false)}
+          onSuccess={() => {
+            loadData();
+            setShowBulkSalesModal(false);
+          }}
+        />
       )}
     </div>
   );
