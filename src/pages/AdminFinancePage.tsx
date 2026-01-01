@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut } from 'lucide-react';
+import { useAuth } from '../context/MockAuthContext';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
+import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
 
 interface PayoutRequest {
   id: string;
@@ -33,6 +36,8 @@ interface Event {
 }
 
 export default function AdminFinancePage() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
@@ -46,7 +51,14 @@ export default function AdminFinancePage() {
   const [selectedPayout, setSelectedPayout] = useState<PayoutRequest | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events'>('payouts');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification'>('payouts');
+
+  const handleLogout = () => {
+    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+      logout();
+      navigate('/admin/finance/login');
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -162,9 +174,18 @@ export default function AdminFinancePage() {
   return (
     <div className="min-h-screen bg-[#0A0A0B]">
       <header className="bg-[#0A0A0B] border-b border-[#2A2A2A]">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-white">💰 Admin Finance</h1>
-          <p className="text-[#B5B5B5] mt-1">Gestion des flux financiers 5% / 1.5% / 93.5%</p>
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">💰 Admin Finance</h1>
+            <p className="text-[#B5B5B5] mt-1">Gestion des flux financiers 5% / 1.5% / 93.5%</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </button>
         </div>
       </header>
 
@@ -291,6 +312,16 @@ export default function AdminFinancePage() {
             >
               🎫 Tous les Événements ({allEvents.length})
             </button>
+            <button
+              onClick={() => setActiveTab('verification')}
+              className={`px-6 py-3 font-bold transition-colors ${
+                activeTab === 'verification'
+                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                  : 'text-[#B5B5B5] hover:text-white'
+              }`}
+            >
+              ✅ Vérification Organisateurs
+            </button>
           </div>
 
           {activeTab === 'payouts' && (
@@ -375,6 +406,10 @@ export default function AdminFinancePage() {
                 </div>
               ))}
             </div>
+          )}
+
+          {activeTab === 'verification' && (
+            <OrganizerVerificationTab />
           )}
         </div>
       </div>

@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Ticket, Mail, Lock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/MockAuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,16 +16,56 @@ export default function OrganizerLoginPage() {
     setLoading(true);
 
     try {
-      const { error: signInError } = await signIn(email, password);
+      // 1. Connexion avec Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (signInError) {
-        setError(signInError.message);
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Erreur de connexion');
+
+      // 2. Récupérer le profil organisateur
+      const { data: organizerData, error: organizerError } = await supabase
+        .from('organizers')
+        .select('*, users(*)')
+        .eq('user_id', authData.user.id)
+        .maybeSingle();
+
+      if (organizerError) throw organizerError;
+
+      // 3. Vérifier si l'utilisateur est un organisateur
+      if (!organizerData) {
+        setError('Aucun compte organisateur trouvé pour cet email');
+        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
 
-      navigate('/organizer/dashboard');
+      // 4. Vérifier le statut de vérification
+      if (organizerData.verification_status === 'pending') {
+        // Compte en attente de vérification
+        navigate('/organizer/pending');
+        return;
+      }
+
+      if (organizerData.verification_status === 'rejected') {
+        setError('Votre compte a été rejeté. Veuillez contacter le support pour plus d\'informations.');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      if (organizerData.verification_status === 'verified' && organizerData.is_active) {
+        // Compte vérifié et actif
+        navigate('/organizer/dashboard');
+      } else {
+        setError('Votre compte n\'est pas encore actif');
+        await supabase.auth.signOut();
+        setLoading(false);
+      }
     } catch (err: any) {
+      console.error('Error during login:', err);
       setError(err.message || 'Email ou mot de passe incorrect');
       setLoading(false);
     }

@@ -8,6 +8,7 @@ import ErrorPage from './pages/ErrorPage';
 import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
 import OrganizerSignupPage from './pages/OrganizerSignupPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
+import PendingVerificationPage from './pages/PendingVerificationPage';
 import AdminFinancePage from './pages/AdminFinancePage';
 import AdminFinanceLoginPage from './pages/AdminFinanceLoginPage';
 import OpsManagerPage from './pages/OpsManagerPage';
@@ -43,6 +44,7 @@ function AppRoutes() {
 
       <Route path="/organizer/signup" element={<OrganizerSignupPage />} />
       <Route path="/organizer/login" element={<OrganizerLoginPage />} />
+      <Route path="/organizer/pending" element={<PendingVerificationPage />} />
       <Route
         path="/organizer/dashboard"
         element={

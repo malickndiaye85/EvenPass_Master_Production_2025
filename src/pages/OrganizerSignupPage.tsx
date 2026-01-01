@@ -1,39 +1,130 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft } from 'lucide-react';
+import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function OrganizerSignupPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
+    password: '',
     phone: '',
     organization_name: '',
     organization_type: 'individual' as 'individual' | 'company' | 'association' | 'ngo',
     description: '',
     contact_email: '',
     contact_phone: '',
+    merchant_number: '',
+    merchant_provider: 'wave' as 'wave' | 'orange_money' | 'free_money',
     website: '',
     city: '',
   });
 
+  const [documents, setDocuments] = useState<{
+    cni?: File;
+    registre?: File;
+  }>({});
+
+  const handleFileChange = (type: 'cni' | 'registre', file: File | null) => {
+    if (file) {
+      setDocuments(prev => ({ ...prev, [type]: file }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
 
     try {
-      console.log('[MOCK] Creating organizer account:', formData);
+      // 1. Créer le compte auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      setTimeout(() => {
-        alert('✅ Demande envoyée avec succès!\n\nVotre compte organisateur est en attente de validation par notre équipe.\n\nVous recevrez un email de confirmation une fois votre compte approuvé.');
-        navigate('/organizer/login');
-      }, 1500);
-    } catch (error) {
-      console.error('Error creating organizer:', error);
-      alert('❌ Erreur lors de la création du compte');
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Erreur lors de la création du compte');
+
+      const userId = authData.user.id;
+
+      // 2. Créer le profil utilisateur
+      const { error: userError } = await supabase
+        .from('users')
+        .insert({
+          id: userId,
+          email: formData.email,
+          full_name: formData.full_name,
+          phone: formData.phone,
+        });
+
+      if (userError) throw userError;
+
+      // 3. Upload documents (si présents)
+      const verificationDocuments: any = {};
+
+      if (documents.cni) {
+        const cniPath = `${userId}/cni_${Date.now()}.${documents.cni.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage
+          .from('verification-documents')
+          .upload(cniPath, documents.cni);
+
+        if (!uploadError) {
+          verificationDocuments.cni = cniPath;
+        }
+      }
+
+      if (documents.registre) {
+        const registrePath = `${userId}/registre_${Date.now()}.${documents.registre.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage
+          .from('verification-documents')
+          .upload(registrePath, documents.registre);
+
+        if (!uploadError) {
+          verificationDocuments.registre = registrePath;
+        }
+      }
+
+      // 4. Créer le profil organisateur
+      const { error: organizerError } = await supabase
+        .from('organizers')
+        .insert({
+          user_id: userId,
+          organization_name: formData.organization_name,
+          organization_type: formData.organization_type,
+          description: formData.description,
+          contact_email: formData.contact_email,
+          contact_phone: formData.contact_phone,
+          website: formData.website || null,
+          verification_status: 'pending',
+          verification_documents: verificationDocuments,
+          bank_account_info: {
+            provider: formData.merchant_provider,
+            phone: formData.merchant_number,
+          },
+          is_active: false,
+        });
+
+      if (organizerError) throw organizerError;
+
+      // 5. Déconnexion immédiate (pour éviter accès non autorisé)
+      await supabase.auth.signOut();
+
+      alert('✅ Demande envoyée avec succès!\n\n' +
+        'Votre compte organisateur est en attente de validation par notre équipe.\n\n' +
+        'Vous recevrez un email de confirmation une fois votre compte approuvé (sous 24h).\n\n' +
+        '📞 Contact : 77 139 29 26\n' +
+        '📧 Email : contact@evenpass.sn');
+
+      navigate('/organizer/login');
+    } catch (err: any) {
+      console.error('Error creating organizer:', err);
+      setError(err.message || 'Erreur lors de la création du compte');
       setLoading(false);
     }
   };
@@ -43,6 +134,12 @@ export default function OrganizerSignupPage() {
     { value: 'company', label: 'Entreprise', description: 'Société commerciale' },
     { value: 'association', label: 'Association', description: 'Organisation à but non lucratif' },
     { value: 'ngo', label: 'ONG', description: 'Organisation non gouvernementale' },
+  ];
+
+  const merchantProviders = [
+    { value: 'wave', label: 'Wave', icon: '📱' },
+    { value: 'orange_money', label: 'Orange Money', icon: '🟠' },
+    { value: 'free_money', label: 'Free Money', icon: '💙' },
   ];
 
   return (
@@ -67,7 +164,7 @@ export default function OrganizerSignupPage() {
         <div className="bg-[#2A2A2A] rounded-2xl border border-[#2A2A2A] overflow-hidden">
           <div className="bg-[#0F0F0F] px-8 py-4 border-b border-[#2A2A2A]">
             <div className="flex items-center justify-between">
-              {[1, 2].map((s) => (
+              {[1, 2, 3].map((s) => (
                 <div key={s} className="flex items-center flex-1">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
@@ -77,11 +174,11 @@ export default function OrganizerSignupPage() {
                     {s}
                   </div>
                   <div className="ml-3 flex-1">
-                    <p className={`font-bold ${step >= s ? 'text-white' : 'text-[#B5B5B5]'}`}>
-                      {s === 1 ? 'Informations personnelles' : 'Informations organisation'}
+                    <p className={`font-bold text-sm ${step >= s ? 'text-white' : 'text-[#B5B5B5]'}`}>
+                      {s === 1 ? 'Compte' : s === 2 ? 'Organisation' : 'Vérification'}
                     </p>
                   </div>
-                  {s < 2 && (
+                  {s < 3 && (
                     <div className={`h-1 flex-1 mx-4 rounded ${step > s ? 'bg-[#FF5F05]' : 'bg-[#2A2A2A]'}`} />
                   )}
                 </div>
@@ -90,9 +187,16 @@ export default function OrganizerSignupPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-8">
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white mb-6">Vos informations</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">Créer votre compte</h2>
 
                 <div>
                   <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
@@ -139,6 +243,22 @@ export default function OrganizerSignupPage() {
                       placeholder="77 123 45 67"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Mot de passe *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
+                    placeholder="Minimum 6 caractères"
+                  />
                 </div>
 
                 <div className="flex justify-end">
@@ -272,17 +392,128 @@ export default function OrganizerSignupPage() {
                   </div>
                 </div>
 
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="px-8 py-3 bg-[#2A2A2A] hover:bg-[#404040] text-white rounded-lg font-bold transition-all"
+                  >
+                    Précédent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="flex-1 px-8 py-3 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-lg font-bold transition-all"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white mb-6">Vérification & Paiement</h2>
+
+                <div className="bg-[#FF5F05]/10 border border-[#FF5F05]/20 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-[#FF8C42] font-medium">
+                    <Wallet className="w-4 h-4 inline mr-2" />
+                    Les reversements se feront uniquement sur le numéro renseigné ci-dessous
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#B5B5B5] mb-3">
+                    <Wallet className="w-4 h-4 inline mr-2" />
+                    Opérateur Mobile Money *
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {merchantProviders.map((provider) => (
+                      <button
+                        key={provider.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, merchant_provider: provider.value as any })}
+                        className={`p-4 rounded-lg border-2 text-center transition-all ${
+                          formData.merchant_provider === provider.value
+                            ? 'border-[#FF5F05] bg-[#FF5F05]/10'
+                            : 'border-[#2A2A2A] hover:border-[#B5B5B5]'
+                        }`}
+                      >
+                        <div className="text-3xl mb-2">{provider.icon}</div>
+                        <p className="text-sm font-bold text-white">{provider.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
+                    <Phone className="w-4 h-4 inline mr-2" />
+                    Numéro Marchand *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.merchant_number}
+                    onChange={(e) => setFormData({ ...formData, merchant_number: e.target.value })}
+                    className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
+                    placeholder="77 123 45 67"
+                  />
+                  <p className="text-xs text-[#B5B5B5] mt-2">
+                    Ce numéro sera utilisé pour tous vos reversements de fonds
+                  </p>
+                </div>
+
+                <div className="border-t border-[#2A2A2A] pt-6">
+                  <h3 className="text-lg font-bold text-white mb-4">
+                    <Upload className="w-5 h-5 inline mr-2" />
+                    Documents de vérification (KYC)
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
+                        Carte d'identité nationale (CNI) *
+                      </label>
+                      <input
+                        type="file"
+                        required
+                        accept="image/*,.pdf"
+                        onChange={(e) => handleFileChange('cni', e.target.files?.[0] || null)}
+                        className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FF5F05] file:text-white file:cursor-pointer hover:file:bg-[#FF7A00]"
+                      />
+                    </div>
+
+                    {(formData.organization_type === 'company' || formData.organization_type === 'ngo') && (
+                      <div>
+                        <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
+                          Registre de commerce / Récépissé
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleFileChange('registre', e.target.files?.[0] || null)}
+                          className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FF5F05] file:text-white file:cursor-pointer hover:file:bg-[#FF7A00]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="bg-[#0F0F0F] rounded-lg p-4 border border-[#2A2A2A]">
                   <p className="text-sm text-[#B5B5B5]">
                     En soumettant ce formulaire, vous acceptez que votre demande soit examinée par notre équipe.
-                    Vous serez notifié par email une fois votre compte approuvé.
+                    Vous serez notifié par email une fois votre compte approuvé (sous 24h).
                   </p>
+                  <div className="mt-3 text-sm text-[#FF8C42]">
+                    📞 Contact : 77 139 29 26 | 📧 contact@evenpass.sn
+                  </div>
                 </div>
 
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(2)}
                     className="px-8 py-3 bg-[#2A2A2A] hover:bg-[#404040] text-white rounded-lg font-bold transition-all"
                   >
                     Précédent
