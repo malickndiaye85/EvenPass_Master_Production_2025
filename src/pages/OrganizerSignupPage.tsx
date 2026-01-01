@@ -36,6 +36,72 @@ export default function OrganizerSignupPage() {
     }
   };
 
+  const validateStep = (currentStep: number): boolean => {
+    if (currentStep === 1) {
+      if (!formData.full_name.trim()) {
+        setError('Le nom complet est obligatoire');
+        return false;
+      }
+      if (!formData.email.trim() || !formData.email.includes('@')) {
+        setError('Email valide requis');
+        return false;
+      }
+      if (!formData.phone.trim()) {
+        setError('Le téléphone est obligatoire');
+        return false;
+      }
+      if (!formData.password || formData.password.length < 6) {
+        setError('Le mot de passe doit contenir au moins 6 caractères');
+        return false;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (!formData.organization_name.trim()) {
+        setError('Le nom de structure est obligatoire');
+        return false;
+      }
+      if (!formData.contact_email.trim() || !formData.contact_email.includes('@')) {
+        setError('Email de contact valide requis');
+        return false;
+      }
+      if (!formData.contact_phone.trim()) {
+        setError('Le téléphone de contact est obligatoire');
+        return false;
+      }
+      if (!formData.city.trim()) {
+        setError('La ville est obligatoire');
+        return false;
+      }
+    }
+
+    if (currentStep === 3) {
+      if (!formData.merchant_number.trim()) {
+        setError('Le numéro marchand est obligatoire');
+        return false;
+      }
+      if (formData.organization_type === 'company') {
+        if (!documents.cni) {
+          setError('La CNI est obligatoire pour les entreprises');
+          return false;
+        }
+        if (!documents.registre) {
+          setError('Le registre de commerce est obligatoire pour les entreprises');
+          return false;
+        }
+      }
+    }
+
+    setError('');
+    return true;
+  };
+
+  const nextStep = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -135,8 +201,8 @@ export default function OrganizerSignupPage() {
   ];
 
   const merchantProviders = [
-    { value: 'wave', label: 'Wave', logo: '/wave-icon.jpg' },
-    { value: 'orange_money', label: 'Orange Money', logo: '/orange-money-icon.jpg' },
+    { value: 'wave', label: 'Wave', logo: '/wave-logo.svg' },
+    { value: 'orange_money', label: 'Orange Money', logo: '/orange-money-logo.svg' },
   ];
 
   return (
@@ -261,7 +327,7 @@ export default function OrganizerSignupPage() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
+                    onClick={nextStep}
                     className="px-8 py-3 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-lg font-bold transition-all"
                   >
                     Suivant
@@ -315,7 +381,7 @@ export default function OrganizerSignupPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
                     <FileText className="w-4 h-4 inline mr-2" />
-                    Description
+                    Description (Facultatif)
                   </label>
                   <textarea
                     value={formData.description}
@@ -362,7 +428,7 @@ export default function OrganizerSignupPage() {
                   <div>
                     <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
                       <Globe className="w-4 h-4 inline mr-2" />
-                      Site web
+                      Site web (Facultatif)
                     </label>
                     <input
                       type="url"
@@ -399,7 +465,7 @@ export default function OrganizerSignupPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStep(3)}
+                    onClick={nextStep}
                     className="flex-1 px-8 py-3 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-lg font-bold transition-all"
                   >
                     Suivant
@@ -476,28 +542,37 @@ export default function OrganizerSignupPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
-                        Carte d'identité nationale (CNI) *
+                        Carte d'identité nationale (CNI) {formData.organization_type === 'company' ? '*' : '(Facultatif)'}
                       </label>
                       <input
                         type="file"
-                        required
+                        required={formData.organization_type === 'company'}
                         accept="image/*,.pdf"
                         onChange={(e) => handleFileChange('cni', e.target.files?.[0] || null)}
                         className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FF5F05] file:text-white file:cursor-pointer hover:file:bg-[#FF7A00]"
                       />
+                      {formData.organization_type === 'individual' && (
+                        <p className="text-xs text-[#B5B5B5] mt-2">
+                          Le téléchargement de la CNI est facultatif pour les individuels
+                        </p>
+                      )}
                     </div>
 
                     {formData.organization_type === 'company' && (
                       <div>
                         <label className="block text-sm font-medium text-[#B5B5B5] mb-2">
-                          Registre de commerce / Récépissé
+                          Registre de commerce / NINEA *
                         </label>
                         <input
                           type="file"
+                          required
                           accept="image/*,.pdf"
                           onChange={(e) => handleFileChange('registre', e.target.files?.[0] || null)}
                           className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FF5F05] file:text-white file:cursor-pointer hover:file:bg-[#FF7A00]"
                         />
+                        <p className="text-xs text-[#B5B5B5] mt-2">
+                          Obligatoire pour les entreprises
+                        </p>
                       </div>
                     )}
                   </div>
