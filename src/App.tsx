@@ -6,6 +6,7 @@ import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
 import ErrorPage from './pages/ErrorPage';
 import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
+import OrganizerSignupPage from './pages/OrganizerSignupPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
 import AdminFinancePage from './pages/AdminFinancePage';
 import AdminFinanceLoginPage from './pages/AdminFinanceLoginPage';
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
 
+      <Route path="/organizer/signup" element={<OrganizerSignupPage />} />
       <Route path="/organizer/login" element={<OrganizerLoginPage />} />
       <Route
         path="/organizer/dashboard"

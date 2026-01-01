@@ -1,20 +1,30 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Calendar, Wallet, ArrowUpCircle, Clock, CheckCircle } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, Wallet, ArrowUpCircle, Clock, CheckCircle, LogOut, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/MockAuthContext';
 import { mockEvents, mockStats, mockPayouts } from '../lib/mockData';
 import type { OrganizerBalance, PayoutRequest, Event } from '../types';
 
 export default function OrganizerDashboardPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [balance, setBalance] = useState<OrganizerBalance | null>(null);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutMethod, setPayoutMethod] = useState<'wave' | 'orange_money'>('wave');
   const [payoutPhone, setPayoutPhone] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const handleLogout = () => {
+    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+      logout();
+      navigate('/organizer/login');
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -97,9 +107,27 @@ export default function OrganizerDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-900">
       <header className="bg-slate-900 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-white">Dashboard Organisateur</h1>
-          <p className="text-slate-400 mt-1">{user?.organizer?.organization_name}</p>
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Dashboard Organisateur</h1>
+            <p className="text-slate-400 mt-1">{user?.organizer?.organization_name || 'Mon Organisation'}</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCreateEventModal(true)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-bold flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Créer un événement
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Déconnexion
+            </button>
+          </div>
         </div>
       </header>
 
