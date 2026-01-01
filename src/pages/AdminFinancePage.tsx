@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock } from 'lucide-react';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 
 interface PayoutRequest {
@@ -35,6 +35,7 @@ interface Event {
 export default function AdminFinancePage() {
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState({
     totalSales: 0,
     platformCommission: 0,
@@ -43,7 +44,9 @@ export default function AdminFinancePage() {
   });
   const [loading, setLoading] = useState(true);
   const [selectedPayout, setSelectedPayout] = useState<PayoutRequest | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events'>('payouts');
 
   useEffect(() => {
     loadData();
@@ -55,6 +58,7 @@ export default function AdminFinancePage() {
 
       setPayouts(mockPayouts as any);
       setPendingEvents(mockEvents.filter(e => e.status === 'draft') as Event[]);
+      setAllEvents(mockEvents as Event[]);
 
       const totalSales = mockStats.totalRevenue || 0;
       const platformCommission = totalSales * 0.05;
@@ -71,7 +75,7 @@ export default function AdminFinancePage() {
   };
 
   const handleMasterGo = (eventId: string) => {
-    if (!confirm('Approuver cet événement et le débloquer pour les opérations ?')) {
+    if (!confirm('✅ Approuver cet événement et le débloquer pour les opérations ?')) {
       return;
     }
 
@@ -79,6 +83,37 @@ export default function AdminFinancePage() {
     console.log('[MOCK] Approving event:', eventId);
     setTimeout(() => {
       alert('✅ Événement approuvé avec succès! (Mode Test)');
+      setSelectedEvent(null);
+      loadData();
+      setProcessing(false);
+    }, 800);
+  };
+
+  const handleSuspendEvent = (eventId: string) => {
+    if (!confirm('⚠️ Suspendre cet événement ? Les ventes seront bloquées.')) {
+      return;
+    }
+
+    setProcessing(true);
+    console.log('[MOCK] Suspending event:', eventId);
+    setTimeout(() => {
+      alert('⏸️ Événement suspendu! (Mode Test)');
+      setSelectedEvent(null);
+      loadData();
+      setProcessing(false);
+    }, 800);
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    if (!confirm('❌ ATTENTION : Supprimer définitivement cet événement ?')) {
+      return;
+    }
+
+    setProcessing(true);
+    console.log('[MOCK] Deleting event:', eventId);
+    setTimeout(() => {
+      alert('🗑️ Événement supprimé! (Mode Test)');
+      setSelectedEvent(null);
       loadData();
       setProcessing(false);
     }, 800);
@@ -235,46 +270,112 @@ export default function AdminFinancePage() {
         </div>
 
         <div className="bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] p-6">
-          <h2 className="text-xl font-bold text-white mb-6">📋 Demandes de Payout</h2>
-
-          <div className="space-y-4">
-            {payouts.filter(p => p.status === 'pending' || p.status === 'approved').map((payout) => (
-              <div
-                key={payout.id}
-                className="bg-[#0F0F0F] rounded-lg p-4 border border-[#2A2A2A] cursor-pointer hover:border-[#FF5F05] transition-colors"
-                onClick={() => setSelectedPayout(payout)}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="font-bold text-white">{payout.request_number}</p>
-                    <p className="text-sm text-[#B5B5B5]">{payout.organizer?.organization_name}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      payout.status === 'pending' ? 'bg-yellow-600' : 'bg-blue-600'
-                    } text-white`}
-                  >
-                    {payout.status === 'pending' ? '⏳ En attente' : '✅ Approuvé'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <p className="text-[#B5B5B5]">Demandé</p>
-                    <p className="text-white font-medium">{formatAmount(payout.amount_requested)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#B5B5B5]">Frais 1.5%</p>
-                    <p className="text-yellow-400 font-medium">-{formatAmount(payout.technical_fees)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#B5B5B5]">Net</p>
-                    <p className="text-green-400 font-bold">{formatAmount(payout.net_amount)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex gap-4 mb-6 border-b border-[#0F0F0F]">
+            <button
+              onClick={() => setActiveTab('payouts')}
+              className={`px-6 py-3 font-bold transition-colors ${
+                activeTab === 'payouts'
+                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                  : 'text-[#B5B5B5] hover:text-white'
+              }`}
+            >
+              📋 Payouts ({payouts.filter(p => p.status === 'pending' || p.status === 'approved').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`px-6 py-3 font-bold transition-colors ${
+                activeTab === 'events'
+                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                  : 'text-[#B5B5B5] hover:text-white'
+              }`}
+            >
+              🎫 Tous les Événements ({allEvents.length})
+            </button>
           </div>
+
+          {activeTab === 'payouts' && (
+            <div className="space-y-4">
+              {payouts.filter(p => p.status === 'pending' || p.status === 'approved').map((payout) => (
+                <div
+                  key={payout.id}
+                  className="bg-[#0F0F0F] rounded-lg p-4 border border-[#2A2A2A] cursor-pointer hover:border-[#FF5F05] transition-colors"
+                  onClick={() => setSelectedPayout(payout)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="font-bold text-white">{payout.request_number}</p>
+                      <p className="text-sm text-[#B5B5B5]">{payout.organizer?.organization_name}</p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        payout.status === 'pending' ? 'bg-yellow-600' : 'bg-blue-600'
+                      } text-white`}
+                    >
+                      {payout.status === 'pending' ? '⏳ En attente' : '✅ Approuvé'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-[#B5B5B5]">Demandé</p>
+                      <p className="text-white font-medium">{formatAmount(payout.amount_requested)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[#B5B5B5]">Frais 1.5%</p>
+                      <p className="text-yellow-400 font-medium">-{formatAmount(payout.technical_fees)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[#B5B5B5]">Net</p>
+                      <p className="text-green-400 font-bold">{formatAmount(payout.net_amount)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'events' && (
+            <div className="space-y-4">
+              {allEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-[#0F0F0F] rounded-lg p-4 border border-[#2A2A2A] cursor-pointer hover:border-[#FF5F05] transition-colors"
+                  onClick={() => setSelectedEvent(event)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="font-bold text-white">{event.title}</p>
+                      <p className="text-sm text-[#B5B5B5]">{event.venue_city}</p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        event.status === 'published' ? 'bg-green-600' :
+                        event.status === 'draft' ? 'bg-yellow-600' :
+                        'bg-red-600'
+                      } text-white`}
+                    >
+                      {event.status === 'published' && '✅ Publié'}
+                      {event.status === 'draft' && '⏳ Brouillon'}
+                      {event.status === 'suspended' && '⏸️ Suspendu'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-[#B5B5B5]">Date</p>
+                      <p className="text-white font-medium">
+                        {new Date(event.start_date).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[#B5B5B5]">Lieu</p>
+                      <p className="text-white font-medium">{event.venue_city}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -362,6 +463,124 @@ export default function AdminFinancePage() {
 
               <button
                 onClick={() => setSelectedPayout(null)}
+                className="w-full px-6 py-3 bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white rounded-lg transition-colors border border-[#2A2A2A]"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedEvent && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2A2A2A] rounded-2xl max-w-2xl w-full border border-[#2A2A2A]">
+            <div className="p-6 border-b border-[#0F0F0F] flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">🎫 Gestion Événement</h2>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="text-[#B5B5B5] hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-[#B5B5B5]">Titre</p>
+                  <p className="text-white font-bold">{selectedEvent.title}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#B5B5B5]">Statut</p>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                      selectedEvent.status === 'published' ? 'bg-green-600' :
+                      selectedEvent.status === 'draft' ? 'bg-yellow-600' :
+                      'bg-red-600'
+                    } text-white`}
+                  >
+                    {selectedEvent.status === 'published' && '✅ Publié'}
+                    {selectedEvent.status === 'draft' && '⏳ Brouillon'}
+                    {selectedEvent.status === 'suspended' && '⏸️ Suspendu'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-[#B5B5B5]">Date</p>
+                  <p className="text-white">{new Date(selectedEvent.start_date).toLocaleString('fr-FR')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#B5B5B5]">Ville</p>
+                  <p className="text-white">{selectedEvent.venue_city}</p>
+                </div>
+              </div>
+
+              {selectedEvent.event_image_url && (
+                <div>
+                  <p className="text-sm text-[#B5B5B5] mb-2">Image</p>
+                  <img
+                    src={selectedEvent.event_image_url}
+                    alt={selectedEvent.title}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              <div className="bg-[#0F0F0F] rounded-lg p-4 border border-[#2A2A2A]">
+                <p className="text-sm text-[#B5B5B5] mb-2">Actions disponibles</p>
+                <div className="space-y-2">
+                  {selectedEvent.status === 'draft' && (
+                    <div className="flex items-center text-green-400 text-sm">
+                      <Zap className="w-4 h-4 mr-2" />
+                      <span>Master GO - Active l'événement pour les ventes</span>
+                    </div>
+                  )}
+                  {selectedEvent.status === 'published' && (
+                    <div className="flex items-center text-yellow-400 text-sm">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>Suspension - Bloque temporairement les ventes</span>
+                    </div>
+                  )}
+                  <div className="flex items-center text-red-400 text-sm">
+                    <X className="w-4 h-4 mr-2" />
+                    <span>Suppression - Action irréversible</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                {selectedEvent.status === 'draft' && (
+                  <button
+                    onClick={() => handleMasterGo(selectedEvent.id)}
+                    disabled={processing}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-colors font-bold disabled:opacity-50 flex items-center justify-center"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    MASTER GO
+                  </button>
+                )}
+
+                {selectedEvent.status === 'published' && (
+                  <button
+                    onClick={() => handleSuspendEvent(selectedEvent.id)}
+                    disabled={processing}
+                    className="flex-1 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors font-bold disabled:opacity-50"
+                  >
+                    ⏸️ Suspendre
+                  </button>
+                )}
+
+                <button
+                  onClick={() => handleDeleteEvent(selectedEvent.id)}
+                  disabled={processing}
+                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold disabled:opacity-50"
+                >
+                  🗑️ Supprimer
+                </button>
+              </div>
+
+              <button
+                onClick={() => setSelectedEvent(null)}
                 className="w-full px-6 py-3 bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white rounded-lg transition-colors border border-[#2A2A2A]"
               >
                 Fermer

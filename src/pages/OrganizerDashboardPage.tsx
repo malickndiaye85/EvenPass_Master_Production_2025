@@ -17,20 +17,16 @@ export default function OrganizerDashboardPage() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (user?.organizer) {
-      loadData();
-    }
-  }, [user]);
+    loadData();
+  }, []);
 
-  const loadData = async () => {
-    if (!user?.organizer) return;
-
+  const loadData = () => {
     try {
       console.log('[MOCK DATA] Loading organizer dashboard...');
 
       const mockBalance: OrganizerBalance = {
         id: '1',
-        organizer_id: user.organizer.id,
+        organizer_id: '1',
         available_balance: mockStats.totalRevenue - mockStats.pendingPayouts,
         pending_balance: mockStats.pendingPayouts,
         total_earnings: mockStats.totalRevenue,
@@ -39,11 +35,14 @@ export default function OrganizerDashboardPage() {
         last_payout_date: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        total_sales: mockStats.totalRevenue,
+        platform_commission: mockStats.totalRevenue * 0.05,
+        pending_payouts: mockStats.pendingPayouts,
       };
 
       setBalance(mockBalance);
       setPayouts(mockPayouts as PayoutRequest[]);
-      setEvents(mockEvents.filter(e => e.organizer_id === user.organizer?.id) as Event[]);
+      setEvents(mockEvents.filter(e => e.organizer_id === '1') as Event[]);
       console.log('[MOCK DATA] Loaded organizer data');
     } catch (error) {
       console.error('Error loading data:', error);
