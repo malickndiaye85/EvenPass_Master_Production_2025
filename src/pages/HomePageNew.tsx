@@ -30,6 +30,7 @@ import { useAuth } from '../context/MockAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { mockEvents, mockCategories } from '../lib/mockData';
 import type { Event, EventCategory } from '../types';
+import Logo from '../components/Logo';
 
 export default function HomePageNew() {
   const navigate = useNavigate();
@@ -120,75 +121,66 @@ export default function HomePageNew() {
       } backdrop-blur-2xl border-b`}>
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="relative group">
-                <div className={`absolute -inset-0.5 rounded-2xl blur opacity-70 group-hover:opacity-100 transition ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600'
-                    : 'bg-gradient-to-r from-orange-400 to-pink-500'
-                }`}></div>
-                <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isDark
-                    ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700'
-                    : 'bg-gradient-to-br from-orange-400 via-red-500 to-pink-500'
-                }`}>
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className={`text-2xl font-black tracking-tight ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
-                    : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
-                }`}>
-                  EvenPass
-                </h1>
-                <p className={`text-xs font-medium ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
-                  Premium Events • Sénégal
-                </p>
-              </div>
+            <div className="flex flex-col">
+              <Logo size="md" variant={isDark ? 'dark' : 'light'} />
+              <p className={`text-xs font-medium ml-16 -mt-1 ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
+                Premium Events • Sénégal
+              </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate('/how-it-works')}
-                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all border ${
+                className={`group relative px-4 py-2 rounded-xl font-semibold text-sm transition-all overflow-hidden ${
                   isDark
-                    ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-300 border-amber-700/40'
-                    : 'bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200'
-                }`}
+                    ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 hover:from-amber-800/40 hover:to-orange-800/40 text-amber-300 border border-amber-700/30'
+                    : 'bg-gradient-to-r from-orange-50 to-pink-50 hover:from-orange-100 hover:to-pink-100 text-orange-600 border border-orange-200/50'
+                } hover:scale-105 hover:shadow-lg`}
               >
-                Comment ça marche
+                <span className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Comment ça marche</span>
+                </span>
               </button>
 
               <button
                 onClick={() => navigate('/for-organizers')}
-                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all border ${
+                className={`group relative px-4 py-2 rounded-xl font-semibold text-sm transition-all overflow-hidden ${
                   isDark
-                    ? 'bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 border-blue-700/40'
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
-                }`}
+                    ? 'bg-gradient-to-r from-blue-900/30 to-cyan-900/30 hover:from-blue-800/40 hover:to-cyan-800/40 text-blue-300 border border-blue-700/30'
+                    : 'bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 text-blue-600 border border-blue-200/50'
+                } hover:scale-105 hover:shadow-lg`}
               >
-                Pour les organisateurs
+                <span className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Pour organisateurs</span>
+                </span>
               </button>
 
               <button
                 onClick={toggleTheme}
-                className={`p-3 rounded-2xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-105 ${
                   isDark
-                    ? 'bg-amber-900/30 hover:bg-amber-800/40 text-amber-400 border border-amber-800/40'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                    ? 'bg-amber-900/30 hover:bg-amber-800/40 text-amber-400 border border-amber-800/30'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/50'
                 }`}
                 aria-label="Toggle theme"
               >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
               <button
                 onClick={() => navigate('/organizer/login')}
-                className="px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-[#0F0F0F] shadow-[#FF7A00]/30 hover:scale-[1.02]"
+                className={`group relative px-6 py-2.5 rounded-xl font-black text-sm transition-all overflow-hidden shadow-lg hover:scale-105 ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-600/30'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
+                }`}
               >
-                Espace Organisateur
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-4 h-4" />
+                  <span>Espace Organisateur</span>
+                </span>
               </button>
             </div>
           </div>

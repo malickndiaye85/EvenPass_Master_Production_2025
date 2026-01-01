@@ -229,7 +229,7 @@ export default function EPscanPage() {
   };
 
   const handleScan = async (qrCode: string) => {
-    if (!qrCode.trim() || isProcessingScan) return;
+    if (!qrCode.trim() || isProcessingScan || showFlash) return;
 
     setIsProcessingScan(true);
     const startTime = Date.now();
@@ -240,6 +240,7 @@ export default function EPscanPage() {
 
       if (!eventId) {
         showError('Événement non configuré');
+        setIsProcessingScan(false);
         return;
       }
 
@@ -344,8 +345,7 @@ export default function EPscanPage() {
     } catch (error) {
       console.error('Scan error:', error);
       showError('Erreur de validation');
-    } finally {
-      setTimeout(() => setIsProcessingScan(false), 2000);
+      setTimeout(() => setIsProcessingScan(false), 3000);
     }
   };
 
@@ -375,6 +375,7 @@ export default function EPscanPage() {
     flashTimeoutRef.current = setTimeout(() => {
       setShowFlash(null);
       flashTimeoutRef.current = null;
+      setTimeout(() => setIsProcessingScan(false), 500);
     }, 1500);
   };
 
@@ -403,6 +404,7 @@ export default function EPscanPage() {
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
         flashTimeoutRef.current = null;
+        setTimeout(() => setIsProcessingScan(false), 500);
       }, 1500);
       setTimeout(() => setLastScanResult(null), 5000);
     } else {
@@ -412,6 +414,7 @@ export default function EPscanPage() {
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
         flashTimeoutRef.current = null;
+        setTimeout(() => setIsProcessingScan(false), 500);
       }, 1500);
       setTimeout(() => setLastScanResult(null), 8000);
     }

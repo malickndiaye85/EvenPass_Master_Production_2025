@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- Background -->
+  <rect width="200" height="80" rx="12" fill="#FFFFFF"/>
+
+  <!-- Orange Circle -->
+  <circle cx="30" cy="40" r="18" fill="#FF7900"/>
+
+  <!-- Text Orange -->
+  <text x="55" y="38" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#000000">Orange</text>
+
+  <!-- Text Money -->
+  <text x="55" y="52" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#FF7900">Money</text>
+</svg>

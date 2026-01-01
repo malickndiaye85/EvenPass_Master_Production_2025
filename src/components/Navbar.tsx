@@ -1,7 +1,8 @@
 import React from 'react';
-import { Ticket, Moon, Sun, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
+import { Moon, Sun, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 interface NavbarProps {
   onNavigate: (page: string) => void;
@@ -25,13 +26,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
     <nav className="fixed top-0 w-full z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 h-20 flex items-center px-8 transition-colors">
       <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
         <div
-          className="flex items-center gap-3 cursor-pointer"
+          className="cursor-pointer"
           onClick={() => onNavigate('home')}
         >
-          <Ticket className="text-orange-500" size={28} />
-          <span className="text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">
-            Even<span className="text-orange-500">Pass</span>
-          </span>
+          <Logo size="md" variant={isDark ? 'dark' : 'light'} />
         </div>
 
         <div className="flex items-center gap-4">
