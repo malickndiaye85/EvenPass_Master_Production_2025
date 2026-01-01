@@ -12,13 +12,7 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/epscan-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
+      "src": "/epscan-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -21,9 +21,10 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-xl font-black mb-6">Liens Rapides</h3>
             <ul className="space-y-3 text-gray-400">
-              <li><a href="#" className="hover:text-orange-500 transition-colors">À propos</a></li>
-              <li><a href="#" className="hover:text-orange-500 transition-colors">Événements</a></li>
-              <li><a href="#" className="hover:text-orange-500 transition-colors">Organisateurs</a></li>
+              <li><a href="/" className="hover:text-orange-500 transition-colors">Événements</a></li>
+              <li><a href="/for-organizers" className="hover:text-orange-500 transition-colors font-bold">Pour les organisateurs</a></li>
+              <li><a href="/how-it-works" className="hover:text-orange-500 transition-colors font-bold">Comment ça marche</a></li>
+              <li><a href="/organizer/login" className="hover:text-orange-500 transition-colors">Espace Organisateur</a></li>
               <li><a href="#" className="hover:text-orange-500 transition-colors">Aide & Support</a></li>
             </ul>
           </div>

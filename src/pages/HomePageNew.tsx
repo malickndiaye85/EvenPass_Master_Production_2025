@@ -151,6 +151,28 @@ export default function HomePageNew() {
 
             <div className="flex items-center gap-3">
               <button
+                onClick={() => navigate('/how-it-works')}
+                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all border ${
+                  isDark
+                    ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-300 border-amber-700/40'
+                    : 'bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200'
+                }`}
+              >
+                Comment ça marche
+              </button>
+
+              <button
+                onClick={() => navigate('/for-organizers')}
+                className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all border ${
+                  isDark
+                    ? 'bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 border-blue-700/40'
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
+                }`}
+              >
+                Pour les organisateurs
+              </button>
+
+              <button
                 onClick={toggleTheme}
                 className={`p-3 rounded-2xl transition-all duration-300 ${
                   isDark
