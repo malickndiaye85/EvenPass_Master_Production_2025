@@ -17,7 +17,8 @@ import {
   X,
   Wifi,
   WifiOff,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -413,7 +414,7 @@ export default function EPscanPage() {
     return (
       <div
         className={`fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300 ${
-          showFlash === 'success' ? 'bg-orange-500' : 'bg-red-600'
+          showFlash === 'success' ? 'bg-green-500' : 'bg-red-600'
         }`}
       >
         <div className="text-center animate-pulse">
@@ -434,13 +435,19 @@ export default function EPscanPage() {
     <div className="min-h-screen bg-black text-white">
       <div className="bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-4 shadow-2xl">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+              isOnline
+                ? 'bg-green-500/20 border border-green-400/50'
+                : 'bg-yellow-500/20 border border-yellow-400/50'
+            }`}
+          >
             {isOnline ? (
-              <Wifi className="w-4 h-4 text-white animate-pulse" />
+              <Wifi className="w-3.5 h-3.5 text-green-400" />
             ) : (
-              <WifiOff className="w-4 h-4 text-yellow-300 animate-pulse" />
+              <WifiOff className="w-3.5 h-3.5 text-yellow-400" />
             )}
-            <span className="text-xs text-white font-semibold">
+            <span className="text-xs text-white font-bold">
               {isOnline ? 'En ligne' : 'Hors ligne'}
             </span>
           </div>
@@ -450,7 +457,7 @@ export default function EPscanPage() {
         </div>
 
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-black text-white tracking-tight">EVENPASS SCAN</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight">EPscan</h1>
           <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/30">
             <span className="text-sm font-bold text-white">{currentGate}</span>
           </div>
@@ -464,18 +471,18 @@ export default function EPscanPage() {
       </div>
 
       <div className="px-4 py-6 grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 backdrop-blur-sm border-2 border-orange-500 rounded-2xl p-4 text-center shadow-lg shadow-orange-500/20">
-          <div className="text-4xl font-black text-orange-500 mb-1">{scanStats.validScans}</div>
-          <div className="text-xs text-orange-400 font-bold uppercase tracking-wide">Validés</div>
+        <div className="bg-gradient-to-br from-green-500/20 to-green-600/10 backdrop-blur-sm border-2 border-green-500 rounded-2xl p-4 text-center shadow-lg shadow-green-500/20">
+          <div className="text-4xl font-bold text-green-500 mb-1">{scanStats.validScans}</div>
+          <div className="text-xs text-green-400 font-bold uppercase tracking-wide">Validés</div>
         </div>
 
         <div className="bg-gradient-to-br from-red-500/20 to-red-600/10 backdrop-blur-sm border-2 border-red-500 rounded-2xl p-4 text-center shadow-lg shadow-red-500/20">
-          <div className="text-4xl font-black text-red-500 mb-1">{scanStats.invalidScans}</div>
+          <div className="text-4xl font-bold text-red-500 mb-1">{scanStats.invalidScans}</div>
           <div className="text-xs text-red-400 font-bold uppercase tracking-wide">Refusés</div>
         </div>
 
         <div className="bg-gradient-to-br from-gray-500/20 to-gray-600/10 backdrop-blur-sm border-2 border-gray-500 rounded-2xl p-4 text-center shadow-lg shadow-gray-500/20">
-          <div className="text-4xl font-black text-gray-400 mb-1">{scanStats.totalScans}</div>
+          <div className="text-4xl font-bold text-gray-400 mb-1">{scanStats.totalScans}</div>
           <div className="text-xs text-gray-400 font-bold uppercase tracking-wide">Total</div>
         </div>
       </div>
@@ -491,7 +498,7 @@ export default function EPscanPage() {
             }`}
           >
             <Camera className="w-5 h-5" />
-            Caméra
+            Auto
           </button>
 
           <button
@@ -582,20 +589,20 @@ export default function EPscanPage() {
           <div
             className={`border-2 rounded-2xl overflow-hidden shadow-2xl ${
               lastScanResult.success
-                ? 'bg-orange-500/10 border-orange-500 shadow-orange-500/30'
+                ? 'bg-green-500/10 border-green-500 shadow-green-500/30'
                 : 'bg-red-500/10 border-red-500 shadow-red-500/30'
             }`}
           >
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 {lastScanResult.success ? (
-                  <CheckCircle className="w-12 h-12 text-orange-500 flex-shrink-0" strokeWidth={3} />
+                  <CheckCircle className="w-12 h-12 text-green-500 flex-shrink-0" strokeWidth={3} />
                 ) : (
                   <XCircle className="w-12 h-12 text-red-500 flex-shrink-0" strokeWidth={3} />
                 )}
                 <div className="flex-1">
                   <p className={`text-xl font-black ${
-                    lastScanResult.success ? 'text-orange-500' : 'text-red-500'
+                    lastScanResult.success ? 'text-green-500' : 'text-red-500'
                   }`}>
                     {lastScanResult.message.toUpperCase()}
                   </p>
@@ -603,6 +610,13 @@ export default function EPscanPage() {
                     {lastScanResult.ticket_reference}
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowArbitrationModal(true)}
+                  className="p-3 bg-gray-900 hover:bg-gray-800 rounded-full transition-colors border border-gray-700"
+                  title="Détails / Arbitrage"
+                >
+                  <Info className="w-5 h-5 text-orange-500" />
+                </button>
               </div>
 
               {lastScanResult.success && lastScanResult.zone_name && (
@@ -638,14 +652,6 @@ export default function EPscanPage() {
                 </div>
               )}
             </div>
-
-            <button
-              onClick={() => setShowArbitrationModal(true)}
-              className="w-full py-4 bg-gray-900 hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-white font-bold border-t-2 border-gray-800"
-            >
-              <Shield className="w-5 h-5 text-orange-500" />
-              Mode Arbitrage
-            </button>
           </div>
         </div>
       )}
