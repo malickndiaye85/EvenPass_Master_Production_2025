@@ -63,8 +63,8 @@
       },
 
       "admins": {
+        ".read": "auth != null",
         "$adminId": {
-          ".read": "auth != null && (auth.uid === $adminId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
           ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
         }
       },
