@@ -23,7 +23,13 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[FIREBASE AUTH] Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('[FIREBASE AUTH] Auth state changed:', {
+        authenticated: !!firebaseUser,
+        email: firebaseUser?.email,
+        uid: firebaseUser?.uid
+      });
       setFirebaseUser(firebaseUser);
       if (firebaseUser) {
         await loadUserProfile(firebaseUser);
@@ -38,7 +44,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
   const loadUserProfile = async (firebaseUser: FirebaseUser) => {
     try {
+      console.log('[FIREBASE AUTH] Loading user profile for:', firebaseUser.uid);
       const isAdmin = firebaseUser.uid === ADMIN_UID;
+      console.log('[FIREBASE AUTH] Is admin UID?', isAdmin, 'Expected:', ADMIN_UID);
 
       let userData = null;
       let organizerData = null;
@@ -48,6 +56,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         const userRef = ref(db, `evenpass/users/${firebaseUser.uid}`);
         const userSnapshot = await get(userRef);
         userData = userSnapshot.val();
+        console.log('[FIREBASE AUTH] User data loaded:', !!userData);
       } catch (error) {
         console.warn('[FIREBASE AUTH] Could not load user data:', error);
       }
@@ -56,6 +65,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         const organizerRef = ref(db, `evenpass/organizers/${firebaseUser.uid}`);
         const organizerSnapshot = await get(organizerRef);
         organizerData = organizerSnapshot.val();
+        console.log('[FIREBASE AUTH] Organizer data loaded:', {
+          exists: !!organizerData,
+          isActive: organizerData?.is_active,
+          status: organizerData?.verification_status
+        });
       } catch (error) {
         console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
       }
@@ -64,6 +78,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
         const adminSnapshot = await get(adminRef);
         adminData = adminSnapshot.val();
+        console.log('[FIREBASE AUTH] Admin data loaded:', {
+          exists: !!adminData,
+          isActive: adminData?.is_active
+        });
       } catch (error) {
         console.warn('[FIREBASE AUTH] Could not load admin data:', error);
       }
@@ -74,8 +92,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       } else if (organizerData && organizerData.is_active && organizerData.verification_status === 'verified') {
         role = 'organizer';
       }
+      console.log('[FIREBASE AUTH] Determined role:', role);
 
-      setUser({
+      const userProfile: AuthUser = {
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
         full_name: userData?.full_name || firebaseUser.displayName || 'Utilisateur',
@@ -107,7 +126,16 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           created_at: adminData.created_at || new Date().toISOString(),
           updated_at: adminData.updated_at || new Date().toISOString(),
         } : undefined,
+      };
+
+      console.log('[FIREBASE AUTH] User profile created:', {
+        email: userProfile.email,
+        role: userProfile.role,
+        hasOrganizer: !!userProfile.organizer,
+        hasAdmin: !!userProfile.admin
       });
+
+      setUser(userProfile);
     } catch (error) {
       console.error('[FIREBASE AUTH] Critical error loading user profile:', error);
 

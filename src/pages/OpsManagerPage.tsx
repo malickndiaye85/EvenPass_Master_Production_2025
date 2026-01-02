@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -14,17 +15,36 @@ import { useAuth } from '../context/FirebaseAuthContext';
 import { mockEvents, mockOpsStats } from '../lib/mockData';
 
 export default function OpsManagerPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading: authLoading, firebaseUser } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 500);
-  }, []);
+    console.log('[OPS MANAGER] Auth state:', {
+      authLoading,
+      user: user?.email,
+      role: user?.role,
+      uid: firebaseUser?.uid
+    });
 
-  if (loading) {
+    if (!authLoading) {
+      if (!user || user.role !== 'admin') {
+        console.log('[OPS MANAGER] Access denied, redirecting to home');
+        navigate('/');
+      } else {
+        console.log('[OPS MANAGER] Access granted');
+        setTimeout(() => setLoading(false), 500);
+      }
+    }
+  }, [authLoading, user, navigate]);
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#FFB800] border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#FFB800] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-sm">Vérification des accès...</p>
+        </div>
       </div>
     );
   }

@@ -7,7 +7,7 @@ import type { OrganizerBalance, PayoutRequest, Event } from '../types';
 
 export default function OrganizerDashboardPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout, firebaseUser } = useAuth();
   const [balance, setBalance] = useState<OrganizerBalance | null>(null);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -27,16 +27,39 @@ export default function OrganizerDashboardPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    console.log('[ORGANIZER DASHBOARD] Auth state:', {
+      authLoading,
+      user: user?.email,
+      role: user?.role,
+      uid: firebaseUser?.uid,
+      organizerStatus: user?.organizer?.verification_status
+    });
+
+    if (!authLoading) {
+      if (!user) {
+        console.log('[ORGANIZER DASHBOARD] No user, redirecting to login');
+        navigate('/organizer/login');
+      } else if (user.role !== 'organizer' && user.role !== 'admin') {
+        console.log('[ORGANIZER DASHBOARD] Not an organizer, redirecting to home');
+        navigate('/');
+      } else {
+        console.log('[ORGANIZER DASHBOARD] Access granted, loading data');
+        loadData();
+      }
+    }
+  }, [authLoading, user, navigate]);
 
   const loadData = () => {
     try {
-      console.log('[MOCK DATA] Loading organizer dashboard...');
+      console.log('[MOCK DATA] Loading organizer dashboard...', {
+        userRole: user?.role,
+        uid: firebaseUser?.uid,
+        organizerId: user?.organizer?.id
+      });
 
       const mockBalance: OrganizerBalance = {
         id: '1',
-        organizer_id: '1',
+        organizer_id: user?.organizer?.id || '1',
         available_balance: mockStats.totalRevenue - mockStats.pendingPayouts,
         pending_balance: mockStats.pendingPayouts,
         total_earnings: mockStats.totalRevenue,
@@ -53,9 +76,9 @@ export default function OrganizerDashboardPage() {
       setBalance(mockBalance);
       setPayouts(mockPayouts as PayoutRequest[]);
       setEvents(mockEvents.filter(e => e.organizer_id === '1') as Event[]);
-      console.log('[MOCK DATA] Loaded organizer data');
+      console.log('[MOCK DATA] Loaded organizer data successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('[ORGANIZER DASHBOARD] Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -96,10 +119,13 @@ export default function OrganizerDashboardPage() {
     return amount - technicalFees;
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-sm">Vérification des accès...</p>
+        </div>
       </div>
     );
   }

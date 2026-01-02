@@ -38,7 +38,7 @@ interface Event {
 
 export default function AdminFinancePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout, firebaseUser } = useAuth();
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
@@ -56,10 +56,23 @@ export default function AdminFinancePage() {
   const [showBulkSalesModal, setShowBulkSalesModal] = useState(false);
 
   useEffect(() => {
-    if (user && user.role !== 'admin') {
-      navigate('/');
+    console.log('[ADMIN FINANCE] Auth state:', {
+      authLoading,
+      user: user?.email,
+      role: user?.role,
+      uid: firebaseUser?.uid
+    });
+
+    if (!authLoading) {
+      if (!user || user.role !== 'admin') {
+        console.log('[ADMIN FINANCE] Access denied, redirecting to home');
+        navigate('/');
+      } else {
+        console.log('[ADMIN FINANCE] Access granted, loading data');
+        loadData();
+      }
     }
-  }, [user, navigate]);
+  }, [authLoading, user, navigate]);
 
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
@@ -68,13 +81,9 @@ export default function AdminFinancePage() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = () => {
     try {
-      console.log('[MOCK DATA] Loading admin finance...');
+      console.log('[MOCK DATA] Loading admin finance...', { userRole: user?.role, uid: firebaseUser?.uid });
 
       setPayouts(mockPayouts as any);
       setPendingEvents(mockEvents.filter(e => e.status === 'draft') as Event[]);
@@ -86,9 +95,9 @@ export default function AdminFinancePage() {
       const organizerPayouts = totalSales * 0.935;
 
       setStats({ totalSales, platformCommission, payoutFees, organizerPayouts });
-      console.log('[MOCK DATA] Loaded admin finance data');
+      console.log('[MOCK DATA] Loaded admin finance data successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('[ADMIN FINANCE] Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -171,10 +180,13 @@ export default function AdminFinancePage() {
     return Math.round(amount).toLocaleString('fr-FR');
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0B] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#FF5F05] border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#FF5F05] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-sm">Vérification des accès...</p>
+        </div>
       </div>
     );
   }
