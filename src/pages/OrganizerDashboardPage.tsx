@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Calendar, Wallet, ArrowUpCircle, Clock, CheckCircle, LogOut, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/MockAuthContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 import { mockEvents, mockStats, mockPayouts } from '../lib/mockData';
 import type { OrganizerBalance, PayoutRequest, Event } from '../types';
 

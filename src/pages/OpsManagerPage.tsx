@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import { useAuth } from '../context/MockAuthContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 import { mockEvents, mockOpsStats } from '../lib/mockData';
 
 export default function OpsManagerPage() {
