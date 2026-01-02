@@ -49,8 +49,8 @@
       },
 
       "users": {
+        ".read": "auth != null",
         "$userId": {
-          ".read": "auth != null && (auth.uid === $userId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
           ".write": "auth != null && (auth.uid === $userId || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
         }
       },
