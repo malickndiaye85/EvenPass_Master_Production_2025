@@ -76,20 +76,16 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
       }
 
-      if (isAdmin) {
-        try {
-          const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
-          const adminSnapshot = await get(adminRef);
-          adminData = adminSnapshot.val();
-          console.log('[FIREBASE AUTH] Admin data loaded:', {
-            exists: !!adminData,
-            isActive: adminData?.is_active
-          });
-        } catch (error) {
-          console.warn('[FIREBASE AUTH] Could not load admin data:', error);
-        }
-      } else {
-        console.log('[FIREBASE AUTH] Skipping admin data load (not admin UID)');
+      try {
+        const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
+        const adminSnapshot = await get(adminRef);
+        adminData = adminSnapshot.val();
+        console.log('[FIREBASE AUTH] Admin data loaded:', {
+          exists: !!adminData,
+          isActive: adminData?.is_active
+        });
+      } catch (error) {
+        console.warn('[FIREBASE AUTH] Could not load admin data:', error);
       }
 
       let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
