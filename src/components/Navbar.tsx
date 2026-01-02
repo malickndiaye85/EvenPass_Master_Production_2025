@@ -26,10 +26,13 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
     <nav className="fixed top-0 w-full z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 h-20 flex items-center px-8 transition-colors">
       <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
         <div
-          className="cursor-pointer"
+          className="cursor-pointer flex flex-col"
           onClick={() => onNavigate('home')}
         >
           <Logo size="md" variant="default" />
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wide -mt-1 ml-1">
+            Digital Ticketing & Access Control
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
