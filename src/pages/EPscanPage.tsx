@@ -162,14 +162,17 @@ export default function EPscanPage() {
         { facingMode: 'environment' },
         config,
         (decodedText) => {
-          if (isProcessingScan) {
+          if (isProcessingRef.current || showFlash) {
+            console.log('🚫 Scan ignoré - traitement en cours');
             return;
           }
           const now = Date.now();
-          if (now - lastScanTimeRef.current < 2000) {
+          if (now - lastScanTimeRef.current < 3000) {
+            console.log('🚫 Scan ignoré - debounce');
             return;
           }
           lastScanTimeRef.current = now;
+          isProcessingRef.current = true;
           handleScan(decodedText);
         },
         undefined
@@ -229,9 +232,14 @@ export default function EPscanPage() {
   };
 
   const handleScan = async (qrCode: string) => {
-    if (!qrCode.trim() || isProcessingScan || showFlash) return;
+    if (!qrCode.trim() || isProcessingRef.current) {
+      console.log('🚫 handleScan bloqué');
+      return;
+    }
 
+    console.log('✅ handleScan démarré');
     setIsProcessingScan(true);
+    isProcessingRef.current = true;
     const startTime = Date.now();
     const trimmedCode = qrCode.trim();
 
@@ -240,7 +248,6 @@ export default function EPscanPage() {
 
       if (!eventId) {
         showError('Événement non configuré');
-        setIsProcessingScan(false);
         return;
       }
 
@@ -323,6 +330,8 @@ export default function EPscanPage() {
       if (scanError) {
         console.error('Scan insert error:', scanError);
         showError('Erreur lors de l\'enregistrement du scan');
+        setIsProcessingScan(false);
+        isProcessingRef.current = false;
         return;
       }
 
@@ -374,8 +383,10 @@ export default function EPscanPage() {
     flashTimeoutRef.current = setTimeout(() => {
       setShowFlash(null);
       setIsProcessingScan(false);
+      isProcessingRef.current = false;
       flashTimeoutRef.current = null;
-    }, 2000);
+      console.log('✅ Erreur traitée - prêt pour nouveau scan');
+    }, 3000);
   };
 
   const processScanResult = (result: ScanResult, startTime: number) => {
@@ -403,8 +414,10 @@ export default function EPscanPage() {
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
         setIsProcessingScan(false);
+        isProcessingRef.current = false;
         flashTimeoutRef.current = null;
-      }, 2000);
+        console.log('✅ Scan réussi - prêt pour nouveau scan');
+      }, 3000);
       setTimeout(() => setLastScanResult(null), 5000);
     } else {
       setShowFlash('error');
@@ -413,15 +426,17 @@ export default function EPscanPage() {
       flashTimeoutRef.current = setTimeout(() => {
         setShowFlash(null);
         setIsProcessingScan(false);
+        isProcessingRef.current = false;
         flashTimeoutRef.current = null;
-      }, 2000);
+        console.log('✅ Scan échoué - prêt pour nouveau scan');
+      }, 3000);
       setTimeout(() => setLastScanResult(null), 8000);
     }
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (scanInput.trim()) {
+    if (scanInput.trim() && !isProcessingRef.current) {
       handleScan(scanInput);
     }
   };
