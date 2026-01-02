@@ -182,7 +182,14 @@ export default function OrganizerSignupPage() {
       navigate('/organizer/login');
     } catch (err: any) {
       console.error('[FIREBASE] Error creating organizer:', err);
-      setError(err.message || 'Erreur lors de la création du compte');
+
+      // Message d'erreur plus clair pour l'email déjà utilisé
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Cet email est déjà utilisé. Connectez-vous ou utilisez un autre email.');
+      } else {
+        setError(err.message || 'Erreur lors de la création du compte');
+      }
+
       setLoading(false);
     }
   };
