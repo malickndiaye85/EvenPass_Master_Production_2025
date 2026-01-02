@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from '../firebase';
+import { getStorage } from 'firebase/storage';
 
 export default function OrganizerSignupPage() {
   const navigate = useNavigate();
@@ -108,78 +112,63 @@ export default function OrganizerSignupPage() {
     setLoading(true);
 
     try {
-      // 1. Créer le compte auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+      const userId = user.uid;
+
+      await set(ref(db, `evenpass/users/${userId}`), {
+        uid: userId,
         email: formData.email,
-        password: formData.password,
+        full_name: formData.full_name,
+        phone: formData.phone,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        role: 'organizer'
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Erreur lors de la création du compte');
-
-      const userId = authData.user.id;
-
-      // 2. Créer le profil utilisateur
-      const { error: userError } = await supabase
-        .from('users')
-        .insert({
-          id: userId,
-          email: formData.email,
-          full_name: formData.full_name,
-          phone: formData.phone,
-        });
-
-      if (userError) throw userError;
-
-      // 3. Upload documents (si présents)
       const verificationDocuments: any = {};
+      const storage = getStorage();
 
       if (documents.cni) {
-        const cniPath = `${userId}/cni_${Date.now()}.${documents.cni.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage
-          .from('verification-documents')
-          .upload(cniPath, documents.cni);
-
-        if (!uploadError) {
-          verificationDocuments.cni = cniPath;
-        }
+        const cniPath = `verification-documents/${userId}/cni_${Date.now()}.${documents.cni.name.split('.').pop()}`;
+        const cniRef = storageRef(storage, cniPath);
+        await uploadBytes(cniRef, documents.cni);
+        const cniUrl = await getDownloadURL(cniRef);
+        verificationDocuments.cni = cniUrl;
       }
 
       if (documents.registre) {
-        const registrePath = `${userId}/registre_${Date.now()}.${documents.registre.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage
-          .from('verification-documents')
-          .upload(registrePath, documents.registre);
-
-        if (!uploadError) {
-          verificationDocuments.registre = registrePath;
-        }
+        const registrePath = `verification-documents/${userId}/registre_${Date.now()}.${documents.registre.name.split('.').pop()}`;
+        const registreRef = storageRef(storage, registrePath);
+        await uploadBytes(registreRef, documents.registre);
+        const registreUrl = await getDownloadURL(registreRef);
+        verificationDocuments.registre = registreUrl;
       }
 
-      // 4. Créer le profil organisateur
-      const { error: organizerError } = await supabase
-        .from('organizers')
-        .insert({
-          user_id: userId,
-          organization_name: formData.organization_name,
-          organization_type: formData.organization_type,
-          description: formData.description,
-          contact_email: formData.contact_email,
-          contact_phone: formData.contact_phone,
-          website: formData.website || null,
-          verification_status: 'pending',
-          verification_documents: verificationDocuments,
-          bank_account_info: {
-            provider: formData.merchant_provider,
-            phone: formData.merchant_number,
-          },
-          is_active: false,
-        });
+      await set(ref(db, `evenpass/organizers/${userId}`), {
+        uid: userId,
+        user_id: userId,
+        organization_name: formData.organization_name,
+        organization_type: formData.organization_type,
+        description: formData.description,
+        contact_email: formData.contact_email,
+        contact_phone: formData.contact_phone,
+        website: formData.website || null,
+        verification_status: 'pending',
+        verification_documents: verificationDocuments,
+        bank_account_info: {
+          provider: formData.merchant_provider,
+          phone: formData.merchant_number,
+        },
+        commission_rate: 10,
+        total_events_created: 0,
+        total_tickets_sold: 0,
+        is_active: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-      if (organizerError) throw organizerError;
-
-      // 5. Déconnexion immédiate (pour éviter accès non autorisé)
-      await supabase.auth.signOut();
+      await auth.signOut();
 
       alert('✅ Demande envoyée avec succès!\n\n' +
         'Votre compte organisateur est en attente de validation par notre équipe.\n\n' +
@@ -189,7 +178,7 @@ export default function OrganizerSignupPage() {
 
       navigate('/organizer/login');
     } catch (err: any) {
-      console.error('Error creating organizer:', err);
+      console.error('[FIREBASE] Error creating organizer:', err);
       setError(err.message || 'Erreur lors de la création du compte');
       setLoading(false);
     }
