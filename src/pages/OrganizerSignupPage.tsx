@@ -116,7 +116,7 @@ export default function OrganizerSignupPage() {
       const user = userCredential.user;
       const userId = user.uid;
 
-      await set(ref(db, `evenpass/users/${userId}`), {
+      await set(ref(db, `users/${userId}`), {
         uid: userId,
         email: formData.email,
         full_name: formData.full_name,
@@ -145,7 +145,7 @@ export default function OrganizerSignupPage() {
         verificationDocuments.registre = registreUrl;
       }
 
-      await set(ref(db, `evenpass/organizers/${userId}`), {
+      await set(ref(db, `organizers/${userId}`), {
         uid: userId,
         user_id: userId,
         organization_name: formData.organization_name,

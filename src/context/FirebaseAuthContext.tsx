@@ -53,7 +53,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       let adminData = null;
 
       try {
-        const userRef = ref(db, `evenpass/users/${firebaseUser.uid}`);
+        const userRef = ref(db, `users/${firebaseUser.uid}`);
         const userSnapshot = await get(userRef);
         userData = userSnapshot.val();
         console.log('[FIREBASE AUTH] User data loaded:', !!userData);
@@ -62,7 +62,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       try {
-        const organizerRef = ref(db, `evenpass/organizers/${firebaseUser.uid}`);
+        const organizerRef = ref(db, `organizers/${firebaseUser.uid}`);
         const organizerSnapshot = await get(organizerRef);
         organizerData = organizerSnapshot.val();
         console.log('[FIREBASE AUTH] Organizer data loaded:', {
@@ -77,7 +77,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       try {
-        const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
+        const adminRef = ref(db, `admins/${firebaseUser.uid}`);
         const adminSnapshot = await get(adminRef);
         adminData = adminSnapshot.val();
         console.log('[FIREBASE AUTH] Admin data loaded:', {

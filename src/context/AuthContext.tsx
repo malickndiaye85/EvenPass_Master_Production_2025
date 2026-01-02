@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    await set(ref(db, `evenpass/users/${user.uid}`), {
+    await set(ref(db, `users/${user.uid}`), {
       uid: user.uid,
       email: email,
       name: userData.name,

@@ -21,7 +21,7 @@ export default function OrganizerLoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const organizerRef = ref(db, `evenpass/organizers/${user.uid}`);
+      const organizerRef = ref(db, `organizers/${user.uid}`);
       const organizerSnapshot = await get(organizerRef);
       const organizerData = organizerSnapshot.val();
 
