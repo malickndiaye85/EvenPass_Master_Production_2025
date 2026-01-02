@@ -112,6 +112,9 @@ export default function OrganizerSignupPage() {
     setLoading(true);
 
     try {
+      // Déconnecter tout utilisateur actuellement connecté
+      await auth.signOut();
+
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const userId = user.uid;
