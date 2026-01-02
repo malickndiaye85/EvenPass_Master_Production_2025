@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
-import { supabase } from '../lib/supabase';
+import { ref, get } from 'firebase/database';
+import { auth, db } from '../firebase';
 import type { AuthUser } from '../types';
 
 const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
@@ -39,32 +39,22 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       const isAdmin = firebaseUser.uid === ADMIN_UID;
 
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', firebaseUser.uid)
-        .maybeSingle();
+      const userRef = ref(db, `evenpass/users/${firebaseUser.uid}`);
+      const userSnapshot = await get(userRef);
+      const userData = userSnapshot.val();
 
-      if (userError && userError.code !== 'PGRST116') {
-        console.error('Error loading user:', userError);
-      }
+      const organizerRef = ref(db, `evenpass/organizers/${firebaseUser.uid}`);
+      const organizerSnapshot = await get(organizerRef);
+      const organizerData = organizerSnapshot.val();
 
-      const { data: organizer } = await supabase
-        .from('organizers')
-        .select('*')
-        .eq('user_id', firebaseUser.uid)
-        .maybeSingle();
-
-      const { data: admin } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', firebaseUser.uid)
-        .maybeSingle();
+      const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
+      const adminSnapshot = await get(adminRef);
+      const adminData = adminSnapshot.val();
 
       let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
-      if (isAdmin || (admin && admin.is_active)) {
+      if (isAdmin || (adminData && adminData.is_active)) {
         role = 'admin';
-      } else if (organizer && organizer.is_active) {
+      } else if (organizerData && organizerData.is_active && organizerData.verification_status === 'verified') {
         role = 'organizer';
       }
 
@@ -79,11 +69,30 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         created_at: userData?.created_at || new Date().toISOString(),
         updated_at: userData?.updated_at || new Date().toISOString(),
         role,
-        organizer: organizer || undefined,
-        admin: admin || undefined,
+        organizer: organizerData ? {
+          id: firebaseUser.uid,
+          user_id: firebaseUser.uid,
+          organization_name: organizerData.organization_name,
+          organization_type: organizerData.organization_type || 'company',
+          verification_status: organizerData.verification_status || 'pending',
+          contact_email: organizerData.contact_email || firebaseUser.email,
+          contact_phone: organizerData.contact_phone || userData?.phone,
+          is_active: organizerData.is_active || false,
+          created_at: organizerData.created_at || new Date().toISOString(),
+          updated_at: organizerData.updated_at || new Date().toISOString(),
+        } : undefined,
+        admin: adminData ? {
+          id: firebaseUser.uid,
+          user_id: firebaseUser.uid,
+          role: adminData.role || 'super_admin',
+          permissions: adminData.permissions || ['all'],
+          is_active: adminData.is_active || true,
+          created_at: adminData.created_at || new Date().toISOString(),
+          updated_at: adminData.updated_at || new Date().toISOString(),
+        } : undefined,
       });
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('[FIREBASE AUTH] Error loading user profile:', error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -95,6 +104,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       await signInWithEmailAndPassword(auth, email, password);
       return { error: null };
     } catch (error) {
+      console.error('[FIREBASE AUTH] Sign in error:', error);
       return { error: error as Error };
     }
   };
