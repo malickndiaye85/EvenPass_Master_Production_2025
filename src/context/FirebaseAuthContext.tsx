@@ -12,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,17 +40,33 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       const isAdmin = firebaseUser.uid === ADMIN_UID;
 
-      const userRef = ref(db, `evenpass/users/${firebaseUser.uid}`);
-      const userSnapshot = await get(userRef);
-      const userData = userSnapshot.val();
+      let userData = null;
+      let organizerData = null;
+      let adminData = null;
 
-      const organizerRef = ref(db, `evenpass/organizers/${firebaseUser.uid}`);
-      const organizerSnapshot = await get(organizerRef);
-      const organizerData = organizerSnapshot.val();
+      try {
+        const userRef = ref(db, `evenpass/users/${firebaseUser.uid}`);
+        const userSnapshot = await get(userRef);
+        userData = userSnapshot.val();
+      } catch (error) {
+        console.warn('[FIREBASE AUTH] Could not load user data:', error);
+      }
 
-      const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
-      const adminSnapshot = await get(adminRef);
-      const adminData = adminSnapshot.val();
+      try {
+        const organizerRef = ref(db, `evenpass/organizers/${firebaseUser.uid}`);
+        const organizerSnapshot = await get(organizerRef);
+        organizerData = organizerSnapshot.val();
+      } catch (error) {
+        console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
+      }
+
+      try {
+        const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
+        const adminSnapshot = await get(adminRef);
+        adminData = adminSnapshot.val();
+      } catch (error) {
+        console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+      }
 
       let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
       if (isAdmin || (adminData && adminData.is_active)) {
@@ -92,8 +109,21 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         } : undefined,
       });
     } catch (error) {
-      console.error('[FIREBASE AUTH] Error loading user profile:', error);
-      setUser(null);
+      console.error('[FIREBASE AUTH] Critical error loading user profile:', error);
+
+      const isAdmin = firebaseUser.uid === ADMIN_UID;
+      setUser({
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        full_name: firebaseUser.displayName || 'Utilisateur',
+        phone: null,
+        avatar_url: firebaseUser.photoURL || null,
+        preferred_language: 'fr',
+        preferred_payment_method: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        role: isAdmin ? 'admin' : 'customer',
+      });
     } finally {
       setLoading(false);
     }
@@ -116,7 +146,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signOut, logout: signOut }}>
       {children}
     </AuthContext.Provider>
   );
