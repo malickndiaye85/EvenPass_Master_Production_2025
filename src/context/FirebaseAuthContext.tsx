@@ -67,32 +67,62 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         organizerData = organizerSnapshot.val();
         console.log('[FIREBASE AUTH] Organizer data loaded:', {
           exists: !!organizerData,
+          fullData: organizerData,
           isActive: organizerData?.is_active,
-          status: organizerData?.verification_status
+          status: organizerData?.verification_status,
+          orgName: organizerData?.organization_name
         });
       } catch (error) {
         console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
       }
 
-      try {
-        const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
-        const adminSnapshot = await get(adminRef);
-        adminData = adminSnapshot.val();
-        console.log('[FIREBASE AUTH] Admin data loaded:', {
-          exists: !!adminData,
-          isActive: adminData?.is_active
-        });
-      } catch (error) {
-        console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+      if (isAdmin) {
+        try {
+          const adminRef = ref(db, `evenpass/admins/${firebaseUser.uid}`);
+          const adminSnapshot = await get(adminRef);
+          adminData = adminSnapshot.val();
+          console.log('[FIREBASE AUTH] Admin data loaded:', {
+            exists: !!adminData,
+            isActive: adminData?.is_active
+          });
+        } catch (error) {
+          console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+        }
+      } else {
+        console.log('[FIREBASE AUTH] Skipping admin data load (not admin UID)');
       }
 
       let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
+
+      console.log('[FIREBASE AUTH] Role determination checks:', {
+        isAdmin,
+        hasOrganizerData: !!organizerData,
+        organizerIsActive: organizerData?.is_active,
+        organizerIsActiveType: typeof organizerData?.is_active,
+        organizerStatus: organizerData?.verification_status,
+        organizerStatusType: typeof organizerData?.verification_status
+      });
+
       if (isAdmin || (adminData && adminData.is_active)) {
         role = 'admin';
-      } else if (organizerData && organizerData.is_active && organizerData.verification_status === 'verified') {
-        role = 'organizer';
+        console.log('[FIREBASE AUTH] Role set to admin (isAdmin:', isAdmin, 'adminData:', !!adminData, ')');
+      } else if (organizerData) {
+        if (organizerData.is_active === true && organizerData.verification_status === 'verified') {
+          role = 'organizer';
+          console.log('[FIREBASE AUTH] Role set to organizer (verified)');
+        } else if (organizerData.verification_status === 'pending') {
+          console.log('[FIREBASE AUTH] Organizer pending verification');
+        } else {
+          console.log('[FIREBASE AUTH] Organizer data exists but conditions not met:', {
+            is_active: organizerData.is_active,
+            is_active_equals_true: organizerData.is_active === true,
+            verification_status: organizerData.verification_status,
+            verification_status_equals_verified: organizerData.verification_status === 'verified'
+          });
+        }
       }
-      console.log('[FIREBASE AUTH] Determined role:', role);
+
+      console.log('[FIREBASE AUTH] Final determined role:', role);
 
       const userProfile: AuthUser = {
         id: firebaseUser.uid,
