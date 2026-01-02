@@ -38,7 +38,7 @@ interface Event {
 
 export default function AdminFinancePage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
@@ -54,6 +54,12 @@ export default function AdminFinancePage() {
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification'>('payouts');
   const [showBulkSalesModal, setShowBulkSalesModal] = useState(false);
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
