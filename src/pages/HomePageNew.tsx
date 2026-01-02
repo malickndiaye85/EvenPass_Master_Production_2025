@@ -26,7 +26,7 @@ import {
   Star,
   Flame
 } from 'lucide-react';
-import { useAuth } from '../context/MockAuthContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { mockEvents, mockCategories } from '../lib/mockData';
 import type { Event, EventCategory } from '../types';

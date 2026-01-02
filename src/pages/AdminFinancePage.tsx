@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut, Package } from 'lucide-react';
-import { useAuth } from '../context/MockAuthContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
 import BulkSalesModal from '../components/BulkSalesModal';

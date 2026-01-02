@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, DollarSign, Mail, Lock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/MockAuthContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 
 export default function AdminFinanceLoginPage() {
   const navigate = useNavigate();
