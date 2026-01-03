@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { auth, db } from '../firebase';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { supabase } from '../lib/supabase';
 
 export default function OrganizerSignupPage() {
   const navigate = useNavigate();
@@ -151,7 +152,7 @@ export default function OrganizerSignupPage() {
         console.log('[ORGANIZER SIGNUP] Registre uploaded successfully to Cloudinary');
       }
 
-      console.log('[ORGANIZER SIGNUP] Creating organizer profile...');
+      console.log('[ORGANIZER SIGNUP] Creating organizer profile in Firebase...');
       await set(ref(db, `organizers/${userId}`), {
         uid: userId,
         user_id: userId,
@@ -174,7 +175,52 @@ export default function OrganizerSignupPage() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
-      console.log('[ORGANIZER SIGNUP] Organizer profile created successfully');
+      console.log('[ORGANIZER SIGNUP] Organizer profile created in Firebase');
+
+      console.log('[ORGANIZER SIGNUP] Creating user in Supabase...');
+      const { error: userError } = await supabase
+        .from('users')
+        .insert({
+          id: userId,
+          email: formData.email,
+          full_name: formData.full_name,
+          phone: formData.phone,
+          role: 'organizer',
+        });
+
+      if (userError) {
+        console.error('[SUPABASE] Error creating user:', userError);
+      } else {
+        console.log('[ORGANIZER SIGNUP] User created in Supabase');
+      }
+
+      console.log('[ORGANIZER SIGNUP] Creating organizer in Supabase...');
+      const { error: organizerError } = await supabase
+        .from('organizers')
+        .insert({
+          user_id: userId,
+          organization_name: formData.organization_name,
+          organization_type: formData.organization_type,
+          description: formData.description || null,
+          contact_email: formData.contact_email,
+          contact_phone: formData.contact_phone,
+          website: formData.website || null,
+          city: formData.city || null,
+          verification_status: 'pending',
+          verification_documents: verificationDocuments,
+          bank_account_info: {
+            provider: formData.merchant_provider,
+            phone: formData.merchant_number,
+          },
+          commission_rate: 10,
+          is_active: false,
+        });
+
+      if (organizerError) {
+        console.error('[SUPABASE] Error creating organizer:', organizerError);
+      } else {
+        console.log('[ORGANIZER SIGNUP] Organizer created in Supabase successfully');
+      }
 
       console.log('[ORGANIZER SIGNUP] Signing out user...');
       await auth.signOut();
