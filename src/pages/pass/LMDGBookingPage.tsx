@@ -36,6 +36,7 @@ const LMDGBookingPage: React.FC = () => {
   const [adultsCount, setAdultsCount] = useState(1);
   const [childrenCount, setChildrenCount] = useState(0);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'wave' | 'orange'>('wave');
   const [loading, setLoading] = useState(false);
 
   // Détection jour de la semaine pour grille horaires
@@ -49,19 +50,24 @@ const LMDGBookingPage: React.FC = () => {
   };
 
   const getNextAvailableTime = (): string => {
+    const availableTimes = getAvailableTimes();
+    return availableTimes.length > 0 ? availableTimes[0] : getSchedules()[direction][0];
+  };
+
+  const getAvailableTimes = (): string[] => {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const schedules = getSchedules();
     const times = schedules[direction];
 
-    for (const time of times) {
+    const futureTimes = times.filter(time => {
       const [hour, minute] = time.replace('h', ':').split(':').map(Number);
-      if (hour > currentHour || (hour === currentHour && minute > currentMinute)) {
-        return time;
-      }
-    }
-    return times[0]; // Si plus d'horaire aujourd'hui, retourner le premier
+      return hour > currentHour || (hour === currentHour && minute > currentMinute);
+    });
+
+    // Retourner les 3 prochains créneaux disponibles
+    return futureTimes.length > 0 ? futureTimes.slice(0, 3) : times.slice(0, 3);
   };
 
   useEffect(() => {
@@ -105,12 +111,13 @@ const LMDGBookingPage: React.FC = () => {
     const bookingData = {
       reference: `LMDG-${Date.now()}`,
       direction: direction === 'dakar' ? 'Dakar → Gorée' : 'Gorée → Dakar',
-      trip_type: 'round_trip', // Toujours A/R
+      trip_type: 'round_trip',
       departure_time: selectedTime,
       category,
       adults_count: adultsCount,
       children_count: childrenCount,
       phone_number: phoneNumber,
+      payment_method: paymentMethod,
       total_amount: calculateTotal(),
       payment_status: 'pending',
       created_at: Date.now()
@@ -118,16 +125,14 @@ const LMDGBookingPage: React.FC = () => {
 
     try {
       await set(bookingRef, bookingData);
-      setLoading(false);
 
-      navigate('/pass/payment', {
-        state: {
-          bookingId: bookingRef.key,
-          amount: calculateTotal(),
-          service: 'LMDG Dakar-Gorée',
-          reference: bookingData.reference
-        }
-      });
+      // Simuler le traitement du paiement
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      setLoading(false);
+      alert(`✓ Achat validé !\n\nRéférence : ${bookingData.reference}\nMontant : ${calculateTotal().toLocaleString()} FCFA\nPaiement via ${paymentMethod === 'wave' ? 'Wave' : 'Orange Money'}\n\nVotre QR Code a été envoyé au ${phoneNumber}`);
+
+      navigate('/pass/services');
     } catch (error) {
       setLoading(false);
       alert('Erreur lors de l\'achat');
@@ -251,23 +256,35 @@ const LMDGBookingPage: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      {getSchedules()[direction].map((time) => (
+                    <div className="space-y-3">
+                      {getAvailableTimes().map((time, index) => (
                         <button
                           key={time}
                           onClick={() => setSelectedTime(time)}
-                          className={`py-4 px-3 font-bold text-lg transition-all transform hover:scale-105 ${
+                          className={`w-full py-6 px-6 font-black text-2xl transition-all transform hover:scale-105 ${
                             selectedTime === time
                               ? isDark
-                                ? 'bg-cyan-500 text-white shadow-lg'
-                                : 'bg-[#0A7EA3] text-white shadow-lg'
+                                ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white shadow-2xl'
+                                : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] text-white shadow-2xl'
                               : isDark
-                                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                : 'bg-white text-gray-900 hover:bg-gray-100'
+                                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 border-2 border-gray-700'
+                                : 'bg-white text-gray-900 hover:bg-gray-100 border-2 border-gray-300'
                           }`}
-                          style={{ borderRadius: '15px 5px 15px 5px' }}
+                          style={{ borderRadius: '25px 10px 25px 10px' }}
                         >
-                          {time}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className={`text-3xl font-black ${selectedTime === time ? 'text-white' : isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                                {time}
+                              </div>
+                              <div className={`text-sm font-semibold mt-1 ${selectedTime === time ? 'text-white/80' : isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                {index === 0 ? 'Prochain départ' : `Dans ${index + 1}${index === 0 ? 'er' : 'ème'}`}
+                              </div>
+                            </div>
+                            {selectedTime === time && (
+                              <Check className="w-8 h-8 text-white" />
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -566,6 +583,57 @@ const LMDGBookingPage: React.FC = () => {
                     </div>
                     <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       QR Code envoyé par SMS
+                    </div>
+                  </div>
+
+                  <div className={`p-6 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`} style={{ borderRadius: '25px 12px 25px 12px' }}>
+                    <div className={`text-sm font-semibold mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Mode de paiement</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setPaymentMethod('wave')}
+                        className={`p-6 transition-all transform hover:scale-105 ${
+                          paymentMethod === 'wave'
+                            ? isDark
+                              ? 'bg-[#1E3A8A] border-4 border-blue-400 shadow-2xl'
+                              : 'bg-blue-50 border-4 border-blue-500 shadow-2xl'
+                            : isDark
+                              ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
+                              : 'bg-white border-2 border-gray-300 opacity-60'
+                        }`}
+                        style={{ borderRadius: '20px 8px 20px 8px' }}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                            <span className="text-3xl font-black text-[#1E3A8A]">W</span>
+                          </div>
+                          <div className={`text-xl font-black ${paymentMethod === 'wave' ? isDark ? 'text-blue-400' : 'text-blue-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                            Wave
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setPaymentMethod('orange')}
+                        className={`p-6 transition-all transform hover:scale-105 ${
+                          paymentMethod === 'orange'
+                            ? isDark
+                              ? 'bg-[#D97706] border-4 border-orange-400 shadow-2xl'
+                              : 'bg-orange-50 border-4 border-orange-500 shadow-2xl'
+                            : isDark
+                              ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
+                              : 'bg-white border-2 border-gray-300 opacity-60'
+                        }`}
+                        style={{ borderRadius: '8px 20px 8px 20px' }}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                            <span className="text-3xl font-black text-[#FF7A00]">OM</span>
+                          </div>
+                          <div className={`text-xl font-black ${paymentMethod === 'orange' ? isDark ? 'text-orange-400' : 'text-orange-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                            Orange Money
+                          </div>
+                        </div>
+                      </button>
                     </div>
                   </div>
 

@@ -47,7 +47,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePageNew />} />
+      <Route path="/" element={<PassLandingPage />} />
+      <Route path="/even" element={<HomePageNew />} />
       <Route path="/event/:slug" element={<EventDetailPage />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
@@ -88,14 +89,12 @@ function AppRoutes() {
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
 
-      <Route path="/pass" element={<PassLandingPage />} />
       <Route path="/pass/services" element={<PassServicesPage />} />
       <Route path="/pass/lmdg" element={<LMDGBookingPage />} />
       <Route path="/pass/cosama" element={<COSAMABookingPage />} />
       <Route path="/pass/interregional" element={<InterregionalBookingPage />} />
-
-      <Route path="/subscription" element={<SubscriptionPage />} />
-      <Route path="/wallet" element={<WalletPage />} />
+      <Route path="/pass/subscriptions" element={<SubscriptionPage />} />
+      <Route path="/pass/wallet" element={<WalletPage />} />
 
       <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />

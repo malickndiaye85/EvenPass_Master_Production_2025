@@ -10,7 +10,7 @@ const PassLandingPage: React.FC = () => {
   const [hoveredSide, setHoveredSide] = useState<'even' | 'pass' | null>(null);
 
   const handleEvenClick = () => {
-    navigate('/');
+    navigate('/even');
   };
 
   const handlePassClick = () => {

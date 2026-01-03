@@ -106,7 +106,7 @@ const PassServicesPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <button onClick={() => navigate('/pass')} className="flex items-center gap-3 group">
+              <button onClick={() => navigate('/')} className="flex items-center gap-3 group">
                 <Logo size="md" variant="default" />
                 <div className="flex items-center gap-2">
                   <span className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -124,11 +124,12 @@ const PassServicesPage: React.FC = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/pass/wallet')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all transform hover:scale-105 ${
+                className={`flex items-center gap-2 px-4 py-2 font-bold transition-all transform hover:scale-105 ${
                   isDark
                     ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white shadow-lg'
                     : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] text-white shadow-lg'
                 }`}
+                style={{ borderRadius: '20px 8px 20px 8px' }}
               >
                 <Wallet className="w-5 h-5" />
                 Mon Wallet
@@ -143,7 +144,7 @@ const PassServicesPage: React.FC = () => {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/even')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   isDark
                     ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -295,11 +296,12 @@ const PassServicesPage: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/pass/subscriptions')}
-                className={`px-8 py-4 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-xl ${
+                className={`px-8 py-4 font-bold text-white transition-all hover:scale-105 shadow-xl ${
                   isDark
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
                     : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700'
                 }`}
+                style={{ borderRadius: '25px 10px 25px 10px' }}
               >
                 Découvrir les Pass
                 <ArrowRight className="inline-block ml-2 w-5 h-5" />
@@ -368,7 +370,7 @@ const PassServicesPage: React.FC = () => {
                 Aide
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/even')}
                 className={`text-sm font-medium transition-colors ${
                   isDark ? 'text-gray-400 hover:text-amber-400' : 'text-gray-600 hover:text-orange-600'
                 }`}
