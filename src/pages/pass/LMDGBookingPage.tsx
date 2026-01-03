@@ -3,19 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Ship, Calendar, Users, Phone, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/Logo';
-import { supabase } from '../../firebase';
+import { db } from '../../firebase';
+import { ref, onValue, push, set } from 'firebase/database';
 
-interface Tarif {
-  category: string;
-  passenger_type: string;
-  price: number;
+interface Tarifs {
+  national: { adulte: number; enfant: number };
+  resident: { adulte: number; enfant: number };
+  non_resident: { adulte: number; enfant: number };
+  goreen: { adulte: number; enfant: number };
 }
 
-interface Schedule {
-  id: string;
-  departure_time: string;
-  direction: string;
-  capacity: number;
+interface Schedules {
+  dakar_to_goree: string[];
+  goree_to_dakar: string[];
 }
 
 const LMDGBookingPage: React.FC = () => {
@@ -34,35 +34,30 @@ const LMDGBookingPage: React.FC = () => {
   const [childrenCount, setChildrenCount] = useState(0);
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  const [tarifs, setTarifs] = useState<Tarif[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [tarifs, setTarifs] = useState<Tarifs | null>(null);
+  const [schedules, setSchedules] = useState<Schedules | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchTarifs();
-    fetchSchedules();
+    const tarifsRef = ref(db, 'pass/lmdg/tarifs');
+    const schedulesRef = ref(db, 'pass/lmdg/schedules');
+
+    onValue(tarifsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setTarifs(snapshot.val());
+      }
+    });
+
+    onValue(schedulesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSchedules(snapshot.val());
+      }
+    });
   }, []);
 
-  const fetchTarifs = async () => {
-    const { data } = await supabase
-      .from('lmdg_tarifs')
-      .select('*')
-      .eq('active', true);
-    if (data) setTarifs(data);
-  };
-
-  const fetchSchedules = async () => {
-    const { data } = await supabase
-      .from('lmdg_schedules')
-      .select('*')
-      .eq('active', true)
-      .order('departure_time');
-    if (data) setSchedules(data);
-  };
-
-  const getTarif = (cat: string, type: string): number => {
-    const tarif = tarifs.find(t => t.category === cat && t.passenger_type === type);
-    return tarif?.price || 0;
+  const getTarif = (cat: keyof Tarifs, type: 'adulte' | 'enfant'): number => {
+    if (!tarifs) return 0;
+    return tarifs[cat][type];
   };
 
   const calculateTotal = (): number => {
@@ -86,7 +81,7 @@ const LMDGBookingPage: React.FC = () => {
     return dir === 'dakar_to_goree' ? 'Dakar → Gorée' : 'Gorée → Dakar';
   };
 
-  const filteredSchedules = schedules.filter(s => s.direction === direction);
+  const filteredSchedules = schedules?.[direction] || [];
 
   const canProceed = (): boolean => {
     switch (step) {
@@ -107,8 +102,9 @@ const LMDGBookingPage: React.FC = () => {
   const handleBooking = async () => {
     setLoading(true);
 
+    const bookingRef = push(ref(db, 'pass/lmdg/bookings'));
     const bookingData = {
-      booking_reference: `LMDG-${Date.now()}`,
+      reference: `LMDG-${Date.now()}`,
       direction: tripType === 'round_trip' ? 'round_trip' : direction,
       travel_date: departureDate,
       departure_time: departureTime,
@@ -119,30 +115,26 @@ const LMDGBookingPage: React.FC = () => {
       children_count: childrenCount,
       phone_number: phoneNumber,
       total_amount: calculateTotal(),
-      payment_status: 'pending'
+      payment_status: 'pending',
+      created_at: Date.now()
     };
 
-    const { data, error } = await supabase
-      .from('lmdg_bookings')
-      .insert([bookingData])
-      .select()
-      .single();
+    try {
+      await set(bookingRef, bookingData);
+      setLoading(false);
 
-    setLoading(false);
-
-    if (error) {
+      navigate('/pass/payment', {
+        state: {
+          bookingId: bookingRef.key,
+          amount: calculateTotal(),
+          service: 'LMDG',
+          reference: bookingData.reference
+        }
+      });
+    } catch (error) {
+      setLoading(false);
       alert('Erreur lors de la réservation');
-      return;
     }
-
-    navigate('/pass/payment', {
-      state: {
-        bookingId: data.id,
-        amount: calculateTotal(),
-        service: 'LMDG',
-        reference: bookingData.booking_reference
-      }
-    });
   };
 
   const steps = [
@@ -263,7 +255,7 @@ const LMDGBookingPage: React.FC = () => {
                       Aller-retour
                     </div>
                     <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Économisez avec le forfait
+                      Prix × 2
                     </div>
                   </button>
                 </div>
@@ -385,9 +377,9 @@ const LMDGBookingPage: React.FC = () => {
                       } focus:outline-none focus:border-cyan-500`}
                     >
                       <option value="">Sélectionnez une heure</option>
-                      {filteredSchedules.map((schedule) => (
-                        <option key={schedule.id} value={schedule.departure_time}>
-                          {schedule.departure_time.substring(0, 5)}
+                      {filteredSchedules.map((time: string, index: number) => (
+                        <option key={index} value={time}>
+                          {time}
                         </option>
                       ))}
                     </select>
@@ -432,9 +424,9 @@ const LMDGBookingPage: React.FC = () => {
                           } focus:outline-none focus:border-cyan-500`}
                         >
                           <option value="">Sélectionnez une heure</option>
-                          {schedules.filter(s => s.direction !== direction).map((schedule) => (
-                            <option key={schedule.id} value={schedule.departure_time}>
-                              {schedule.departure_time.substring(0, 5)}
+                          {(schedules?.[direction === 'dakar_to_goree' ? 'goree_to_dakar' : 'dakar_to_goree'] || []).map((time: string, index: number) => (
+                            <option key={index} value={time}>
+                              {time}
                             </option>
                           ))}
                         </select>
@@ -697,11 +689,11 @@ const LMDGBookingPage: React.FC = () => {
                       {new Date(departureDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                     <div className={`text-md ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Départ à {departureTime?.substring(0, 5)}
+                      Départ à {departureTime}
                     </div>
                     {tripType === 'round_trip' && returnDate && (
                       <div className={`text-md mt-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Retour le {new Date(returnDate).toLocaleDateString('fr-FR')} à {returnTime?.substring(0, 5)}
+                        Retour le {new Date(returnDate).toLocaleDateString('fr-FR')} à {returnTime}
                       </div>
                     )}
                   </div>

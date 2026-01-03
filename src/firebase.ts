@@ -4,7 +4,6 @@ import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
-import { createClient } from '@supabase/supabase-js';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -27,8 +26,3 @@ export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : nul
 setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error('[FIREBASE] Error setting persistence:', error);
 });
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
