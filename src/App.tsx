@@ -17,6 +17,7 @@ import OpsManagerPage from './pages/OpsManagerPage';
 import OpsManagerLoginPage from './pages/OpsManagerLoginPage';
 import EPscanLoginPage from './pages/EPscanLoginPage';
 import PassLandingPage from './pages/pass/PassLandingPage';
+import PassServicesPage from './pages/pass/PassServicesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -81,6 +82,7 @@ function AppRoutes() {
       <Route path="/scan/login" element={<EPscanLoginPage />} />
 
       <Route path="/pass" element={<PassLandingPage />} />
+      <Route path="/pass/services" element={<PassServicesPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
