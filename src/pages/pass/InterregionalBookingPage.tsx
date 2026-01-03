@@ -139,7 +139,7 @@ const InterregionalBookingPage: React.FC = () => {
       state: {
         bookingId: data.id,
         amount: calculateTotal(),
-        service: 'INTERRÉGIONAL',
+        service: 'INTER-RÉGIONAUX',
         reference: bookingData.booking_reference
       }
     });
@@ -524,7 +524,7 @@ const InterregionalBookingPage: React.FC = () => {
                         : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
                   }`}
                 >
-                  {loading ? 'Traitement...' : 'Procéder au paiement'}
+                  {loading ? 'Traitement...' : 'Acheter'}
                   {!loading && <ArrowRight className="w-5 h-5" />}
                 </button>
               </div>

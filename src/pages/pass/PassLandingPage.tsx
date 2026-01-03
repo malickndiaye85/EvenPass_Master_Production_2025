@@ -246,17 +246,17 @@ const PassLandingPage: React.FC = () => {
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  className="w-3 h-3 rounded-full bg-gray-400 hover:bg-gray-600 transition-colors"
+                  className="w-3 h-3 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors shadow-lg"
                   title="Admin Finance"
                   onClick={() => navigate('/admin/finance/login')}
                 ></button>
                 <button
-                  className="w-3 h-3 rounded-full bg-gray-400 hover:bg-gray-600 transition-colors"
+                  className="w-3 h-3 rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-lg"
                   title="Admin Ops"
                   onClick={() => navigate('/admin/ops/login')}
                 ></button>
                 <button
-                  className="w-3 h-3 rounded-full bg-gray-400 hover:bg-gray-600 transition-colors"
+                  className="w-3 h-3 rounded-full bg-cyan-500 hover:bg-cyan-600 transition-colors shadow-lg"
                   title="EPscan"
                   onClick={() => navigate('/scan/login')}
                 ></button>

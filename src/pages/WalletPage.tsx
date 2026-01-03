@@ -106,10 +106,10 @@ const WalletPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
+            <button onClick={() => navigate('/pass/services')} className="flex items-center gap-2 group">
               <ArrowLeft className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'} group-hover:translate-x-[-4px] transition-transform`} />
               <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                Accueil
+                Services PASS
               </span>
             </button>
 
