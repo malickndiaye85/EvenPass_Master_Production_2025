@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Ship, Users, CreditCard, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/Logo';
-import { supabase } from '../../firebase';
+import { db } from '../../firebase';
+import { ref, onValue, push, set, runTransaction } from 'firebase/database';
+import { AlertCircle } from 'lucide-react';
+import { calculateCommissions } from '../../lib/passCommissions';
 
 interface CabinType {
   id: string;
@@ -44,23 +47,40 @@ const COSAMABookingPage: React.FC = () => {
     fetchSchedules();
   }, []);
 
-  const fetchCabinTypes = async () => {
-    const { data } = await supabase
-      .from('cosama_cabin_types')
-      .select('*')
-      .eq('active', true)
-      .order('capacity');
-    if (data) setCabinTypes(data);
+  const fetchCabinTypes = () => {
+    const cabinTypesRef = ref(db, 'pass/cosama/cabin_types');
+    onValue(cabinTypesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const cabinTypesArray: CabinType[] = Object.keys(data).map((key) => ({
+          id: key,
+          name: data[key].name,
+          capacity: data[key].capacity,
+          base_price: data[key].price,
+          description: data[key].description,
+          amenities: data[key].amenities
+        }));
+        setCabinTypes(cabinTypesArray);
+      }
+    });
   };
 
-  const fetchSchedules = async () => {
-    const { data } = await supabase
-      .from('cosama_schedules')
-      .select('*')
-      .eq('active', true)
-      .gte('departure_date', new Date().toISOString().split('T')[0])
-      .order('departure_date');
-    if (data) setSchedules(data);
+  const fetchSchedules = () => {
+    const schedulesRef = ref(db, 'pass/cosama/schedules/dakar_ziguinchor');
+    onValue(schedulesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const schedulesArray: Schedule[] = Object.keys(data).map((key) => ({
+          id: key,
+          direction: 'dakar_to_ziguinchor',
+          departure_date: data[key].date,
+          departure_time: data[key].departure_time,
+          arrival_date: data[key].date,
+          arrival_time: data[key].arrival_time
+        }));
+        setSchedules(schedulesArray);
+      }
+    });
   };
 
   const getAccommodationPrice = (): number => {
@@ -88,13 +108,17 @@ const COSAMABookingPage: React.FC = () => {
     switch (step) {
       case 1: return !!scheduleId;
       case 2: return !!accommodationType;
-      case 3: return !!holderName && holderCNI.length >= 10 && holderPhone.length >= 9;
+      case 3: return !!holderName && holderCNI.length === 13 && holderPhone.length >= 9;
       default: return false;
     }
   };
 
   const handleBooking = async () => {
     setLoading(true);
+
+    const baseAmount = getAccommodationPrice();
+    const { totalAmount } = calculateCommissions(baseAmount);
+    const bookingRef = push(ref(db, 'pass/cosama/bookings'));
 
     const bookingData = {
       booking_reference: `COSAMA-${Date.now()}`,
@@ -106,33 +130,29 @@ const COSAMABookingPage: React.FC = () => {
       holder_cni: holderCNI,
       holder_phone: holderPhone,
       holder_email: holderEmail,
-      base_amount: getAccommodationPrice(),
-      supplements_amount: 0,
-      total_amount: getAccommodationPrice(),
-      payment_status: 'pending'
+      base_amount: baseAmount,
+      total_amount: totalAmount,
+      payment_status: 'pending',
+      created_at: Date.now()
     };
 
-    const { data, error } = await supabase
-      .from('cosama_bookings')
-      .insert([bookingData])
-      .select()
-      .single();
+    try {
+      await set(bookingRef, bookingData);
+      setLoading(false);
 
-    setLoading(false);
-
-    if (error) {
+      navigate('/pass/payment', {
+        state: {
+          bookingId: bookingRef.key,
+          amount: totalAmount,
+          service: 'COSAMA',
+          reference: bookingData.booking_reference,
+          showTravelAdvice: true
+        }
+      });
+    } catch (error) {
+      setLoading(false);
       alert('Erreur lors de la réservation');
-      return;
     }
-
-    navigate('/pass/payment', {
-      state: {
-        bookingId: data.id,
-        amount: getAccommodationPrice(),
-        service: 'COSAMA',
-        reference: bookingData.booking_reference
-      }
-    });
   };
 
   const selectedSchedule = schedules.find(s => s.id === scheduleId);
@@ -382,19 +402,32 @@ const COSAMABookingPage: React.FC = () => {
 
                   <div>
                     <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Numéro CNI *
+                      Numéro CNI * (13 chiffres obligatoires)
                     </label>
                     <input
                       type="text"
                       value={holderCNI}
-                      onChange={(e) => setHolderCNI(e.target.value)}
-                      placeholder="Ex: 1234567890123"
-                      className={`w-full p-4 rounded-xl border-2 ${
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, '');
+                        if (cleaned.length <= 13) {
+                          setHolderCNI(cleaned);
+                        }
+                      }}
+                      placeholder="1234567890123"
+                      maxLength={13}
+                      className={`w-full p-4 rounded-xl border-2 font-mono ${
+                        holderCNI && holderCNI.length !== 13 ? 'border-red-500' :
                         isDark
                           ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                       } focus:outline-none focus:border-cyan-500`}
                     />
+                    {holderCNI && holderCNI.length !== 13 && (
+                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Le numéro CNI doit contenir exactement 13 chiffres ({holderCNI.length}/13)</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -463,6 +496,31 @@ const COSAMABookingPage: React.FC = () => {
                   <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     Vérifiez vos informations
                   </p>
+                </div>
+
+                <div className={`mb-6 p-6 rounded-2xl ${isDark ? 'bg-amber-900/30 border-2 border-amber-700' : 'bg-amber-50 border-2 border-amber-300'}`}>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className={`w-6 h-6 flex-shrink-0 mt-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                    <div>
+                      <div className={`font-bold text-lg mb-2 ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
+                        Conseil Voyageur
+                      </div>
+                      <div className={`text-sm ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                        <p className="mb-2">
+                          <strong>Embarquement :</strong> Entre 15h00 et 17h00 au port de Dakar
+                        </p>
+                        <p className="mb-2">
+                          <strong>Départ :</strong> Le bateau lève l'ancre à 20h00 précises
+                        </p>
+                        <p className="mb-2">
+                          <strong>Durée de la traversée :</strong> 14-16 heures
+                        </p>
+                        <p>
+                          <strong>Documents :</strong> CNI obligatoire + ticket électronique (QR Code)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-4 mb-8">

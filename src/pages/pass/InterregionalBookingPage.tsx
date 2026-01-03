@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Bus, MapPin, Calendar, User, Phone, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/Logo';
-import { supabase } from '../../firebase';
+import { db } from '../../firebase';
+import { ref, onValue, push, set } from 'firebase/database';
+import { calculateCommissions } from '../../lib/passCommissions';
 
 interface Route {
   id: string;
@@ -40,12 +42,27 @@ const InterregionalBookingPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchRoutes();
+    const routesRef = ref(db, 'pass/interregional/routes');
+    onValue(routesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const routesArray: Route[] = Object.keys(data).map((key) => ({
+          id: key,
+          departure_city: data[key].from,
+          arrival_city: data[key].to,
+          base_price: data[key].price,
+          distance_km: data[key].distance,
+          estimated_duration_hours: data[key].duration
+        }));
+        setRoutes(routesArray);
+      }
+    });
   }, []);
 
   useEffect(() => {
     if (routeId) {
-      fetchSchedules(routeId);
+      setScheduleId('');
+      setSchedules([]);
     }
   }, [routeId]);
 
