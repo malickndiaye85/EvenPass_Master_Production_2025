@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Clock, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
+import { db } from '../firebase';
 
 interface Organizer {
-  id: string;
+  uid: string;
   user_id: string;
   organization_name: string;
   organization_type: string;
@@ -13,13 +14,12 @@ interface Organizer {
   contact_email: string;
   contact_phone: string;
   website: string | null;
+  city: string | null;
   bank_account_info: any;
   created_at: string;
-  users: {
-    full_name: string;
-    email: string;
-    phone: string;
-  };
+  full_name?: string;
+  email?: string;
+  phone?: string;
 }
 
 export default function OrganizerVerificationTab() {
@@ -35,16 +35,41 @@ export default function OrganizerVerificationTab() {
 
   const loadOrganizers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('organizers')
-        .select('*, users(*)')
-        .eq('verification_status', 'pending')
-        .order('created_at', { ascending: false });
+      const organizersRef = ref(db, 'organizers');
+      const snapshot = await get(organizersRef);
 
-      if (error) throw error;
-      setOrganizers(data || []);
+      if (snapshot.exists()) {
+        const organizersData = snapshot.val();
+        const organizersList: Organizer[] = [];
+
+        for (const userId in organizersData) {
+          const organizer = organizersData[userId];
+
+          if (organizer.verification_status === 'pending') {
+            const userRef = ref(db, `users/${userId}`);
+            const userSnapshot = await get(userRef);
+            const userData = userSnapshot.val();
+
+            organizersList.push({
+              ...organizer,
+              uid: userId,
+              full_name: userData?.full_name || '',
+              email: userData?.email || '',
+              phone: userData?.phone || '',
+            });
+          }
+        }
+
+        organizersList.sort((a, b) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+
+        setOrganizers(organizersList);
+      } else {
+        setOrganizers([]);
+      }
     } catch (error) {
-      console.error('Error loading organizers:', error);
+      console.error('[FIREBASE] Error loading organizers:', error);
     } finally {
       setLoading(false);
     }
@@ -57,21 +82,18 @@ export default function OrganizerVerificationTab() {
 
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('organizers')
-        .update({
-          verification_status: 'verified',
-          is_active: true,
-        })
-        .eq('id', organizerId);
-
-      if (error) throw error;
+      const organizerRef = ref(db, `organizers/${organizerId}`);
+      await update(organizerRef, {
+        verification_status: 'verified',
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      });
 
       alert('✅ Organisateur approuvé avec succès!');
       setSelectedOrganizer(null);
       loadOrganizers();
     } catch (error: any) {
-      console.error('Error approving organizer:', error);
+      console.error('[FIREBASE] Error approving organizer:', error);
       alert('❌ Erreur: ' + error.message);
     } finally {
       setProcessing(false);
@@ -90,22 +112,20 @@ export default function OrganizerVerificationTab() {
 
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('organizers')
-        .update({
-          verification_status: 'rejected',
-          is_active: false,
-        })
-        .eq('id', organizerId);
-
-      if (error) throw error;
+      const organizerRef = ref(db, `organizers/${organizerId}`);
+      await update(organizerRef, {
+        verification_status: 'rejected',
+        is_active: false,
+        rejection_reason: rejectionReason,
+        updated_at: new Date().toISOString(),
+      });
 
       alert('❌ Organisateur rejeté');
       setSelectedOrganizer(null);
       setRejectionReason('');
       loadOrganizers();
     } catch (error: any) {
-      console.error('Error rejecting organizer:', error);
+      console.error('[FIREBASE] Error rejecting organizer:', error);
       alert('❌ Erreur: ' + error.message);
     } finally {
       setProcessing(false);
@@ -151,7 +171,7 @@ export default function OrganizerVerificationTab() {
       <div className="grid gap-4">
         {organizers.map((organizer) => (
           <div
-            key={organizer.id}
+            key={organizer.uid}
             className="bg-[#0F0F0F] rounded-xl p-6 border border-[#2A2A2A] hover:border-[#FF5F05]/30 transition-colors"
           >
             <div className="flex items-start justify-between">
@@ -226,6 +246,13 @@ export default function OrganizerVerificationTab() {
                     </div>
                   </div>
 
+                  {selectedOrganizer.city && (
+                    <div>
+                      <p className="text-sm text-[#B5B5B5]">Ville</p>
+                      <p className="text-white">{selectedOrganizer.city}</p>
+                    </div>
+                  )}
+
                   {selectedOrganizer.description && (
                     <div>
                       <p className="text-sm text-[#B5B5B5]">Description</p>
@@ -250,7 +277,7 @@ export default function OrganizerVerificationTab() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-[#B5B5B5]">Nom du responsable</p>
-                      <p className="text-white font-medium">{selectedOrganizer.users.full_name}</p>
+                      <p className="text-white font-medium">{selectedOrganizer.full_name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#B5B5B5]">Email</p>
@@ -327,7 +354,7 @@ export default function OrganizerVerificationTab() {
                 <div className="space-y-4">
                   <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                     <button
-                      onClick={() => handleApprove(selectedOrganizer.id)}
+                      onClick={() => handleApprove(selectedOrganizer.uid)}
                       disabled={processing}
                       className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
@@ -348,7 +375,7 @@ export default function OrganizerVerificationTab() {
                       className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-red-500 mb-3"
                     />
                     <button
-                      onClick={() => handleReject(selectedOrganizer.id)}
+                      onClick={() => handleReject(selectedOrganizer.uid)}
                       disabled={processing || !rejectionReason.trim()}
                       className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
