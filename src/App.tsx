@@ -21,6 +21,8 @@ import PassServicesPage from './pages/pass/PassServicesPage';
 import LMDGBookingPage from './pages/pass/LMDGBookingPage';
 import COSAMABookingPage from './pages/pass/COSAMABookingPage';
 import InterregionalBookingPage from './pages/pass/InterregionalBookingPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import WalletPage from './pages/WalletPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -89,6 +91,9 @@ function AppRoutes() {
       <Route path="/pass/lmdg" element={<LMDGBookingPage />} />
       <Route path="/pass/cosama" element={<COSAMABookingPage />} />
       <Route path="/pass/interregional" element={<InterregionalBookingPage />} />
+
+      <Route path="/subscription" element={<SubscriptionPage />} />
+      <Route path="/wallet" element={<WalletPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
