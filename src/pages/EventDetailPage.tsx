@@ -1,8 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Minus, Plus, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { firestore } from '../firebase';
+import { collection, query, where, getDocs, doc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
 import type { Event, TicketType, CartItem, CheckoutForm } from '../types';
+
+const generateBookingNumber = () => {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `BK-${timestamp}-${random}`;
+};
+
+const generateTicketNumber = () => {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `TK-${timestamp}-${random}`;
+};
+
+const generateQRCode = () => {
+  return `QR-${Date.now()}-${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
+};
 
 export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -28,21 +45,29 @@ export default function EventDetailPage() {
 
   const loadEvent = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select(`
-          *,
-          category:event_categories(*),
-          organizer:organizers(*),
-          ticket_types(*)
-        `)
-        .eq('slug', slug)
-        .eq('status', 'published')
-        .maybeSingle();
+      const eventsRef = collection(firestore, 'events');
+      const q = query(eventsRef, where('slug', '==', slug), where('status', '==', 'published'));
+      const eventSnapshot = await getDocs(q);
 
-      if (error) throw error;
-      if (data) {
-        setEvent(data as Event);
+      if (!eventSnapshot.empty) {
+        const eventData = { id: eventSnapshot.docs[0].id, ...eventSnapshot.docs[0].data() } as any;
+
+        if (eventData.category_id) {
+          const categoryDoc = await getDoc(doc(firestore, 'event_categories', eventData.category_id));
+          eventData.category = categoryDoc.exists() ? { id: categoryDoc.id, ...categoryDoc.data() } : null;
+        }
+
+        if (eventData.organizer_id) {
+          const organizerDoc = await getDoc(doc(firestore, 'organizers', eventData.organizer_id));
+          eventData.organizer = organizerDoc.exists() ? { id: organizerDoc.id, ...organizerDoc.data() } : null;
+        }
+
+        const ticketTypesRef = collection(firestore, 'ticket_types');
+        const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
+        const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
+        eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        setEvent(eventData as Event);
       }
     } catch (error) {
       console.error('Error loading event:', error);
@@ -98,16 +123,16 @@ export default function EventDetailPage() {
     setCheckingPhone(true);
 
     try {
-      const { data: existingBookings, error: checkError } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('event_id', event.id)
-        .eq('customer_phone', checkoutForm.customer_phone)
-        .in('status', ['confirmed', 'pending']);
+      const bookingsRef = collection(firestore, 'bookings');
+      const existingBookingsQuery = query(
+        bookingsRef,
+        where('event_id', '==', event.id),
+        where('customer_phone', '==', checkoutForm.customer_phone),
+        where('status', 'in', ['confirmed', 'pending'])
+      );
+      const existingBookingsSnapshot = await getDocs(existingBookingsQuery);
 
-      if (checkError) throw checkError;
-
-      if (existingBookings && existingBookings.length > 0) {
+      if (!existingBookingsSnapshot.empty) {
         setProcessing(false);
         setCheckingPhone(false);
         alert('⚠️ Ce numéro de téléphone a déjà effectué un achat pour cet événement.\n\nLimite : 1 transaction par numéro pour éviter les abus.\n\nSi vous avez besoin d\'aide, contactez le support.');
@@ -116,69 +141,66 @@ export default function EventDetailPage() {
 
       setCheckingPhone(false);
 
-      const { data: bookingNumber } = await supabase.rpc('generate_booking_number');
+      const bookingNumber = generateBookingNumber();
+      const bookingData = {
+        booking_number: bookingNumber,
+        event_id: event.id,
+        total_amount: totalAmount,
+        customer_name: checkoutForm.customer_name,
+        customer_email: checkoutForm.customer_email,
+        customer_phone: checkoutForm.customer_phone,
+        payment_method: checkoutForm.payment_method,
+        status: 'pending',
+        currency: 'XOF',
+        expires_at: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
+      };
 
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          booking_number: bookingNumber,
-          event_id: event.id,
-          total_amount: totalAmount,
-          customer_name: checkoutForm.customer_name,
-          customer_email: checkoutForm.customer_email,
-          customer_phone: checkoutForm.customer_phone,
-          payment_method: checkoutForm.payment_method,
-          status: 'pending',
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        })
-        .select()
-        .single();
-
-      if (bookingError) throw bookingError;
+      const bookingRef = await addDoc(collection(firestore, 'bookings'), bookingData);
 
       const ticketsToCreate = [];
       for (const cartItem of cart) {
         for (let i = 0; i < cartItem.quantity; i++) {
-          const { data: ticketNumber } = await supabase.rpc('generate_ticket_number');
-          const { data: qrCode } = await supabase.rpc('generate_qr_code');
+          const ticketNumber = generateTicketNumber();
+          const qrCode = generateQRCode();
 
           ticketsToCreate.push({
             ticket_number: ticketNumber,
             qr_code: qrCode,
-            booking_id: booking.id,
+            booking_id: bookingRef.id,
             event_id: event.id,
             ticket_type_id: cartItem.ticket_type.id,
             holder_name: checkoutForm.customer_name,
             holder_email: checkoutForm.customer_email,
             price_paid: cartItem.ticket_type.price,
             status: 'valid',
+            created_at: Timestamp.now(),
+            updated_at: Timestamp.now(),
           });
         }
       }
 
-      const { error: ticketsError } = await supabase
-        .from('tickets')
-        .insert(ticketsToCreate);
-
-      if (ticketsError) throw ticketsError;
+      for (const ticket of ticketsToCreate) {
+        await addDoc(collection(firestore, 'tickets'), ticket);
+      }
 
       const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          booking_id: booking.id,
-          payment_reference: paymentReference,
-          payment_method: checkoutForm.payment_method,
-          amount: totalAmount,
-          phone_number: checkoutForm.customer_phone,
-          status: 'completed',
-          paid_at: new Date().toISOString(),
-        });
+      await addDoc(collection(firestore, 'payments'), {
+        booking_id: bookingRef.id,
+        payment_reference: paymentReference,
+        payment_method: checkoutForm.payment_method,
+        amount: totalAmount,
+        currency: 'XOF',
+        phone_number: checkoutForm.customer_phone,
+        status: 'completed',
+        paid_at: Timestamp.now(),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
+      });
 
-      if (paymentError) throw paymentError;
-
-      navigate(`/success?booking=${booking.booking_number}`);
+      navigate(`/success?booking=${bookingNumber}`);
     } catch (error) {
       console.error('Checkout error:', error);
       navigate('/error');

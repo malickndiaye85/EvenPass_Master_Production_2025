@@ -15,7 +15,6 @@ import AdminFinancePage from './pages/AdminFinancePage';
 import AdminFinanceLoginPage from './pages/AdminFinanceLoginPage';
 import OpsManagerPage from './pages/OpsManagerPage';
 import OpsManagerLoginPage from './pages/OpsManagerLoginPage';
-import EPscanPage from './pages/EPscanPage';
 import EPscanLoginPage from './pages/EPscanLoginPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -79,8 +78,6 @@ function AppRoutes() {
       />
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
-      <Route path="/scan" element={<EPscanPage />} />
-      <Route path="/scan/activate/:activationToken" element={<EPscanPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -4,7 +4,6 @@ import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, C
 import { useAuth } from '../context/FirebaseAuthContext';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
-import BulkSalesModal from '../components/BulkSalesModal';
 
 interface PayoutRequest {
   id: string;
@@ -53,7 +52,6 @@ export default function AdminFinancePage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification'>('payouts');
-  const [showBulkSalesModal, setShowBulkSalesModal] = useState(false);
 
   useEffect(() => {
     console.log('[ADMIN FINANCE] Auth state:', {
@@ -200,13 +198,6 @@ export default function AdminFinancePage() {
             <p className="text-[#B5B5B5] mt-1">Gestion des flux financiers 5% / 1.5% / 93.5%</p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowBulkSalesModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-xl transition-all font-black flex items-center gap-2 shadow-lg shadow-[#FF5F05]/30"
-            >
-              <Package className="w-5 h-5" />
-              Vente de Bloc / Dotation
-            </button>
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
@@ -672,16 +663,6 @@ export default function AdminFinancePage() {
             </div>
           </div>
         </div>
-      )}
-
-      {showBulkSalesModal && (
-        <BulkSalesModal
-          onClose={() => setShowBulkSalesModal(false)}
-          onSuccess={() => {
-            loadData();
-            setShowBulkSalesModal(false);
-          }}
-        />
       )}
     </div>
   );

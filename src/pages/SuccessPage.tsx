@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Download, Mail, MessageCircle, Calendar, MapPin, Ticket, Home, Phone } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { firestore } from '../firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 export default function SuccessPage() {
   const [searchParams] = useSearchParams();
@@ -20,17 +21,27 @@ export default function SuccessPage() {
 
   const loadBooking = async () => {
     try {
-      const { data } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          event:events(*),
-          tickets(*)
-        `)
-        .eq('booking_number', bookingNumber)
-        .maybeSingle();
+      const bookingsRef = collection(firestore, 'bookings');
+      const q = query(bookingsRef, where('booking_number', '==', bookingNumber));
+      const bookingSnapshot = await getDocs(q);
 
-      if (data) setBooking(data);
+      if (!bookingSnapshot.empty) {
+        const bookingData = { id: bookingSnapshot.docs[0].id, ...bookingSnapshot.docs[0].data() };
+
+        const eventDoc = await getDoc(doc(firestore, 'events', bookingData.event_id));
+        const eventData = eventDoc.exists() ? { id: eventDoc.id, ...eventDoc.data() } : null;
+
+        const ticketsRef = collection(firestore, 'tickets');
+        const ticketsQuery = query(ticketsRef, where('booking_id', '==', bookingData.id));
+        const ticketsSnapshot = await getDocs(ticketsQuery);
+        const ticketsData = ticketsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        setBooking({
+          ...bookingData,
+          event: eventData,
+          tickets: ticketsData
+        });
+      }
     } catch (error) {
       console.error('Error loading booking:', error);
     } finally {
