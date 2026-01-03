@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Ticket, Mail, Lock, AlertCircle } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { auth, db } from '../firebase';
 
@@ -11,6 +11,7 @@ export default function OrganizerLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +54,35 @@ export default function OrganizerLoginPage() {
       }
     } catch (err: any) {
       console.error('[FIREBASE] Error during login:', err);
-      setError(err.message || 'Email ou mot de passe incorrect');
+
+      if (err.code === 'auth/invalid-credential') {
+        setError('Email ou mot de passe incorrect. Si vous avez oublié votre mot de passe, utilisez le lien ci-dessous.');
+      } else if (err.code === 'auth/user-disabled') {
+        setError('Ce compte a été désactivé. Veuillez contacter le support.');
+      } else {
+        setError(err.message || 'Email ou mot de passe incorrect');
+      }
       setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email || !email.includes('@')) {
+      alert('⚠️ Veuillez entrer votre email d\'abord');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetEmailSent(true);
+      alert('✅ Email de réinitialisation envoyé!\n\nVérifiez votre boîte mail (et vos spams) pour réinitialiser votre mot de passe.');
+    } catch (err: any) {
+      console.error('[FIREBASE] Error sending password reset:', err);
+      if (err.code === 'auth/user-not-found') {
+        alert('❌ Aucun compte trouvé avec cet email');
+      } else {
+        alert('❌ Erreur: ' + err.message);
+      }
     }
   };
 
@@ -114,6 +142,16 @@ export default function OrganizerLoginPage() {
                   placeholder="••••••••"
                 />
               </div>
+            </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="text-sm text-[#FF7A00] hover:text-[#FF8C42] transition-colors underline"
+              >
+                Mot de passe oublié ?
+              </button>
             </div>
 
             <button
