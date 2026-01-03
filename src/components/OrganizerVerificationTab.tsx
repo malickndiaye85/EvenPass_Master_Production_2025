@@ -291,7 +291,7 @@ export default function OrganizerVerificationTab() {
                   <div className="grid grid-cols-2 gap-3">
                     {selectedOrganizer.verification_documents.cni && (
                       <a
-                        href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/verification-documents/${selectedOrganizer.verification_documents.cni}`}
+                        href={selectedOrganizer.verification_documents.cni}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-4 bg-[#0F0F0F] rounded-lg hover:bg-[#0F0F0F]/50 transition-colors flex items-center gap-3"
@@ -305,7 +305,7 @@ export default function OrganizerVerificationTab() {
                     )}
                     {selectedOrganizer.verification_documents.registre && (
                       <a
-                        href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/verification-documents/${selectedOrganizer.verification_documents.registre}`}
+                        href={selectedOrganizer.verification_documents.registre}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-4 bg-[#0F0F0F] rounded-lg hover:bg-[#0F0F0F]/50 transition-colors flex items-center gap-3"

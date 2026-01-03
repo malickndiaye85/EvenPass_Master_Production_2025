@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db } from '../firebase';
-import { getStorage } from 'firebase/storage';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 export default function OrganizerSignupPage() {
   const navigate = useNavigate();
@@ -137,26 +136,19 @@ export default function OrganizerSignupPage() {
       console.log('[ORGANIZER SIGNUP] User profile created');
 
       const verificationDocuments: any = {};
-      const storage = getStorage();
 
       if (documents.cni) {
-        console.log('[ORGANIZER SIGNUP] Uploading CNI document...');
-        const cniPath = `verification-documents/${userId}/cni_${Date.now()}.${documents.cni.name.split('.').pop()}`;
-        const cniRef = storageRef(storage, cniPath);
-        await uploadBytes(cniRef, documents.cni);
-        const cniUrl = await getDownloadURL(cniRef);
+        console.log('[ORGANIZER SIGNUP] Uploading CNI document to Cloudinary...');
+        const cniUrl = await uploadToCloudinary(documents.cni, `verification-documents/${userId}`);
         verificationDocuments.cni = cniUrl;
-        console.log('[ORGANIZER SIGNUP] CNI uploaded successfully');
+        console.log('[ORGANIZER SIGNUP] CNI uploaded successfully to Cloudinary');
       }
 
       if (documents.registre) {
-        console.log('[ORGANIZER SIGNUP] Uploading registre document...');
-        const registrePath = `verification-documents/${userId}/registre_${Date.now()}.${documents.registre.name.split('.').pop()}`;
-        const registreRef = storageRef(storage, registrePath);
-        await uploadBytes(registreRef, documents.registre);
-        const registreUrl = await getDownloadURL(registreRef);
+        console.log('[ORGANIZER SIGNUP] Uploading registre document to Cloudinary...');
+        const registreUrl = await uploadToCloudinary(documents.registre, `verification-documents/${userId}`);
         verificationDocuments.registre = registreUrl;
-        console.log('[ORGANIZER SIGNUP] Registre uploaded successfully');
+        console.log('[ORGANIZER SIGNUP] Registre uploaded successfully to Cloudinary');
       }
 
       console.log('[ORGANIZER SIGNUP] Creating organizer profile...');
