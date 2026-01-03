@@ -82,6 +82,19 @@ service firebase.storage {
     }
 
     // ============================================
+    // VERIFICATION DOCUMENTS (KYC - CNI, Registre de commerce)
+    // ============================================
+    match /verification-documents/{userId}/{fileName} {
+      // Lecture : Admin Finance uniquement
+      allow read: if isAdminFinance();
+
+      // Écriture : Utilisateur authentifié peut uploader ses propres documents
+      // OU Admin Finance
+      allow write: if (isAuthenticated() && request.auth.uid == userId && isValidFileSize()) ||
+                     isAdminFinance();
+    }
+
+    // ============================================
     // DOCUMENTS FINANCIERS
     // ============================================
     match /finances/{document=**} {

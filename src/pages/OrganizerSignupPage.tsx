@@ -112,13 +112,19 @@ export default function OrganizerSignupPage() {
     setLoading(true);
 
     try {
+      console.log('[ORGANIZER SIGNUP] Starting signup process...');
+
       // Déconnecter tout utilisateur actuellement connecté
+      console.log('[ORGANIZER SIGNUP] Signing out any existing user...');
       await auth.signOut();
 
+      console.log('[ORGANIZER SIGNUP] Creating Firebase auth user...');
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const userId = user.uid;
+      console.log('[ORGANIZER SIGNUP] User created with ID:', userId);
 
+      console.log('[ORGANIZER SIGNUP] Creating user profile in database...');
       await set(ref(db, `users/${userId}`), {
         uid: userId,
         email: formData.email,
@@ -128,26 +134,32 @@ export default function OrganizerSignupPage() {
         updated_at: new Date().toISOString(),
         role: 'organizer'
       });
+      console.log('[ORGANIZER SIGNUP] User profile created');
 
       const verificationDocuments: any = {};
       const storage = getStorage();
 
       if (documents.cni) {
+        console.log('[ORGANIZER SIGNUP] Uploading CNI document...');
         const cniPath = `verification-documents/${userId}/cni_${Date.now()}.${documents.cni.name.split('.').pop()}`;
         const cniRef = storageRef(storage, cniPath);
         await uploadBytes(cniRef, documents.cni);
         const cniUrl = await getDownloadURL(cniRef);
         verificationDocuments.cni = cniUrl;
+        console.log('[ORGANIZER SIGNUP] CNI uploaded successfully');
       }
 
       if (documents.registre) {
+        console.log('[ORGANIZER SIGNUP] Uploading registre document...');
         const registrePath = `verification-documents/${userId}/registre_${Date.now()}.${documents.registre.name.split('.').pop()}`;
         const registreRef = storageRef(storage, registrePath);
         await uploadBytes(registreRef, documents.registre);
         const registreUrl = await getDownloadURL(registreRef);
         verificationDocuments.registre = registreUrl;
+        console.log('[ORGANIZER SIGNUP] Registre uploaded successfully');
       }
 
+      console.log('[ORGANIZER SIGNUP] Creating organizer profile...');
       await set(ref(db, `organizers/${userId}`), {
         uid: userId,
         user_id: userId,
@@ -170,9 +182,12 @@ export default function OrganizerSignupPage() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
+      console.log('[ORGANIZER SIGNUP] Organizer profile created successfully');
 
+      console.log('[ORGANIZER SIGNUP] Signing out user...');
       await auth.signOut();
 
+      console.log('[ORGANIZER SIGNUP] Signup complete! Showing success message...');
       alert('✅ Demande envoyée avec succès!\n\n' +
         'Votre compte organisateur est en attente de validation par notre équipe.\n\n' +
         'Vous recevrez un email de confirmation une fois votre compte approuvé (sous 24h).\n\n' +
