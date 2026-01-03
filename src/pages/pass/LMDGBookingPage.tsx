@@ -66,8 +66,8 @@ const LMDGBookingPage: React.FC = () => {
       return hour > currentHour || (hour === currentHour && minute > currentMinute);
     });
 
-    // Retourner les 3 prochains créneaux disponibles
-    return futureTimes.length > 0 ? futureTimes.slice(0, 3) : times.slice(0, 3);
+    // Retourner les 2 prochains créneaux disponibles (prochain + suivant)
+    return futureTimes.length > 0 ? futureTimes.slice(0, 2) : times.slice(0, 2);
   };
 
   useEffect(() => {
@@ -278,7 +278,7 @@ const LMDGBookingPage: React.FC = () => {
                                 {time}
                               </div>
                               <div className={`text-sm font-semibold mt-1 ${selectedTime === time ? 'text-white/80' : isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                {index === 0 ? 'Prochain départ' : `Dans ${index + 1}${index === 0 ? 'er' : 'ème'}`}
+                                {index === 0 ? 'Prochain départ' : 'Départ suivant'}
                               </div>
                             </div>
                             {selectedTime === time && (
