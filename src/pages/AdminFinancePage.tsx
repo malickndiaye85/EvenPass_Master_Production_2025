@@ -331,36 +331,45 @@ export default function AdminFinancePage() {
         </div>
 
         <div className="bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] p-6">
-          <div className="flex gap-4 mb-6 border-b border-[#0F0F0F]">
+          <div className="flex justify-between items-center gap-4 mb-6 border-b border-[#0F0F0F]">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setActiveTab('payouts')}
+                className={`px-6 py-3 font-bold transition-colors ${
+                  activeTab === 'payouts'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                📋 Payouts ({payouts.filter(p => p.status === 'pending' || p.status === 'approved').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('events')}
+                className={`px-6 py-3 font-bold transition-colors ${
+                  activeTab === 'events'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                🎫 Tous les Événements ({allEvents.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('verification')}
+                className={`px-6 py-3 font-bold transition-colors ${
+                  activeTab === 'verification'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                ✅ Vérification Organisateurs
+              </button>
+            </div>
             <button
-              onClick={() => setActiveTab('payouts')}
-              className={`px-6 py-3 font-bold transition-colors ${
-                activeTab === 'payouts'
-                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
-                  : 'text-[#B5B5B5] hover:text-white'
-              }`}
+              onClick={() => alert('Fonctionnalité Vente en Bloc bientôt disponible')}
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg flex items-center gap-2"
             >
-              📋 Payouts ({payouts.filter(p => p.status === 'pending' || p.status === 'approved').length})
-            </button>
-            <button
-              onClick={() => setActiveTab('events')}
-              className={`px-6 py-3 font-bold transition-colors ${
-                activeTab === 'events'
-                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
-                  : 'text-[#B5B5B5] hover:text-white'
-              }`}
-            >
-              🎫 Tous les Événements ({allEvents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('verification')}
-              className={`px-6 py-3 font-bold transition-colors ${
-                activeTab === 'verification'
-                  ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
-                  : 'text-[#B5B5B5] hover:text-white'
-              }`}
-            >
-              ✅ Vérification Organisateurs
+              <Package className="w-4 h-4" />
+              Créer une Vente en Bloc
             </button>
           </div>
 

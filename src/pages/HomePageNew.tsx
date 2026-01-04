@@ -119,20 +119,55 @@ export default function HomePageNew() {
           : 'bg-white/40'
       } backdrop-blur-xl`}>
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center relative">
+          <div className="flex items-center justify-between">
             <DynamicLogo />
 
-            <button
-              onClick={toggleTheme}
-              className={`absolute right-0 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
-                isDark
-                  ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-400'
-                  : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-700'
-              }`}
-              aria-label="Changer le thème"
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/how-it-works')}
+                className={`hidden sm:flex items-center px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                  isDark
+                    ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-300'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Comment ça marche
+              </button>
+
+              <button
+                onClick={() => navigate('/for-organizers')}
+                className={`hidden sm:flex items-center px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                  isDark
+                    ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-300'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Pour les organisateurs
+              </button>
+
+              <button
+                onClick={() => navigate('/organizer-login')}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-black hover:shadow-amber-900/40'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-orange-500/30'
+                }`}
+              >
+                Espace Organisateur
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
+                  isDark
+                    ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-400'
+                    : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-700'
+                }`}
+                aria-label="Changer le thème"
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -297,111 +332,6 @@ export default function HomePageNew() {
                 </div>
               </button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`py-16 ${isDark ? 'bg-gradient-to-br from-cyan-950/20 to-blue-950/20' : 'bg-gradient-to-br from-cyan-50 to-blue-50'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className={`inline-flex items-center px-5 py-2.5 rounded-full border mb-6 ${
-              isDark
-                ? 'bg-cyan-950/40 backdrop-blur-xl border-cyan-800/40'
-                : 'bg-white/80 backdrop-blur-xl border-cyan-200 shadow-lg'
-            }`}>
-              <Ship className={`w-4 h-4 mr-2 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-              <span className={`text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-slate-700'}`}>
-                Transport Maritime • Gënaa Gaaw
-              </span>
-            </div>
-            <h3 className={`text-4xl sm:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Liaisons Maritimes
-            </h3>
-            <p className={`text-lg ${isDark ? 'text-cyan-200/70' : 'text-slate-600'}`}>
-              Réservez vos traversées en toute simplicité
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <button
-              onClick={() => navigate('/pass/lmdg')}
-              className={`group relative overflow-hidden p-8 transition-all duration-300 hover:scale-[1.05] border ${
-                isDark
-                  ? 'bg-gradient-to-br from-cyan-950/40 to-blue-950/40 backdrop-blur-xl border-cyan-800/40 hover:border-cyan-600'
-                  : 'bg-white/80 backdrop-blur-xl border-cyan-200 hover:border-cyan-400 shadow-lg hover:shadow-2xl'
-              }`}
-              style={{ borderRadius: '40px 120px 40px 120px' }}
-            >
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                isDark
-                  ? 'bg-gradient-to-br from-cyan-600/10 to-blue-600/10'
-                  : 'bg-gradient-to-br from-cyan-100/50 to-blue-100/50'
-              }`}></div>
-              <div className="absolute top-4 right-4">
-                <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
-                  isDark
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black'
-                    : 'bg-gradient-to-r from-[#0A7EA3] to-cyan-600 text-white'
-                } shadow-lg`}>
-                  [ PASS ]
-                </span>
-              </div>
-              <div className="relative">
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
-                  isDark
-                    ? 'bg-gradient-to-br from-cyan-500 to-blue-600'
-                    : 'bg-gradient-to-br from-[#0A7EA3] to-cyan-600'
-                } shadow-xl`}>
-                  <Ship className="w-10 h-10 text-white" />
-                </div>
-                <h4 className={`text-2xl font-black mb-3 ${isDark ? 'text-cyan-50' : 'text-slate-900'}`}>
-                  LMDG ⇄ Dakar-Gorée
-                </h4>
-                <p className={`text-sm ${isDark ? 'text-cyan-300/60' : 'text-slate-600'}`}>
-                  Liaison maritime • Rotation dans les deux sens
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => navigate('/pass/cosama')}
-              className={`group relative overflow-hidden p-8 transition-all duration-300 hover:scale-[1.05] border ${
-                isDark
-                  ? 'bg-gradient-to-br from-cyan-950/40 to-blue-950/40 backdrop-blur-xl border-cyan-800/40 hover:border-cyan-600'
-                  : 'bg-white/80 backdrop-blur-xl border-cyan-200 hover:border-cyan-400 shadow-lg hover:shadow-2xl'
-              }`}
-              style={{ borderRadius: '40px 120px 40px 120px' }}
-            >
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                isDark
-                  ? 'bg-gradient-to-br from-cyan-600/10 to-blue-600/10'
-                  : 'bg-gradient-to-br from-cyan-100/50 to-blue-100/50'
-              }`}></div>
-              <div className="absolute top-4 right-4">
-                <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
-                  isDark
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black'
-                    : 'bg-gradient-to-r from-[#0A7EA3] to-cyan-600 text-white'
-                } shadow-lg`}>
-                  [ PASS ]
-                </span>
-              </div>
-              <div className="relative">
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
-                  isDark
-                    ? 'bg-gradient-to-br from-cyan-500 to-blue-600'
-                    : 'bg-gradient-to-br from-[#0A7EA3] to-cyan-600'
-                } shadow-xl`}>
-                  <Ship className="w-10 h-10 text-white" />
-                </div>
-                <h4 className={`text-2xl font-black mb-3 ${isDark ? 'text-cyan-50' : 'text-slate-900'}`}>
-                  COSAMA ⇄ Dakar-Ziguinchor
-                </h4>
-                <p className={`text-sm ${isDark ? 'text-cyan-300/60' : 'text-slate-600'}`}>
-                  Liaison maritime • Rotation dans les deux sens
-                </p>
-              </div>
-            </button>
           </div>
         </div>
       </section>
