@@ -169,7 +169,7 @@ export default function HomePageNew() {
               </button>
 
               <button
-                onClick={() => navigate('/organizer-login')}
+                onClick={() => navigate('/organizer/login')}
                 className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg ${
                   isDark
                     ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-black hover:shadow-amber-900/40'
