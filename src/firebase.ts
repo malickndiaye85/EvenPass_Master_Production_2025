@@ -16,13 +16,31 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-export const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
-export const firestore = getFirestore(app);
-export const storage = getStorage(app);
-export const auth = getAuth(app);
-export const analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
+// Check if Firebase config is complete
+const isFirebaseConfigured = firebaseConfig.projectId &&
+                             firebaseConfig.apiKey &&
+                             firebaseConfig.appId;
 
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('[FIREBASE] Error setting persistence:', error);
-});
+let app: any = null;
+let db: any = null;
+let firestore: any = null;
+let storage: any = null;
+let auth: any = null;
+let analytics: any = null;
+
+if (isFirebaseConfigured) {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+  firestore = getFirestore(app);
+  storage = getStorage(app);
+  auth = getAuth(app);
+  analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
+
+  setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error('[FIREBASE] Error setting persistence:', error);
+  });
+} else {
+  console.warn('[FIREBASE] Configuration incomplete. Firebase services disabled. Please configure Firebase environment variables in .env file.');
+}
+
+export { app, db, firestore, storage, auth, analytics };

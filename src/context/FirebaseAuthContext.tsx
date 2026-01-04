@@ -23,6 +23,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      console.warn('[FIREBASE AUTH] Firebase auth not configured');
+      setLoading(false);
+      return;
+    }
+
     console.log('[FIREBASE AUTH] Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log('[FIREBASE AUTH] Auth state changed:', {
@@ -52,40 +58,44 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       let organizerData = null;
       let adminData = null;
 
-      try {
-        const userRef = ref(db, `users/${firebaseUser.uid}`);
-        const userSnapshot = await get(userRef);
-        userData = userSnapshot.val();
-        console.log('[FIREBASE AUTH] User data loaded:', !!userData);
-      } catch (error) {
-        console.warn('[FIREBASE AUTH] Could not load user data:', error);
-      }
+      if (db) {
+        try {
+          const userRef = ref(db, `users/${firebaseUser.uid}`);
+          const userSnapshot = await get(userRef);
+          userData = userSnapshot.val();
+          console.log('[FIREBASE AUTH] User data loaded:', !!userData);
+        } catch (error) {
+          console.warn('[FIREBASE AUTH] Could not load user data:', error);
+        }
 
-      try {
-        const organizerRef = ref(db, `organizers/${firebaseUser.uid}`);
-        const organizerSnapshot = await get(organizerRef);
-        organizerData = organizerSnapshot.val();
-        console.log('[FIREBASE AUTH] Organizer data loaded:', {
-          exists: !!organizerData,
-          fullData: organizerData,
-          isActive: organizerData?.is_active,
-          status: organizerData?.verification_status,
-          orgName: organizerData?.organization_name
-        });
-      } catch (error) {
-        console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
-      }
+        try {
+          const organizerRef = ref(db, `organizers/${firebaseUser.uid}`);
+          const organizerSnapshot = await get(organizerRef);
+          organizerData = organizerSnapshot.val();
+          console.log('[FIREBASE AUTH] Organizer data loaded:', {
+            exists: !!organizerData,
+            fullData: organizerData,
+            isActive: organizerData?.is_active,
+            status: organizerData?.verification_status,
+            orgName: organizerData?.organization_name
+          });
+        } catch (error) {
+          console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
+        }
 
-      try {
-        const adminRef = ref(db, `admins/${firebaseUser.uid}`);
-        const adminSnapshot = await get(adminRef);
-        adminData = adminSnapshot.val();
-        console.log('[FIREBASE AUTH] Admin data loaded:', {
-          exists: !!adminData,
-          isActive: adminData?.is_active
-        });
-      } catch (error) {
-        console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+        try {
+          const adminRef = ref(db, `admins/${firebaseUser.uid}`);
+          const adminSnapshot = await get(adminRef);
+          adminData = adminSnapshot.val();
+          console.log('[FIREBASE AUTH] Admin data loaded:', {
+            exists: !!adminData,
+            isActive: adminData?.is_active
+          });
+        } catch (error) {
+          console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+        }
+      } else {
+        console.warn('[FIREBASE AUTH] Firebase database not configured');
       }
 
       let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
@@ -184,6 +194,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) {
+      return { error: new Error('Firebase auth not configured') };
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return { error: null };
@@ -194,6 +207,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signOut = async () => {
+    if (!auth) {
+      console.warn('[FIREBASE AUTH] Cannot sign out - auth not configured');
+      return;
+    }
     await firebaseSignOut(auth);
     setUser(null);
     setFirebaseUser(null);

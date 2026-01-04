@@ -26,6 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   async function signup(email: string, password: string, userData: any) {
+    if (!auth || !db) {
+      throw new Error('Firebase not configured');
+    }
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -43,14 +46,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   function login(email: string, password: string) {
+    if (!auth) {
+      return Promise.reject(new Error('Firebase not configured'));
+    }
     return signInWithEmailAndPassword(auth, email, password);
   }
 
   function logout() {
+    if (!auth) {
+      return Promise.reject(new Error('Firebase not configured'));
+    }
     return signOut(auth);
   }
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
