@@ -375,12 +375,24 @@ export default function OrganizerDashboardPage() {
                 BILLETS
               </span>
             </div>
-            <p className={`text-3xl font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {totalTicketsSold}
-            </p>
-            <p className={`text-sm font-medium ${isDark ? 'text-blue-400/60' : 'text-blue-600'}`}>
-              Vendus au total
-            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-blue-400/60' : 'text-blue-600'}`}>
+                  Vendus
+                </p>
+                <p className={`text-2xl font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  {totalTicketsSold}
+                </p>
+              </div>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-blue-400/60' : 'text-blue-600'}`}>
+                  Restants
+                </p>
+                <p className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                  {events.reduce((sum, e) => sum + (eventStats[e.id]?.remainingTickets || 0), 0)}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className={`rounded-[24px] p-6 border ${
@@ -392,18 +404,30 @@ export default function OrganizerDashboardPage() {
               <div className={`p-3 rounded-xl ${
                 isDark ? 'bg-purple-800/40' : 'bg-purple-100'
               }`}>
-                <Calendar className={`w-6 h-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                <DollarSign className={`w-6 h-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
               <span className={`text-xs font-bold ${isDark ? 'text-purple-400/80' : 'text-purple-700'}`}>
-                ÉVÉNEMENTS
+                FRAIS
               </span>
             </div>
-            <p className={`text-3xl font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {events.length}
-            </p>
-            <p className={`text-sm font-medium ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
-              Créés
-            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
+                  Mobile Money
+                </p>
+                <p className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  1,5%
+                </p>
+              </div>
+              <div>
+                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
+                  Commissions
+                </p>
+                <p className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  5%
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className={`rounded-[24px] p-6 border ${
@@ -418,15 +442,22 @@ export default function OrganizerDashboardPage() {
                 <Package className={`w-6 h-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
               </div>
               <span className={`text-xs font-bold ${isDark ? 'text-orange-400/80' : 'text-orange-700'}`}>
-                STOCK BULK
+                BLOC DE BILLET
               </span>
             </div>
-            <p className={`text-3xl font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {bulkStock}
-            </p>
-            <p className={`text-sm font-medium ${isDark ? 'text-orange-400/60' : 'text-orange-600'}`}>
-              Billets restants
-            </p>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <p className={`text-xs font-medium ${isDark ? 'text-orange-400/60' : 'text-orange-600'}`}>
+                  Restants
+                </p>
+                <p className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {bulkStock}
+                </p>
+              </div>
+              <p className={`text-xs font-medium ${isDark ? 'text-orange-400/40' : 'text-orange-500'}`}>
+                Générés par Admin Finance
+              </p>
+            </div>
           </div>
         </div>
 

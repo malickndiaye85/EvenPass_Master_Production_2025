@@ -126,20 +126,7 @@ const COSAMABookingPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => step === 1 ? navigate('/pass/services') : setStep(step - 1)} className="flex items-center gap-2 group">
-              <ArrowLeft className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'} group-hover:translate-x-[-4px] transition-transform`} />
-              <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {step === 1 ? 'Services' : 'Retour'}
-              </span>
-            </button>
-
-            <div className="flex items-center gap-3">
-              <Logo size="sm" variant="default" />
-              <div>
-                <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>COSAMA</div>
-                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Dakar ⇄ Ziguinchor</div>
-              </div>
-            </div>
+            <Logo size="sm" variant="default" />
           </div>
         </div>
       </nav>
