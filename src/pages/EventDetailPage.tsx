@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Clock, Users, ShoppingCart, Minus, Plus, X } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ShoppingCart, Minus, Plus, X, Star, ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { useTheme } from '../context/ThemeContext';
+import DynamicLogo from '../components/DynamicLogo';
 import type { Event, TicketType, CartItem, CheckoutForm } from '../types';
 
 const generateBookingNumber = () => {
@@ -24,6 +26,7 @@ const generateQRCode = () => {
 export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -150,7 +153,7 @@ export default function EventDetailPage() {
         customer_email: checkoutForm.customer_email,
         customer_phone: checkoutForm.customer_phone,
         payment_method: checkoutForm.payment_method,
-        status: 'pending',
+        status: 'confirmed',
         currency: 'XOF',
         expires_at: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
         created_at: Timestamp.now(),
@@ -211,20 +214,24 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className={`min-h-screen ${isDark ? 'bg-[#050505]' : 'bg-white'} flex items-center justify-center`}>
+        <div className={`w-16 h-16 border-4 border-t-transparent rounded-full animate-spin ${
+          isDark ? 'border-amber-600' : 'border-orange-500'
+        }`}></div>
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className={`min-h-screen ${isDark ? 'bg-[#050505]' : 'bg-white'} flex items-center justify-center`}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Événement non trouvé</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            Événement non trouvé
+          </h2>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition-all font-bold"
           >
             Retour à l'accueil
           </button>
@@ -234,39 +241,71 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <header className="bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
+    <div className={`min-h-screen transition-colors duration-500 ${
+      isDark ? 'bg-[#050505]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
+    }`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isDark ? 'bg-black/40' : 'bg-white/40'
+      } backdrop-blur-xl border-b ${isDark ? 'border-amber-900/20' : 'border-slate-200/60'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => navigate('/')}
-            className="text-white hover:text-orange-400 transition-colors"
-          >
-            ← Retour aux événements
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 ${
+                isDark
+                  ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-semibold">Retour</span>
+            </button>
+            <DynamicLogo />
+          </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="relative h-96 bg-slate-800 rounded-xl overflow-hidden mb-6">
+            <div className={`relative h-[500px] rounded-[32px] overflow-hidden mb-6 ${
+              isDark ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40' : 'bg-gradient-to-br from-slate-200 to-slate-300'
+            }`}>
               {event.cover_image_url ? (
-                <img
-                  src={event.cover_image_url}
-                  alt={event.title}
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img
+                    src={event.cover_image_url}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className={`absolute inset-0 ${
+                    isDark
+                      ? 'bg-gradient-to-t from-black via-black/20 to-transparent'
+                      : 'bg-gradient-to-t from-white via-white/20 to-transparent'
+                  }`}></div>
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Calendar className="w-24 h-24 text-slate-600" />
+                  <Calendar className={`w-32 h-32 ${isDark ? 'text-amber-700/40' : 'text-slate-400'}`} />
                 </div>
               )}
-            </div>
 
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="absolute top-6 right-6 flex flex-col gap-2">
+                {event.is_featured && (
+                  <div className={`px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg flex items-center backdrop-blur-xl ${
+                    isDark
+                      ? 'bg-amber-600/90 text-black'
+                      : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white'
+                  }`}>
+                    <Star className="w-4 h-4 mr-1.5 fill-current" />
+                    À LA UNE
+                  </div>
+                )}
+              </div>
+
+              <div className="absolute bottom-6 left-6">
                 <span
-                  className="px-3 py-1 text-sm font-medium rounded-full"
+                  className="px-5 py-2.5 text-sm font-black rounded-2xl shadow-lg backdrop-blur-xl"
                   style={{
                     backgroundColor: event.category?.color || '#FF6B35',
                     color: 'white',
@@ -274,21 +313,34 @@ export default function EventDetailPage() {
                 >
                   {event.category?.name_fr}
                 </span>
-                {event.is_featured && (
-                  <span className="px-3 py-1 bg-orange-600 text-white text-sm font-bold rounded-full">
-                    À LA UNE
-                  </span>
-                )}
               </div>
+            </div>
 
-              <h1 className="text-3xl font-bold text-white mb-4">{event.title}</h1>
+            <div className={`rounded-[32px] p-8 border ${
+              isDark
+                ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 border-amber-800/40'
+                : 'bg-white border-slate-200 shadow-lg'
+            }`}>
+              <h1 className={`text-4xl font-black mb-6 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}>
+                {event.title}
+              </h1>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center text-slate-300">
-                  <Calendar className="w-5 h-5 mr-3 text-orange-500" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className={`flex items-start gap-4 p-4 rounded-2xl ${
+                  isDark ? 'bg-amber-900/20' : 'bg-orange-50'
+                }`}>
+                  <div className={`p-3 rounded-xl ${
+                    isDark ? 'bg-amber-600/20' : 'bg-orange-100'
+                  }`}>
+                    <Calendar className={`w-6 h-6 ${isDark ? 'text-amber-400' : 'text-orange-600'}`} />
+                  </div>
                   <div>
-                    <p className="text-sm text-slate-400">Date</p>
-                    <p className="font-medium">
+                    <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-amber-500' : 'text-slate-500'}`}>
+                      Date
+                    </p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {new Date(event.start_date).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'long',
@@ -298,11 +350,19 @@ export default function EventDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center text-slate-300">
-                  <Clock className="w-5 h-5 mr-3 text-orange-500" />
+                <div className={`flex items-start gap-4 p-4 rounded-2xl ${
+                  isDark ? 'bg-amber-900/20' : 'bg-orange-50'
+                }`}>
+                  <div className={`p-3 rounded-xl ${
+                    isDark ? 'bg-amber-600/20' : 'bg-orange-100'
+                  }`}>
+                    <Clock className={`w-6 h-6 ${isDark ? 'text-amber-400' : 'text-orange-600'}`} />
+                  </div>
                   <div>
-                    <p className="text-sm text-slate-400">Heure</p>
-                    <p className="font-medium">
+                    <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-amber-500' : 'text-slate-500'}`}>
+                      Heure
+                    </p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {new Date(event.start_date).toLocaleTimeString('fr-FR', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -311,21 +371,43 @@ export default function EventDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center text-slate-300">
-                  <MapPin className="w-5 h-5 mr-3 text-orange-500" />
+                <div className={`flex items-start gap-4 p-4 rounded-2xl ${
+                  isDark ? 'bg-amber-900/20' : 'bg-orange-50'
+                }`}>
+                  <div className={`p-3 rounded-xl ${
+                    isDark ? 'bg-amber-600/20' : 'bg-orange-100'
+                  }`}>
+                    <MapPin className={`w-6 h-6 ${isDark ? 'text-amber-400' : 'text-orange-600'}`} />
+                  </div>
                   <div>
-                    <p className="text-sm text-slate-400">Lieu</p>
-                    <p className="font-medium">{event.venue_name}</p>
-                    <p className="text-sm text-slate-400">{event.venue_city}</p>
+                    <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-amber-500' : 'text-slate-500'}`}>
+                      Lieu
+                    </p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {event.venue_name}
+                    </p>
+                    <p className={`text-sm ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                      {event.venue_city}
+                    </p>
                   </div>
                 </div>
 
                 {event.capacity && (
-                  <div className="flex items-center text-slate-300">
-                    <Users className="w-5 h-5 mr-3 text-orange-500" />
+                  <div className={`flex items-start gap-4 p-4 rounded-2xl ${
+                    isDark ? 'bg-amber-900/20' : 'bg-orange-50'
+                  }`}>
+                    <div className={`p-3 rounded-xl ${
+                      isDark ? 'bg-amber-600/20' : 'bg-orange-100'
+                    }`}>
+                      <Users className={`w-6 h-6 ${isDark ? 'text-amber-400' : 'text-orange-600'}`} />
+                    </div>
                     <div>
-                      <p className="text-sm text-slate-400">Capacité</p>
-                      <p className="font-medium">{event.capacity} places</p>
+                      <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-amber-500' : 'text-slate-500'}`}>
+                        Capacité
+                      </p>
+                      <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {event.capacity} places
+                      </p>
                     </div>
                   </div>
                 )}
@@ -333,24 +415,39 @@ export default function EventDetailPage() {
 
               {event.description && (
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-3">À propos</h2>
-                  <p className="text-slate-300 whitespace-pre-line">{event.description}</p>
+                  <h2 className={`text-2xl font-black mb-4 flex items-center gap-2 ${
+                    isDark ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    <Sparkles className="w-6 h-6" />
+                    À propos
+                  </h2>
+                  <p className={`leading-relaxed whitespace-pre-line ${
+                    isDark ? 'text-amber-100/80' : 'text-slate-600'
+                  }`}>
+                    {event.description}
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
           <div>
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 sticky top-24">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                <ShoppingCart className="w-6 h-6 mr-2" />
-                ACHETER
+            <div className={`rounded-[32px] p-6 border sticky top-24 ${
+              isDark
+                ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 border-amber-800/40'
+                : 'bg-white border-slate-200 shadow-lg'
+            }`}>
+              <h2 className={`text-2xl font-black mb-6 flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}>
+                <ShoppingCart className="w-6 h-6" />
+                Acheter vos billets
               </h2>
 
               {event.is_free ? (
                 <div className="text-center py-8">
                   <p className="text-2xl font-bold text-green-500 mb-4">Événement GRATUIT</p>
-                  <button className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                  <button className="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-bold">
                     S'inscrire
                   </button>
                 </div>
@@ -358,33 +455,68 @@ export default function EventDetailPage() {
                 <>
                   <div className="space-y-4 mb-6">
                     {event.ticket_types?.map((ticketType) => (
-                      <div key={ticketType.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
-                        <div className="flex justify-between items-start mb-2">
+                      <div
+                        key={ticketType.id}
+                        className={`rounded-2xl p-5 border-2 transition-all ${
+                          cart.find(item => item.ticket_type.id === ticketType.id)
+                            ? isDark
+                              ? 'border-amber-600 bg-amber-900/20'
+                              : 'border-orange-500 bg-orange-50'
+                            : isDark
+                              ? 'border-amber-800/40 bg-amber-950/20'
+                              : 'border-slate-200 bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="font-bold text-white">{ticketType.name}</h3>
+                            <h3 className={`font-black text-lg ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
+                              {ticketType.name}
+                            </h3>
                             {ticketType.description && (
-                              <p className="text-sm text-slate-400 mt-1">{ticketType.description}</p>
+                              <p className={`text-sm mt-1 ${
+                                isDark ? 'text-amber-400/60' : 'text-slate-500'
+                              }`}>
+                                {ticketType.description}
+                              </p>
                             )}
                           </div>
-                          <p className="text-xl font-bold text-orange-400">
-                            {ticketType.price.toLocaleString()} FCFA
+                          <p className={`text-2xl font-black ${
+                            isDark ? 'text-amber-400' : 'text-orange-600'
+                          }`}>
+                            {ticketType.price.toLocaleString()} F
                           </p>
                         </div>
 
                         {cart.find(item => item.ticket_type.id === ticketType.id) ? (
-                          <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center justify-between mt-4">
                             <button
                               onClick={() => updateQuantity(ticketType.id, cart.find(item => item.ticket_type.id === ticketType.id)!.quantity - 1)}
-                              className="w-10 h-10 bg-slate-600 hover:bg-slate-500 rounded-lg flex items-center justify-center text-white transition-colors"
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold transition-all ${
+                                isDark
+                                  ? 'bg-amber-900/40 hover:bg-amber-800/60 text-white'
+                                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                              }`}
                             >
                               <Minus className="w-5 h-5" />
                             </button>
-                            <span className="text-white font-bold text-lg">
+                            <span className={`text-2xl font-black ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
                               {cart.find(item => item.ticket_type.id === ticketType.id)?.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(ticketType.id, cart.find(item => item.ticket_type.id === ticketType.id)!.quantity + 1)}
-                              className="w-10 h-10 bg-orange-600 hover:bg-orange-700 rounded-lg flex items-center justify-center text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold transition-all ${
+                                cart.find(item => item.ticket_type.id === ticketType.id)!.quantity >= 3
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : ''
+                              } ${
+                                isDark
+                                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
+                                  : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
+                              }`}
                               disabled={cart.find(item => item.ticket_type.id === ticketType.id)!.quantity >= 3}
                             >
                               <Plus className="w-5 h-5" />
@@ -393,15 +525,25 @@ export default function EventDetailPage() {
                         ) : (
                           <button
                             onClick={() => addToCart(ticketType)}
-                            className="w-full mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium"
+                            className={`w-full mt-4 px-6 py-3 rounded-xl transition-all font-bold ${
+                              ticketType.quantity_sold >= ticketType.quantity_total
+                                ? 'opacity-50 cursor-not-allowed'
+                                : ''
+                            } ${
+                              isDark
+                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
+                                : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
+                            }`}
                             disabled={ticketType.quantity_sold >= ticketType.quantity_total}
                           >
-                            {ticketType.quantity_sold >= ticketType.quantity_total ? 'Épuisé' : 'Ajouter'}
+                            {ticketType.quantity_sold >= ticketType.quantity_total ? 'Épuisé' : 'Ajouter au panier'}
                           </button>
                         )}
 
-                        <p className="text-xs text-slate-400 mt-2">
-                          {ticketType.quantity_total - ticketType.quantity_sold} places restantes • Max 3 billets/catégorie
+                        <p className={`text-xs mt-3 ${
+                          isDark ? 'text-amber-400/60' : 'text-slate-500'
+                        }`}>
+                          {ticketType.quantity_total - ticketType.quantity_sold} places restantes • Max 3 billets
                         </p>
                       </div>
                     ))}
@@ -409,10 +551,18 @@ export default function EventDetailPage() {
 
                   {cart.length > 0 && (
                     <>
-                      <div className="border-t border-slate-700 pt-4 mb-6">
+                      <div className={`border-t pt-4 mb-6 ${
+                        isDark ? 'border-amber-800/40' : 'border-slate-200'
+                      }`}>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-slate-400">Total</span>
-                          <span className="text-2xl font-bold text-white">
+                          <span className={`font-semibold ${
+                            isDark ? 'text-amber-400/80' : 'text-slate-600'
+                          }`}>
+                            Total
+                          </span>
+                          <span className={`text-3xl font-black ${
+                            isDark ? 'text-white' : 'text-slate-900'
+                          }`}>
                             {totalAmount.toLocaleString()} FCFA
                           </span>
                         </div>
@@ -420,9 +570,13 @@ export default function EventDetailPage() {
 
                       <button
                         onClick={() => setShowCheckout(true)}
-                        className="w-full px-6 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-bold text-lg"
+                        className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl ${
+                          isDark
+                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black hover:shadow-amber-900/40'
+                            : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white hover:shadow-orange-500/30'
+                        }`}
                       >
-                        Procéder au paiement
+                        Acheter maintenant
                       </button>
                     </>
                   )}
@@ -435,12 +589,28 @@ export default function EventDetailPage() {
 
       {showCheckout && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-700">
-            <div className="sticky top-0 bg-slate-800 p-6 border-b border-slate-700 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Paiement</h2>
+          <div className={`rounded-[32px] max-w-lg w-full max-h-[90vh] overflow-y-auto border ${
+            isDark
+              ? 'bg-gradient-to-br from-amber-950/95 to-orange-950/95 border-amber-800/40'
+              : 'bg-white border-slate-200'
+          }`}>
+            <div className={`sticky top-0 p-6 border-b flex justify-between items-center ${
+              isDark
+                ? 'bg-amber-950/95 backdrop-blur-xl border-amber-800/40'
+                : 'bg-white backdrop-blur-xl border-slate-200'
+            }`}>
+              <h2 className={`text-2xl font-black ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}>
+                Paiement Mobile Money
+              </h2>
               <button
                 onClick={() => setShowCheckout(false)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className={`p-2 rounded-xl transition-colors ${
+                  isDark
+                    ? 'hover:bg-amber-900/40 text-amber-400'
+                    : 'hover:bg-slate-100 text-slate-600'
+                }`}
                 disabled={processing}
               >
                 <X className="w-6 h-6" />
@@ -448,148 +618,213 @@ export default function EventDetailPage() {
             </div>
 
             <div className="p-6 space-y-6">
+              <div className="flex items-center justify-center gap-8 pb-6 border-b border-amber-800/40">
+                <div className="flex items-center justify-center bg-white rounded-2xl p-4 shadow-lg">
+                  <img src="/Wave.svg" alt="Wave" className="h-24 w-auto" />
+                </div>
+                <div className="flex items-center justify-center bg-white rounded-2xl p-4 shadow-lg">
+                  <img src="/Orange-Money.svg" alt="Orange Money" className="h-24 w-auto" />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Recevoir les billets par *
+                <label className={`block text-sm font-bold mb-3 ${
+                  isDark ? 'text-amber-300' : 'text-slate-700'
+                }`}>
+                  Recevoir les billets par
                 </label>
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setContactMethod('whatsapp')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-4 rounded-2xl border-2 transition-all ${
                       contactMethod === 'whatsapp'
-                        ? 'border-green-500 bg-green-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-green-500 bg-green-500/20'
+                        : isDark
+                          ? 'border-amber-800/40 hover:border-amber-700'
+                          : 'border-slate-200 hover:border-slate-300'
                     }`}
                     disabled={processing}
                   >
-                    <div className="text-2xl mb-1">💬</div>
-                    <div className="text-white font-bold text-sm">WhatsApp</div>
-                    <div className="text-xs text-slate-400">Recommandé</div>
+                    <div className="text-3xl mb-2">💬</div>
+                    <div className={`font-bold ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      WhatsApp
+                    </div>
+                    <div className={`text-xs ${
+                      isDark ? 'text-amber-400/60' : 'text-slate-500'
+                    }`}>
+                      Recommandé
+                    </div>
                   </button>
                   <button
                     onClick={() => setContactMethod('email')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-4 rounded-2xl border-2 transition-all ${
                       contactMethod === 'email'
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-blue-500 bg-blue-500/20'
+                        : isDark
+                          ? 'border-amber-800/40 hover:border-amber-700'
+                          : 'border-slate-200 hover:border-slate-300'
                     }`}
                     disabled={processing}
                   >
-                    <div className="text-2xl mb-1">✉️</div>
-                    <div className="text-white font-bold text-sm">Email</div>
-                    <div className="text-xs text-slate-400">Alternative</div>
+                    <div className="text-3xl mb-2">✉️</div>
+                    <div className={`font-bold ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      Email
+                    </div>
+                    <div className={`text-xs ${
+                      isDark ? 'text-amber-400/60' : 'text-slate-500'
+                    }`}>
+                      Classique
+                    </div>
                   </button>
-                </div>
-
-                {contactMethod === 'whatsapp' ? (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Numéro WhatsApp *
-                    </label>
-                    <input
-                      type="tel"
-                      value={checkoutForm.customer_phone}
-                      onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_phone: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="+221 77 123 45 67"
-                      disabled={processing}
-                    />
-                    <p className="text-xs text-slate-400 mt-2">
-                      Vos billets seront envoyés sur WhatsApp
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Adresse Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={checkoutForm.customer_email}
-                      onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_email: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="votre@email.com"
-                      disabled={processing}
-                    />
-                    <p className="text-xs text-slate-400 mt-2">
-                      Vos billets seront envoyés par email
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">🔒</div>
-                  <div>
-                    <p className="text-sm font-semibold text-blue-400 mb-1">
-                      Protection Anti-Raffle
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      • Maximum 3 billets par catégorie
-                      <br />
-                      • 1 transaction par numéro de téléphone
-                      <br />
-                      • Vérification automatique des achats
-                    </p>
-                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Méthode de paiement</label>
-                <div className="grid grid-cols-2 gap-3">
+                <label className={`block text-sm font-bold mb-2 ${
+                  isDark ? 'text-amber-300' : 'text-slate-700'
+                }`}>
+                  Nom complet
+                </label>
+                <input
+                  type="text"
+                  value={checkoutForm.customer_name}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_name: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                    isDark
+                      ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
+                      : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
+                  } focus:outline-none`}
+                  placeholder="Votre nom"
+                  disabled={processing}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-bold mb-2 ${
+                  isDark ? 'text-amber-300' : 'text-slate-700'
+                }`}>
+                  Numéro de téléphone {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
+                </label>
+                <input
+                  type="tel"
+                  value={checkoutForm.customer_phone}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_phone: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                    isDark
+                      ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
+                      : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
+                  } focus:outline-none`}
+                  placeholder="77 123 45 67"
+                  disabled={processing}
+                />
+              </div>
+
+              {contactMethod === 'email' && (
+                <div>
+                  <label className={`block text-sm font-bold mb-2 ${
+                    isDark ? 'text-amber-300' : 'text-slate-700'
+                  }`}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={checkoutForm.customer_email}
+                    onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_email: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                      isDark
+                        ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
+                        : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
+                    } focus:outline-none`}
+                    placeholder="email@exemple.com"
+                    disabled={processing}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className={`block text-sm font-bold mb-3 ${
+                  isDark ? 'text-amber-300' : 'text-slate-700'
+                }`}>
+                  Méthode de paiement
+                </label>
+                <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'wave' })}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-4 rounded-2xl border-2 transition-all ${
                       checkoutForm.payment_method === 'wave'
-                        ? 'border-orange-500 bg-orange-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-blue-500 bg-blue-500/20'
+                        : isDark
+                          ? 'border-amber-800/40 hover:border-amber-700'
+                          : 'border-slate-200 hover:border-slate-300'
                     }`}
                     disabled={processing}
                   >
-                    <div className="text-white font-bold">Wave</div>
+                    <div className={`font-bold ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      Wave
+                    </div>
                   </button>
                   <button
                     onClick={() => setCheckoutForm({ ...checkoutForm, payment_method: 'orange_money' })}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-4 rounded-2xl border-2 transition-all ${
                       checkoutForm.payment_method === 'orange_money'
-                        ? 'border-orange-500 bg-orange-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-orange-500 bg-orange-500/20'
+                        : isDark
+                          ? 'border-amber-800/40 hover:border-amber-700'
+                          : 'border-slate-200 hover:border-slate-300'
                     }`}
                     disabled={processing}
                   >
-                    <div className="text-white font-bold">Orange Money</div>
+                    <div className={`font-bold ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      Orange Money
+                    </div>
                   </button>
                 </div>
               </div>
 
-              <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
-                <p className="text-sm text-slate-400 mb-2">Récapitulatif</p>
-                {cart.map((item) => (
-                  <div key={item.ticket_type.id} className="flex justify-between text-white mb-1">
-                    <span>{item.quantity}x {item.ticket_type.name}</span>
-                    <span>{item.subtotal.toLocaleString()} FCFA</span>
-                  </div>
-                ))}
-                <div className="border-t border-slate-600 mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-bold text-white">Total</span>
-                  <span className="text-2xl font-bold text-orange-400">
-                    {totalAmount.toLocaleString()} FCFA
-                  </span>
-                </div>
+              <div className={`p-4 rounded-2xl border ${
+                isDark
+                  ? 'bg-amber-900/20 border-amber-800/40'
+                  : 'bg-orange-50 border-orange-200'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  isDark ? 'text-amber-300' : 'text-orange-800'
+                }`}>
+                  <strong>Limite:</strong> Maximum 3 billets par numéro de téléphone
+                </p>
               </div>
 
               <button
                 onClick={handleCheckout}
-                disabled={
-                  processing ||
-                  !checkoutForm.customer_phone ||
-                  (contactMethod === 'email' && !checkoutForm.customer_email)
-                }
-                className="w-full px-6 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={processing || checkingPhone}
+                className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl flex items-center justify-center gap-2 ${
+                  processing || checkingPhone
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                } ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
+                }`}
               >
-                {checkingPhone ? 'Vérification...' : processing ? 'Traitement...' : 'Confirmer le paiement'}
+                {processing || checkingPhone ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    {checkingPhone ? 'Vérification...' : 'Traitement...'}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Confirmer l'achat - {totalAmount.toLocaleString()} FCFA
+                  </>
+                )}
               </button>
             </div>
           </div>

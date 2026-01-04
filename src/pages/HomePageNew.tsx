@@ -27,7 +27,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { mockEvents, mockCategories } from '../lib/mockData';
+import { firestore } from '../firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import type { Event, EventCategory } from '../types';
 import DynamicLogo from '../components/DynamicLogo';
 
@@ -48,25 +49,47 @@ export default function HomePageNew() {
   const loadData = async () => {
     setLoading(true);
     try {
-      console.log('[MOCK DATA] Loading categories and events...');
+      console.log('[FIREBASE] Loading categories and events from Firebase...');
 
-      setCategories(mockCategories as EventCategory[]);
+      const categoriesRef = collection(firestore, 'event_categories');
+      const categoriesSnapshot = await getDocs(categoriesRef);
+      const loadedCategories = categoriesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as EventCategory[];
+      setCategories(loadedCategories);
 
-      let filteredEvents = mockEvents.filter(event =>
-        event.status === 'published' &&
-        new Date(event.start_date) >= new Date()
+      const eventsRef = collection(firestore, 'events');
+      let eventsQuery = query(
+        eventsRef,
+        where('status', '==', 'published'),
+        orderBy('start_date', 'desc')
       );
 
+      const eventsSnapshot = await getDocs(eventsQuery);
+      let loadedEvents = await Promise.all(
+        eventsSnapshot.docs.map(async (eventDoc) => {
+          const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
+
+          const ticketTypesRef = collection(firestore, 'ticket_types');
+          const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
+          const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
+          eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+          return eventData;
+        })
+      );
+
+      loadedEvents = loadedEvents.filter(event => new Date(event.start_date) >= new Date());
+
       if (selectedCategory) {
-        filteredEvents = filteredEvents.filter(event =>
-          event.category_id === selectedCategory
-        );
+        loadedEvents = loadedEvents.filter(event => event.category_id === selectedCategory);
       }
 
-      setEvents(filteredEvents as Event[]);
-      console.log('[MOCK DATA] Loaded', filteredEvents.length, 'events');
+      setEvents(loadedEvents);
+      console.log('[FIREBASE] Loaded', loadedEvents.length, 'events and', loadedCategories.length, 'categories');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading data from Firebase:', error);
     } finally {
       setLoading(false);
     }
