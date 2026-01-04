@@ -113,11 +113,11 @@ export default function CreateEventModal({
       const eventRef = await addDoc(collection(firestore, 'events'), eventData);
 
       for (const ticketType of ticketTypes) {
-        if (ticketType.name && ticketType.price > 0 && ticketType.quantity > 0) {
+        if (ticketType.name && ticketType.quantity > 0) {
           await addDoc(collection(firestore, 'ticket_types'), {
             event_id: eventRef.id,
             name: ticketType.name,
-            price: ticketType.price,
+            price: ticketType.price || 0,
             quantity_total: ticketType.quantity,
             quantity_sold: 0,
             is_active: true,

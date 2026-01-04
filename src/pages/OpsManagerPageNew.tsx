@@ -11,13 +11,15 @@ import {
   CheckCircle,
   Eye,
   UserCheck,
-  Scan
+  Scan,
+  Database
 } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { firestore } from '../firebase';
 import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import AgentManagementModal from '../components/AgentManagementModal';
+import SecurityAgentsDatabase from '../components/SecurityAgentsDatabase';
 import type { Event } from '../types';
 
 interface AgentStats {
@@ -36,6 +38,7 @@ export default function OpsManagerPageNew() {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showAgentModal, setShowAgentModal] = useState(false);
+  const [showAgentsDatabase, setShowAgentsDatabase] = useState(false);
   const [agentStats, setAgentStats] = useState<AgentStats[]>([]);
   const [globalStats, setGlobalStats] = useState({
     totalEvents: 0,
@@ -188,17 +191,30 @@ export default function OpsManagerPageNew() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className={`px-5 py-3 rounded-xl transition-all duration-300 font-bold text-sm flex items-center gap-2 ${
-                isDark
-                  ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
-                  : 'bg-red-50 hover:bg-red-100 text-red-600'
-              }`}
-            >
-              <LogOut className="w-5 h-5" />
-              Déconnexion
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAgentsDatabase(true)}
+                className={`px-5 py-3 rounded-xl transition-all duration-300 font-bold text-sm flex items-center gap-2 ${
+                  isDark
+                    ? 'bg-blue-900/20 hover:bg-blue-900/40 text-blue-400'
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                }`}
+              >
+                <Database className="w-5 h-5" />
+                Base Contrôleurs
+              </button>
+              <button
+                onClick={handleLogout}
+                className={`px-5 py-3 rounded-xl transition-all duration-300 font-bold text-sm flex items-center gap-2 ${
+                  isDark
+                    ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
+                    : 'bg-red-50 hover:bg-red-100 text-red-600'
+                }`}
+              >
+                <LogOut className="w-5 h-5" />
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -452,6 +468,13 @@ export default function OpsManagerPageNew() {
           eventId={selectedEvent.id}
           eventTitle={selectedEvent.title}
           onClose={() => setShowAgentModal(false)}
+        />
+      )}
+
+      {showAgentsDatabase && (
+        <SecurityAgentsDatabase
+          isDark={isDark}
+          onClose={() => setShowAgentsDatabase(false)}
         />
       )}
     </div>
