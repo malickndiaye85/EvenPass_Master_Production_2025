@@ -22,52 +22,17 @@ const PassLandingPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Logo size="md" variant="default" />
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleEvenClick}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    isDark
-                      ? 'text-amber-400 hover:bg-amber-400/10'
-                      : 'text-orange-600 hover:bg-orange-50'
-                  }`}
-                >
-                  EVEN
-                </button>
-                <button
-                  onClick={handlePassClick}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    isDark
-                      ? 'text-cyan-400 hover:bg-cyan-400/10'
-                      : 'text-[#0A7EA3] hover:bg-[#E6F1F5]'
-                  }`}
-                >
-                  PASS
-                </button>
-              </div>
-            </div>
+            <Logo size="md" variant="default" />
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-lg transition-all ${
-                  isDark ? 'bg-gray-800 text-amber-400' : 'bg-gray-100 text-gray-700'
-                }`}
-                aria-label="Toggle theme"
-              >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  isDark
-                    ? 'bg-gray-800 text-white hover:bg-gray-700'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
-              >
-                Connexion
-              </button>
-            </div>
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-all ${
+                isDark ? 'bg-gray-800 text-amber-400' : 'bg-gray-100 text-gray-700'
+              }`}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </nav>

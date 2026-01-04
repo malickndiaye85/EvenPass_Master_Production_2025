@@ -105,55 +105,19 @@ const PassServicesPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} shadow-sm`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <button onClick={() => navigate('/')} className="flex items-center gap-3 group">
-                <Logo size="md" variant="default" />
-                <div className="flex items-center gap-2">
-                  <span className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    EvenPass
-                  </span>
-                  <span className={`px-2 py-1 text-xs font-bold rounded-lg ${
-                    isDark ? 'bg-cyan-500/20 text-cyan-400' : 'bg-[#E6F1F5] text-[#0A7EA3]'
-                  }`}>
-                    PASS
-                  </span>
-                </div>
-              </button>
-            </div>
+            <button onClick={() => navigate('/')} className="flex items-center gap-3 group">
+              <Logo size="md" variant="default" />
+            </button>
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/pass/wallet')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold transition-all transform hover:scale-105 ${
-                  isDark
-                    ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white shadow-lg'
-                    : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] text-white shadow-lg'
-                }`}
-                style={{ borderRadius: '20px 8px 20px 8px' }}
-              >
-                <Wallet className="w-5 h-5" />
-                Mon Wallet
-              </button>
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-lg transition-all ${
-                  isDark ? 'bg-gray-800 text-cyan-400' : 'bg-gray-100 text-gray-700'
-                }`}
-                aria-label="Toggle theme"
-              >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              <button
-                onClick={() => navigate('/even')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  isDark
-                    ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Retour à EVEN
-              </button>
-            </div>
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-all ${
+                isDark ? 'bg-gray-800 text-cyan-400' : 'bg-gray-100 text-gray-700'
+              }`}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </nav>
