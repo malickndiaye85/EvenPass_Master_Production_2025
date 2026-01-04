@@ -262,6 +262,15 @@ export default function HomePageNew() {
                     ? 'bg-gradient-to-br from-amber-600/10 to-orange-600/10'
                     : 'bg-gradient-to-br from-orange-100/50 to-pink-100/50'
                 }`}></div>
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
+                    isDark
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black'
+                      : 'bg-gradient-to-r from-orange-500 to-red-600 text-white'
+                  } shadow-lg`}>
+                    [ EVEN ]
+                  </span>
+                </div>
                 <div className="relative">
                   <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                     isDark
@@ -296,6 +305,15 @@ export default function HomePageNew() {
                     ? 'bg-gradient-to-br from-blue-600/10 to-cyan-600/10'
                     : 'bg-gradient-to-br from-blue-100/50 to-cyan-100/50'
                 }`}></div>
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
+                    isDark
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-black'
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white'
+                  } shadow-lg`}>
+                    [ EVEN ]
+                  </span>
+                </div>
                 <div className="relative">
                   <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                     isDark
@@ -305,7 +323,7 @@ export default function HomePageNew() {
                     <Plus className="w-10 h-10 text-white" />
                   </div>
                   <h3 className={`text-xl font-black mb-3 ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
-                    Créer un événement
+                    Espace Organisateur
                   </h3>
                   <p className={`text-sm mb-5 ${isDark ? 'text-blue-300/60' : 'text-slate-600'}`}>
                     Organisez et gérez vos événements en toute simplicité
@@ -356,6 +374,15 @@ export default function HomePageNew() {
                   ? 'bg-gradient-to-br from-cyan-600/10 to-blue-600/10'
                   : 'bg-gradient-to-br from-cyan-100/50 to-blue-100/50'
               }`}></div>
+              <div className="absolute top-4 right-4">
+                <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
+                  isDark
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black'
+                    : 'bg-gradient-to-r from-[#0A7EA3] to-cyan-600 text-white'
+                } shadow-lg`}>
+                  [ PASS ]
+                </span>
+              </div>
               <div className="relative">
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                   isDark
@@ -365,17 +392,10 @@ export default function HomePageNew() {
                   <Ship className="w-10 h-10 text-white" />
                 </div>
                 <h4 className={`text-2xl font-black mb-3 ${isDark ? 'text-cyan-50' : 'text-slate-900'}`}>
-                  LMDG
+                  LMDG ⇄ Dakar-Gorée
                 </h4>
-                <div className={`text-lg font-bold mb-4 flex items-center justify-center gap-2 ${
-                  isDark ? 'text-cyan-300' : 'text-[#0A7EA3]'
-                }`}>
-                  <span>Dakar</span>
-                  <ArrowRight className="w-5 h-5" />
-                  <span>Gorée</span>
-                </div>
                 <p className={`text-sm ${isDark ? 'text-cyan-300/60' : 'text-slate-600'}`}>
-                  Liaison maritime Dakar-Gorée
+                  Liaison maritime • Rotation dans les deux sens
                 </p>
               </div>
             </button>
@@ -394,6 +414,15 @@ export default function HomePageNew() {
                   ? 'bg-gradient-to-br from-cyan-600/10 to-blue-600/10'
                   : 'bg-gradient-to-br from-cyan-100/50 to-blue-100/50'
               }`}></div>
+              <div className="absolute top-4 right-4">
+                <span className={`px-4 py-1.5 text-xs font-black rounded-full ${
+                  isDark
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black'
+                    : 'bg-gradient-to-r from-[#0A7EA3] to-cyan-600 text-white'
+                } shadow-lg`}>
+                  [ PASS ]
+                </span>
+              </div>
               <div className="relative">
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 ${
                   isDark
@@ -403,17 +432,10 @@ export default function HomePageNew() {
                   <Ship className="w-10 h-10 text-white" />
                 </div>
                 <h4 className={`text-2xl font-black mb-3 ${isDark ? 'text-cyan-50' : 'text-slate-900'}`}>
-                  COSAMA
+                  COSAMA ⇄ Dakar-Ziguinchor
                 </h4>
-                <div className={`text-lg font-bold mb-4 flex items-center justify-center gap-2 ${
-                  isDark ? 'text-cyan-300' : 'text-[#0A7EA3]'
-                }`}>
-                  <span>Dakar</span>
-                  <ArrowRight className="w-5 h-5" />
-                  <span>Ziguinchor</span>
-                </div>
                 <p className={`text-sm ${isDark ? 'text-cyan-300/60' : 'text-slate-600'}`}>
-                  Liaison maritime Dakar-Ziguinchor
+                  Liaison maritime • Rotation dans les deux sens
                 </p>
               </div>
             </button>

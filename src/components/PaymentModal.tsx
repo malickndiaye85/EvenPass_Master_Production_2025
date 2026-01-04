@@ -140,10 +140,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         <div className="flex items-center justify-center gap-6 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-center bg-white rounded-xl p-3 shadow-md">
-            <img src="/wave-logo.svg" alt="Wave" className="h-8 w-auto" />
+            <img src="/Wave.svg" alt="Wave" className="h-10 w-auto" />
           </div>
           <div className="flex items-center justify-center bg-white rounded-xl p-3 shadow-md">
-            <img src="/orange-money-logo.svg" alt="Orange Money" className="h-8 w-auto" />
+            <img src="/Orange-Money.svg" alt="Orange Money" className="h-10 w-auto" />
           </div>
         </div>
 
