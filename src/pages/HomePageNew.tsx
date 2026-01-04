@@ -6,14 +6,11 @@ import {
   Search,
   Ticket,
   Plus,
-  Scan,
-  TrendingUp,
   Sparkles,
   ArrowRight,
   Clock,
   Users,
   Shield,
-  Zap,
   Sun,
   Moon,
   Music,
@@ -31,7 +28,7 @@ import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { mockEvents, mockCategories } from '../lib/mockData';
 import type { Event, EventCategory } from '../types';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function HomePageNew() {
   const navigate = useNavigate();
@@ -115,66 +112,31 @@ export default function HomePageNew() {
         ? 'bg-[#050505]'
         : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
     }`}>
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isDark
-          ? 'bg-black/60 border-amber-900/20'
-          : 'bg-white/60 border-slate-200/60'
-      } backdrop-blur-2xl border-b`}>
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <Logo size="md" variant="default" />
-              <p className={`text-xs font-medium ml-16 -mt-1 ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
-                Premium Events • Sénégal
-              </p>
-            </div>
+          ? 'bg-black/40'
+          : 'bg-white/40'
+      } backdrop-blur-xl`}>
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center relative">
+            <DynamicLogo />
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/how-it-works')}
-                className={`group relative px-4 py-2 rounded-xl font-semibold text-sm transition-all overflow-hidden ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 hover:from-amber-800/40 hover:to-orange-800/40 text-amber-300 border border-amber-700/30'
-                    : 'bg-gradient-to-r from-orange-50 to-pink-50 hover:from-orange-100 hover:to-pink-100 text-orange-600 border border-orange-200/50'
-                } hover:scale-105 hover:shadow-lg`}
-              >
-                <span className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Comment ça marche</span>
-                </span>
-              </button>
-
-              <button
-                onClick={() => navigate('/for-organizers')}
-                className={`group relative px-4 py-2 rounded-xl font-semibold text-sm transition-all overflow-hidden ${
-                  isDark
-                    ? 'bg-gradient-to-r from-blue-900/30 to-cyan-900/30 hover:from-blue-800/40 hover:to-cyan-800/40 text-blue-300 border border-blue-700/30'
-                    : 'bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 text-blue-600 border border-blue-200/50'
-                } hover:scale-105 hover:shadow-lg`}
-              >
-                <span className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Pour organisateurs</span>
-                </span>
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-105 ${
-                  isDark
-                    ? 'bg-amber-900/30 hover:bg-amber-800/40 text-amber-400 border border-amber-800/30'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/50'
-                }`}
-                aria-label="Toggle theme"
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-            </div>
+            <button
+              onClick={toggleTheme}
+              className={`absolute right-0 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
+                isDark
+                  ? 'bg-amber-900/20 hover:bg-amber-800/30 text-amber-400'
+                  : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-700'
+              }`}
+              aria-label="Changer le thème"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </header>
 
-      <section className="relative overflow-hidden py-20 sm:py-32">
+      <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-32">
         <div className={`absolute inset-0 ${
           isDark
             ? 'bg-gradient-to-br from-amber-950/20 via-transparent to-orange-950/20'

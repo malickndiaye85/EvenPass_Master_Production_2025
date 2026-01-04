@@ -634,7 +634,7 @@ const COSAMABookingPage: React.FC = () => {
                         style={{ borderRadius: '40px 120px 40px 120px' }}
                       >
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center p-3 shadow-md">
+                          <div className="w-28 h-28 bg-white rounded-xl flex items-center justify-center p-4 shadow-lg">
                             <img src="/Wave.svg" alt="Wave" className="w-full h-full object-contain" />
                           </div>
                           <div className={`text-xl font-black ${paymentMethod === 'wave' ? isDark ? 'text-blue-400' : 'text-blue-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -657,7 +657,7 @@ const COSAMABookingPage: React.FC = () => {
                         style={{ borderRadius: '40px 120px 40px 120px' }}
                       >
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center p-3 shadow-md">
+                          <div className="w-28 h-28 bg-white rounded-xl flex items-center justify-center p-4 shadow-lg">
                             <img src="/Orange-Money.svg" alt="Orange Money" className="w-full h-full object-contain" />
                           </div>
                           <div className={`text-xl font-black ${paymentMethod === 'orange' ? isDark ? 'text-orange-400' : 'text-orange-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
