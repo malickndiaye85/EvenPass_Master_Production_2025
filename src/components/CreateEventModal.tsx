@@ -38,7 +38,7 @@ export default function CreateEventModal({
   });
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
-    { name: 'Standard', price: 0, quantity: 0 },
+    { name: 'Standard', price: 5000, quantity: 100 },
   ]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +76,12 @@ export default function CreateEventModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organizerData) return;
+
+    const validTickets = ticketTypes.filter(t => t.name && t.quantity > 0);
+    if (validTickets.length === 0) {
+      alert('Veuillez ajouter au moins un type de billet avec un nom et une quantité');
+      return;
+    }
 
     setProcessing(true);
     try {
@@ -374,7 +380,6 @@ export default function CreateEventModal({
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="VIP, Standard..."
-                      required
                       disabled={processing}
                     />
                   </div>
@@ -395,7 +400,6 @@ export default function CreateEventModal({
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="5000"
-                      required
                       disabled={processing}
                       min="0"
                     />
@@ -417,9 +421,8 @@ export default function CreateEventModal({
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="100"
-                      required
                       disabled={processing}
-                      min="0"
+                      min="1"
                     />
                   </div>
 
