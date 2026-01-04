@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut, Package } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, Users, Zap, Calendar, MapPin, X, Clock, LogOut, Package, Plus, Loader } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { mockPayouts, mockEvents, mockStats } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
+import { firestore } from '../firebase';
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 
 interface PayoutRequest {
   id: string;
@@ -52,6 +54,17 @@ export default function AdminFinancePage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification'>('payouts');
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [organizers, setOrganizers] = useState<any[]>([]);
+  const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
+  const [bulkForm, setBulkForm] = useState({
+    organizer_id: '',
+    event_id: '',
+    quantity: '',
+    unit_price: '',
+  });
+  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => {
     console.log('[ADMIN FINANCE] Auth state:', {
@@ -79,7 +92,7 @@ export default function AdminFinancePage() {
     }
   };
 
-  const loadData = () => {
+  const loadData = async () => {
     try {
       console.log('[MOCK DATA] Loading admin finance...', { userRole: user?.role, uid: firebaseUser?.uid });
 
@@ -93,11 +106,109 @@ export default function AdminFinancePage() {
       const organizerPayouts = totalSales * 0.935;
 
       setStats({ totalSales, platformCommission, payoutFees, organizerPayouts });
+
+      const organizersRef = collection(firestore, 'organizers');
+      const organizersQuery = query(organizersRef, where('verification_status', '==', 'verified'));
+      const organizersSnapshot = await getDocs(organizersQuery);
+      const loadedOrganizers = organizersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrganizers(loadedOrganizers);
+
       console.log('[MOCK DATA] Loaded admin finance data successfully');
     } catch (error) {
       console.error('[ADMIN FINANCE] Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOrganizerEvents = async (organizerId: string) => {
+    try {
+      const eventsRef = collection(firestore, 'events');
+      const eventsQuery = query(eventsRef, where('organizer_id', '==', organizerId), where('status', '==', 'published'));
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const loadedEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrganizerEvents(loadedEvents);
+    } catch (error) {
+      console.error('[ADMIN FINANCE] Error loading organizer events:', error);
+    }
+  };
+
+  const handleCreateBulk = async () => {
+    if (!bulkForm.organizer_id || !bulkForm.event_id || !bulkForm.quantity || !bulkForm.unit_price) {
+      alert('⚠️ Veuillez remplir tous les champs');
+      return;
+    }
+
+    const quantity = parseInt(bulkForm.quantity);
+    const unitPrice = parseInt(bulkForm.unit_price);
+
+    if (quantity <= 0 || unitPrice <= 0) {
+      alert('⚠️ Les valeurs doivent être supérieures à 0');
+      return;
+    }
+
+    if (!confirm(`✅ Confirmer la création de ${quantity} billets à ${unitPrice.toLocaleString()} FCFA ?`)) {
+      return;
+    }
+
+    setBulkProcessing(true);
+    setBulkProgress(20);
+
+    try {
+      const selectedOrganizer = organizers.find(o => o.id === bulkForm.organizer_id);
+      const selectedEvent = organizerEvents.find(e => e.id === bulkForm.event_id);
+
+      setBulkProgress(40);
+
+      const bulkSaleData = {
+        organizer_id: bulkForm.organizer_id,
+        organizer_name: selectedOrganizer?.organization_name || '',
+        event_id: bulkForm.event_id,
+        event_title: selectedEvent?.title || '',
+        quantity_allocated: quantity,
+        quantity_sold: 0,
+        unit_price: unitPrice,
+        total_value: quantity * unitPrice,
+        created_at: Timestamp.now(),
+        created_by: firebaseUser?.uid || '',
+        status: 'active',
+      };
+
+      setBulkProgress(60);
+
+      await addDoc(collection(firestore, 'bulk_sales'), bulkSaleData);
+
+      setBulkProgress(80);
+
+      const transactionData = {
+        type: 'bulk_generation',
+        organizer_id: bulkForm.organizer_id,
+        event_id: bulkForm.event_id,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_amount: quantity * unitPrice,
+        created_at: Timestamp.now(),
+        created_by: firebaseUser?.uid || '',
+        status: 'confirmed',
+      };
+
+      await addDoc(collection(firestore, 'transactions'), transactionData);
+
+      setBulkProgress(100);
+
+      setTimeout(() => {
+        alert(`✅ Bloc de ${quantity} billets créé avec succès!\n\nOrganisateur : ${selectedOrganizer?.organization_name}\nÉvénement : ${selectedEvent?.title}\nValeur totale : ${(quantity * unitPrice).toLocaleString()} FCFA`);
+        setShowBulkModal(false);
+        setBulkForm({ organizer_id: '', event_id: '', quantity: '', unit_price: '' });
+        setBulkProgress(0);
+        setBulkProcessing(false);
+      }, 500);
+
+    } catch (error) {
+      console.error('[ADMIN FINANCE] Error creating bulk:', error);
+      alert('❌ Erreur lors de la création du bloc');
+      setBulkProcessing(false);
+      setBulkProgress(0);
     }
   };
 
@@ -365,8 +476,9 @@ export default function AdminFinancePage() {
               </button>
             </div>
             <button
-              onClick={() => alert('Fonctionnalité Vente en Bloc bientôt disponible')}
-              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg flex items-center gap-2"
+              onClick={() => setShowBulkModal(true)}
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold transition-all shadow-lg flex items-center gap-2"
+              style={{ borderRadius: '40px 8px 40px 8px' }}
             >
               <Package className="w-4 h-4" />
               Créer une Vente en Bloc
@@ -669,6 +781,163 @@ export default function AdminFinancePage() {
               >
                 Fermer
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2A2A2A] max-w-2xl w-full border border-[#2A2A2A]" style={{ borderRadius: '40px 120px 40px 120px' }}>
+            <div className="p-6 border-b border-[#0F0F0F] flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-black text-white">📦 Génération de Bloc de Billets</h2>
+                <p className="text-[#B5B5B5] text-sm mt-1">Allouer un quota de billets à un organisateur</p>
+              </div>
+              <button
+                onClick={() => !bulkProcessing && setShowBulkModal(false)}
+                disabled={bulkProcessing}
+                className="text-[#B5B5B5] hover:text-white transition-colors disabled:opacity-50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-white mb-2">
+                  Organisateur <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={bulkForm.organizer_id}
+                  onChange={(e) => {
+                    setBulkForm({ ...bulkForm, organizer_id: e.target.value, event_id: '' });
+                    if (e.target.value) loadOrganizerEvents(e.target.value);
+                  }}
+                  disabled={bulkProcessing}
+                  className="w-full px-4 py-3 bg-[#0F0F0F] border-2 border-[#2A2A2A] text-white font-medium transition-colors focus:border-purple-600 focus:outline-none disabled:opacity-50"
+                  style={{ borderRadius: '20px 8px 20px 8px' }}
+                >
+                  <option value="">Sélectionner un organisateur</option>
+                  {organizers.map(org => (
+                    <option key={org.id} value={org.id}>
+                      {org.organization_name} - {org.contact_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2">
+                  Événement <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={bulkForm.event_id}
+                  onChange={(e) => setBulkForm({ ...bulkForm, event_id: e.target.value })}
+                  disabled={!bulkForm.organizer_id || bulkProcessing}
+                  className="w-full px-4 py-3 bg-[#0F0F0F] border-2 border-[#2A2A2A] text-white font-medium transition-colors focus:border-purple-600 focus:outline-none disabled:opacity-50"
+                  style={{ borderRadius: '20px 8px 20px 8px' }}
+                >
+                  <option value="">Sélectionner un événement</option>
+                  {organizerEvents.map(event => (
+                    <option key={event.id} value={event.id}>
+                      {event.title} - {new Date(event.start_date).toLocaleDateString('fr-FR')}
+                    </option>
+                  ))}
+                </select>
+                {bulkForm.organizer_id && organizerEvents.length === 0 && (
+                  <p className="text-yellow-400 text-sm mt-2">Aucun événement publié pour cet organisateur</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">
+                    Nombre de billets <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bulkForm.quantity}
+                    onChange={(e) => setBulkForm({ ...bulkForm, quantity: e.target.value })}
+                    disabled={bulkProcessing}
+                    placeholder="Ex: 100"
+                    className="w-full px-4 py-3 bg-[#0F0F0F] border-2 border-[#2A2A2A] text-white font-medium transition-colors focus:border-purple-600 focus:outline-none disabled:opacity-50"
+                    style={{ borderRadius: '20px 8px 20px 8px' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2">
+                    Prix unitaire (FCFA) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bulkForm.unit_price}
+                    onChange={(e) => setBulkForm({ ...bulkForm, unit_price: e.target.value })}
+                    disabled={bulkProcessing}
+                    placeholder="Ex: 5000"
+                    className="w-full px-4 py-3 bg-[#0F0F0F] border-2 border-[#2A2A2A] text-white font-medium transition-colors focus:border-purple-600 focus:outline-none disabled:opacity-50"
+                    style={{ borderRadius: '20px 8px 20px 8px' }}
+                  />
+                </div>
+              </div>
+
+              {bulkForm.quantity && bulkForm.unit_price && (
+                <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border-2 border-purple-600 p-4" style={{ borderRadius: '20px 8px 20px 8px' }}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#B5B5B5] font-bold">Valeur totale du bloc :</span>
+                    <span className="text-white font-black text-2xl">
+                      {(parseInt(bulkForm.quantity || '0') * parseInt(bulkForm.unit_price || '0')).toLocaleString()} FCFA
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {bulkProcessing && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[#B5B5B5]">Génération en cours...</span>
+                    <span className="text-purple-400 font-bold">{bulkProgress}%</span>
+                  </div>
+                  <div className="w-full bg-[#0F0F0F] rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 h-full transition-all duration-500"
+                      style={{ width: `${bulkProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBulkModal(false)}
+                  disabled={bulkProcessing}
+                  className="flex-1 px-6 py-3 bg-[#0F0F0F] hover:bg-[#2A2A2A] text-white font-bold transition-colors border border-[#2A2A2A] disabled:opacity-50"
+                  style={{ borderRadius: '20px 8px 20px 8px' }}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCreateBulk}
+                  disabled={bulkProcessing || !bulkForm.organizer_id || !bulkForm.event_id || !bulkForm.quantity || !bulkForm.unit_price}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black transition-all disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
+                  style={{ borderRadius: '20px 8px 20px 8px' }}
+                >
+                  {bulkProcessing ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Générer le Bloc
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

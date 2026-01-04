@@ -70,6 +70,8 @@ export default function OrganizerDashboardPage() {
   const [totalTicketsSold, setTotalTicketsSold] = useState(0);
   const [bulkStock, setBulkStock] = useState(0);
   const [categories, setCategories] = useState<any[]>([]);
+  const [mobileMoneyFees, setMobileMoneyFees] = useState(0);
+  const [platformCommission, setPlatformCommission] = useState(0);
 
   const [requestForm, setRequestForm] = useState({
     event_id: '',
@@ -189,6 +191,11 @@ export default function OrganizerDashboardPage() {
       setEventStats(stats);
       setTotalRevenue(totalRev);
       setTotalTicketsSold(totalSold);
+
+      const commission = totalRev * 0.05;
+      const fees = totalRev * 0.015;
+      setPlatformCommission(commission);
+      setMobileMoneyFees(fees);
 
       const payoutsRef = collection(firestore, 'payout_requests');
       const payoutsQuery = query(payoutsRef, where('organizer_id', '==', organizerDoc.id));
@@ -413,17 +420,23 @@ export default function OrganizerDashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
-                  Mobile Money
+                  Frais Mobile Money
                 </p>
-                <p className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <p className={`text-lg font-black ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                  {mobileMoneyFees.toLocaleString()} F
+                </p>
+                <p className={`text-xs ${isDark ? 'text-purple-400/40' : 'text-purple-500'}`}>
                   1,5%
                 </p>
               </div>
               <div>
                 <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
-                  Commissions
+                  Commission EvenPass
                 </p>
-                <p className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <p className={`text-lg font-black ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                  {platformCommission.toLocaleString()} F
+                </p>
+                <p className={`text-xs ${isDark ? 'text-purple-400/40' : 'text-purple-500'}`}>
                   5%
                 </p>
               </div>
