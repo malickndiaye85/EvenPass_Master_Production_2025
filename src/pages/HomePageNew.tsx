@@ -11,6 +11,7 @@ import {
   Clock,
   Users,
   Shield,
+  Zap,
   Sun,
   Moon,
   Music,
