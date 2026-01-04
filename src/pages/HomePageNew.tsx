@@ -169,20 +169,6 @@ export default function HomePageNew() {
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
-
-              <button
-                onClick={() => navigate('/organizer/login')}
-                className={`group relative px-6 py-2.5 rounded-xl font-black text-sm transition-all overflow-hidden shadow-lg hover:scale-105 ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-black shadow-amber-600/30'
-                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-orange-500/30'
-                }`}
-              >
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4" />
-                  <span>Espace Organisateur</span>
-                </span>
-              </button>
             </div>
           </div>
         </div>
