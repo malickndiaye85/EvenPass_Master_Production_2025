@@ -8,7 +8,11 @@ interface Agent {
   name: string;
   phone: string;
   email: string;
+  mobile_pda?: string;
+  cni?: string;
+  address?: string;
   is_active: boolean;
+  is_enrolled: boolean;
   created_at: any;
 }
 
@@ -28,6 +32,9 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
     name: '',
     phone: '',
     email: '',
+    mobile_pda: '',
+    cni: '',
+    address: '',
   });
 
   useEffect(() => {
@@ -59,10 +66,14 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
+        mobile_pda: formData.mobile_pda || '',
+        cni: formData.cni || '',
+        address: formData.address || '',
         is_active: true,
+        is_enrolled: false,
         created_at: Timestamp.now(),
       });
-      setFormData({ name: '', phone: '', email: '' });
+      setFormData({ name: '', phone: '', email: '', mobile_pda: '', cni: '', address: '' });
       setShowAddForm(false);
       await loadAgents();
       alert('Agent ajouté avec succès!');
@@ -82,9 +93,12 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
+        mobile_pda: formData.mobile_pda || '',
+        cni: formData.cni || '',
+        address: formData.address || '',
       });
       setEditingId(null);
-      setFormData({ name: '', phone: '', email: '' });
+      setFormData({ name: '', phone: '', email: '', mobile_pda: '', cni: '', address: '' });
       await loadAgents();
       alert('Agent modifié avec succès!');
     } catch (error) {
@@ -125,18 +139,38 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
     }
   };
 
+  const handleEnroll = async (agentId: string, agentName: string) => {
+    if (!confirm(`✅ Confirmer l'enrôlement de ${agentName} ?`)) return;
+
+    setProcessing(true);
+    try {
+      const agentRef = doc(firestore, 'security_agents', agentId);
+      await updateDoc(agentRef, { is_enrolled: true });
+      await loadAgents();
+      alert(`✅ ${agentName} enrôlé avec succès !`);
+    } catch (error) {
+      console.error('Error enrolling agent:', error);
+      alert('Erreur lors de l\'enrôlement');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const startEdit = (agent: Agent) => {
     setEditingId(agent.id);
     setFormData({
       name: agent.name,
       phone: agent.phone,
       email: agent.email,
+      mobile_pda: agent.mobile_pda || '',
+      cni: agent.cni || '',
+      address: agent.address || '',
     });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: '', phone: '', email: '' });
+    setFormData({ name: '', phone: '', email: '', mobile_pda: '', cni: '', address: '' });
   };
 
   const filteredAgents = agents.filter(agent =>
@@ -222,7 +256,7 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
               <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Nouveau Contrôleur
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className={`block text-xs font-bold mb-2 ${
                     isDark ? 'text-slate-400' : 'text-slate-600'
@@ -278,6 +312,60 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
                     } focus:outline-none`}
                     placeholder="agent@email.com"
                     required
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${
+                    isDark ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    Mobile PDA
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.mobile_pda}
+                    onChange={(e) => setFormData({ ...formData, mobile_pda: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border font-medium ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-white'
+                        : 'bg-white border-slate-200 text-slate-900'
+                    } focus:outline-none`}
+                    placeholder="PDA12345"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs font-bold mb-2 ${
+                    isDark ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    CNI
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cni}
+                    onChange={(e) => setFormData({ ...formData, cni: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border font-medium ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-white'
+                        : 'bg-white border-slate-200 text-slate-900'
+                    } focus:outline-none`}
+                    placeholder="1234567890123"
+                  />
+                </div>
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className={`block text-xs font-bold mb-2 ${
+                    isDark ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    Adresse
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border font-medium ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-white'
+                        : 'bg-white border-slate-200 text-slate-900'
+                    } focus:outline-none`}
+                    placeholder="Sacré-Cœur 3, Dakar"
                   />
                 </div>
               </div>
@@ -345,6 +433,21 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
                         isDark ? 'text-slate-400' : 'text-slate-600'
                       }`}>
                         Email
+                      </th>
+                      <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}>
+                        Mobile PDA
+                      </th>
+                      <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}>
+                        CNI
+                      </th>
+                      <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}>
+                        Adresse
                       </th>
                       <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
                         isDark ? 'text-slate-400' : 'text-slate-600'
@@ -427,6 +530,66 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          {editingId === agent.id ? (
+                            <input
+                              type="text"
+                              value={formData.mobile_pda}
+                              onChange={(e) => setFormData({ ...formData, mobile_pda: e.target.value })}
+                              className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
+                                isDark
+                                  ? 'bg-slate-900 border-slate-700 text-white'
+                                  : 'bg-white border-slate-200 text-slate-900'
+                              } focus:outline-none`}
+                            />
+                          ) : (
+                            <span className={`text-sm font-medium ${
+                              isDark ? 'text-slate-400' : 'text-slate-600'
+                            }`}>
+                              {agent.mobile_pda || '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {editingId === agent.id ? (
+                            <input
+                              type="text"
+                              value={formData.cni}
+                              onChange={(e) => setFormData({ ...formData, cni: e.target.value })}
+                              className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
+                                isDark
+                                  ? 'bg-slate-900 border-slate-700 text-white'
+                                  : 'bg-white border-slate-200 text-slate-900'
+                              } focus:outline-none`}
+                            />
+                          ) : (
+                            <span className={`text-sm font-medium ${
+                              isDark ? 'text-slate-400' : 'text-slate-600'
+                            }`}>
+                              {agent.cni || '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {editingId === agent.id ? (
+                            <input
+                              type="text"
+                              value={formData.address}
+                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
+                                isDark
+                                  ? 'bg-slate-900 border-slate-700 text-white'
+                                  : 'bg-white border-slate-200 text-slate-900'
+                              } focus:outline-none`}
+                            />
+                          ) : (
+                            <span className={`text-sm font-medium ${
+                              isDark ? 'text-slate-400' : 'text-slate-600'
+                            }`}>
+                              {agent.address || '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleToggleActive(agent.id, agent.is_active)}
                             disabled={processing}
@@ -466,6 +629,19 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
+                              {!agent.is_enrolled && (
+                                <button
+                                  onClick={() => handleEnroll(agent.id, agent.name)}
+                                  disabled={processing}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                                    isDark
+                                      ? 'bg-green-900/40 hover:bg-green-900/60 text-green-400'
+                                      : 'bg-green-100 hover:bg-green-200 text-green-700'
+                                  }`}
+                                >
+                                  Enrôler
+                                </button>
+                              )}
                               <button
                                 onClick={() => startEdit(agent)}
                                 className={`p-2 rounded-lg transition-colors ${

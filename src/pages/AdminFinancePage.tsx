@@ -242,7 +242,7 @@ export default function AdminFinancePage() {
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-white">💰 Admin Finance</h1>
-            <p className="text-[#B5B5B5] mt-1">Gestion des flux financiers 5% / 1.5% / 93.5%</p>
+            <p className="text-[#B5B5B5] mt-1">Centre névralgique de la plateforme EvenPass</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -258,6 +258,70 @@ export default function AdminFinancePage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
         <AdminKPICards />
+
+        {pendingEvents.length > 0 && (
+          <div className="bg-gradient-to-br from-[#FF5F05]/20 to-red-900/20 border-2 border-[#FF5F05] p-6" style={{ borderRadius: '40px 120px 40px 120px' }}>
+            <div className="flex items-center mb-6">
+              <Clock className="w-8 h-8 text-[#FF5F05] mr-3" />
+              <div>
+                <h2 className="text-2xl font-black text-white">Événements en attente de validation</h2>
+                <p className="text-[#FF5F05] text-sm">Utilisez Master GO pour débloquer les opérations logistiques</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-[#2A2A2A] border border-[#2A2A2A] overflow-hidden hover:border-[#FF5F05] transition-all"
+                  style={{ borderRadius: '20px 8px 20px 8px' }}
+                >
+                  <div className="relative h-32 bg-[#0F0F0F]">
+                    {event.event_image_url ? (
+                      <img
+                        src={event.event_image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Calendar className="w-12 h-12 text-[#B5B5B5]" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-yellow-600 text-white text-xs font-bold rounded-full animate-pulse">
+                      PENDING
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-white font-bold mb-2 line-clamp-1">{event.title}</h3>
+                    <div className="space-y-1 text-sm text-[#B5B5B5] mb-3">
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-2" />
+                        {new Date(event.start_date).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-2" />
+                        {event.venue_city}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMasterGo(event.id);
+                      }}
+                      disabled={processing}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black transition-all disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
+                      style={{ borderRadius: '15px 5px 15px 5px' }}
+                    >
+                      <Clock className="w-4 h-4" />
+                      MASTER GO
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="bg-[#2A2A2A] border border-[#2A2A2A] p-6" style={{ borderRadius: '40px 120px 40px 120px' }}>
           <div className="flex justify-between items-center gap-4 mb-6 border-b border-[#0F0F0F] pb-4">

@@ -183,21 +183,24 @@ export default function AdminKPICards() {
         className="col-span-full bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border-2 border-purple-600 p-6 backdrop-blur-sm"
         style={{ borderRadius: '40px 120px 40px 120px' }}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-white font-black text-lg mb-2">Répartition PASS</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[#B5B5B5] text-sm">LMDG</p>
-                <p className="text-purple-400 font-black text-2xl">{formatAmount(kpiData.lmdgRevenue)} F</p>
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Package className="w-6 h-6 text-purple-400" />
+              <h3 className="text-white font-black text-lg">Répartition PASS</h3>
+            </div>
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <p className="text-[#B5B5B5] text-sm mb-1">LMDG</p>
+                <p className="text-purple-400 font-black text-3xl">{formatAmount(kpiData.lmdgRevenue)} F</p>
               </div>
-              <div>
-                <p className="text-[#B5B5B5] text-sm">COSAMA</p>
-                <p className="text-indigo-400 font-black text-2xl">{formatAmount(kpiData.cosamaRevenue)} F</p>
+              <div className="w-px h-12 bg-purple-600/40"></div>
+              <div className="text-center">
+                <p className="text-[#B5B5B5] text-sm mb-1">COSAMA</p>
+                <p className="text-indigo-400 font-black text-3xl">{formatAmount(kpiData.cosamaRevenue)} F</p>
               </div>
             </div>
           </div>
-          <Package className="w-16 h-16 text-purple-400 opacity-50" />
         </div>
       </div>
     </div>
