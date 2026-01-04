@@ -21,7 +21,7 @@ export const db = getDatabase(app);
 export const firestore = getFirestore(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+export const analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
 
 setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error('[FIREBASE] Error setting persistence:', error);
