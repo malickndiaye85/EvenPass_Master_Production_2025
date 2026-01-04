@@ -13,7 +13,7 @@ import OrganizerLoginPage from './pages/OrganizerLoginPage';
 import PendingVerificationPage from './pages/PendingVerificationPage';
 import AdminFinancePage from './pages/AdminFinancePage';
 import AdminFinanceLoginPage from './pages/AdminFinanceLoginPage';
-import OpsManagerPage from './pages/OpsManagerPage';
+import OpsManagerPage from './pages/OpsManagerPageNew';
 import OpsManagerLoginPage from './pages/OpsManagerLoginPage';
 import EPscanLoginPage from './pages/EPscanLoginPage';
 import PassLandingPage from './pages/pass/PassLandingPage';

@@ -33,7 +33,6 @@ export default function CreateEventModal({
     start_date: '',
     venue_name: '',
     venue_city: '',
-    category_id: '',
     event_image: null as File | null,
     total_capacity: 0,
   });
@@ -100,7 +99,6 @@ export default function CreateEventModal({
         start_date: formData.start_date,
         venue_name: formData.venue_name,
         venue_city: formData.venue_city,
-        category_id: formData.category_id,
         organizer_id: organizerData.id,
         slug,
         status: 'draft',
@@ -285,32 +283,6 @@ export default function CreateEventModal({
                 required
                 disabled={processing}
               />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
-                Catégorie
-              </label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
-                required
-                disabled={processing}
-              >
-                <option value="">Sélectionner une catégorie</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div>
