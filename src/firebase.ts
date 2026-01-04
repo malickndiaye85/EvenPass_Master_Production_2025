@@ -36,6 +36,8 @@ if (isFirebaseConfigured) {
   auth = getAuth(app);
   analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
 
+  console.log('[FIREBASE] ✅ Firebase initialized successfully');
+
   setPersistence(auth, browserLocalPersistence).catch((error) => {
     console.error('[FIREBASE] Error setting persistence:', error);
   });
