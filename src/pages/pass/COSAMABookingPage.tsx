@@ -631,11 +631,11 @@ const COSAMABookingPage: React.FC = () => {
                               ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
                               : 'bg-white border-2 border-gray-300 opacity-60'
                         }`}
-                        style={{ borderRadius: '20px 8px 20px 8px' }}
+                        style={{ borderRadius: '40px 120px 40px 120px' }}
                       >
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                            <span className="text-3xl font-black text-[#1E3A8A]">W</span>
+                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center p-3 shadow-md">
+                            <img src="/Wave.svg" alt="Wave" className="w-full h-full object-contain" />
                           </div>
                           <div className={`text-xl font-black ${paymentMethod === 'wave' ? isDark ? 'text-blue-400' : 'text-blue-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                             Wave
@@ -654,11 +654,11 @@ const COSAMABookingPage: React.FC = () => {
                               ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
                               : 'bg-white border-2 border-gray-300 opacity-60'
                         }`}
-                        style={{ borderRadius: '8px 20px 8px 20px' }}
+                        style={{ borderRadius: '40px 120px 40px 120px' }}
                       >
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                            <span className="text-3xl font-black text-[#FF7A00]">OM</span>
+                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center p-3 shadow-md">
+                            <img src="/Orange-Money.svg" alt="Orange Money" className="w-full h-full object-contain" />
                           </div>
                           <div className={`text-xl font-black ${paymentMethod === 'orange' ? isDark ? 'text-orange-400' : 'text-orange-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                             Orange Money
