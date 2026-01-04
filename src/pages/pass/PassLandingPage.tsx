@@ -213,7 +213,7 @@ const PassLandingPage: React.FC = () => {
                     ? 'bg-gradient-to-r from-cyan-400 to-[#0A7EA3] hover:from-cyan-500 hover:to-[#006B8C]'
                     : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] hover:from-[#006B8C] hover:to-[#00475E]'
                 }`}>
-                  Réserver un ticket
+                  Acheter un ticket
                   <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </button>
               </div>

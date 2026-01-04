@@ -267,7 +267,7 @@ const PassServicesPage: React.FC = () => {
                       : 'bg-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  {service.available ? 'Réserver' : 'Bientôt disponible'}
+                  {service.available ? 'Acheter' : 'Bientôt disponible'}
                   {service.available && (
                     <ArrowRight className="w-5 h-5 transition-all" />
                   )}

@@ -263,11 +263,12 @@ export default function HomePageNew() {
             <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
               <button
                 onClick={() => navigate('/')}
-                className={`group relative overflow-hidden rounded-3xl p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
+                className={`group relative overflow-hidden p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
                   isDark
                     ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-orange-300 shadow-lg hover:shadow-2xl'
                 }`}
+                style={{ borderRadius: '40px 120px 40px 120px' }}
               >
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                   isDark
@@ -296,11 +297,12 @@ export default function HomePageNew() {
 
               <button
                 onClick={() => user?.role === 'organizer' ? navigate('/organizer/dashboard') : navigate('/organizer/login')}
-                className={`group relative overflow-hidden rounded-3xl p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
+                className={`group relative overflow-hidden p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
                   isDark
                     ? 'bg-gradient-to-br from-blue-950/40 to-cyan-950/40 backdrop-blur-xl border-blue-800/40 hover:border-blue-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-blue-300 shadow-lg hover:shadow-2xl'
                 }`}
+                style={{ borderRadius: '40px 120px 40px 120px' }}
               >
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                   isDark

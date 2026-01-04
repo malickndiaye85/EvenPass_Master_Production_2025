@@ -134,9 +134,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <X size={24} />
         </button>
 
-        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-6">
+        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4">
           Paiement Mobile Money
         </h2>
+
+        <div className="flex items-center justify-center gap-6 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center bg-white rounded-xl p-3 shadow-md">
+            <img src="/wave-logo.svg" alt="Wave" className="h-8 w-auto" />
+          </div>
+          <div className="flex items-center justify-center bg-white rounded-xl p-3 shadow-md">
+            <img src="/orange-money-logo.svg" alt="Orange Money" className="h-8 w-auto" />
+          </div>
+        </div>
 
         {error && (
           <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl mb-6 flex items-start gap-2">
