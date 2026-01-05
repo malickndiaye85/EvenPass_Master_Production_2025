@@ -16,7 +16,7 @@ service cloud.firestore {
     // Helper function - Event owner
     function isEventOwner(eventId) {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid;
+             get(/databases/$(database)/documents/events/$(eventId)).data.organizer_id == request.auth.uid;
     }
 
     // ============================================
@@ -50,7 +50,7 @@ service cloud.firestore {
 
       // Organisateurs : Création de nouveaux événements
       allow create: if isAuthenticated() &&
-                      request.resource.data.organizerId == request.auth.uid;
+                      request.resource.data.organizer_id == request.auth.uid;
 
       // Organisateurs : Modification de leurs propres événements
       allow update: if isEventOwner(eventId) || isAdminFinance();
