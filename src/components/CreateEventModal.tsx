@@ -134,10 +134,13 @@ export default function CreateEventModal({
       console.log('[CREATE EVENT] Creating event with data:', eventData);
       const eventRef = await addDoc(collection(firestore, 'events'), eventData);
       console.log('[CREATE EVENT] Event created with ID:', eventRef.id);
+      console.log('[CREATE EVENT] Event slug:', slug);
 
+      console.log('[CREATE EVENT] Creating', ticketTypes.length, 'ticket types...');
+      let ticketCount = 0;
       for (const ticketType of ticketTypes) {
         if (ticketType.name && ticketType.quantity > 0) {
-          await addDoc(collection(firestore, 'ticket_types'), {
+          const ticketData = {
             event_id: eventRef.id,
             name: ticketType.name,
             price: ticketType.price || 0,
@@ -145,11 +148,16 @@ export default function CreateEventModal({
             quantity_sold: 0,
             is_active: true,
             created_at: Timestamp.now(),
-          });
+          };
+          console.log(`[CREATE EVENT] Creating ticket ${ticketCount + 1}:`, ticketData);
+          const ticketRef = await addDoc(collection(firestore, 'ticket_types'), ticketData);
+          console.log(`[CREATE EVENT] Ticket created with ID:`, ticketRef.id);
+          ticketCount++;
         }
       }
 
-      alert('Événement créé avec succès avec les types de billets!');
+      console.log(`[CREATE EVENT] ✅ ${ticketCount} billets créés pour l'événement ${eventRef.id}`);
+      alert(`Événement créé avec succès!\n\n✅ ${ticketCount} types de billets créés\n\n⚠️ N'oubliez pas de changer le status en "published" pour rendre l'événement visible.`);
       onSuccess();
       onClose();
     } catch (error: any) {

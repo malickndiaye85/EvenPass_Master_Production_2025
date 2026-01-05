@@ -48,42 +48,83 @@ export default function EventDetailPage() {
 
   const loadEvent = async () => {
     try {
+      console.log('=== CHARGEMENT ÉVÉNEMENT ===');
+      console.log('Slug recherché:', slug);
+
       const eventsRef = collection(firestore, 'events');
       const q = query(eventsRef, where('slug', '==', slug), where('status', '==', 'published'));
       const eventSnapshot = await getDocs(q);
 
-      if (!eventSnapshot.empty) {
-        const eventData = { id: eventSnapshot.docs[0].id, ...eventSnapshot.docs[0].data() } as any;
-
-        if (eventData.category_id) {
-          const categoryDoc = await getDoc(doc(firestore, 'event_categories', eventData.category_id));
-          eventData.category = categoryDoc.exists() ? { id: categoryDoc.id, ...categoryDoc.data() } : null;
+      if (eventSnapshot.empty) {
+        console.log('❌ Aucun événement trouvé avec ce slug et status=published');
+        console.log('Recherche sans filtre status...');
+        const qAll = query(eventsRef, where('slug', '==', slug));
+        const allSnapshot = await getDocs(qAll);
+        if (!allSnapshot.empty) {
+          console.log('⚠️ Événement trouvé mais status:', allSnapshot.docs[0].data().status);
+          console.log('Pour voir l\'événement, changez le status en "published" dans Firebase');
         }
-
-        if (eventData.organizer_id) {
-          const organizerDoc = await getDoc(doc(firestore, 'organizers', eventData.organizer_id));
-          eventData.organizer = organizerDoc.exists() ? { id: organizerDoc.id, ...organizerDoc.data() } : null;
-        }
-
-        const ticketTypesRef = collection(firestore, 'ticket_types');
-        const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
-        const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
-        eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          quantity_sold: doc.data().quantity_sold || 0,
-          is_active: doc.data().is_active !== false
-        }));
-
-        console.log('Event loaded:', eventData.title);
-        console.log('Ticket types found:', eventData.ticket_types.length);
-        console.log('Ticket types:', eventData.ticket_types);
-
-        setEvent(eventData as Event);
+        return;
       }
+
+      const eventData = { id: eventSnapshot.docs[0].id, ...eventSnapshot.docs[0].data() } as any;
+      console.log('✅ Événement trouvé:', eventData.title);
+      console.log('📋 Event ID:', eventData.id);
+      console.log('📋 Status:', eventData.status);
+
+      if (eventData.category_id) {
+        const categoryDoc = await getDoc(doc(firestore, 'event_categories', eventData.category_id));
+        eventData.category = categoryDoc.exists() ? { id: categoryDoc.id, ...categoryDoc.data() } : null;
+      }
+
+      if (eventData.organizer_id) {
+        const organizerDoc = await getDoc(doc(firestore, 'organizers', eventData.organizer_id));
+        eventData.organizer = organizerDoc.exists() ? { id: organizerDoc.id, ...organizerDoc.data() } : null;
+      }
+
+      console.log('🎫 Recherche des billets pour event_id:', eventData.id);
+      const ticketTypesRef = collection(firestore, 'ticket_types');
+      const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
+      const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
+
+      console.log('📊 Nombre de billets trouvés:', ticketTypesSnapshot.docs.length);
+
+      if (ticketTypesSnapshot.empty) {
+        console.log('❌ AUCUN BILLET TROUVÉ!');
+        console.log('');
+        console.log('🔍 DIAGNOSTIC:');
+        console.log('1. Allez dans Firebase Console → Firestore Database');
+        console.log('2. Ouvrez la collection "ticket_types"');
+        console.log('3. Cherchez des documents avec event_id =', eventData.id);
+        console.log('');
+        console.log('Si aucun document n\'existe, l\'organisateur doit recréer l\'événement');
+        console.log('ou créer les billets manuellement dans Firebase.');
+      } else {
+        ticketTypesSnapshot.docs.forEach((doc, index) => {
+          console.log(`Billet ${index + 1}:`, {
+            id: doc.id,
+            name: doc.data().name,
+            price: doc.data().price,
+            quantity_total: doc.data().quantity_total,
+            quantity_sold: doc.data().quantity_sold,
+            is_active: doc.data().is_active,
+            event_id: doc.data().event_id
+          });
+        });
+      }
+
+      eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        quantity_sold: doc.data().quantity_sold || 0,
+        is_active: doc.data().is_active !== false
+      }));
+
+      console.log('=== FIN CHARGEMENT ===');
+      setEvent(eventData as Event);
     } catch (error) {
-      console.error('Error loading event:', error);
-      alert('Erreur lors du chargement de l\'événement. Veuillez actualiser la page.');
+      console.error('❌ ERREUR:', error);
+      alert('Erreur lors du chargement de l\'événement. Consultez la console (F12) pour plus de détails.');
     } finally {
       setLoading(false);
     }
