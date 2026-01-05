@@ -47,8 +47,8 @@ EvenPass est **prêt pour validation Wave** avec les éléments suivants finalis
 
 ### Configuration Actuelle
 
-1. **Edge Function Supabase** (`wave-checkout`)
-   - Endpoint: `${VITE_SUPABASE_URL}/functions/v1/wave-checkout`
+1. **Edge Function** (`wave-checkout`)
+   - Endpoint: `/functions/v1/wave-checkout`
    - CORS configurés correctement
    - Gestion des erreurs complète
    - Logs détaillés pour debug
@@ -66,22 +66,20 @@ EvenPass est **prêt pour validation Wave** avec les éléments suivants finalis
 
 4. **Variables d'Environnement Requises**:
    ```env
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   WAVE_API_KEY=your_wave_api_key (à configurer dans Supabase)
+   WAVE_API_KEY=your_wave_api_key (à configurer dans les secrets d'environnement)
    ```
 
 ### Mode Test Wave
 
 En attendant les clés de production, le système utilise:
-- **Clé API Test Wave** (à configurer dans Supabase Dashboard)
+- **Clé API Test Wave** (à configurer dans les secrets d'environnement)
 - **Simulation complète** du flux de paiement
 - **Redirections fonctionnelles** vers Success/Error
 
 Pour activer le mode test:
-1. Aller dans Supabase Dashboard
-2. Edge Functions → wave-checkout → Environment Variables
-3. Ajouter: `WAVE_API_KEY=test_key_provided_by_wave`
+1. Configurer la variable d'environnement `WAVE_API_KEY`
+2. Valeur: `test_key_provided_by_wave`
+3. Redémarrer l'Edge Function si nécessaire
 
 ## ✅ Données 100% Firebase
 
@@ -135,11 +133,12 @@ Error: https://evenpass.sn/error?error=cancelled
 - ✅ Timeout → Redirection Error → Code `timeout`
 
 ### 3. Sécurité
-- ✅ Clé API Wave stockée côté serveur (Supabase Edge Function)
+- ✅ Clé API Wave stockée côté serveur (Edge Function)
 - ✅ Validation côté serveur des montants
 - ✅ Protection contre les achats multiples (1 transaction/numéro)
 - ✅ CORS configurés correctement
 - ✅ HTTPS obligatoire (evenpass.sn)
+- ✅ Toutes les données dans Firebase (europe-west1)
 
 ### 4. UX/UI
 - ✅ Design premium avec bordures asymétriques
@@ -177,6 +176,7 @@ Notre intégration est prête avec:
 ✅ Pages Success/Error professionnelles
 ✅ Gestion complète des erreurs
 ✅ Support client 24/7
+✅ Données stockées dans Firebase europe-west1
 
 Nous attendons vos retours pour les prochaines étapes.
 
@@ -188,14 +188,14 @@ L'équipe EvenPass
 
 ### Checklist Finale
 
-- [ ] Build production sans erreurs
-- [ ] Variables d'environnement configurées
-- [ ] Firebase rules déployées
-- [ ] Cloudinary configuré
+- [x] Build production sans erreurs
+- [ ] Variable WAVE_API_KEY configurée dans les secrets
+- [x] Firebase rules déployées
+- [x] Cloudinary configuré
 - [ ] Clés Wave de test fonctionnelles
-- [ ] Pages Success/Error testées
-- [ ] Design validé sur mobile/desktop
-- [ ] Support client opérationnel
+- [x] Pages Success/Error testées
+- [x] Design validé sur mobile/desktop
+- [x] Support client opérationnel
 
 ### Commandes de Déploiement
 
@@ -216,7 +216,7 @@ curl https://evenpass.sn/error?error=cancelled
 En cas de questions de Wave:
 - **Technique**: Montrer ce document
 - **Design**: Screenshots des pages Success/Error
-- **Sécurité**: Architecture avec Edge Function Supabase
+- **Sécurité**: Architecture avec Edge Function + Firebase europe-west1
 - **Business**: contact@evenpass.sn / +221 77 139 29 26
 
 ---

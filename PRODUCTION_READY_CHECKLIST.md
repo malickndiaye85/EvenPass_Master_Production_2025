@@ -102,9 +102,9 @@ Version: Production 1.0
 
 1. **Configurer la clé Wave Test**:
    ```
-   1. Aller sur Supabase Dashboard
-   2. Edge Functions → wave-checkout → Environment Variables
-   3. Ajouter: WAVE_API_KEY=<votre_clé_test_wave>
+   1. Configurer la variable d'environnement WAVE_API_KEY
+   2. Valeur: <votre_clé_test_wave>
+   3. Redémarrer l'Edge Function si nécessaire
    ```
 
 2. **Tester le Flux Complet**:
@@ -205,18 +205,18 @@ http://localhost:5173/error?error=insufficient_funds
 - [x] Pages Success/Error finalisées avec design premium
 - [x] Logo EvenPass intégré
 - [x] Bordures asymétriques 40px/120px
-- [x] Données 100% Firebase (zéro mock)
+- [x] Données 100% Firebase europe-west1 (zéro mock)
 - [x] Tunnel Wave fonctionnel
 - [x] Build production sans erreurs
 - [x] Documentation complète
-- [ ] Clé Wave Test configurée dans Supabase
+- [ ] Variable WAVE_API_KEY configurée
 - [ ] Tests complets du flux de paiement
 - [ ] Screenshots des pages pour Wave
 - [ ] Email envoyé à Wave
 
 ### Après Réponse Wave
 - [ ] Clés de production Wave reçues
-- [ ] Clés configurées dans Supabase (production)
+- [ ] WAVE_API_KEY production configurée
 - [ ] Tests en production
 - [ ] Déploiement final sur evenpass.sn
 - [ ] Communication aux organisateurs
