@@ -11,6 +11,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { signup, login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -118,15 +119,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  className={`w-full pl-12 pr-14 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-all ${
+                    passwordFocused ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-700'
+                  }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 dark:bg-white/10 dark:hover:bg-white/20 transition-all"
+                  tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? (
+                    <EyeOff size={20} className="text-orange-600 dark:text-white" />
+                  ) : (
+                    <Eye size={20} className="text-orange-600 dark:text-white" />
+                  )}
                 </button>
               </div>
             </div>

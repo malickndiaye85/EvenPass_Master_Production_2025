@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle } from 'lucide-react';
+import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { auth, db } from '../firebase';
@@ -11,6 +11,8 @@ export default function OrganizerSignupPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -320,15 +322,33 @@ export default function OrganizerSignupPage() {
                     <Lock className="w-4 h-4 inline mr-2" />
                     Mot de passe *
                   </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                    placeholder="Minimum 6 caractères"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      className={`w-full px-4 pr-14 py-3 border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05] transition-all ${
+                        passwordFocused ? 'bg-[#0F0F0F]' : 'bg-[#1A1A1A]'
+                      }`}
+                      placeholder="Minimum 6 caractères"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5 text-white" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex justify-end">

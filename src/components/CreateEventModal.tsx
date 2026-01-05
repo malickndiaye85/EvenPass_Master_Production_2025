@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, CheckCircle, Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
 import { Timestamp, addDoc, collection } from 'firebase/firestore';
 import { firestore } from '../firebase';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 interface CreateEventModalProps {
   isDark: boolean;
@@ -75,7 +76,10 @@ export default function CreateEventModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!organizerData) return;
+    if (!organizerData || !organizerData.id) {
+      alert('Erreur : Profil organisateur non trouvé. Veuillez vous reconnecter.');
+      return;
+    }
 
     const validTickets = ticketTypes.filter(t => t.name && t.quantity > 0);
     if (validTickets.length === 0) {
@@ -92,9 +96,15 @@ export default function CreateEventModal({
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-      let event_image_url = '';
+      let event_image_url = 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg';
+
       if (formData.event_image) {
-        event_image_url = URL.createObjectURL(formData.event_image);
+        try {
+          const uploadResult = await uploadToCloudinary(formData.event_image, 'event_images');
+          event_image_url = uploadResult.secure_url;
+        } catch (uploadError) {
+          console.warn('Failed to upload image, using default:', uploadError);
+        }
       }
 
       const totalCapacity = calculateTotalCapacity();
@@ -116,7 +126,9 @@ export default function CreateEventModal({
         updated_at: Timestamp.now(),
       };
 
+      console.log('[CREATE EVENT] Creating event with data:', eventData);
       const eventRef = await addDoc(collection(firestore, 'events'), eventData);
+      console.log('[CREATE EVENT] Event created with ID:', eventRef.id);
 
       for (const ticketType of ticketTypes) {
         if (ticketType.name && ticketType.quantity > 0) {
@@ -135,9 +147,10 @@ export default function CreateEventModal({
       alert('Événement créé avec succès avec les types de billets!');
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error('Error creating event:', error);
-      alert('Erreur lors de la création de l\'événement');
+    } catch (error: any) {
+      console.error('[CREATE EVENT] Error creating event:', error);
+      const errorMessage = error?.message || 'Erreur inconnue';
+      alert(`Erreur lors de la création de l'événement:\n${errorMessage}\n\nVérifiez votre connexion et réessayez.`);
     } finally {
       setProcessing(false);
     }
