@@ -686,12 +686,15 @@ const COSAMABookingPage: React.FC = () => {
                                   }
                                 }
                               }}
+                              onFocus={(e) => {
+                                if (passenger.passport.length > 0) {
+                                  updatePassenger(index, 'passport', '');
+                                }
+                              }}
                               placeholder="1234567890123"
                               maxLength={13}
-                              disabled={passenger.passport.length > 0}
                               className={`w-full p-4 font-mono border-2 ${
                                 passenger.cni && passenger.cni.length !== 13 && passenger.passport.length === 0 ? 'border-red-500' :
-                                passenger.passport.length > 0 ? 'opacity-50 cursor-not-allowed' :
                                 isDark
                                   ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
                                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
@@ -720,10 +723,13 @@ const COSAMABookingPage: React.FC = () => {
                                   updatePassenger(index, 'cni', '');
                                 }
                               }}
+                              onFocus={(e) => {
+                                if (passenger.cni.length > 0) {
+                                  updatePassenger(index, 'cni', '');
+                                }
+                              }}
                               placeholder="AB1234567"
-                              disabled={passenger.cni.length > 0}
                               className={`w-full p-4 font-mono uppercase border-2 ${
-                                passenger.cni.length > 0 ? 'opacity-50 cursor-not-allowed' :
                                 isDark
                                   ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
                                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'

@@ -282,7 +282,7 @@ export default function HomePageNew() {
                     ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-orange-300 shadow-lg hover:shadow-2xl'
                 }`}
-                style={{ borderRadius: '40px 120px 40px 120px' }}
+                style={{ borderRadius: '32px' }}
               >
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                   isDark
@@ -325,7 +325,7 @@ export default function HomePageNew() {
                     ? 'bg-gradient-to-br from-blue-950/40 to-cyan-950/40 backdrop-blur-xl border-blue-800/40 hover:border-blue-600'
                     : 'bg-white/80 backdrop-blur-xl border-slate-200 hover:border-blue-300 shadow-lg hover:shadow-2xl'
                 }`}
-                style={{ borderRadius: '40px 120px 40px 120px' }}
+                style={{ borderRadius: '32px' }}
               >
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                   isDark
