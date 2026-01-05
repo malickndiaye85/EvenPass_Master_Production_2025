@@ -508,7 +508,7 @@ export default function EventDetailPage() {
                 isDark ? 'text-white' : 'text-slate-900'
               }`}>
                 <ShoppingCart className="w-6 h-6" />
-                Acheter vos billets
+                ACHETER VOS BILLETS
               </h2>
 
               {event.is_free ? (
