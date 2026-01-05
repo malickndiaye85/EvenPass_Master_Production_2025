@@ -271,7 +271,12 @@ export default function HomePageNew() {
 
             <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  const eventsSection = document.getElementById('events-section');
+                  if (eventsSection) {
+                    eventsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
                 className={`group relative overflow-hidden p-10 transition-all duration-300 hover:scale-[1.05] border w-full sm:w-80 ${
                   isDark
                     ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 backdrop-blur-xl border-amber-800/40 hover:border-amber-600'
@@ -381,7 +386,7 @@ export default function HomePageNew() {
         </div>
       </section>
 
-      <section className={`py-16 ${isDark ? 'bg-[#050505]' : 'bg-white'}`}>
+      <section id="events-section" className={`py-16 ${isDark ? 'bg-[#050505]' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <h3 className={`text-3xl font-black ${isDark ? 'text-amber-50' : 'text-slate-900'}`}>
