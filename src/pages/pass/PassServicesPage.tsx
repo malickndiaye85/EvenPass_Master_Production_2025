@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ship, Anchor, Bus, ArrowRight, Calendar, MapPin, Ticket, Moon, Sun, Wallet } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 
 interface ServiceCard {
   id: string;
@@ -105,9 +105,7 @@ const PassServicesPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} shadow-sm`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => navigate('/')} className="flex items-center gap-3 group">
-              <Logo size="md" variant="default" />
-            </button>
+            <DynamicLogo />
 
             <button
               onClick={toggleTheme}
@@ -145,14 +143,14 @@ const PassServicesPage: React.FC = () => {
               Choisissez votre mode de transport
             </p>
 
-            <div className="space-y-1">
-              <p className={`text-2xl font-black ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+            <div className="space-y-2">
+              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
                 Gënaa Yomb
               </p>
-              <p className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
+              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
                 Gënaa Wóor
               </p>
-              <p className={`text-2xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
                 Gënaa Gaaw
               </p>
             </div>
@@ -319,7 +317,7 @@ const PassServicesPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Logo size="sm" variant="default" />
+              <img src="/evenpass-logo.png" alt="EvenPass" className="h-8 w-auto object-contain" />
               <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                 © 2026 EvenPass. Tous droits réservés.
               </div>
