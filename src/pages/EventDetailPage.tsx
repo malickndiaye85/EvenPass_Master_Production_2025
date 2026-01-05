@@ -334,12 +334,16 @@ export default function EventDetailPage() {
             <div className={`relative h-[500px] rounded-[32px] overflow-hidden mb-6 ${
               isDark ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40' : 'bg-gradient-to-br from-slate-200 to-slate-300'
             }`}>
-              {event.cover_image_url ? (
+              {event.event_image_url ? (
                 <>
                   <img
-                    src={event.cover_image_url}
+                    src={event.event_image_url}
                     alt={event.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      console.error('Failed to load image:', event.event_image_url);
+                    }}
                   />
                   <div className={`absolute inset-0 ${
                     isDark
@@ -750,32 +754,19 @@ export default function EventDetailPage() {
                 <label className={`block text-sm font-bold mb-2 ${
                   isDark ? 'text-amber-300' : 'text-slate-700'
                 }`}>
-                  Nom complet
-                </label>
-                <input
-                  type="text"
-                  value={checkoutForm.customer_name}
-                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                    isDark
-                      ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                      : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                  } focus:outline-none`}
-                  placeholder="Votre nom"
-                  disabled={processing}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-bold mb-2 ${
-                  isDark ? 'text-amber-300' : 'text-slate-700'
-                }`}>
                   Numéro de téléphone {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
                 </label>
                 <input
                   type="tel"
                   value={checkoutForm.customer_phone}
-                  onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_phone: e.target.value })}
+                  onChange={(e) => {
+                    const phone = e.target.value;
+                    setCheckoutForm({
+                      ...checkoutForm,
+                      customer_phone: phone,
+                      customer_name: phone || 'Client'
+                    });
+                  }}
                   className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
                     isDark
                       ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
@@ -783,7 +774,11 @@ export default function EventDetailPage() {
                   } focus:outline-none`}
                   placeholder="77 123 45 67"
                   disabled={processing}
+                  required
                 />
+                <p className={`text-xs mt-2 ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                  Utilisez votre numéro {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
+                </p>
               </div>
 
               {contactMethod === 'email' && (
