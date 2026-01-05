@@ -32,13 +32,12 @@ const InterregionalBookingPage: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [routeId, setRouteId] = useState('');
-  const [scheduleId, setScheduleId] = useState('');
   const [passengersCount, setPassengersCount] = useState(1);
   const [passengerName, setPassengerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'wave' | 'orange'>('wave');
 
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -59,35 +58,7 @@ const InterregionalBookingPage: React.FC = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (routeId) {
-      setScheduleId('');
-      setSchedules([]);
-    }
-  }, [routeId]);
-
-  const fetchRoutes = async () => {
-    const { data } = await supabase
-      .from('interregional_routes')
-      .select('*')
-      .eq('active', true)
-      .order('departure_city');
-    if (data) setRoutes(data);
-  };
-
-  const fetchSchedules = async (rId: string) => {
-    const { data } = await supabase
-      .from('interregional_schedules')
-      .select('*')
-      .eq('route_id', rId)
-      .eq('active', true)
-      .gte('departure_date', new Date().toISOString().split('T')[0])
-      .order('departure_date');
-    if (data) setSchedules(data);
-  };
-
   const selectedRoute = routes.find(r => r.id === routeId);
-  const selectedSchedule = schedules.find(s => s.id === scheduleId);
 
   const calculateTotal = (): number => {
     return (selectedRoute?.base_price || 0) * passengersCount;
@@ -96,9 +67,8 @@ const InterregionalBookingPage: React.FC = () => {
   const canProceed = (): boolean => {
     switch (step) {
       case 1: return !!routeId;
-      case 2: return !!scheduleId;
-      case 3: return passengersCount > 0;
-      case 4: return !!passengerName && phoneNumber.length >= 9;
+      case 2: return passengersCount > 0;
+      case 3: return !!passengerName && phoneNumber.length >= 9;
       default: return false;
     }
   };
@@ -106,51 +76,72 @@ const InterregionalBookingPage: React.FC = () => {
   const handleBooking = async () => {
     setLoading(true);
 
+    const reference = `BUS-${Date.now()}`;
+    const bookingRef = ref(db, `pass/interregional/bookings/${reference}`);
     const bookingData = {
-      booking_reference: `BUS-${Date.now()}`,
-      schedule_id: scheduleId,
+      reference,
       route_id: routeId,
       departure_city: selectedRoute?.departure_city || '',
       arrival_city: selectedRoute?.arrival_city || '',
-      departure_date: selectedSchedule?.departure_date || '',
-      departure_time: selectedSchedule?.departure_time || '',
       passenger_name: passengerName,
       phone_number: phoneNumber,
       passengers_count: passengersCount,
       unit_price: selectedRoute?.base_price || 0,
       total_amount: calculateTotal(),
-      payment_status: 'pending'
+      payment_method: paymentMethod,
+      payment_status: 'pending',
+      created_at: Date.now()
     };
 
-    const { data, error } = await supabase
-      .from('interregional_bookings')
-      .insert([bookingData])
-      .select()
-      .single();
+    try {
+      await set(bookingRef, bookingData);
 
-    setLoading(false);
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-    if (error) {
-      alert('Erreur lors de la réservation');
-      return;
-    }
+      const response = await fetch(`${supabaseUrl}/functions/v1/pass-payment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: calculateTotal(),
+          currency: 'XOF',
+          payment_method: paymentMethod === 'wave' ? 'wave' : 'orange_money',
+          service: 'interregional',
+          reference,
+          metadata: {
+            phone: phoneNumber,
+            route: `${selectedRoute?.departure_city} → ${selectedRoute?.arrival_city}`,
+            passengers: passengersCount
+          }
+        }),
+      });
 
-    navigate('/pass/payment', {
-      state: {
-        bookingId: data.id,
-        amount: calculateTotal(),
-        service: 'INTER-RÉGIONAUX',
-        reference: bookingData.booking_reference
+      if (!response.ok) {
+        throw new Error('Failed to initiate payment');
       }
-    });
+
+      const data = await response.json();
+
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      setLoading(false);
+      navigate(`/payment/error?service=interregional&message=${encodeURIComponent('Erreur lors de l\'initiation du paiement')}`);
+    }
   };
 
   const steps = [
     { number: 1, label: 'Route' },
-    { number: 2, label: 'Date' },
-    { number: 3, label: 'Passagers' },
-    { number: 4, label: 'Contact' },
-    { number: 5, label: 'Paiement' }
+    { number: 2, label: 'Passagers' },
+    { number: 3, label: 'Contact' },
+    { number: 4, label: 'Paiement' }
   ];
 
   return (
@@ -249,72 +240,6 @@ const InterregionalBookingPage: React.FC = () => {
             {step === 2 && (
               <div>
                 <div className="text-center mb-8">
-                  <Calendar className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                  <h2 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Horaire de départ
-                  </h2>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {selectedRoute?.departure_city} → {selectedRoute?.arrival_city}
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {schedules.map((schedule) => (
-                    <button
-                      key={schedule.id}
-                      onClick={() => setScheduleId(schedule.id)}
-                      className={`w-full p-6 rounded-2xl border-2 transition-all text-left ${
-                        scheduleId === schedule.id
-                          ? isDark
-                            ? 'border-emerald-500 bg-emerald-500/10'
-                            : 'border-emerald-600 bg-emerald-50'
-                          : isDark
-                            ? 'border-gray-700 hover:border-gray-600'
-                            : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {new Date(schedule.departure_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                          </div>
-                          <div className={`text-md ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Départ : {schedule.departure_time?.substring(0, 5)} • Arrivée : {schedule.arrival_time?.substring(0, 5)}
-                          </div>
-                          <div className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            {schedule.available_seats} places disponibles
-                          </div>
-                        </div>
-                        <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                          isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
-                        }`}>
-                          {schedule.bus_type.toUpperCase()}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!canProceed()}
-                  className={`w-full mt-6 py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
-                    canProceed()
-                      ? isDark
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
-                      : 'bg-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  Continuer
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div>
-                <div className="text-center mb-8">
                   <User className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
                   <h2 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Nombre de passagers
@@ -352,7 +277,7 @@ const InterregionalBookingPage: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   disabled={!canProceed()}
                   className={`w-full mt-6 py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
                     canProceed()
@@ -368,7 +293,7 @@ const InterregionalBookingPage: React.FC = () => {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 3 && (
               <div>
                 <div className="text-center mb-8">
                   <Phone className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
@@ -420,7 +345,7 @@ const InterregionalBookingPage: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(4)}
                   disabled={!canProceed()}
                   className={`w-full mt-6 py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
                     canProceed()
@@ -436,7 +361,7 @@ const InterregionalBookingPage: React.FC = () => {
               </div>
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <div>
                 <div className="text-center mb-8">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
@@ -464,16 +389,6 @@ const InterregionalBookingPage: React.FC = () => {
                   </div>
 
                   <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Date et heure</div>
-                    <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {selectedSchedule && new Date(selectedSchedule.departure_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </div>
-                    <div className={`text-md ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Départ à {selectedSchedule?.departure_time?.substring(0, 5)}
-                    </div>
-                  </div>
-
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                     <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Passagers</div>
                     <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {passengersCount} place{passengersCount > 1 ? 's' : ''}
@@ -487,6 +402,57 @@ const InterregionalBookingPage: React.FC = () => {
                     <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Contact</div>
                     <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {phoneNumber}
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    <div className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Mode de paiement</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setPaymentMethod('wave')}
+                        className={`p-6 transition-all transform hover:scale-105 ${
+                          paymentMethod === 'wave'
+                            ? isDark
+                              ? 'bg-[#1E3A8A] border-4 border-blue-400 shadow-2xl'
+                              : 'bg-blue-50 border-4 border-blue-500 shadow-2xl'
+                            : isDark
+                              ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
+                              : 'bg-white border-2 border-gray-300 opacity-60'
+                        }`}
+                        style={{ borderRadius: '40px 120px 40px 120px' }}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-28 h-28 bg-white rounded-xl flex items-center justify-center p-4 shadow-lg">
+                            <img src="/Wave.svg" alt="Wave" className="w-full h-full object-contain" />
+                          </div>
+                          <div className={`text-xl font-black ${paymentMethod === 'wave' ? isDark ? 'text-blue-400' : 'text-blue-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                            Wave
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setPaymentMethod('orange')}
+                        className={`p-6 transition-all transform hover:scale-105 ${
+                          paymentMethod === 'orange'
+                            ? isDark
+                              ? 'bg-[#D97706] border-4 border-orange-400 shadow-2xl'
+                              : 'bg-orange-50 border-4 border-orange-500 shadow-2xl'
+                            : isDark
+                              ? 'bg-gray-800 border-2 border-gray-700 opacity-60'
+                              : 'bg-white border-2 border-gray-300 opacity-60'
+                        }`}
+                        style={{ borderRadius: '40px 120px 40px 120px' }}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-28 h-28 bg-white rounded-xl flex items-center justify-center p-4 shadow-lg">
+                            <img src="/Orange-Money.svg" alt="Orange Money" className="w-full h-full object-contain" />
+                          </div>
+                          <div className={`text-xl font-black ${paymentMethod === 'orange' ? isDark ? 'text-orange-400' : 'text-orange-700' : isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                            Orange Money
+                          </div>
+                        </div>
+                      </button>
                     </div>
                   </div>
 

@@ -84,9 +84,10 @@ const COSAMABookingPage: React.FC = () => {
   const handleBooking = async () => {
     setLoading(true);
 
-    const bookingRef = push(ref(db, 'pass/cosama/bookings'));
+    const reference = `COSAMA-${Date.now()}`;
+    const bookingRef = ref(db, `pass/cosama/bookings/${reference}`);
     const bookingData = {
-      reference: `COSAMA-${Date.now()}`,
+      reference,
       direction: direction === 'dakar_ziguinchor' ? 'Dakar → Ziguinchor' : 'Ziguinchor → Dakar',
       is_resident: isResident,
       accommodation_type: accommodationType,
@@ -102,15 +103,45 @@ const COSAMABookingPage: React.FC = () => {
     try {
       await set(bookingRef, bookingData);
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      setLoading(false);
-      alert(`✓ Achat validé !\n\nRéférence : ${bookingData.reference}\nMontant : ${calculateTotal().toLocaleString()} FCFA\nPaiement via ${paymentMethod === 'wave' ? 'Wave' : 'Orange Money'}\n\nVotre billet a été envoyé au ${holderPhone}`);
+      const response = await fetch(`${supabaseUrl}/functions/v1/pass-payment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: calculateTotal(),
+          currency: 'XOF',
+          payment_method: paymentMethod === 'wave' ? 'wave' : 'orange_money',
+          service: 'cosama',
+          reference,
+          metadata: {
+            phone: holderPhone,
+            direction: bookingData.direction,
+            accommodation: accommodationType,
+            passengers: passengersCount
+          }
+        }),
+      });
 
-      navigate('/pass/services');
+      if (!response.ok) {
+        throw new Error('Failed to initiate payment');
+      }
+
+      const data = await response.json();
+
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
+      console.error('Booking error:', error);
       setLoading(false);
-      alert('Erreur lors de l\'achat');
+      navigate(`/payment/error?service=cosama&message=${encodeURIComponent('Erreur lors de l\'initiation du paiement')}`);
     }
   };
 
