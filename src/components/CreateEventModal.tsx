@@ -109,22 +109,28 @@ export default function CreateEventModal({
 
       const totalCapacity = calculateTotalCapacity();
 
-      const eventData = {
-        title: formData.title,
-        description: formData.description,
-        start_date: formData.start_date,
-        venue_name: formData.venue_name,
-        venue_city: formData.venue_city,
+      const eventData: any = {
+        title: formData.title || 'Sans titre',
+        description: formData.description || '',
+        start_date: formData.start_date || new Date().toISOString(),
+        venue_name: formData.venue_name || '',
+        venue_city: formData.venue_city || '',
         organizer_id: organizerData.id,
         slug,
         status: 'draft',
         is_featured: false,
         is_free: false,
-        event_image_url,
+        event_image_url: event_image_url,
         total_capacity: totalCapacity,
         created_at: Timestamp.now(),
         updated_at: Timestamp.now(),
       };
+
+      Object.keys(eventData).forEach(key => {
+        if (eventData[key] === undefined) {
+          delete eventData[key];
+        }
+      });
 
       console.log('[CREATE EVENT] Creating event with data:', eventData);
       const eventRef = await addDoc(collection(firestore, 'events'), eventData);
