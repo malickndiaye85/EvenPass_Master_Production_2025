@@ -211,6 +211,20 @@ service cloud.firestore {
     }
 
     // ============================================
+    // TICKET TYPES COLLECTION
+    // ============================================
+    match /ticket_types/{ticketTypeId} {
+      // Lecture publique des types de billets
+      allow read: if true;
+
+      // Création par organisateurs authentifiés
+      allow create: if isAuthenticated();
+
+      // Modification et suppression par organisateurs et admin
+      allow update, delete: if isAuthenticated() || isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut
