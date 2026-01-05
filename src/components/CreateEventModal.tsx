@@ -100,8 +100,7 @@ export default function CreateEventModal({
 
       if (formData.event_image) {
         try {
-          const uploadResult = await uploadToCloudinary(formData.event_image, 'event_images');
-          event_image_url = uploadResult.secure_url;
+          event_image_url = await uploadToCloudinary(formData.event_image, 'event_images');
         } catch (uploadError) {
           console.warn('Failed to upload image, using default:', uploadError);
         }
