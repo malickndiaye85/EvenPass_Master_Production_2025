@@ -27,7 +27,7 @@ export default function EPscanLoginPage() {
         return;
       }
 
-      navigate('/scan');
+      window.location.href = '/scanner.html';
     } catch (err: any) {
       setError('Erreur de connexion');
       setLoading(false);

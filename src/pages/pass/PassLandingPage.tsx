@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Ship, Calendar, Users, ArrowRight, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import DynamicLogo from '../../components/DynamicLogo';
+import { getHomeAdsConfig, type HomeAdsConfig } from '../../lib/homeAdsConfig';
 
 const PassLandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const [hoveredSide, setHoveredSide] = useState<'even' | 'pass' | null>(null);
+  const [adsConfig, setAdsConfig] = useState<HomeAdsConfig | null>(null);
+
+  useEffect(() => {
+    async function loadAdsConfig() {
+      const config = await getHomeAdsConfig();
+      setAdsConfig(config);
+    }
+    loadAdsConfig();
+  }, []);
 
   const handleEvenClick = () => {
     navigate('/even');
@@ -47,15 +57,28 @@ const PassLandingPage: React.FC = () => {
             onMouseLeave={() => setHoveredSide(null)}
             onClick={handleEvenClick}
           >
-            <div className={`h-full min-h-[600px] lg:min-h-screen flex flex-col items-center justify-center p-12 relative overflow-hidden ${
-              isDark
-                ? 'bg-gradient-to-br from-orange-900/20 via-gray-900 to-amber-900/20'
-                : 'bg-gradient-to-br from-orange-50 via-white to-amber-50'
-            }`}>
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-20 left-20 w-72 h-72 bg-orange-500 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 right-20 w-96 h-96 bg-amber-500 rounded-full blur-3xl"></div>
-              </div>
+            <div className="h-full min-h-[600px] lg:min-h-screen flex flex-col items-center justify-center p-12 relative overflow-hidden">
+              {adsConfig?.evenBackgroundUrl && (
+                <>
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${adsConfig.evenBackgroundUrl})` }}
+                  ></div>
+                  <div className="absolute inset-0 bg-black/40"></div>
+                </>
+              )}
+              {!adsConfig?.evenBackgroundUrl && (
+                <div className={`absolute inset-0 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-orange-900/20 via-gray-900 to-amber-900/20'
+                    : 'bg-gradient-to-br from-orange-50 via-white to-amber-50'
+                }`}>
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-20 left-20 w-72 h-72 bg-orange-500 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 right-20 w-96 h-96 bg-amber-500 rounded-full blur-3xl"></div>
+                  </div>
+                </div>
+              )}
 
               <div className="relative z-10 text-center max-w-lg">
                 <div className={`inline-flex items-center justify-center w-20 h-20 rounded-3xl ${
@@ -64,19 +87,23 @@ const PassLandingPage: React.FC = () => {
                   <Ticket className="w-10 h-10 text-white" />
                 </div>
 
-                <h1 className={`text-6xl font-black mb-6 ${
-                  isDark
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500'
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600'
-                }`}>
+                <h1 className="text-7xl md:text-8xl font-black mb-6 text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                   EVEN
                 </h1>
 
-                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-amber-400' : 'text-orange-600'}`}>
-                  Gënaa Yomb
-                </p>
+                <div className="text-center mb-6 space-y-2">
+                  <p className="text-4xl md:text-5xl font-black text-amber-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                    Gënaa Yomb
+                  </p>
+                  <p className="text-4xl md:text-5xl font-black text-amber-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                    Gënaa Wóor
+                  </p>
+                  <p className="text-4xl md:text-5xl font-black text-amber-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                    Gënaa Gaaw
+                  </p>
+                </div>
 
-                <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-lg mb-8 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                   Découvrez et réservez vos billets pour les meilleurs événements au Sénégal
                 </p>
 
@@ -119,15 +146,28 @@ const PassLandingPage: React.FC = () => {
             onMouseLeave={() => setHoveredSide(null)}
             onClick={handlePassClick}
           >
-            <div className={`h-full min-h-[600px] lg:min-h-screen flex flex-col items-center justify-center p-12 relative overflow-hidden ${
-              isDark
-                ? 'bg-gradient-to-br from-cyan-900/20 via-gray-900 to-blue-900/20'
-                : 'bg-gradient-to-br from-[#E6F1F5] via-white to-[#B3D9E6]'
-            }`}>
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-20 right-20 w-72 h-72 bg-[#0A7EA3] rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
-              </div>
+            <div className="h-full min-h-[600px] lg:min-h-screen flex flex-col items-center justify-center p-12 relative overflow-hidden">
+              {adsConfig?.passBackgroundUrl && (
+                <>
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${adsConfig.passBackgroundUrl})` }}
+                  ></div>
+                  <div className="absolute inset-0 bg-black/40"></div>
+                </>
+              )}
+              {!adsConfig?.passBackgroundUrl && (
+                <div className={`absolute inset-0 ${
+                  isDark
+                    ? 'bg-gradient-to-br from-cyan-900/20 via-gray-900 to-blue-900/20'
+                    : 'bg-gradient-to-br from-[#E6F1F5] via-white to-[#B3D9E6]'
+                }`}>
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-20 right-20 w-72 h-72 bg-[#0A7EA3] rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
+                  </div>
+                </div>
+              )}
 
               <div className="relative z-10 text-center max-w-lg">
                 <div className={`inline-flex items-center justify-center w-20 h-20 rounded-3xl ${
@@ -136,19 +176,15 @@ const PassLandingPage: React.FC = () => {
                   <Ship className="w-10 h-10 text-white" />
                 </div>
 
-                <h1 className={`text-6xl font-black mb-6 ${
-                  isDark
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-[#0A7EA3]'
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-[#0A7EA3] to-[#005975]'
-                }`}>
+                <h1 className="text-7xl md:text-8xl font-black mb-6 text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                   PASS
                 </h1>
 
-                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                <p className="text-5xl md:text-6xl font-black mb-4 text-cyan-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                   Gënaa Gaaw
                 </p>
 
-                <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-lg mb-8 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                   Votre mobilité maritime et terrestre simplifiée
                 </p>
 

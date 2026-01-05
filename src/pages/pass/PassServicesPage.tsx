@@ -140,13 +140,21 @@ const PassServicesPage: React.FC = () => {
               Services de Mobilité
             </h1>
 
-            <p className={`text-xl mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-xl mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               Choisissez votre mode de transport
             </p>
 
-            <p className={`text-3xl font-bold ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-              Gënaa Gaaw
-            </p>
+            <div className="space-y-3 mb-4">
+              <p className={`text-5xl md:text-6xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                Gënaa Yomb
+              </p>
+              <p className={`text-5xl md:text-6xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                Gënaa Wóor
+              </p>
+              <p className={`text-5xl md:text-6xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                Gënaa Gaaw
+              </p>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 mb-16">

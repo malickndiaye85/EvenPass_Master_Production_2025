@@ -9,6 +9,7 @@ import AdminBulkStockManager from '../components/AdminBulkStockManager';
 import AdminPayoutManager from '../components/AdminPayoutManager';
 import AdminExportManager from '../components/AdminExportManager';
 import AdminEventsManager from '../components/AdminEventsManager';
+import AdminHomeAdsManager from '../components/AdminHomeAdsManager';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 
@@ -29,7 +30,7 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk'>('events');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads'>('events');
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
@@ -407,6 +408,16 @@ export default function AdminFinancePage() {
               >
                 ✅ Vérification
               </button>
+              <button
+                onClick={() => setActiveTab('ads')}
+                className={`px-6 py-3 font-black transition-colors ${
+                  activeTab === 'ads'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                📢 Publicités
+              </button>
             </div>
             <div className="flex items-center gap-3">
               <AdminExportManager />
@@ -425,6 +436,7 @@ export default function AdminFinancePage() {
           {activeTab === 'payouts' && <AdminPayoutManager />}
           {activeTab === 'bulk' && <AdminBulkStockManager />}
           {activeTab === 'verification' && <OrganizerVerificationTab />}
+          {activeTab === 'ads' && <AdminHomeAdsManager />}
         </div>
       </div>
 
