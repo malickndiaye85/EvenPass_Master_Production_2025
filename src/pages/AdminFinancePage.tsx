@@ -8,6 +8,7 @@ import AdminKPICards from '../components/AdminKPICards';
 import AdminBulkStockManager from '../components/AdminBulkStockManager';
 import AdminPayoutManager from '../components/AdminPayoutManager';
 import AdminExportManager from '../components/AdminExportManager';
+import AdminEventsManager from '../components/AdminEventsManager';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 
@@ -28,7 +29,7 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk'>('payouts');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk'>('events');
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
@@ -367,6 +368,16 @@ export default function AdminFinancePage() {
           <div className="flex justify-between items-center gap-4 mb-6 border-b border-[#0F0F0F] pb-4">
             <div className="flex gap-4">
               <button
+                onClick={() => setActiveTab('events')}
+                className={`px-6 py-3 font-black transition-colors ${
+                  activeTab === 'events'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                🎫 Événements
+              </button>
+              <button
                 onClick={() => setActiveTab('payouts')}
                 className={`px-6 py-3 font-black transition-colors ${
                   activeTab === 'payouts'
@@ -410,6 +421,7 @@ export default function AdminFinancePage() {
             </div>
           </div>
 
+          {activeTab === 'events' && <AdminEventsManager />}
           {activeTab === 'payouts' && <AdminPayoutManager />}
           {activeTab === 'bulk' && <AdminBulkStockManager />}
           {activeTab === 'verification' && <OrganizerVerificationTab />}
