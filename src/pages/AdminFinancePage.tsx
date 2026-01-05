@@ -9,7 +9,7 @@ import AdminBulkStockManager from '../components/AdminBulkStockManager';
 import AdminPayoutManager from '../components/AdminPayoutManager';
 import AdminExportManager from '../components/AdminExportManager';
 import { firestore } from '../firebase';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 
 interface Event {
   id: string;
@@ -71,8 +71,24 @@ export default function AdminFinancePage() {
     try {
       console.log('[ADMIN FINANCE] Loading data...', { userRole: user?.role, uid: firebaseUser?.uid });
 
-      setPendingEvents(mockEvents.filter(e => e.status === 'draft') as Event[]);
-      setAllEvents(mockEvents as Event[]);
+      const eventsRef = collection(firestore, 'events');
+
+      const pendingQuery = query(eventsRef, where('status', '==', 'draft'));
+      const pendingSnapshot = await getDocs(pendingQuery);
+      const loadedPendingEvents = pendingSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Event[];
+      setPendingEvents(loadedPendingEvents);
+      console.log('[ADMIN FINANCE] Loaded pending events:', loadedPendingEvents.length);
+
+      const allEventsSnapshot = await getDocs(eventsRef);
+      const loadedAllEvents = allEventsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Event[];
+      setAllEvents(loadedAllEvents);
+      console.log('[ADMIN FINANCE] Loaded all events:', loadedAllEvents.length);
 
       const organizersRef = collection(firestore, 'organizers');
       const organizersQuery = query(organizersRef, where('verification_status', '==', 'verified'));
@@ -179,49 +195,73 @@ export default function AdminFinancePage() {
     }
   };
 
-  const handleMasterGo = (eventId: string) => {
+  const handleMasterGo = async (eventId: string) => {
     if (!confirm('✅ Approuver cet événement et le débloquer pour les opérations ?')) {
       return;
     }
 
     setProcessing(true);
-    console.log('[MOCK] Approving event:', eventId);
-    setTimeout(() => {
-      alert('✅ Événement approuvé avec succès! (Mode Test)');
+    try {
+      console.log('[ADMIN FINANCE] Approving event:', eventId);
+      const eventRef = doc(firestore, 'events', eventId);
+      await updateDoc(eventRef, {
+        status: 'published',
+        updated_at: Timestamp.now()
+      });
+      alert('✅ Événement approuvé avec succès!');
       setSelectedEvent(null);
-      loadData();
+      await loadData();
+    } catch (error) {
+      console.error('[ADMIN FINANCE] Error approving event:', error);
+      alert('❌ Erreur lors de l\'approbation de l\'événement');
+    } finally {
       setProcessing(false);
-    }, 800);
+    }
   };
 
-  const handleSuspendEvent = (eventId: string) => {
+  const handleSuspendEvent = async (eventId: string) => {
     if (!confirm('⚠️ Suspendre cet événement ? Les ventes seront bloquées.')) {
       return;
     }
 
     setProcessing(true);
-    console.log('[MOCK] Suspending event:', eventId);
-    setTimeout(() => {
-      alert('⏸️ Événement suspendu! (Mode Test)');
+    try {
+      console.log('[ADMIN FINANCE] Suspending event:', eventId);
+      const eventRef = doc(firestore, 'events', eventId);
+      await updateDoc(eventRef, {
+        status: 'suspended',
+        updated_at: Timestamp.now()
+      });
+      alert('⏸️ Événement suspendu!');
       setSelectedEvent(null);
-      loadData();
+      await loadData();
+    } catch (error) {
+      console.error('[ADMIN FINANCE] Error suspending event:', error);
+      alert('❌ Erreur lors de la suspension de l\'événement');
+    } finally {
       setProcessing(false);
-    }, 800);
+    }
   };
 
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (!confirm('❌ ATTENTION : Supprimer définitivement cet événement ?')) {
       return;
     }
 
     setProcessing(true);
-    console.log('[MOCK] Deleting event:', eventId);
-    setTimeout(() => {
-      alert('🗑️ Événement supprimé! (Mode Test)');
+    try {
+      console.log('[ADMIN FINANCE] Deleting event:', eventId);
+      const eventRef = doc(firestore, 'events', eventId);
+      await deleteDoc(eventRef);
+      alert('🗑️ Événement supprimé!');
       setSelectedEvent(null);
-      loadData();
+      await loadData();
+    } catch (error) {
+      console.error('[ADMIN FINANCE] Error deleting event:', error);
+      alert('❌ Erreur lors de la suppression de l\'événement');
+    } finally {
       setProcessing(false);
-    }, 800);
+    }
   };
 
 
