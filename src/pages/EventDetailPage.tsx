@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Minus, Plus, X, Star, ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
 import { firestore } from '../firebase';
-import { collection, query, where, getDocs, doc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useTheme } from '../context/ThemeContext';
 import DynamicLogo from '../components/DynamicLogo';
 import type { Event, TicketType, CartItem, CheckoutForm } from '../types';
@@ -153,7 +153,7 @@ export default function EventDetailPage() {
         customer_email: checkoutForm.customer_email,
         customer_phone: checkoutForm.customer_phone,
         payment_method: checkoutForm.payment_method,
-        status: 'confirmed',
+        status: 'pending',
         currency: 'XOF',
         expires_at: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
         created_at: Timestamp.now(),
@@ -177,7 +177,7 @@ export default function EventDetailPage() {
             holder_name: checkoutForm.customer_name,
             holder_email: checkoutForm.customer_email,
             price_paid: cartItem.ticket_type.price,
-            status: 'valid',
+            status: 'pending',
             created_at: Timestamp.now(),
             updated_at: Timestamp.now(),
           });
@@ -188,22 +188,85 @@ export default function EventDetailPage() {
         await addDoc(collection(firestore, 'tickets'), ticket);
       }
 
-      const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      if (checkoutForm.payment_method === 'wave') {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      await addDoc(collection(firestore, 'payments'), {
-        booking_id: bookingRef.id,
-        payment_reference: paymentReference,
-        payment_method: checkoutForm.payment_method,
-        amount: totalAmount,
-        currency: 'XOF',
-        phone_number: checkoutForm.customer_phone,
-        status: 'completed',
-        paid_at: Timestamp.now(),
-        created_at: Timestamp.now(),
-        updated_at: Timestamp.now(),
-      });
+        const response = await fetch(`${supabaseUrl}/functions/v1/wave-checkout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: totalAmount,
+            currency: 'XOF',
+            metadata: {
+              bookingNumber: bookingNumber,
+              bookingId: bookingRef.id,
+              eventId: event.id,
+            },
+          }),
+        });
 
-      navigate(`/success?booking=${bookingNumber}`);
+        if (!response.ok) {
+          throw new Error('Failed to initiate Wave payment');
+        }
+
+        const data = await response.json();
+
+        await addDoc(collection(firestore, 'payments'), {
+          booking_id: bookingRef.id,
+          payment_reference: data.session_id,
+          payment_method: checkoutForm.payment_method,
+          amount: totalAmount,
+          currency: 'XOF',
+          phone_number: checkoutForm.customer_phone,
+          status: 'pending',
+          created_at: Timestamp.now(),
+          updated_at: Timestamp.now(),
+        });
+
+        window.location.href = data.checkout_url;
+      } else {
+        const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+
+        await addDoc(collection(firestore, 'payments'), {
+          booking_id: bookingRef.id,
+          payment_reference: paymentReference,
+          payment_method: checkoutForm.payment_method,
+          amount: totalAmount,
+          currency: 'XOF',
+          phone_number: checkoutForm.customer_phone,
+          status: 'completed',
+          paid_at: Timestamp.now(),
+          created_at: Timestamp.now(),
+          updated_at: Timestamp.now(),
+        });
+
+        await updateDoc(doc(firestore, 'bookings', bookingRef.id), {
+          status: 'confirmed',
+          updated_at: Timestamp.now(),
+        });
+
+        for (const ticket of ticketsToCreate) {
+          const ticketsRef = collection(firestore, 'tickets');
+          const ticketQuery = query(
+            ticketsRef,
+            where('booking_id', '==', bookingRef.id),
+            where('qr_code', '==', ticket.qr_code)
+          );
+          const ticketSnapshot = await getDocs(ticketQuery);
+          if (!ticketSnapshot.empty) {
+            await updateDoc(doc(firestore, 'tickets', ticketSnapshot.docs[0].id), {
+              status: 'valid',
+              updated_at: Timestamp.now(),
+            });
+          }
+        }
+
+        navigate(`/success?booking=${bookingNumber}`);
+      }
     } catch (error) {
       console.error('Checkout error:', error);
       navigate('/error');
@@ -822,7 +885,7 @@ export default function EventDetailPage() {
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    Confirmer l'achat - {totalAmount.toLocaleString()} FCFA
+                    Acheter - {totalAmount.toLocaleString()} FCFA
                   </>
                 )}
               </button>
