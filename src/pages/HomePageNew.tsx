@@ -470,9 +470,9 @@ export default function HomePageNew() {
                       onClick={() => navigate(`/event/${event.slug}`)}
                     >
                       <div className="relative h-64 bg-slate-700 overflow-hidden">
-                        {event.cover_image_url ? (
+                        {event.event_image_url ? (
                           <img
-                            src={event.cover_image_url}
+                            src={event.event_image_url}
                             alt={event.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />

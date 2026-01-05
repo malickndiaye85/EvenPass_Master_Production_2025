@@ -885,10 +885,13 @@ export default function EventDetailPage() {
                     }`}
                     disabled={processing}
                   >
-                    <div className={`font-bold ${
-                      isDark ? 'text-white' : 'text-slate-900'
-                    }`}>
-                      Wave
+                    <div className="flex flex-col items-center gap-2">
+                      <img src="/Wave.svg" alt="Wave" className="h-12 w-auto" />
+                      <div className={`font-bold text-sm ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}>
+                        Wave
+                      </div>
                     </div>
                   </button>
                   <button
@@ -902,10 +905,13 @@ export default function EventDetailPage() {
                     }`}
                     disabled={processing}
                   >
-                    <div className={`font-bold ${
-                      isDark ? 'text-white' : 'text-slate-900'
-                    }`}>
-                      Orange Money
+                    <div className="flex flex-col items-center gap-2">
+                      <img src="/Orange-Money.svg" alt="Orange Money" className="h-12 w-auto" />
+                      <div className={`font-bold text-sm ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}>
+                        Orange Money
+                      </div>
                     </div>
                   </button>
                 </div>
