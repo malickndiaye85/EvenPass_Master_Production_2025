@@ -29,7 +29,8 @@ import {
   addDoc,
   Timestamp,
   doc,
-  getDoc
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import DynamicLogo from '../components/DynamicLogo';
 import CreateEventModal from '../components/CreateEventModal';
@@ -122,21 +123,32 @@ export default function OrganizerDashboardPage() {
       setCategories(loadedCategories);
 
       const organizersRef = collection(firestore, 'organizers');
-      const organizerQuery = query(organizersRef, where('user_id', '==', firebaseUser.uid));
-      const organizerSnapshot = await getDocs(organizerQuery);
+      const organizerDocRef = doc(firestore, 'organizers', firebaseUser.uid);
+      const organizerDocSnap = await getDoc(organizerDocRef);
 
-      if (organizerSnapshot.empty) {
-        console.error('[ORGANIZER DASHBOARD] No organizer found for this user');
-        setLoading(false);
-        return;
+      let organizer: any;
+      if (!organizerDocSnap.exists()) {
+        console.log('[ORGANIZER DASHBOARD] Creating organizer profile for UID:', firebaseUser.uid);
+        const newOrganizerData = {
+          user_id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          organization_name: firebaseUser.email?.split('@')[0] || 'Organisation',
+          phone: '',
+          address: '',
+          verified: true,
+          created_at: Timestamp.now(),
+          status: 'active'
+        };
+        await setDoc(organizerDocRef, newOrganizerData);
+        organizer = { id: firebaseUser.uid, ...newOrganizerData };
+      } else {
+        organizer = { id: organizerDocSnap.id, ...organizerDocSnap.data() };
       }
 
-      const organizerDoc = organizerSnapshot.docs[0];
-      const organizer = { id: organizerDoc.id, ...organizerDoc.data() };
       setOrganizerData(organizer);
 
       const eventsRef = collection(firestore, 'events');
-      const eventsQuery = query(eventsRef, where('organizer_id', '==', organizerDoc.id));
+      const eventsQuery = query(eventsRef, where('organizer_id', '==', firebaseUser.uid));
       const eventsSnapshot = await getDocs(eventsQuery);
 
       const loadedEvents = await Promise.all(

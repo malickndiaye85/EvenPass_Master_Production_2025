@@ -62,8 +62,7 @@ export default function HomePageNew() {
       const eventsRef = collection(firestore, 'events');
       let eventsQuery = query(
         eventsRef,
-        where('status', '==', 'published'),
-        orderBy('start_date', 'desc')
+        where('status', '==', 'published')
       );
 
       const eventsSnapshot = await getDocs(eventsQuery);
@@ -80,7 +79,9 @@ export default function HomePageNew() {
         })
       );
 
-      loadedEvents = loadedEvents.filter(event => new Date(event.start_date) >= new Date());
+      loadedEvents = loadedEvents
+        .filter(event => new Date(event.start_date) >= new Date())
+        .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
       if (selectedCategory) {
         loadedEvents = loadedEvents.filter(event => event.category_id === selectedCategory);
