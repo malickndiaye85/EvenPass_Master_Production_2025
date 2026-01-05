@@ -64,25 +64,17 @@ const PassLandingPage: React.FC = () => {
                   <Ticket className="w-10 h-10 text-white" />
                 </div>
 
-                <div className="mb-6 flex justify-center">
-                  <img
-                    src="/evenpass-logo.png"
-                    alt="EvenPass"
-                    className="h-20 w-auto object-contain transition-all duration-500 hover:scale-110 hover:brightness-110 hover:drop-shadow-2xl"
-                  />
-                </div>
+                <h1 className={`text-6xl font-black mb-6 ${
+                  isDark
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500'
+                    : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600'
+                }`}>
+                  EVEN
+                </h1>
 
-                <div className="space-y-1 mb-4">
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                    Gënaa Yomb
-                  </p>
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
-                    Gënaa Wóor
-                  </p>
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-amber-400' : 'text-orange-600'}`}>
-                    Gënaa Gaaw
-                  </p>
-                </div>
+                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-amber-400' : 'text-orange-600'}`}>
+                  Gënaa Yomb
+                </p>
 
                 <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Découvrez et réservez vos billets pour les meilleurs événements au Sénégal
@@ -144,25 +136,17 @@ const PassLandingPage: React.FC = () => {
                   <Ship className="w-10 h-10 text-white" />
                 </div>
 
-                <div className="mb-6 flex justify-center">
-                  <img
-                    src="/evenpass-logo.png"
-                    alt="EvenPass"
-                    className="h-20 w-auto object-contain transition-all duration-500 hover:scale-110 hover:brightness-110 hover:drop-shadow-2xl"
-                  />
-                </div>
+                <h1 className={`text-6xl font-black mb-6 ${
+                  isDark
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-[#0A7EA3]'
+                    : 'text-transparent bg-clip-text bg-gradient-to-r from-[#0A7EA3] to-[#005975]'
+                }`}>
+                  PASS
+                </h1>
 
-                <div className="space-y-1 mb-4">
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                    Gënaa Yomb
-                  </p>
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
-                    Gënaa Wóor
-                  </p>
-                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                    Gënaa Gaaw
-                  </p>
-                </div>
+                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                  Gënaa Gaaw
+                </p>
 
                 <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Votre mobilité maritime et terrestre simplifiée
@@ -207,19 +191,15 @@ const PassLandingPage: React.FC = () => {
         </div>
 
         <div className={`py-8 text-center border-t ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-          <div className="space-y-2">
-            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-              Gënaa Yomb
-            </p>
-            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
-              Gënaa Wóor
-            </p>
-            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-              Gënaa Gaaw
-            </p>
-          </div>
-          <p className={`text-sm mt-4 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-            Découvrir • Partager • Voyager
+          <p className={`text-2xl font-bold ${
+            isDark
+              ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-cyan-400 to-orange-500'
+              : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-[#0A7EA3] to-amber-600'
+          }`}>
+            Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw
+          </p>
+          <p className={`text-sm mt-2 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+            Événements • Services • Mobilité
           </p>
         </div>
 

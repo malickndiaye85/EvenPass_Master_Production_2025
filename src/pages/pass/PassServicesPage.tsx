@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Ship, Anchor, Bus, ArrowRight, Calendar, MapPin, Ticket, Moon, Sun, Wallet } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import DynamicLogo from '../../components/DynamicLogo';
+import Logo from '../../components/Logo';
 
 interface ServiceCard {
   id: string;
@@ -139,21 +140,13 @@ const PassServicesPage: React.FC = () => {
               Services de Mobilité
             </h1>
 
-            <p className={`text-xl mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-xl mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               Choisissez votre mode de transport
             </p>
 
-            <div className="space-y-2">
-              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                Gënaa Yomb
-              </p>
-              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
-                Gënaa Wóor
-              </p>
-              <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                Gënaa Gaaw
-              </p>
-            </div>
+            <p className={`text-3xl font-bold ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+              Gënaa Gaaw
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 mb-16">

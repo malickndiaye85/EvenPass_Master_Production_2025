@@ -7,9 +7,10 @@ export default function DynamicLogo() {
   const location = useLocation();
   const { isDark } = useTheme();
   const [scrolled, setScrolled] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [hoveredPart, setHoveredPart] = useState<'even' | 'pass' | null>(null);
 
   const isPassUniverse = location.pathname.includes('/pass');
+  const isEvenUniverse = !isPassUniverse;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,39 +21,53 @@ export default function DynamicLogo() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const getLogoHeight = () => {
+  const getLogoSize = () => {
     if (scrolled) {
-      return 'h-8 sm:h-10';
+      return 'text-3xl sm:text-4xl';
     }
-    return 'h-10 sm:h-12 md:h-14';
+    return 'text-4xl sm:text-5xl md:text-6xl';
   };
 
   return (
     <button
       onClick={() => navigate('/')}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`group relative transition-all duration-500 ease-in-out hover:scale-110 ${
-        isHovered ? 'filter drop-shadow-2xl' : ''
-      }`}
+      className={`group transition-all duration-300 ease-in-out ${getLogoSize()} font-black flex items-center justify-center gap-0 hover:scale-105`}
       aria-label="Retour à l'accueil"
     >
-      <div className="relative">
-        <img
-          src="/evenpass-logo.png"
-          alt="EvenPass"
-          className={`${getLogoHeight()} w-auto object-contain transition-all duration-500 ${
-            isHovered ? 'brightness-110' : 'brightness-100'
-          }`}
-        />
-        {isHovered && (
-          <div className={`absolute -inset-4 rounded-2xl blur-xl opacity-60 transition-opacity duration-500 ${
-            isPassUniverse
-              ? 'bg-gradient-to-r from-cyan-400 to-[#0A7EA3]'
-              : 'bg-gradient-to-r from-[#FF5F05] to-amber-500'
-          } -z-10`}></div>
-        )}
-      </div>
+      <span
+        onMouseEnter={() => setHoveredPart('even')}
+        onMouseLeave={() => setHoveredPart(null)}
+        className={`transition-all duration-300 ease-in-out ${
+          hoveredPart === 'even' ? 'scale-110' : 'scale-100'
+        } ${
+          isEvenUniverse || hoveredPart === 'even'
+            ? isDark
+              ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
+              : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
+            : isDark
+              ? 'text-amber-500/40'
+              : 'text-orange-400/40'
+        }`}
+      >
+        Even
+      </span>
+      <span
+        onMouseEnter={() => setHoveredPart('pass')}
+        onMouseLeave={() => setHoveredPart(null)}
+        className={`transition-all duration-300 ease-in-out ${
+          hoveredPart === 'pass' ? 'scale-110' : 'scale-100'
+        } ${
+          isPassUniverse || hoveredPart === 'pass'
+            ? isDark
+              ? 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-600 bg-clip-text text-transparent'
+              : 'bg-gradient-to-r from-[#0A7EA3] via-cyan-500 to-blue-600 bg-clip-text text-transparent'
+            : isDark
+              ? 'text-cyan-500/40'
+              : 'text-cyan-400/40'
+        }`}
+      >
+        Pass
+      </span>
     </button>
   );
 }
