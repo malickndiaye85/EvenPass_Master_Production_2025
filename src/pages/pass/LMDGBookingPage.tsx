@@ -107,9 +107,10 @@ const LMDGBookingPage: React.FC = () => {
   const handleBooking = async () => {
     setLoading(true);
 
-    const bookingRef = push(ref(db, 'pass/lmdg/bookings'));
+    const reference = `LMDG-${Date.now()}`;
+    const bookingRef = ref(db, `pass/lmdg/bookings/${reference}`);
     const bookingData = {
-      reference: `LMDG-${Date.now()}`,
+      reference,
       direction: direction === 'dakar' ? 'Dakar → Gorée' : 'Gorée → Dakar',
       trip_type: 'round_trip',
       departure_time: selectedTime,
@@ -126,16 +127,45 @@ const LMDGBookingPage: React.FC = () => {
     try {
       await set(bookingRef, bookingData);
 
-      // Simuler le traitement du paiement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      setLoading(false);
-      alert(`✓ Achat validé !\n\nRéférence : ${bookingData.reference}\nMontant : ${calculateTotal().toLocaleString()} FCFA\nPaiement via ${paymentMethod === 'wave' ? 'Wave' : 'Orange Money'}\n\nVotre QR Code a été envoyé au ${phoneNumber}`);
+      const response = await fetch(`${supabaseUrl}/functions/v1/pass-payment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: calculateTotal(),
+          currency: 'XOF',
+          payment_method: paymentMethod === 'wave' ? 'wave' : 'orange_money',
+          service: 'lmdg',
+          reference,
+          metadata: {
+            phone: phoneNumber,
+            direction: bookingData.direction,
+            adults: adultsCount,
+            children: childrenCount
+          }
+        }),
+      });
 
-      navigate('/pass/services');
+      if (!response.ok) {
+        throw new Error('Failed to initiate payment');
+      }
+
+      const data = await response.json();
+
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
+      console.error('Booking error:', error);
       setLoading(false);
-      alert('Erreur lors de l\'achat');
+      navigate(`/payment/error?service=lmdg&message=${encodeURIComponent('Erreur lors de l\'initiation du paiement')}`);
     }
   };
 

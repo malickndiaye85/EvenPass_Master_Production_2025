@@ -21,6 +21,8 @@ import PassServicesPage from './pages/pass/PassServicesPage';
 import LMDGBookingPage from './pages/pass/LMDGBookingPage';
 import COSAMABookingPage from './pages/pass/COSAMABookingPage';
 import InterregionalBookingPage from './pages/pass/InterregionalBookingPage';
+import PaymentSuccessPage from './pages/pass/PaymentSuccessPage';
+import PaymentErrorPage from './pages/pass/PaymentErrorPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import WalletPage from './pages/WalletPage';
 import AdminTransversalDashboard from './pages/AdminTransversalDashboard';
@@ -95,6 +97,8 @@ function AppRoutes() {
       <Route path="/pass/interregional" element={<InterregionalBookingPage />} />
       <Route path="/pass/subscriptions" element={<SubscriptionPage />} />
       <Route path="/pass/wallet" element={<WalletPage />} />
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/error" element={<PaymentErrorPage />} />
 
       <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />

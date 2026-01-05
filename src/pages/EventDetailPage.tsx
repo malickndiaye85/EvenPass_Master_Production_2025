@@ -749,15 +749,6 @@ export default function EventDetailPage() {
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="flex items-center justify-center gap-8 pb-6 border-b border-amber-800/40">
-                <div className="flex items-center justify-center bg-white rounded-2xl p-4 shadow-lg">
-                  <img src="/Wave.svg" alt="Wave" className="h-24 w-auto" />
-                </div>
-                <div className="flex items-center justify-center bg-white rounded-2xl p-4 shadow-lg">
-                  <img src="/Orange-Money.svg" alt="Orange Money" className="h-24 w-auto" />
-                </div>
-              </div>
-
               <div>
                 <label className={`block text-sm font-bold mb-3 ${
                   isDark ? 'text-amber-300' : 'text-slate-700'
