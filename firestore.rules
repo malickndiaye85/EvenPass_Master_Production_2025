@@ -172,6 +172,45 @@ service cloud.firestore {
     }
 
     // ============================================
+    // CATEGORIES COLLECTION
+    // ============================================
+    match /categories/{categoryId} {
+      // Lecture publique des catégories
+      allow read: if true;
+
+      // Création/Modification par organisateurs authentifiés
+      allow create, update: if isAuthenticated();
+
+      // Suppression admin uniquement
+      allow delete: if isAdminFinance();
+    }
+
+    match /event_categories/{categoryId} {
+      // Lecture publique des catégories d'événements
+      allow read: if true;
+
+      // Création/Modification par organisateurs authentifiés
+      allow create, update: if isAuthenticated();
+
+      // Suppression admin uniquement
+      allow delete: if isAdminFinance();
+    }
+
+    // ============================================
+    // SECURITY AGENTS COLLECTION (Contrôleurs)
+    // ============================================
+    match /security_agents/{agentId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Création par organisateurs et admin
+      allow create: if isAuthenticated();
+
+      // Modification et suppression par admin uniquement
+      allow update, delete: if isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut

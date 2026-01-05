@@ -679,7 +679,7 @@ export default function OrganizerDashboardPage() {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-[2fr_3fr_2fr] gap-4">
                         <div>
                           <p className={`text-xs ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
                             Montant
