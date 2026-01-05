@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { XCircle, ArrowLeft, RefreshCcw, AlertTriangle, Phone, Mail, Home, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function ErrorPage() {
   const navigate = useNavigate();
@@ -29,9 +30,22 @@ export default function ErrorPage() {
   const errorMessage = errorMessages[errorCode] || errorMessages.unknown;
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center p-4">
-      <div className="max-w-3xl w-full">
-        <div className={`bg-[#1A1A1A] rounded-3xl border-2 border-red-500 overflow-hidden transition-all duration-500 ${showAnimation ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center p-4 md:p-8">
+      <div className="max-w-4xl w-full">
+        <div className="flex justify-center mb-8">
+          <div className="scale-125">
+            <DynamicLogo />
+          </div>
+        </div>
+
+        <div
+          className={`bg-[#1A1A1A] overflow-hidden transition-all duration-500 ${showAnimation ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+          style={{
+            borderRadius: '40px 120px 40px 120px',
+            border: '3px solid #EF4444',
+            boxShadow: '0 0 60px rgba(239, 68, 68, 0.3)'
+          }}
+        >
           <div className="bg-gradient-to-r from-red-600 via-rose-600 to-red-600 p-12 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
             <div className={`relative inline-block p-6 bg-white rounded-full mb-6 transition-all duration-700 ${showAnimation ? 'scale-100 rotate-0' : 'scale-0 rotate-180'}`}>
@@ -158,12 +172,12 @@ export default function ErrorPage() {
           </div>
         </div>
 
-        <div className="text-center mt-8">
-          <p className="text-xl font-bold text-red-400 mb-2">
+        <div className="text-center mt-12">
+          <p className="text-2xl font-black text-red-400 mb-2">
             Gënaa Gaaw! 😔
           </p>
-          <p className="text-[#B5B5B5]">
-            Nous sommes désolés pour ce désagrément
+          <p className="text-[#B5B5B5] text-lg">
+            Nous sommes désolés pour ce désagrément - Notre équipe est là pour vous aider
           </p>
         </div>
       </div>
