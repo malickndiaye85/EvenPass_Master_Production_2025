@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Bus, MapPin, Calendar, User, Phone, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 import { db } from '../../firebase';
 import { ref, onValue, push, set } from 'firebase/database';
 import { calculateCommissions } from '../../lib/passCommissions';
@@ -149,7 +149,7 @@ const InterregionalBookingPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Logo size="sm" variant="default" />
+            <DynamicLogo />
           </div>
         </div>
       </nav>

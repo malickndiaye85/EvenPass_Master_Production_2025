@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Ship, Calendar, Users, ArrowRight, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 
 const PassLandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const PassLandingPage: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Logo size="md" variant="default" />
+            <DynamicLogo />
 
             <button
               onClick={toggleTheme}
@@ -64,17 +64,25 @@ const PassLandingPage: React.FC = () => {
                   <Ticket className="w-10 h-10 text-white" />
                 </div>
 
-                <h1 className={`text-6xl font-black mb-6 ${
-                  isDark
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500'
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600'
-                }`}>
-                  EVEN
-                </h1>
+                <div className="mb-6 flex justify-center">
+                  <img
+                    src="/evenpass-logo.png"
+                    alt="EvenPass"
+                    className="h-20 w-auto object-contain transition-all duration-500 hover:scale-110 hover:brightness-110 hover:drop-shadow-2xl"
+                  />
+                </div>
 
-                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-amber-400' : 'text-orange-600'}`}>
-                  Gënaa Yomb
-                </p>
+                <div className="space-y-1 mb-4">
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                    Gënaa Yomb
+                  </p>
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
+                    Gënaa Wóor
+                  </p>
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-amber-400' : 'text-orange-600'}`}>
+                    Gënaa Gaaw
+                  </p>
+                </div>
 
                 <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Découvrez et réservez vos billets pour les meilleurs événements au Sénégal
@@ -136,17 +144,25 @@ const PassLandingPage: React.FC = () => {
                   <Ship className="w-10 h-10 text-white" />
                 </div>
 
-                <h1 className={`text-6xl font-black mb-6 ${
-                  isDark
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-[#0A7EA3]'
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-[#0A7EA3] to-[#005975]'
-                }`}>
-                  PASS
-                </h1>
+                <div className="mb-6 flex justify-center">
+                  <img
+                    src="/evenpass-logo.png"
+                    alt="EvenPass"
+                    className="h-20 w-auto object-contain transition-all duration-500 hover:scale-110 hover:brightness-110 hover:drop-shadow-2xl"
+                  />
+                </div>
 
-                <p className={`text-3xl font-bold mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                  Gënaa Gaaw
-                </p>
+                <div className="space-y-1 mb-4">
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                    Gënaa Yomb
+                  </p>
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
+                    Gënaa Wóor
+                  </p>
+                  <p className={`text-2xl font-black transition-all duration-300 hover:scale-105 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    Gënaa Gaaw
+                  </p>
+                </div>
 
                 <p className={`text-lg mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Votre mobilité maritime et terrestre simplifiée
@@ -191,14 +207,14 @@ const PassLandingPage: React.FC = () => {
         </div>
 
         <div className={`py-8 text-center border-t ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-          <div className="space-y-1">
-            <p className={`text-2xl font-black ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+          <div className="space-y-2">
+            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
               Gënaa Yomb
             </p>
-            <p className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
+            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
               Gënaa Wóor
             </p>
-            <p className={`text-2xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+            <p className={`text-2xl font-black transition-all duration-300 hover:scale-110 hover:brightness-125 cursor-default ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
               Gënaa Gaaw
             </p>
           </div>
