@@ -191,15 +191,19 @@ const PassLandingPage: React.FC = () => {
         </div>
 
         <div className={`py-8 text-center border-t ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-          <p className={`text-2xl font-bold ${
-            isDark
-              ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-cyan-400 to-orange-500'
-              : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-[#0A7EA3] to-amber-600'
-          }`}>
-            Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw
-          </p>
-          <p className={`text-sm mt-2 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-            Événements • Services • Mobilité
+          <div className="space-y-1">
+            <p className={`text-2xl font-black ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+              Gënaa Yomb
+            </p>
+            <p className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-[#FF5F05]'}`}>
+              Gënaa Wóor
+            </p>
+            <p className={`text-2xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+              Gënaa Gaaw
+            </p>
+          </div>
+          <p className={`text-sm mt-4 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+            Découvrir • Partager • Voyager
           </p>
         </div>
 
