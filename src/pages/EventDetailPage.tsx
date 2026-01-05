@@ -68,12 +68,22 @@ export default function EventDetailPage() {
         const ticketTypesRef = collection(firestore, 'ticket_types');
         const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
         const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
-        eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          quantity_sold: doc.data().quantity_sold || 0,
+          is_active: doc.data().is_active !== false
+        }));
+
+        console.log('Event loaded:', eventData.title);
+        console.log('Ticket types found:', eventData.ticket_types.length);
+        console.log('Ticket types:', eventData.ticket_types);
 
         setEvent(eventData as Event);
       }
     } catch (error) {
       console.error('Error loading event:', error);
+      alert('Erreur lors du chargement de l\'événement. Veuillez actualiser la page.');
     } finally {
       setLoading(false);
     }
@@ -520,8 +530,19 @@ export default function EventDetailPage() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-4 mb-6">
-                    {event.ticket_types?.map((ticketType) => (
+                  {!event.ticket_types || event.ticket_types.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className={`text-lg font-semibold mb-2 ${isDark ? 'text-amber-400' : 'text-slate-700'}`}>
+                        Aucun billet disponible pour le moment
+                      </p>
+                      <p className={`text-sm ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                        Les billets seront bientôt en vente
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-4 mb-6">
+                        {event.ticket_types.filter(t => t.is_active !== false).map((ticketType) => (
                       <div
                         key={ticketType.id}
                         className={`rounded-2xl p-5 border-2 transition-all ${
@@ -613,38 +634,40 @@ export default function EventDetailPage() {
                           {ticketType.quantity_total - ticketType.quantity_sold} places restantes • Max 3 billets
                         </p>
                       </div>
-                    ))}
-                  </div>
-
-                  {cart.length > 0 && (
-                    <>
-                      <div className={`border-t pt-4 mb-6 ${
-                        isDark ? 'border-amber-800/40' : 'border-slate-200'
-                      }`}>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className={`font-semibold ${
-                            isDark ? 'text-amber-400/80' : 'text-slate-600'
-                          }`}>
-                            Total
-                          </span>
-                          <span className={`text-3xl font-black ${
-                            isDark ? 'text-white' : 'text-slate-900'
-                          }`}>
-                            {totalAmount.toLocaleString()} FCFA
-                          </span>
-                        </div>
+                        ))}
                       </div>
 
-                      <button
-                        onClick={() => setShowCheckout(true)}
-                        className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl ${
-                          isDark
-                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black hover:shadow-amber-900/40'
-                            : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white hover:shadow-orange-500/30'
-                        }`}
-                      >
-                        Acheter maintenant
-                      </button>
+                      {cart.length > 0 && (
+                        <>
+                          <div className={`border-t pt-4 mb-6 ${
+                            isDark ? 'border-amber-800/40' : 'border-slate-200'
+                          }`}>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className={`font-semibold ${
+                                isDark ? 'text-amber-400/80' : 'text-slate-600'
+                              }`}>
+                                Total
+                              </span>
+                              <span className={`text-3xl font-black ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                              }`}>
+                                {totalAmount.toLocaleString()} FCFA
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setShowCheckout(true)}
+                            className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl ${
+                              isDark
+                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black hover:shadow-amber-900/40'
+                                : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white hover:shadow-orange-500/30'
+                            }`}
+                          >
+                            Acheter maintenant
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
                 </>
