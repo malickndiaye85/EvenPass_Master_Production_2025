@@ -225,6 +225,50 @@ service cloud.firestore {
     }
 
     // ============================================
+    // MODIFICATION REQUESTS COLLECTION
+    // ============================================
+    match /modification_requests/{requestId} {
+      // Organisateurs : Création de demandes
+      allow create: if isAuthenticated() &&
+                      request.resource.data.organizer_id == request.auth.uid;
+
+      // Organisateurs : Lecture de leurs propres demandes
+      allow read: if isAuthenticated() &&
+                    resource.data.organizer_id == request.auth.uid;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // PAYOUT REQUESTS COLLECTION
+    // ============================================
+    match /payout_requests/{requestId} {
+      // Organisateurs : Création de demandes de payout
+      allow create: if isAuthenticated() &&
+                      request.resource.data.organizer_id == request.auth.uid;
+
+      // Organisateurs : Lecture de leurs propres demandes
+      allow read: if isAuthenticated() &&
+                    resource.data.organizer_id == request.auth.uid;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // BULK SALES COLLECTION
+    // ============================================
+    match /bulk_sales/{saleId} {
+      // Organisateurs : Lecture de leurs propres ventes en bloc
+      allow read: if isAuthenticated() &&
+                    resource.data.organizer_id == request.auth.uid;
+
+      // Admin : Accès total pour gérer les stocks en bloc
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut

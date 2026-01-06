@@ -83,6 +83,39 @@
     "config": {
       ".read": true,
       ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+    },
+
+    "evenpass": {
+      "global_config": {
+        "home_ads": {
+          ".read": true,
+          ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+        }
+      },
+      "controllers": {
+        ".read": "auth != null",
+        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+      },
+      "sessions": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "scans": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "tickets": {
+        ".read": "auth != null",
+        "$ticketId": {
+          ".write": "auth != null"
+        }
+      },
+      "events": {
+        ".read": true,
+        "$eventId": {
+          ".write": "auth != null"
+        }
+      }
     }
   }
 }
