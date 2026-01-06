@@ -27,6 +27,9 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import WalletPage from './pages/WalletPage';
 import AdminTransversalDashboard from './pages/AdminTransversalDashboard';
 import SecurityManifestPage from './pages/SecurityManifestPage';
+import CommandantDashboard from './pages/CommandantDashboard';
+import BoardingDashboard from './pages/BoardingDashboard';
+import CommercialDashboard from './pages/CommercialDashboard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -102,6 +105,22 @@ function AppRoutes() {
 
       <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />
+
+      <Route path="/pass/commandant" element={
+        <ProtectedRoute>
+          <CommandantDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/pass/boarding" element={
+        <ProtectedRoute>
+          <BoardingDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/pass/commercial" element={
+        <ProtectedRoute>
+          <CommercialDashboard />
+        </ProtectedRoute>
+      } />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

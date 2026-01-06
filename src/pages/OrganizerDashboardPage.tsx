@@ -246,15 +246,28 @@ export default function OrganizerDashboardPage() {
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!organizerData) return;
+    if (!firebaseUser) {
+      alert('Vous devez être connecté pour envoyer une demande');
+      return;
+    }
 
     setProcessing(true);
     try {
       const selectedEvent = events.find(e => e.id === requestForm.event_id);
-      if (!selectedEvent) return;
+      if (!selectedEvent) {
+        alert('Veuillez sélectionner un événement');
+        setProcessing(false);
+        return;
+      }
+
+      if (!requestForm.description.trim()) {
+        alert('Veuillez décrire votre demande');
+        setProcessing(false);
+        return;
+      }
 
       const requestData = {
-        organizer_id: organizerData.id,
+        organizer_id: firebaseUser.uid,
         event_id: requestForm.event_id,
         event_name: selectedEvent.title,
         request_type: requestForm.request_type,
@@ -263,7 +276,10 @@ export default function OrganizerDashboardPage() {
         created_at: Timestamp.now(),
       };
 
-      await addDoc(collection(firestore, 'modification_requests'), requestData);
+      console.log('[ORGANIZER DASHBOARD] Submitting request:', requestData);
+      const docRef = await addDoc(collection(firestore, 'modification_requests'), requestData);
+      console.log('[ORGANIZER DASHBOARD] Request submitted successfully with ID:', docRef.id);
+
       alert('Demande envoyée avec succès! L\'admin va la traiter.');
       setShowRequestModal(false);
       setRequestForm({
@@ -272,9 +288,9 @@ export default function OrganizerDashboardPage() {
         description: '',
       });
       loadOrganizerData();
-    } catch (error) {
-      console.error('Error submitting request:', error);
-      alert('Erreur lors de l\'envoi de la demande');
+    } catch (error: any) {
+      console.error('[ORGANIZER DASHBOARD] Error submitting request:', error);
+      alert(`Erreur lors de l'envoi de la demande: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setProcessing(false);
     }
