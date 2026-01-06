@@ -10,6 +10,7 @@ import AdminPayoutManager from '../components/AdminPayoutManager';
 import AdminExportManager from '../components/AdminExportManager';
 import AdminEventsManager from '../components/AdminEventsManager';
 import AdminHomeAdsManager from '../components/AdminHomeAdsManager';
+import MaritimeAccessManager from '../components/MaritimeAccessManager';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 
@@ -410,13 +411,23 @@ export default function AdminFinancePage() {
               </button>
               <button
                 onClick={() => setActiveTab('ads')}
-                className={`px-6 py-3 font-black transition-colors ${
+                className={`px-6 py-3 font-black transition-colors whitespace-nowrap ${
                   activeTab === 'ads'
                     ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
                     : 'text-[#B5B5B5] hover:text-white'
                 }`}
               >
                 📢 Publicités
+              </button>
+              <button
+                onClick={() => setActiveTab('maritime')}
+                className={`px-6 py-3 font-black transition-colors whitespace-nowrap ${
+                  activeTab === 'maritime'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                ⚓ Maritime
               </button>
             </div>
             <div className="flex items-center gap-3">
@@ -437,6 +448,74 @@ export default function AdminFinancePage() {
           {activeTab === 'bulk' && <AdminBulkStockManager />}
           {activeTab === 'verification' && <OrganizerVerificationTab />}
           {activeTab === 'ads' && <AdminHomeAdsManager />}
+          {activeTab === 'maritime' && (
+            <div className="space-y-8">
+              <MaritimeAccessManager />
+
+              <div className="border-t-2 border-[#0F0F0F] pt-8">
+                <h2 className="text-2xl font-black text-white mb-6">⚓ Accès Dashboards Maritimes</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <button
+                    onClick={() => window.open('/pass/boarding', '_blank')}
+                    className="group relative overflow-hidden bg-gradient-to-br from-cyan-600/20 to-blue-600/20 border-2 border-cyan-600 hover:border-cyan-400 transition-all p-8 rounded-2xl"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Users className="w-10 h-10 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-white mb-2">Boarding Management</h3>
+                      <p className="text-cyan-400 text-sm">Gestion embarquement passagers</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => window.open('/pass/commandant', '_blank')}
+                    className="group relative overflow-hidden bg-gradient-to-br from-amber-600/20 to-orange-600/20 border-2 border-amber-600 hover:border-amber-400 transition-all p-8 rounded-2xl"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Ship className="w-10 h-10 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-white mb-2">Commandant Dashboard</h3>
+                      <p className="text-amber-400 text-sm">Manifeste & gestion navire</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => window.open('/pass/commercial', '_blank')}
+                    className="group relative overflow-hidden bg-gradient-to-br from-emerald-600/20 to-green-600/20 border-2 border-emerald-600 hover:border-emerald-400 transition-all p-8 rounded-2xl"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <TrendingUp className="w-10 h-10 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-white mb-2">Commercial Dashboard</h3>
+                      <p className="text-emerald-400 text-sm">Statistiques & revenus</p>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border-2 border-cyan-600/50 p-6 rounded-2xl mt-6">
+                  <h3 className="text-lg font-bold text-cyan-400 mb-3">ℹ️ Information</h3>
+                  <ul className="space-y-2 text-[#B5B5B5]">
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 mt-1">•</span>
+                      <span>Ces dashboards sont réservés au personnel maritime assigné</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 mt-1">•</span>
+                      <span>Chaque utilisateur doit être assigné à un navire spécifique</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 mt-1">•</span>
+                      <span>Les données sont synchronisées en temps réel avec Firebase</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
