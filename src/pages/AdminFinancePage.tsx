@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, X, Clock, LogOut, Package, Plus, Loader } from 'lucide-react';
+import { Calendar, MapPin, X, Clock, LogOut, Package, Plus, Loader, Users, Ship, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { mockEvents } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
@@ -31,10 +31,11 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads'>('events');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads' | 'maritime'>('events');
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
+  const [pendingOrganizers, setPendingOrganizers] = useState<number>(0);
   const [bulkForm, setBulkForm] = useState({
     organizer_id: '',
     event_id: '',
@@ -98,6 +99,10 @@ export default function AdminFinancePage() {
       const organizersSnapshot = await getDocs(organizersQuery);
       const loadedOrganizers = organizersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrganizers(loadedOrganizers);
+
+      const pendingOrganizersQuery = query(organizersRef, where('verification_status', '==', 'pending'));
+      const pendingOrganizersSnapshot = await getDocs(pendingOrganizersQuery);
+      setPendingOrganizers(pendingOrganizersSnapshot.docs.length);
 
       console.log('[ADMIN FINANCE] Loaded data successfully');
     } catch (error) {
@@ -371,13 +376,18 @@ export default function AdminFinancePage() {
             <div className="flex gap-4">
               <button
                 onClick={() => setActiveTab('events')}
-                className={`px-6 py-3 font-black transition-colors ${
+                className={`px-6 py-3 font-black transition-colors relative ${
                   activeTab === 'events'
                     ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
                     : 'text-[#B5B5B5] hover:text-white'
                 }`}
               >
                 🎫 Événements
+                {pendingEvents.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-600 text-white text-xs font-black rounded-full flex items-center justify-center animate-pulse">
+                    {pendingEvents.length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('payouts')}
@@ -401,13 +411,18 @@ export default function AdminFinancePage() {
               </button>
               <button
                 onClick={() => setActiveTab('verification')}
-                className={`px-6 py-3 font-black transition-colors ${
+                className={`px-6 py-3 font-black transition-colors relative ${
                   activeTab === 'verification'
                     ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
                     : 'text-[#B5B5B5] hover:text-white'
                 }`}
               >
                 ✅ Vérification
+                {pendingOrganizers > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs font-black rounded-full flex items-center justify-center animate-pulse">
+                    {pendingOrganizers}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('ads')}

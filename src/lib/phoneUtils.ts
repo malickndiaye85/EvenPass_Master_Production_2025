@@ -3,10 +3,17 @@ export function maskPhoneNumber(phone: string): string {
 
   const cleaned = phone.replace(/\D/g, '');
 
+  if (cleaned.startsWith('221') && cleaned.length >= 12) {
+    const localNumber = cleaned.substring(3);
+    return `+221 ${localNumber.substring(0, 5)}****`;
+  }
+
   if (cleaned.length >= 9) {
-    const prefix = cleaned.slice(0, 2);
-    const suffix = cleaned.slice(-4);
-    return `${prefix} *** ${suffix}`;
+    return `${cleaned.substring(0, 5)}****`;
+  }
+
+  if (cleaned.length >= 5) {
+    return cleaned.substring(0, 3) + '****';
   }
 
   return phone;

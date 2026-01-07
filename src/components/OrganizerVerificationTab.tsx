@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Clock, X } from 'lucide-react';
 import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
 import { db } from '../firebase';
+import { maskPhoneNumber } from '../lib/phoneUtils';
 
 interface Organizer {
   uid: string;
@@ -192,7 +193,7 @@ export default function OrganizerVerificationTab() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-[#B5B5B5]" />
-                    <span className="text-[#B5B5B5]">{organizer.contact_phone}</span>
+                    <span className="text-[#B5B5B5]">{maskPhoneNumber(organizer.contact_phone)}</span>
                   </div>
                 </div>
 
@@ -288,6 +289,7 @@ export default function OrganizerVerificationTab() {
                     <div>
                       <p className="text-sm text-[#B5B5B5]">Téléphone</p>
                       <p className="text-white font-medium">{selectedOrganizer.contact_phone}</p>
+                      <p className="text-[#B5B5B5] text-xs mt-1">Masqué : {maskPhoneNumber(selectedOrganizer.contact_phone)}</p>
                     </div>
                   </div>
                 </div>

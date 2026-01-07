@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { auth, db } from '../firebase';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import SuccessModal from '../components/SuccessModal';
 
 export default function OrganizerSignupPage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function OrganizerSignupPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -183,13 +185,7 @@ export default function OrganizerSignupPage() {
       await auth.signOut();
 
       console.log('[ORGANIZER SIGNUP] Signup complete! Showing success message...');
-      alert('✅ Demande envoyée avec succès!\n\n' +
-        'Votre compte organisateur est en attente de validation par notre équipe.\n\n' +
-        'Vous recevrez un email de confirmation une fois votre compte approuvé (sous 24h).\n\n' +
-        '📞 Contact : 77 139 29 26\n' +
-        '📧 Email : contact@evenpass.sn');
-
-      navigate('/organizer/login');
+      setShowSuccessModal(true);
     } catch (err: any) {
       console.error('[FIREBASE] Error creating organizer:', err);
 
@@ -646,6 +642,24 @@ export default function OrganizerSignupPage() {
           </button>
         </p>
       </div>
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate('/organizer/login');
+        }}
+        title="Demande Envoyée avec Succès!"
+        message="Votre compte organisateur a été créé et est maintenant en attente de validation par notre équipe."
+        details={[
+          "Votre compte sera vérifié sous 24 heures maximum",
+          "Vous recevrez un email de confirmation dès l'approbation",
+          "Vous pourrez alors vous connecter et créer vos événements",
+          "Toutes vos informations sont sécurisées"
+        ]}
+        contactInfo={true}
+        isDark={true}
+      />
     </div>
   );
 }
