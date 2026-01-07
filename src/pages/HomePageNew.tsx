@@ -223,17 +223,11 @@ export default function HomePageNew() {
             </div>
 
             <h2 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] ${
-              isDark ? 'text-white' : 'text-slate-900'
+              isDark
+                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
+                : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
             }`}>
               <span className="block animate-fade-in">Gënaa Yomb</span>
-              <span className={`block animate-fade-in animation-delay-200 ${
-                isDark
-                  ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
-                  : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
-              }`}>
-                Gënaa Wóor
-              </span>
-              <span className="block animate-fade-in animation-delay-400">Gënaa Gaaw</span>
             </h2>
 
             <p className={`text-xl sm:text-2xl mb-3 max-w-3xl mx-auto font-medium ${
@@ -666,7 +660,7 @@ export default function HomePageNew() {
                     EvenPass
                   </h1>
                   <p className={`text-xs font-medium ${isDark ? 'text-amber-500/60' : 'text-slate-500'}`}>
-                    Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw
+                    Gënaa Gaaw
                   </p>
                 </div>
               </div>

@@ -298,6 +298,15 @@ export default function AdminFinancePage() {
             <p className="text-[#B5B5B5] mt-1">Centre névralgique de la plateforme EvenPass</p>
           </div>
           <div className="flex items-center gap-3">
+            <AdminExportManager />
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black transition-all shadow-lg flex items-center gap-2"
+              style={{ borderRadius: '40px 8px 40px 8px' }}
+            >
+              <Package className="w-4 h-4" />
+              Créer Bloc
+            </button>
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
@@ -458,17 +467,6 @@ export default function AdminFinancePage() {
                 }`}
               >
                 👥 Organisateurs
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <AdminExportManager />
-              <button
-                onClick={() => setShowBulkModal(true)}
-                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black transition-all shadow-lg flex items-center gap-2"
-                style={{ borderRadius: '40px 8px 40px 8px' }}
-              >
-                <Package className="w-4 h-4" />
-                Créer Bloc
               </button>
             </div>
           </div>
