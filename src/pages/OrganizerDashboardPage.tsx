@@ -15,7 +15,9 @@ import {
   Package,
   Edit,
   FileText,
-  LayoutDashboard
+  LayoutDashboard,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/FirebaseAuthContext';
@@ -56,7 +58,7 @@ interface ModificationRequest {
 export default function OrganizerDashboardPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading, logout, firebaseUser } = useAuth();
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [modificationRequests, setModificationRequests] = useState<ModificationRequest[]>([]);
@@ -353,6 +355,17 @@ export default function OrganizerDashboardPage() {
               >
                 <Plus className="w-5 h-5" />
                 Créer événement
+              </button>
+              <button
+                onClick={toggleTheme}
+                className={`p-3 rounded-xl transition-all duration-300 ${
+                  isDark
+                    ? 'bg-yellow-900/20 hover:bg-yellow-900/40 text-yellow-400'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+                title={isDark ? 'Mode clair' : 'Mode sombre'}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
                 onClick={handleLogout}

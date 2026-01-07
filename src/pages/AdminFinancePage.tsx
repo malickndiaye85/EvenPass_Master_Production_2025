@@ -11,6 +11,8 @@ import AdminExportManager from '../components/AdminExportManager';
 import AdminEventsManager from '../components/AdminEventsManager';
 import AdminHomeAdsManager from '../components/AdminHomeAdsManager';
 import MaritimeAccessManager from '../components/MaritimeAccessManager';
+import OrganizersManagementTab from '../components/OrganizersManagementTab';
+import ConfirmModal from '../components/ConfirmModal';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 
@@ -31,7 +33,8 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads' | 'maritime'>('events');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads' | 'maritime' | 'organizers'>('events');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
@@ -65,10 +68,12 @@ export default function AdminFinancePage() {
   }, [authLoading, user, navigate]);
 
   const handleLogout = () => {
-    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      logout();
-      navigate('/admin/finance/login');
-    }
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    navigate('/admin/finance/login');
   };
 
   const loadData = async () => {
@@ -444,6 +449,16 @@ export default function AdminFinancePage() {
               >
                 ⚓ Maritime
               </button>
+              <button
+                onClick={() => setActiveTab('organizers')}
+                className={`px-6 py-3 font-black transition-colors whitespace-nowrap ${
+                  activeTab === 'organizers'
+                    ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                👥 Organisateurs
+              </button>
             </div>
             <div className="flex items-center gap-3">
               <AdminExportManager />
@@ -463,6 +478,7 @@ export default function AdminFinancePage() {
           {activeTab === 'bulk' && <AdminBulkStockManager />}
           {activeTab === 'verification' && <OrganizerVerificationTab />}
           {activeTab === 'ads' && <AdminHomeAdsManager />}
+          {activeTab === 'organizers' && <OrganizersManagementTab />}
           {activeTab === 'maritime' && (
             <div className="space-y-8">
               <MaritimeAccessManager />
@@ -777,6 +793,17 @@ export default function AdminFinancePage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter du panneau d'administration ?"
+        type="warning"
+        confirmText="Se déconnecter"
+        cancelText="Annuler"
+        isDark={true}
+      />
     </div>
   );
 }

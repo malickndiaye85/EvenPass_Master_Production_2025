@@ -12,7 +12,9 @@ import {
   Eye,
   UserCheck,
   Scan,
-  Database
+  Database,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,6 +22,7 @@ import { firestore } from '../firebase';
 import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import AgentManagementModal from '../components/AgentManagementModal';
 import SecurityAgentsDatabase from '../components/SecurityAgentsDatabase';
+import ConfirmModal from '../components/ConfirmModal';
 import type { Event } from '../types';
 
 interface AgentStats {
@@ -33,12 +36,13 @@ interface AgentStats {
 export default function OpsManagerPageNew() {
   const navigate = useNavigate();
   const { user, loading: authLoading, logout, firebaseUser } = useAuth();
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showAgentModal, setShowAgentModal] = useState(false);
   const [showAgentsDatabase, setShowAgentsDatabase] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [agentStats, setAgentStats] = useState<AgentStats[]>([]);
   const [globalStats, setGlobalStats] = useState({
     totalEvents: 0,
@@ -48,10 +52,12 @@ export default function OpsManagerPageNew() {
   });
 
   const handleLogout = () => {
-    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      logout();
-      navigate('/admin/ops/login');
-    }
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    navigate('/admin/ops/login');
   };
 
   useEffect(() => {
@@ -202,6 +208,17 @@ export default function OpsManagerPageNew() {
               >
                 <Database className="w-5 h-5" />
                 Base Contrôleurs
+              </button>
+              <button
+                onClick={toggleTheme}
+                className={`p-3 rounded-xl transition-all duration-300 ${
+                  isDark
+                    ? 'bg-yellow-900/20 hover:bg-yellow-900/40 text-yellow-400'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+                title={isDark ? 'Mode clair' : 'Mode sombre'}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
                 onClick={handleLogout}
@@ -477,6 +494,18 @@ export default function OpsManagerPageNew() {
           onClose={() => setShowAgentsDatabase(false)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter du panneau Ops Manager ?"
+        type="warning"
+        confirmText="Se déconnecter"
+        cancelText="Annuler"
+        isDark={isDark}
+      />
     </div>
   );
 }

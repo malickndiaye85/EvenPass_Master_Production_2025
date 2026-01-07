@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Send, Copy, CheckCircle, Users, Shield } from 'lucide-react';
 import { collection, addDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { firestore } from '../firebase';
+import SuccessModal from './SuccessModal';
+import ConfirmModal from './ConfirmModal';
 
 interface Agent {
   id: string;
@@ -36,6 +38,11 @@ export default function AgentManagementModal({
     phone: '',
     email: '',
   });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   useEffect(() => {
     loadAgents();
@@ -80,10 +87,12 @@ export default function AgentManagementModal({
       setNewAgent({ name: '', phone: '', email: '' });
       setShowNewAgentForm(false);
       await loadAgents();
-      alert('Agent ajouté avec succès!');
+      setSuccessMessage('Agent ajouté avec succès à la base de données!');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error adding agent:', error);
-      alert('Erreur lors de l\'ajout de l\'agent');
+      setErrorMessage('Erreur lors de l\'ajout de l\'agent. Veuillez réessayer.');
+      setShowErrorModal(true);
     } finally {
       setProcessing(false);
     }
@@ -101,7 +110,8 @@ export default function AgentManagementModal({
 
   const handleGenerateCodes = async () => {
     if (selectedAgents.size === 0) {
-      alert('Veuillez sélectionner au moins un agent');
+      setErrorMessage('Veuillez sélectionner au moins un agent');
+      setShowErrorModal(true);
       return;
     }
 
@@ -130,10 +140,12 @@ export default function AgentManagementModal({
       }
 
       setGeneratedCodes(codes);
-      alert(`${codes.size} code(s) généré(s) avec succès!`);
+      setSuccessMessage(`${codes.size} code(s) d'accès généré(s) avec succès!`);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error generating codes:', error);
-      alert('Erreur lors de la génération des codes');
+      setErrorMessage('Erreur lors de la génération des codes. Veuillez réessayer.');
+      setShowErrorModal(true);
     } finally {
       setProcessing(false);
     }
@@ -141,7 +153,8 @@ export default function AgentManagementModal({
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    alert('Code copié!');
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
 
   return (
@@ -402,6 +415,26 @@ export default function AgentManagementModal({
           </div>
         </div>
       </div>
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Succès"
+        message={successMessage}
+        isDark={isDark}
+      />
+
+      <ConfirmModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        onConfirm={() => setShowErrorModal(false)}
+        title="Erreur"
+        message={errorMessage}
+        type="danger"
+        confirmText="OK"
+        cancelText=""
+        isDark={isDark}
+      />
     </div>
   );
 }
