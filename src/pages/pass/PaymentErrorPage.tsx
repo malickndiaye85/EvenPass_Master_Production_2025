@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { XCircle, Home, RefreshCw, Phone } from 'lucide-react';
+import { XCircle, Home, RefreshCw, Phone, Ship } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 
 export default function PaymentErrorPage() {
   const [searchParams] = useSearchParams();
@@ -19,11 +19,13 @@ export default function PaymentErrorPage() {
     }
   };
 
+  const context = service ? 'pass' : 'even';
+
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'} flex items-center justify-center p-4 md:p-8`}>
       <div className="max-w-3xl w-full">
         <div className="flex justify-center mb-8">
-          <Logo size="md" variant="default" />
+          <DynamicLogo size="md" context={context} />
         </div>
 
         <div
@@ -95,11 +97,23 @@ export default function PaymentErrorPage() {
               </button>
 
               <button
-                onClick={() => navigate('/pass/services')}
-                className={`w-full px-8 py-5 ${isDark ? 'bg-gray-900 border-gray-700 hover:border-cyan-600' : 'bg-white border-gray-300 hover:border-blue-600'} border-2 ${isDark ? 'text-white' : 'text-gray-900'} rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3`}
+                onClick={() => navigate(service ? '/pass/services' : '/')}
+                className={`w-full px-8 py-5 ${service
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700'
+                  : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
+                } text-white rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02]`}
               >
-                <Home className="w-6 h-6" />
-                Retour aux services
+                {service ? (
+                  <>
+                    <Ship className="w-6 h-6" />
+                    Retour aux Traversées
+                  </>
+                ) : (
+                  <>
+                    <Home className="w-6 h-6" />
+                    Retour aux Événements
+                  </>
+                )}
               </button>
             </div>
 

@@ -344,9 +344,17 @@ export default function PaymentSuccessPage() {
           <p className="text-2xl font-black text-green-400 mb-2">
             🎉 Gënaa Wóor!
           </p>
-          <p className={`${isDark ? 'text-[#B5B5B5]' : 'text-gray-600'} text-lg`}>
+          <p className={`${isDark ? 'text-[#B5B5B5]' : 'text-gray-600'} text-lg mb-8`}>
             Merci d'avoir choisi EvenPass pour vos déplacements
           </p>
+
+          <button
+            onClick={() => navigate('/pass/services')}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-cyan-500/30 hover:scale-105"
+          >
+            <Ship className="w-6 h-6" />
+            Retour aux Traversées
+          </button>
         </div>
       </div>
     </div>

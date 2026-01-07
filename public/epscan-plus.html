@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPscan - Scanner EvenPass</title>
+    <title>EPscan+ - Scanner Premium EvenPass</title>
     <script src="/env-config.js"></script>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/epscan-512.png">
@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#F97316">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EPscan">
+    <meta name="apple-mobile-web-app-title" content="EPscan+">
     <style>
         * {
             margin: 0;
@@ -21,131 +21,200 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
             color: white;
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
             margin-bottom: 30px;
+            animation: fadeInDown 0.5s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo {
-            font-size: 32px;
+            font-size: 40px;
             font-weight: 900;
-            letter-spacing: -1px;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
         }
 
-        .logo span {
-            color: #F97316;
+        .logo-subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 700;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 900;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .session-status {
-            background: #2d2d2d;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 2px solid #3d3d3d;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 2px solid #334155;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         .session-status.locked {
             border-color: #ef4444;
+            background: linear-gradient(135deg, #3f1a1a 0%, #1a0f0f 100%);
         }
 
         .session-status.active {
             border-color: #22c55e;
+            background: linear-gradient(135deg, #1a3f2e 0%, #0f1a15 100%);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #F97316;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .scanner-container {
-            background: #2d2d2d;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #3d3d3d;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #334155;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.7s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         #qr-reader {
             width: 100%;
-            border-radius: 15px;
+            border-radius: 18px;
             overflow: hidden;
-            background: #1a1a1a;
-            min-height: 300px;
+            background: #0a0a0a;
+            min-height: 350px;
+            border: 3px solid #334155;
         }
 
         .result-card {
-            background: #2d2d2d;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border: 2px solid #3d3d3d;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 2px solid #334155;
             display: none;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .result-card.success {
             border-color: #22c55e;
-            background: linear-gradient(135deg, #1a4d2e 0%, #2d2d2d 100%);
+            background: linear-gradient(135deg, #1a4d2e 0%, #0f291a 100%);
+            box-shadow: 0 15px 40px rgba(34, 197, 94, 0.3);
         }
 
         .result-card.error {
             border-color: #ef4444;
-            background: linear-gradient(135deg, #4d1a1a 0%, #2d2d2d 100%);
+            background: linear-gradient(135deg, #4d1a1a 0%, #291010 100%);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.3);
         }
 
         .result-card h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
+            font-size: 28px;
+            margin-bottom: 20px;
             font-weight: 900;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #F97316;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #ea580c;
-            transform: scale(1.02);
-        }
-
-        .btn-secondary {
-            background: #3d3d3d;
-            color: white;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #4d4d4d;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #3d3d3d;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .info-row:last-child {
@@ -155,72 +224,145 @@
         .info-label {
             color: #9ca3af;
             font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .info-value {
-            font-weight: 900;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid #3d3d3d;
-            border-top: 3px solid #F97316;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            font-weight: 800;
+            font-size: 16px;
+            color: white;
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
             font-weight: 900;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .status-valid {
-            background: #22c55e;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
         }
 
         .status-invalid {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 16px 24px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 16px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(249, 115, 22, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #F97316;
         }
 
         .nav-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #F97316;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">EP<span>scan</span></div>
-            <p style="color: #9ca3af; margin-top: 10px; font-weight: 600;">Scanner EvenPass</p>
+            <div class="logo">EPscan+</div>
+            <div class="logo-subtitle">Scanner Premium</div>
+            <span class="badge">🚀 Version Pro</span>
         </div>
 
         <div id="session-status" class="session-status locked">
-            <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
-            <p style="font-size: 12px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
+            <p style="font-weight: 700; font-size: 16px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
+            <p style="font-size: 13px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
         </div>
 
         <div class="scanner-container" id="scanner-container" style="display: none;">
             <div id="qr-reader"></div>
+            <div id="scan-stats" class="stats-grid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-scans">0</div>
+                    <div class="stat-label">Scans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-valid">0</div>
+                    <div class="stat-label">Valides</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-invalid">0</div>
+                    <div class="stat-label">Invalides</div>
+                </div>
+            </div>
         </div>
 
         <div id="result" class="result-card">
@@ -229,14 +371,14 @@
         </div>
 
         <div class="nav-buttons">
-            <a href="/history.html" class="btn btn-secondary">Historique</a>
-            <a href="/dashboard-scans-controleurs.html" class="btn btn-secondary">Dashboard</a>
+            <a href="/history.html" class="btn btn-secondary">📊 Historique</a>
+            <a href="/dashboard-scans-controleurs.html" class="btn btn-secondary">📈 Dashboard</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, get, update, onValue, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: window.ENV.FIREBASE_API_KEY,
@@ -256,11 +398,16 @@
 
         let currentSession = null;
         let html5QrCode = null;
+        let sessionStats = {
+            totalScans: 0,
+            validScans: 0,
+            invalidScans: 0
+        };
 
         if (!controllerId) {
             document.getElementById('session-status').innerHTML = `
-                <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #ef4444;">❌ ERREUR D'ENRÔLEMENT</p>
-                <p style="font-size: 12px; color: #9ca3af;">Scanner le QR d'enrôlement depuis l'Ops Manager</p>
+                <p style="font-weight: 700; font-size: 16px; margin-bottom: 5px; color: #ef4444;">❌ ERREUR D'ENRÔLEMENT</p>
+                <p style="font-size: 13px; color: #9ca3af;">Scanner le QR d'enrôlement depuis l'Ops Manager</p>
             `;
         } else {
             localStorage.setItem('controllerId', controllerId);
@@ -272,8 +419,8 @@
                 } else {
                     document.getElementById('session-status').className = 'session-status locked';
                     document.getElementById('session-status').innerHTML = `
-                        <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #ef4444;">⚠️ AGENT SUSPENDU</p>
-                        <p style="font-size: 12px; color: #9ca3af;">Contactez l'Ops Manager</p>
+                        <p style="font-weight: 700; font-size: 16px; margin-bottom: 5px; color: #ef4444;">⚠️ AGENT SUSPENDU</p>
+                        <p style="font-size: 13px; color: #9ca3af;">Contactez l'Ops Manager</p>
                     `;
                     document.getElementById('scanner-container').style.display = 'none';
                 }
@@ -300,17 +447,18 @@
                         const event = eventSnapshot.val();
                         document.getElementById('session-status').className = 'session-status active';
                         document.getElementById('session-status').innerHTML = `
-                            <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #22c55e;">✓ SESSION ACTIVE</p>
-                            <p style="font-size: 12px; color: #9ca3af;">Événement: ${event?.name || 'N/A'}</p>
+                            <p style="font-weight: 700; font-size: 16px; margin-bottom: 5px; color: #22c55e;">✓ SESSION ACTIVE</p>
+                            <p style="font-size: 13px; color: #9ca3af;">Événement: ${event?.name || 'N/A'}</p>
                         `;
                         document.getElementById('scanner-container').style.display = 'block';
+                        document.getElementById('scan-stats').style.display = 'grid';
                         initScanner();
                     });
                 } else {
                     document.getElementById('session-status').className = 'session-status locked';
                     document.getElementById('session-status').innerHTML = `
-                        <p style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
-                        <p style="font-size: 12px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
+                        <p style="font-weight: 700; font-size: 16px; margin-bottom: 5px;">🔒 SESSION VERROUILLÉE</p>
+                        <p style="font-size: 13px; color: #9ca3af;">En attente d'activation par l'Ops Manager</p>
                     `;
                     document.getElementById('scanner-container').style.display = 'none';
                 }
@@ -323,7 +471,7 @@
             html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { fps: 10, qrbox: { width: 280, height: 280 } },
                 onScanSuccess,
                 onScanError
             ).catch(err => {
@@ -340,11 +488,16 @@
 
         function onScanSuccess(decodedText) {
             if (!currentSession) {
-                alert('Session expirée. Veuillez réactiver depuis l\'Ops Manager.');
+                showError('Session expirée', 'Veuillez réactiver la session depuis l\'Ops Manager.');
                 return;
             }
             console.log('QR Code scanné:', decodedText);
             validateTicket(decodedText);
+        }
+
+        function onScanError(errorMessage) {
+            // Ne rien faire - évite la boucle d'erreur
+            // Le scanner continue à chercher un QR code valide
         }
 
         async function validateTicket(ticketId) {
@@ -356,11 +509,16 @@
             resultDiv.className = 'result-card';
             resultContent.innerHTML = '<div class="loading"><div class="spinner"></div><p>Vérification en cours...</p></div>';
 
+            sessionStats.totalScans++;
+            updateStats();
+
             try {
                 const ticketRef = ref(db, `evenpass/tickets/${ticketId}`);
                 const snapshot = await get(ticketRef);
 
                 if (!snapshot.exists()) {
+                    sessionStats.invalidScans++;
+                    updateStats();
                     showError('Billet invalide', 'Ce billet n\'existe pas dans notre système.');
                     return;
                 }
@@ -368,6 +526,8 @@
                 const ticket = snapshot.val();
 
                 if (ticket.scanned) {
+                    sessionStats.invalidScans++;
+                    updateStats();
                     showError('Billet déjà scanné', `Ce billet a déjà été scanné le ${new Date(ticket.scannedAt).toLocaleString('fr-FR')}`);
                     return;
                 }
@@ -375,10 +535,10 @@
                 await update(ticketRef, {
                     scanned: true,
                     scannedAt: Date.now(),
-                    scannedBy: 'Contrôleur'
+                    scannedBy: controllerId
                 });
 
-                const scanHistoryRef = ref(db, `evenpass/scans/${Date.now()}`);
+                const scanHistoryRef = push(ref(db, 'evenpass/scans'));
                 await update(scanHistoryRef, {
                     ticketId,
                     eventId: currentSession.eventId,
@@ -389,12 +549,22 @@
                     controller: `Agent ${controllerId.substring(0, 8)}`
                 });
 
+                sessionStats.validScans++;
+                updateStats();
                 showSuccess(ticket);
 
             } catch (error) {
                 console.error('Erreur:', error);
+                sessionStats.invalidScans++;
+                updateStats();
                 showError('Erreur de connexion', 'Impossible de vérifier le billet. Veuillez réessayer.');
             }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-scans').textContent = sessionStats.totalScans;
+            document.getElementById('stat-valid').textContent = sessionStats.validScans;
+            document.getElementById('stat-invalid').textContent = sessionStats.invalidScans;
         }
 
         function showSuccess(ticket) {
@@ -421,7 +591,7 @@
                     <span class="info-label">Statut</span>
                     <span class="status-badge status-valid">ACCÈS AUTORISÉ</span>
                 </div>
-                <button class="btn btn-primary" onclick="location.reload()">Scanner un autre billet</button>
+                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">Scanner un autre billet</button>
             `;
         }
 
@@ -433,18 +603,13 @@
             resultDiv.className = 'result-card error';
             resultTitle.innerHTML = '✗ ' + title;
             resultContent.innerHTML = `
-                <p style="margin-bottom: 20px; color: #fca5a5;">${message}</p>
+                <p style="margin-bottom: 20px; color: #fca5a5; font-size: 15px;">${message}</p>
                 <div class="info-row">
                     <span class="info-label">Statut</span>
                     <span class="status-badge status-invalid">ACCÈS REFUSÉ</span>
                 </div>
-                <button class="btn btn-primary" onclick="location.reload()">Scanner un autre billet</button>
+                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">Scanner un autre billet</button>
             `;
-        }
-
-        function onScanError(errorMessage) {
-            // Ne rien faire - les erreurs de scan sont normales quand on pointe vers un objet non-QR
-            // Cela évite la boucle d'erreur et laisse le scanner continuer à chercher un QR valide
         }
 
         if ('serviceWorker' in navigator) {
