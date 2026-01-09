@@ -225,7 +225,9 @@ export default function HomePageNew() {
             <h2 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}>
-              <span className="block animate-fade-in">Gënaa Yomb</span>
+              <span className="block animate-fade-in">Gënaa Wóor</span>
+              <span className="block animate-fade-in" style={{ animationDelay: '0.1s' }}>Gënaa Gaaw</span>
+              <span className="block animate-fade-in" style={{ animationDelay: '0.2s' }}>Gënaa Yomb</span>
             </h2>
 
             <p className={`text-xl sm:text-2xl mb-3 max-w-3xl mx-auto font-medium ${
@@ -742,9 +744,9 @@ export default function HomePageNew() {
                   aria-label="Ops Manager"
                 />
                 <button
-                  onClick={() => navigate('/scan/login')}
+                  onClick={() => window.location.href = 'https://evenpass.sn/controller-login.html'}
                   className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-all hover:scale-125 shadow-lg hover:shadow-red-500/50"
-                  aria-label="EPscan"
+                  aria-label="Controller Login"
                 />
               </div>
             </div>

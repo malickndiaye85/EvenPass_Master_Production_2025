@@ -247,17 +247,17 @@ const PassLandingPage: React.FC = () => {
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate('/pass/boarding')}
+                  onClick={() => navigate('/pass/boarding/login')}
                   className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-all hover:scale-125 shadow-lg hover:shadow-green-500/50"
                   aria-label="Boarding Management"
                 />
                 <button
-                  onClick={() => navigate('/pass/commandant')}
+                  onClick={() => navigate('/pass/commandant/login')}
                   className="w-3 h-3 rounded-full bg-blue-500 hover:bg-blue-400 transition-all hover:scale-125 shadow-lg hover:shadow-blue-500/50"
                   aria-label="Commandant Dashboard"
                 />
                 <button
-                  onClick={() => navigate('/pass/commercial')}
+                  onClick={() => navigate('/pass/commercial/login')}
                   className="w-3 h-3 rounded-full bg-purple-500 hover:bg-purple-400 transition-all hover:scale-125 shadow-lg hover:shadow-purple-500/50"
                   aria-label="Commercial Dashboard"
                 />
