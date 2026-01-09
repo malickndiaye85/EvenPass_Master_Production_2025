@@ -14,7 +14,8 @@ import {
   Scan,
   Database,
   Moon,
-  Sun
+  Sun,
+  Ship
 } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -480,88 +481,85 @@ export default function OpsManagerPageNew() {
 
         <div className={`rounded-[32px] p-8 border mt-8 ${
           isDark
-            ? 'bg-gradient-to-br from-purple-950/40 to-pink-950/40 border-purple-800/40'
-            : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 shadow-lg'
+            ? 'bg-gradient-to-br from-blue-950/40 to-cyan-950/40 border-blue-800/40'
+            : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 shadow-lg'
         }`}>
           <div className="flex items-start gap-4">
             <div className={`p-4 rounded-2xl ${
-              isDark ? 'bg-purple-900/60' : 'bg-purple-100'
+              isDark ? 'bg-blue-900/60' : 'bg-blue-100'
             }`}>
-              <Shield className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+              <Ship className={`w-8 h-8 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
                 <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  EPscan+
+                  Contrôle PASS Maritime
                 </h2>
                 <span className={`px-3 py-1 rounded-full text-xs font-black ${
                   isDark
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                    : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                 } shadow-lg`}>
-                  PREMIUM
+                  EPscan+
                 </span>
               </div>
-              <p className={`text-lg mb-6 ${isDark ? 'text-purple-300/80' : 'text-purple-900'}`}>
-                Version avancée du scanner EPscan avec fonctionnalités premium pour les grands événements
+              <p className={`text-lg mb-6 ${isDark ? 'text-blue-300/80' : 'text-blue-900'}`}>
+                Système de codes personnalisés par contrôleur pour une traçabilité totale sur les navires
               </p>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
                 <div className={`p-4 rounded-xl ${
-                  isDark ? 'bg-purple-900/40' : 'bg-white'
+                  isDark ? 'bg-blue-900/40' : 'bg-white'
                 }`}>
                   <CheckCircle className={`w-5 h-5 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    Mode Hors Ligne
+                    Codes Individuels
                   </h3>
-                  <p className={`text-sm ${isDark ? 'text-purple-300/70' : 'text-purple-800'}`}>
-                    Scan sans connexion internet
+                  <p className={`text-sm ${isDark ? 'text-blue-300/70' : 'text-blue-800'}`}>
+                    Un code unique par contrôleur
                   </p>
                 </div>
 
                 <div className={`p-4 rounded-xl ${
-                  isDark ? 'bg-purple-900/40' : 'bg-white'
+                  isDark ? 'bg-blue-900/40' : 'bg-white'
                 }`}>
                   <CheckCircle className={`w-5 h-5 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    Statistiques Avancées
+                    Traçabilité Totale
                   </h3>
-                  <p className={`text-sm ${isDark ? 'text-purple-300/70' : 'text-purple-800'}`}>
-                    Analytics détaillées en temps réel
+                  <p className={`text-sm ${isDark ? 'text-blue-300/70' : 'text-blue-800'}`}>
+                    Qui, quoi, quand, où
                   </p>
                 </div>
 
                 <div className={`p-4 rounded-xl ${
-                  isDark ? 'bg-purple-900/40' : 'bg-white'
+                  isDark ? 'bg-blue-900/40' : 'bg-white'
                 }`}>
                   <CheckCircle className={`w-5 h-5 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    Multi-Agents
+                    Mode Hors-Ligne
                   </h3>
-                  <p className={`text-sm ${isDark ? 'text-purple-300/70' : 'text-purple-800'}`}>
-                    Gestion coordonnée de plusieurs points d'entrée
+                  <p className={`text-sm ${isDark ? 'text-blue-300/70' : 'text-blue-800'}`}>
+                    Fonctionne sans réseau
                   </p>
                 </div>
               </div>
 
-              <div className={`p-4 rounded-xl flex items-center justify-between ${
-                isDark ? 'bg-purple-900/20' : 'bg-purple-100'
+              <div className={`p-4 rounded-xl ${
+                isDark ? 'bg-blue-900/20' : 'bg-blue-100'
               }`}>
-                <div className="flex items-center gap-2">
-                  <Shield className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                  <span className={`font-bold ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
-                    Accès EPscan+ réservé aux organisateurs premium
-                  </span>
-                </div>
                 <button
-                  className={`px-6 py-2 rounded-xl font-black text-sm transition-all ${
+                  className={`w-full px-6 py-3 rounded-xl font-black text-sm transition-all ${
                     isDark
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
                   } shadow-lg`}
-                  onClick={() => alert('Pour accéder à EPscan+, contactez : contact@evenpass.sn')}
+                  onClick={() => navigate('/admin/ops/maritime')}
                 >
-                  En savoir plus
+                  <div className="flex items-center justify-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    <span>Gérer les Contrôleurs PASS</span>
+                  </div>
                 </button>
               </div>
             </div>
