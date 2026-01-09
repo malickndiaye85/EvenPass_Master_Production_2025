@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Contrôleur - EvenPass</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 2px solid #334155;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 32px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 8px;
+            background: #0f172a;
+            border: 3px solid #334155;
+            border-radius: 16px;
+            color: white;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .code-input:focus {
+            border-color: #F97316;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+        }
+
+        .code-input::placeholder {
+            color: #475569;
+            letter-spacing: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            color: #fca5a5;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .info-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .numeric-hint {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-card">
+            <div class="header">
+                <div class="logo">🎫</div>
+                <h1>Connexion Contrôleur</h1>
+                <p class="subtitle">Entrez votre code d'accès à 6 chiffres</p>
+            </div>
+
+            <div id="error-message" class="error-message"></div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="access-code">Code d'Accès</label>
+                    <input
+                        type="text"
+                        id="access-code"
+                        class="code-input"
+                        placeholder="000000"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="6"
+                        autocomplete="off"
+                        required
+                    />
+                    <p class="numeric-hint">Le code se compose de 6 chiffres</p>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn">
+                    VALIDER
+                </button>
+            </form>
+
+            <p class="info-text">
+                Code fourni par l'Ops Manager
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: window.ENV.FIREBASE_API_KEY,
+            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
+            projectId: window.ENV.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV.FIREBASE_APP_ID
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const codeInput = document.getElementById('access-code');
+        const form = document.getElementById('login-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        // Format code avec espace au milieu (123 456)
+        codeInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) value = value.slice(0, 6);
+
+            if (value.length > 3) {
+                e.target.value = value.slice(0, 3) + ' ' + value.slice(3);
+            } else {
+                e.target.value = value;
+            }
+
+            // Auto-submit quand 6 chiffres
+            if (value.length === 6) {
+                setTimeout(() => form.requestSubmit(), 300);
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rawCode = codeInput.value.replace(/\s/g, '');
+
+            if (rawCode.length !== 6) {
+                showError('Le code doit contenir 6 chiffres');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'VÉRIFICATION...';
+
+            try {
+                // Vérifier dans agent_access_codes (EVEN)
+                const evenCodesRef = collection(db, 'agent_access_codes');
+                const evenQuery = query(evenCodesRef,
+                    where('access_code', '==', rawCode),
+                    where('is_active', '==', true)
+                );
+                const evenSnapshot = await getDocs(evenQuery);
+
+                if (!evenSnapshot.empty) {
+                    const codeData = evenSnapshot.docs[0].data();
+                    sessionStorage.setItem('controller_code', rawCode);
+                    sessionStorage.setItem('controller_id', codeData.agent_id);
+                    sessionStorage.setItem('controller_name', codeData.agent_name);
+                    sessionStorage.setItem('event_id', codeData.event_id);
+                    sessionStorage.setItem('controller_type', 'even');
+                    window.location.href = '/scanner.html';
+                    return;
+                }
+
+                // Vérifier dans maritime_access_codes (PASS)
+                const passCodesRef = collection(db, 'maritime_access_codes');
+                const passQuery = query(passCodesRef,
+                    where('access_code', '==', rawCode),
+                    where('is_active', '==', true)
+                );
+                const passSnapshot = await getDocs(passQuery);
+
+                if (!passSnapshot.empty) {
+                    const codeData = passSnapshot.docs[0].data();
+                    sessionStorage.setItem('controller_code', rawCode);
+                    sessionStorage.setItem('controller_id', codeData.controller_id);
+                    sessionStorage.setItem('controller_name', codeData.controller_name);
+                    sessionStorage.setItem('vessel_id', codeData.vessel_id);
+                    sessionStorage.setItem('controller_type', 'pass');
+                    window.location.href = '/epscan-plus.html';
+                    return;
+                }
+
+                showError('Code invalide ou inactif');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Erreur de connexion. Réessayez.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'VALIDER';
+            }
+        });
+
+        // Focus automatique
+        codeInput.focus();
+    </script>
+</body>
+</html>

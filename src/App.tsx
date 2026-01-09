@@ -32,6 +32,10 @@ import SecurityManifestPage from './pages/SecurityManifestPage';
 import CommandantDashboard from './pages/CommandantDashboard';
 import BoardingDashboard from './pages/BoardingDashboard';
 import CommercialDashboard from './pages/CommercialDashboard';
+import BoardingLoginPage from './pages/pass/BoardingLoginPage';
+import CommandantLoginPage from './pages/pass/CommandantLoginPage';
+import CommercialLoginPage from './pages/pass/CommercialLoginPage';
+import OpsMaritimeManagementPage from './pages/OpsMaritimeManagementPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -95,6 +99,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/ops/maritime"
+        element={
+          <ProtectedRoute>
+            <OpsMaritimeManagementPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
 
@@ -109,6 +121,10 @@ function AppRoutes() {
 
       <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />
+
+      <Route path="/pass/boarding/login" element={<BoardingLoginPage />} />
+      <Route path="/pass/commandant/login" element={<CommandantLoginPage />} />
+      <Route path="/pass/commercial/login" element={<CommercialLoginPage />} />
 
       <Route path="/pass/commandant" element={
         <ProtectedRoute>
