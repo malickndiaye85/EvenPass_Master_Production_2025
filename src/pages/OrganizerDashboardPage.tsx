@@ -515,6 +515,107 @@ export default function OrganizerDashboardPage() {
           </div>
         </div>
 
+        <div className={`rounded-[32px] p-6 border mb-8 ${
+          isDark
+            ? 'bg-gradient-to-br from-indigo-950/40 to-purple-950/40 border-indigo-800/40'
+            : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-lg'
+        }`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`p-3 rounded-xl ${
+              isDark ? 'bg-indigo-800/40' : 'bg-indigo-100'
+            }`}>
+              <CheckCircle className={`w-6 h-6 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+            </div>
+            <div>
+              <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Aperçu Scans Entrée
+              </h2>
+              <p className={`text-sm font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
+                Suivi en temps réel des validations d'accès
+              </p>
+            </div>
+          </div>
+
+          {events.filter(e => e.status === 'published').length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-indigo-400/40' : 'text-indigo-300'}`} />
+              <p className={`font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
+                Aucun événement actif pour le moment
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {events.filter(e => e.status === 'published').map(event => {
+                const stats = eventStats[event.id];
+                const scanRate = stats && stats.totalTickets > 0
+                  ? Math.round((stats.soldTickets / stats.totalTickets) * 100)
+                  : 0;
+
+                return (
+                  <div
+                    key={event.id}
+                    className={`p-4 rounded-2xl border transition-all ${
+                      isDark
+                        ? 'bg-indigo-900/20 border-indigo-800/40 hover:bg-indigo-900/30'
+                        : 'bg-white border-indigo-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {event.title}
+                      </h3>
+                      <div className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                        isDark ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-700'
+                      }`}>
+                        Actif
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className={`text-xs font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
+                          Billets vendus
+                        </span>
+                        <span className={`text-lg font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                          {stats?.soldTickets || 0}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className={`text-xs font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
+                          Total billets
+                        </span>
+                        <span className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          {stats?.totalTickets || 0}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t ${isDark ? 'border-indigo-800/40' : 'border-indigo-200'}">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`text-xs font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                            Taux de vente
+                          </span>
+                          <span className={`text-sm font-black ${isDark ? 'text-indigo-400' : 'text-indigo-700'}`}>
+                            {scanRate}%
+                          </span>
+                        </div>
+                        <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-100'}`}>
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              isDark ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-gradient-to-r from-indigo-600 to-purple-600'
+                            }`}
+                            style={{ width: `${scanRate}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className={`rounded-[32px] p-6 border ${

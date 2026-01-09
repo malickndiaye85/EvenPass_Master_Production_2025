@@ -223,11 +223,17 @@ export default function HomePageNew() {
             </div>
 
             <h2 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] ${
-              isDark
-                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
-                : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
+              isDark ? 'text-white' : 'text-slate-900'
             }`}>
               <span className="block animate-fade-in">Gënaa Yomb</span>
+              <span className={`block animate-fade-in animation-delay-200 ${
+                isDark
+                  ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
+                  : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
+              }`}>
+                Gënaa Wóor
+              </span>
+              <span className="block animate-fade-in animation-delay-400">Gënaa Gaaw</span>
             </h2>
 
             <p className={`text-xl sm:text-2xl mb-3 max-w-3xl mx-auto font-medium ${
@@ -687,22 +693,12 @@ export default function HomePageNew() {
                 </li>
                 <li>
                   <button
-                    onClick={() => navigate('/organizer/dashboard')}
+                    onClick={() => navigate('/organizer/login')}
                     className={`transition-colors ${
                       isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
                     }`}
                   >
                     Organisateur
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => navigate('/scan')}
-                    className={`transition-colors ${
-                      isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
-                    }`}
-                  >
-                    Scanner
                   </button>
                 </li>
               </ul>
@@ -715,6 +711,7 @@ export default function HomePageNew() {
               <ul className="space-y-3 text-sm">
                 <li>
                   <button
+                    onClick={() => navigate('/help')}
                     className={`transition-colors ${
                       isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
                     }`}
@@ -724,6 +721,7 @@ export default function HomePageNew() {
                 </li>
                 <li>
                   <button
+                    onClick={() => navigate('/terms')}
                     className={`transition-colors ${
                       isDark ? 'text-amber-300/60 hover:text-amber-400' : 'text-slate-600 hover:text-orange-500'
                     }`}

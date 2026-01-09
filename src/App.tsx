@@ -7,6 +7,8 @@ import SuccessPage from './pages/SuccessPage';
 import ErrorPage from './pages/ErrorPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import ForOrganizersPage from './pages/ForOrganizersPage';
+import HelpPage from './pages/HelpPage';
+import TermsPage from './pages/TermsPage';
 import OrganizerDashboardPage from './pages/OrganizerDashboardPage';
 import OrganizerSignupPage from './pages/OrganizerSignupPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
@@ -59,6 +61,8 @@ function AppRoutes() {
       <Route path="/error" element={<ErrorPage />} />
       <Route path="/how-it-works" element={<HowItWorksPage />} />
       <Route path="/for-organizers" element={<ForOrganizersPage />} />
+      <Route path="/help" element={<HelpPage />} />
+      <Route path="/terms" element={<TermsPage />} />
 
       <Route path="/organizer/signup" element={<OrganizerSignupPage />} />
       <Route path="/organizer/login" element={<OrganizerLoginPage />} />

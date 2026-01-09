@@ -31,12 +31,27 @@ export default function CreateEventModal({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    category: 'concerts',
     start_date: '',
+    end_date: '',
     venue_name: '',
     venue_city: '',
     event_image: null as File | null,
     total_capacity: 0,
   });
+
+  const eventCategories = [
+    'Concerts',
+    'Lutte Sénégalaise',
+    'Sport',
+    'Conférence',
+    'Culture',
+    'Théâtre',
+    'Soirée',
+    'Festival',
+    'Art',
+    'Autres'
+  ];
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
     { name: 'Standard', price: 5000, quantity: 100 },
@@ -111,7 +126,9 @@ export default function CreateEventModal({
       const eventData: any = {
         title: formData.title || 'Sans titre',
         description: formData.description || '',
+        category: formData.category || 'concerts',
         start_date: formData.start_date || new Date().toISOString(),
+        end_date: formData.end_date || formData.start_date || new Date().toISOString(),
         venue_name: formData.venue_name || '',
         venue_city: formData.venue_city || '',
         organizer_id: organizerData.id,
@@ -301,7 +318,32 @@ export default function CreateEventModal({
               <label className={`block text-sm font-bold mb-2 ${
                 isDark ? 'text-amber-300' : 'text-slate-700'
               }`}>
-                Date et heure
+                Catégorie
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                  isDark
+                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
+                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
+                } focus:outline-none`}
+                required
+                disabled={processing}
+              >
+                {eventCategories.map(cat => (
+                  <option key={cat} value={cat.toLowerCase()}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-bold mb-2 ${
+                isDark ? 'text-amber-300' : 'text-slate-700'
+              }`}>
+                Date et heure de début
               </label>
               <input
                 type="datetime-local"
@@ -313,6 +355,26 @@ export default function CreateEventModal({
                     : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
                 } focus:outline-none`}
                 required
+                disabled={processing}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-bold mb-2 ${
+                isDark ? 'text-amber-300' : 'text-slate-700'
+              }`}>
+                Date et heure de fin
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                  isDark
+                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
+                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
+                } focus:outline-none`}
+                placeholder="Optionnel - pour événements longue durée"
                 disabled={processing}
               />
             </div>

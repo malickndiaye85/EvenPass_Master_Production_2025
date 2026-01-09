@@ -304,6 +304,113 @@ export default function ForOrganizersPage() {
             </div>
           </div>
 
+          <div className={`rounded-[48px] p-12 mb-16 border-2 ${
+            isDark ? 'bg-gradient-to-br from-blue-950/40 to-cyan-950/40 border-blue-800/40' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 shadow-lg'
+          }`}>
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-12">
+                <div className={`inline-flex items-center gap-2 px-6 py-3 rounded-full mb-6 ${
+                  isDark ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  <Shield className="w-5 h-5" />
+                  <span className="font-black text-sm">TECHNOLOGIE INCLUSE</span>
+                </div>
+                <h2 className={`text-4xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Contrôle d'Accès Inclus
+                </h2>
+                <p className={`text-xl ${isDark ? 'text-blue-300/80' : 'text-blue-900'}`}>
+                  Nous fournissons la technologie EPscan pour garantir la sécurité des entrées et chaque scan est synchronisé en temps réel avec votre dashboard.
+                </p>
+              </div>
+
+              <div className={`rounded-3xl p-8 mb-8 border-2 ${
+                isDark ? 'bg-gradient-to-br from-indigo-950/60 to-purple-950/60 border-indigo-800/40' : 'bg-white border-indigo-200'
+              }`}>
+                <div className="flex items-start gap-4 mb-6">
+                  <div className={`p-3 rounded-xl ${
+                    isDark ? 'bg-indigo-900/60' : 'bg-indigo-100'
+                  }`}>
+                    <Users className={`w-6 h-6 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-2xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      L'Offre "Contrôle Total" (EPscan + Personnel)
+                    </h3>
+                    <p className={`text-lg font-medium ${isDark ? 'text-indigo-300/80' : 'text-indigo-900'}`}>
+                      Pour vos événements d'envergure, nous fournissons la solution complète : technologie et expertise humaine.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className={`rounded-2xl p-6 ${
+                    isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                      <h4 className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Agents Certifiés
+                      </h4>
+                    </div>
+                    <p className={`text-sm ${isDark ? 'text-indigo-300/70' : 'text-indigo-800'}`}>
+                      Pour les événements à forte affluence, nous mettons à votre disposition des agents d'accueil formés à l'utilisation intensive de l'application EPscan.
+                    </p>
+                  </div>
+
+                  <div className={`rounded-2xl p-6 ${
+                    isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                      <h4 className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Gestion des Flux
+                      </h4>
+                    </div>
+                    <p className={`text-sm ${isDark ? 'text-indigo-300/70' : 'text-indigo-800'}`}>
+                      Nos agents maîtrisent les protocoles de validation rapide pour éviter les files d'attente interminables et garantir une entrée fluide à vos spectateurs.
+                    </p>
+                  </div>
+
+                  <div className={`rounded-2xl p-6 ${
+                    isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                      <h4 className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Coordination Terrain
+                      </h4>
+                    </div>
+                    <p className={`text-sm ${isDark ? 'text-indigo-300/70' : 'text-indigo-800'}`}>
+                      Un superviseur EvenPass assure la liaison entre les terminaux de scan et votre Dashboard organisateur pour une surveillance en temps réel.
+                    </p>
+                  </div>
+
+                  <div className={`rounded-2xl p-6 ${
+                    isDark ? 'bg-indigo-900/40' : 'bg-indigo-50'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                      <h4 className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Zéro Stress Logistique
+                      </h4>
+                    </div>
+                    <p className={`text-sm ${isDark ? 'text-indigo-300/70' : 'text-indigo-800'}`}>
+                      Vous vous concentrez sur le spectacle, nous nous occupons de l'étanchéité de vos accès et de la validité de chaque billet.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`text-center p-6 rounded-2xl ${
+                isDark ? 'bg-blue-900/20' : 'bg-blue-100'
+              }`}>
+                <p className={`font-bold ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>
+                  💡 Contactez-nous pour un devis personnalisé selon la taille de votre événement
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className={`rounded-[48px] p-12 text-center border-2 ${
             isDark ? 'bg-gradient-to-br from-amber-600/20 to-orange-600/20 border-amber-600/40' : 'bg-gradient-to-br from-orange-500 to-pink-500 border-transparent shadow-2xl'
           }`}>
