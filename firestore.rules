@@ -269,6 +269,67 @@ service cloud.firestore {
     }
 
     // ============================================
+    // AGENT ACCESS CODES COLLECTION (EPscan)
+    // ============================================
+    match /agent_access_codes/{codeId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Admin Finance : Accès total
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // AGENT SCANS COLLECTION (EPscan)
+    // ============================================
+    match /agent_scans/{scanId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Création par tous les authentifiés (agents qui scannent)
+      allow create: if isAuthenticated();
+
+      // Admin Finance : Accès total
+      allow update, delete: if isAdminFinance();
+    }
+
+    // ============================================
+    // MARITIME USERS COLLECTION (Pass)
+    // ============================================
+    match /maritime_users/{userId} {
+      // Admin Finance et utilisateurs authentifiés : Lecture
+      allow read: if isAuthenticated();
+
+      // Admin Finance : Création, modification et suppression
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // MARITIME SUBSCRIPTIONS COLLECTION (Pass)
+    // ============================================
+    match /maritime_subscriptions/{subId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Admin Finance : Accès total
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // MARITIME BOOKINGS COLLECTION (Pass)
+    // ============================================
+    match /maritime_bookings/{bookingId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Création pour tous les authentifiés
+      allow create: if isAuthenticated();
+
+      // Admin Finance : Accès total
+      allow update, delete: if isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut

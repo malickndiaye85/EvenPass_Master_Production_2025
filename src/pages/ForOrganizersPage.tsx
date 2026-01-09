@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import Footer from '../components/Footer';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function ForOrganizersPage() {
   const navigate = useNavigate();
@@ -105,26 +106,30 @@ export default function ForOrganizersPage() {
               onClick={() => navigate('/')}
               className="flex items-center space-x-3 group"
             >
-              <div className="relative">
-                <div className={`absolute -inset-0.5 rounded-2xl blur opacity-70 group-hover:opacity-100 transition ${
-                  isDark ? 'bg-gradient-to-r from-amber-600 to-orange-600' : 'bg-gradient-to-r from-orange-400 to-pink-500'
-                }`}></div>
-                <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isDark ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700' : 'bg-gradient-to-br from-orange-400 via-red-500 to-pink-500'
-                }`}>
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className={`text-2xl font-black tracking-tight ${
-                  isDark ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
-                }`}>
-                  EvenPass
-                </h1>
-              </div>
+              <DynamicLogo size="md" />
             </button>
 
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/how-it-works')}
+                className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                  isDark
+                    ? 'bg-blue-900/40 hover:bg-blue-800/60 text-blue-400 border border-blue-800/40'
+                    : 'bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200'
+                }`}
+              >
+                Comment ça marche
+              </button>
+              <button
+                onClick={() => navigate('/for-organizers')}
+                className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                  isDark
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-black'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white'
+                }`}
+              >
+                Pour les organisateurs
+              </button>
               <button
                 onClick={toggleTheme}
                 className={`p-3 rounded-2xl transition-all duration-300 ${

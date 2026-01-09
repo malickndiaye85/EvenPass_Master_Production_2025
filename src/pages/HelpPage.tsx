@@ -108,7 +108,7 @@ export default function HelpPage() {
                 </a>
 
                 <a
-                  href="tel:+221338234567"
+                  href="tel:+221771392926"
                   className={`p-6 rounded-xl text-center transition-all ${
                     isDark
                       ? 'bg-slate-700 hover:bg-slate-600'
@@ -118,12 +118,12 @@ export default function HelpPage() {
                   <Phone className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-amber-400' : 'text-orange-500'}`} />
                   <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Téléphone</h3>
                   <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    +221 33 823 45 67
+                    +221 77 139 29 26
                   </p>
                 </a>
 
                 <a
-                  href="https://wa.me/221776543210"
+                  href="https://wa.me/221771392926"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`p-6 rounded-xl text-center transition-all ${
@@ -135,7 +135,7 @@ export default function HelpPage() {
                   <MessageCircle className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-amber-400' : 'text-orange-500'}`} />
                   <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>WhatsApp</h3>
                   <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    +221 77 654 32 10
+                    +221 77 139 29 26
                   </p>
                 </a>
               </div>
