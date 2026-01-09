@@ -730,6 +730,23 @@ export default function HomePageNew() {
               <p className={`text-sm ${isDark ? 'text-amber-500/40' : 'text-slate-500'}`}>
                 &copy; 2025 EvenPass. Tous droits réservés.
               </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/admin/finance/login')}
+                  className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-all hover:scale-125 shadow-lg hover:shadow-green-500/50"
+                  aria-label="Admin Finance"
+                />
+                <button
+                  onClick={() => navigate('/admin/ops/login')}
+                  className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-all hover:scale-125 shadow-lg hover:shadow-yellow-500/50"
+                  aria-label="Ops Manager"
+                />
+                <button
+                  onClick={() => navigate('/scan/login')}
+                  className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-all hover:scale-125 shadow-lg hover:shadow-red-500/50"
+                  aria-label="EPscan"
+                />
+              </div>
             </div>
           </div>
         </div>
