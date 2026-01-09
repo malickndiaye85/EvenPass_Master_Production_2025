@@ -350,19 +350,19 @@ const PassServicesPage: React.FC = () => {
               </button>
               <div className="flex items-center gap-2">
                 <button
-                  className="w-3 h-3 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors shadow-lg"
-                  title="Admin Finance"
-                  onClick={() => navigate('/admin/finance/login')}
+                  className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-all hover:scale-125 shadow-lg hover:shadow-green-500/50"
+                  title="Boarding Management"
+                  onClick={() => navigate('/pass/boarding/login')}
                 ></button>
                 <button
-                  className="w-3 h-3 rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-lg"
-                  title="Admin Ops"
-                  onClick={() => navigate('/admin/ops/login')}
+                  className="w-3 h-3 rounded-full bg-blue-500 hover:bg-blue-400 transition-all hover:scale-125 shadow-lg hover:shadow-blue-500/50"
+                  title="Commandant Dashboard"
+                  onClick={() => navigate('/pass/commandant/login')}
                 ></button>
                 <button
-                  className="w-3 h-3 rounded-full bg-cyan-500 hover:bg-cyan-600 transition-colors shadow-lg"
-                  title="EPscan"
-                  onClick={() => navigate('/scan/login')}
+                  className="w-3 h-3 rounded-full bg-purple-500 hover:bg-purple-400 transition-all hover:scale-125 shadow-lg hover:shadow-purple-500/50"
+                  title="Commercial Dashboard"
+                  onClick={() => navigate('/pass/commercial/login')}
                 ></button>
               </div>
             </div>

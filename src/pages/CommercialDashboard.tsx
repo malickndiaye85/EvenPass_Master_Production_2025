@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ship, TrendingUp, DollarSign, Users, LogOut, Calendar } from 'lucide-react';
+import { Ship, TrendingUp, DollarSign, Users, LogOut, Calendar, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getVoyageStats, getMaritimeUser, VESSELS } from '../lib/maritimeData';
@@ -10,7 +10,7 @@ import DynamicLogo from '../components/DynamicLogo';
 export default function CommercialDashboard() {
   const navigate = useNavigate();
   const { firebaseUser, logout } = useAuth();
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState('all');
@@ -112,13 +112,25 @@ export default function CommercialDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <DynamicLogo />
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Déconnexion
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className={`p-3 rounded-xl transition-all ${
+                  isDark
+                    ? 'bg-yellow-900/20 hover:bg-yellow-900/40 text-yellow-400'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </nav>
