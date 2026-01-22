@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FirebaseAuthProvider, useAuth } from './context/FirebaseAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import ThemeWrapper from './components/ThemeWrapper';
+import DemDemLandingPage from './pages/DemDemLandingPage';
 import HomePageNew from './pages/HomePageNew';
 import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
@@ -58,9 +60,25 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<PassLandingPage />} />
-      <Route path="/even" element={<HomePageNew />} />
-      <Route path="/event/:slug" element={<EventDetailPage />} />
+      <Route path="/" element={<DemDemLandingPage />} />
+
+      <Route path="/evenement" element={
+        <ThemeWrapper mode="event">
+          <HomePageNew />
+        </ThemeWrapper>
+      } />
+      <Route path="/event/:slug" element={
+        <ThemeWrapper mode="event">
+          <EventDetailPage />
+        </ThemeWrapper>
+      } />
+
+      <Route path="/voyage" element={
+        <ThemeWrapper mode="transport">
+          <PassLandingPage />
+        </ThemeWrapper>
+      } />
+
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
       <Route path="/how-it-works" element={<HowItWorksPage />} />
@@ -110,14 +128,46 @@ function AppRoutes() {
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
 
-      <Route path="/pass/services" element={<PassServicesPage />} />
-      <Route path="/pass/lmdg" element={<LMDGBookingPage />} />
-      <Route path="/pass/cosama" element={<COSAMABookingPage />} />
-      <Route path="/pass/interregional" element={<InterregionalBookingPage />} />
-      <Route path="/pass/subscriptions" element={<SubscriptionPage />} />
-      <Route path="/pass/wallet" element={<WalletPage />} />
-      <Route path="/payment/success" element={<PaymentSuccessPage />} />
-      <Route path="/payment/error" element={<PaymentErrorPage />} />
+      <Route path="/pass/services" element={
+        <ThemeWrapper mode="transport">
+          <PassServicesPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/pass/lmdg" element={
+        <ThemeWrapper mode="transport">
+          <LMDGBookingPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/pass/cosama" element={
+        <ThemeWrapper mode="transport">
+          <COSAMABookingPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/pass/interregional" element={
+        <ThemeWrapper mode="transport">
+          <InterregionalBookingPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/pass/subscriptions" element={
+        <ThemeWrapper mode="transport">
+          <SubscriptionPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/pass/wallet" element={
+        <ThemeWrapper mode="transport">
+          <WalletPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/payment/success" element={
+        <ThemeWrapper mode="transport">
+          <PaymentSuccessPage />
+        </ThemeWrapper>
+      } />
+      <Route path="/payment/error" element={
+        <ThemeWrapper mode="transport">
+          <PaymentErrorPage />
+        </ThemeWrapper>
+      } />
 
       <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />
@@ -127,19 +177,25 @@ function AppRoutes() {
       <Route path="/pass/commercial/login" element={<CommercialLoginPage />} />
 
       <Route path="/pass/commandant" element={
-        <ProtectedRoute>
-          <CommandantDashboard />
-        </ProtectedRoute>
+        <ThemeWrapper mode="transport">
+          <ProtectedRoute>
+            <CommandantDashboard />
+          </ProtectedRoute>
+        </ThemeWrapper>
       } />
       <Route path="/pass/boarding" element={
-        <ProtectedRoute>
-          <BoardingDashboard />
-        </ProtectedRoute>
+        <ThemeWrapper mode="transport">
+          <ProtectedRoute>
+            <BoardingDashboard />
+          </ProtectedRoute>
+        </ThemeWrapper>
       } />
       <Route path="/pass/commercial" element={
-        <ProtectedRoute>
-          <CommercialDashboard />
-        </ProtectedRoute>
+        <ThemeWrapper mode="transport">
+          <ProtectedRoute>
+            <CommercialDashboard />
+          </ProtectedRoute>
+        </ThemeWrapper>
       } />
 
       <Route path="*" element={<Navigate to="/" replace />} />

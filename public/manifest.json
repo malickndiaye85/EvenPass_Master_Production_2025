@@ -1,30 +1,30 @@
 {
-  "name": "EvenPass - Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw",
-  "short_name": "EvenPass",
-  "description": "Billetterie événements et transport au Sénégal. Votre Pass pour tout !",
+  "name": "DemDem - Sortir & Bouger au Sénégal",
+  "short_name": "DemDem",
+  "description": "La Super-App sénégalaise : événements, transport, covoiturage. Une seule app pour tout ! 🇸🇳",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F0F0F",
-  "theme_color": "#FF7A00",
+  "background_color": "#0A192F",
+  "theme_color": "#10B981",
   "orientation": "portrait",
   "scope": "/",
   "lang": "fr-SN",
   "dir": "ltr",
   "icons": [
     {
-      "src": "/evenpass-icon-512.png",
+      "src": "/assets/demdem-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/evenpass-icon-512.png",
+      "src": "/assets/demdem-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evenpass-icon-512.png",
+      "src": "/assets/demdem-icon-512.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
