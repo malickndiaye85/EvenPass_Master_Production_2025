@@ -27,14 +27,10 @@ export default function Logo({ size = 'md', showText = true, className = '', for
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       <img
-        src="/assets/demdem-logo.svg"
+        src="/assets/logo.png"
         alt="DemDem"
         className={`${sizeClasses.height} w-auto object-contain transition-all duration-300`}
         style={{ filter: logoFilter }}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.src = '/assets/demdem-logo.png';
-        }}
       />
       {showText && (
         <div className={`${sizeClasses.text} font-black tracking-tight leading-none`}>

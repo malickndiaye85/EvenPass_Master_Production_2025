@@ -34,7 +34,7 @@ export default function DemDemLandingPage() {
             </div>
 
             <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
-              SORTIR
+              DEM ÉVÉNEMENT
             </h2>
 
             <p className="text-lg md:text-xl text-gray-300 mb-8 text-center px-6 max-w-md">
@@ -67,7 +67,7 @@ export default function DemDemLandingPage() {
             </div>
 
             <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
-              BOUGER
+              DEM VOYAGE
             </h2>
 
             <p className="text-lg md:text-xl text-gray-300 mb-8 text-center px-6 max-w-md">

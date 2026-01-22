@@ -38,6 +38,10 @@ import BoardingLoginPage from './pages/pass/BoardingLoginPage';
 import CommandantLoginPage from './pages/pass/CommandantLoginPage';
 import CommercialLoginPage from './pages/pass/CommercialLoginPage';
 import OpsMaritimeManagementPage from './pages/OpsMaritimeManagementPage';
+import DemDemExpressPage from './pages/transport/DemDemExpressPage';
+import AlloDakarPage from './pages/transport/AlloDakarPage';
+import TransportHubPage from './pages/transport/TransportHubPage';
+import AdminTransportSetupPage from './pages/AdminTransportSetupPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -75,7 +79,19 @@ function AppRoutes() {
 
       <Route path="/voyage" element={
         <ThemeWrapper mode="transport">
-          <PassLandingPage />
+          <TransportHubPage />
+        </ThemeWrapper>
+      } />
+
+      <Route path="/transport/demdem-express" element={
+        <ThemeWrapper mode="transport">
+          <DemDemExpressPage />
+        </ThemeWrapper>
+      } />
+
+      <Route path="/transport/allo-dakar" element={
+        <ThemeWrapper mode="transport">
+          <AlloDakarPage />
         </ThemeWrapper>
       } />
 
@@ -125,6 +141,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/admin/transport/setup" element={<AdminTransportSetupPage />} />
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
 
