@@ -3,8 +3,45 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* ===== PALETTE DEM ÉVÉNEMENT ===== */
+    --event-primary: #FF6B00;
+    --event-secondary: #1A1A1A;
+    --event-bg: #FFFFFF;
+    --event-accent: #FF8C42;
+    --event-muted: #6B7280;
+
+    /* ===== PALETTE DEM VOYAGE ===== */
+    --voyage-primary: #0A1628;
+    --voyage-secondary: #10B981;
+    --voyage-bg: #F8FAFC;
+    --voyage-accent: #0EA5E9;
+    --voyage-muted: #64748B;
+
+    /* ===== TYPOGRAPHIE ===== */
+    --font-primary: 'Inter', -apple-system, sans-serif;
+    --font-display: 'Poppins', sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-2xl: 32px;
+    --font-size-3xl: 48px;
+
+    /* ===== ESPACEMENTS (Multiple de 4) ===== */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+  }
+
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-primary);
   }
 }
 

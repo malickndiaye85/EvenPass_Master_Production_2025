@@ -82,6 +82,9 @@ export default function OrganizerDashboardPage() {
     description: '',
   });
 
+  const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'past'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
       logout();
@@ -314,54 +317,34 @@ export default function OrganizerDashboardPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      isDark ? 'bg-[#050505]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
-    }`}>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isDark ? 'bg-black/40' : 'bg-white/40'
-      } backdrop-blur-xl border-b ${isDark ? 'border-amber-900/20' : 'border-slate-200/60'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-5">
+    <div className={`min-h-screen ${isDark ? 'bg-[#1a1a1a]' : 'bg-[#F9FAFB]'}`}>
+      {/* Header */}
+      <header className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-white'} border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} sticky top-0 z-50`}>
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-2xl ${
-                isDark ? 'bg-gradient-to-br from-amber-600 to-orange-600' : 'bg-gradient-to-br from-orange-500 to-pink-500'
-              }`}>
-                <LayoutDashboard className="w-7 h-7 text-white" />
-              </div>
+              <DynamicLogo size="sm" />
               <div>
-                <h1 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  Dashboard Organisateur
+                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Bonjour, {organizerData?.organization_name || organizerData?.contact_name || 'Organisateur'}
                 </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <Users className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-slate-500'}`} />
-                  <p className={`text-sm font-bold ${isDark ? 'text-amber-400' : 'text-slate-700'}`}>
-                    {organizerData?.contact_name || 'Organisateur'}
-                  </p>
-                  <span className={`text-sm ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>•</span>
-                  <p className={`text-sm font-medium ${isDark ? 'text-amber-400/80' : 'text-slate-600'}`}>
-                    {organizerData?.organization_name || 'Structure'}
-                  </p>
-                </div>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Gérez vos événements et suivez vos performances
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowCreateEventModal(true)}
-                className={`px-5 py-3 rounded-xl transition-all duration-300 font-black text-sm flex items-center gap-2 shadow-lg ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
-                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
-                }`}
+                className="px-4 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
               >
-                <Plus className="w-5 h-5" />
-                Créer événement
+                <Plus className="w-4 h-4" />
+                Créer un événement
               </button>
               <button
                 onClick={toggleTheme}
-                className={`p-3 rounded-xl transition-all duration-300 ${
-                  isDark
-                    ? 'bg-yellow-900/20 hover:bg-yellow-900/40 text-yellow-400'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                className={`p-2.5 rounded-lg transition-colors ${
+                  isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                 }`}
                 title={isDark ? 'Mode clair' : 'Mode sombre'}
               >
@@ -369,183 +352,129 @@ export default function OrganizerDashboardPage() {
               </button>
               <button
                 onClick={handleLogout}
-                className={`px-5 py-3 rounded-xl transition-all duration-300 font-bold text-sm flex items-center gap-2 ${
-                  isDark
-                    ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
-                    : 'bg-red-50 hover:bg-red-100 text-red-600'
+                className={`p-2.5 rounded-lg transition-colors ${
+                  isDark ? 'bg-red-900/20 hover:bg-red-900/30 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
                 }`}
+                title="Déconnexion"
               >
                 <LogOut className="w-5 h-5" />
-                Déconnexion
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* KPIs Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className={`rounded-[24px] p-6 border ${
-            isDark
-              ? 'bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-800/40'
-              : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${
-                isDark ? 'bg-green-800/40' : 'bg-green-100'
-              }`}>
-                <TrendingUp className={`w-6 h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+          {/* Revenue Card */}
+          <div className={`relative rounded-xl overflow-hidden ${
+            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+          } shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6B00]"></div>
+            <div className="p-5 pl-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">💰</span>
+                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  REVENUS
+                </span>
               </div>
-              <span className={`text-xs font-bold ${isDark ? 'text-green-400/80' : 'text-green-700'}`}>
-                REVENUS
-              </span>
-            </div>
-            <p className={`text-3xl font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {totalRevenue.toLocaleString()} F
-            </p>
-            <p className={`text-sm font-medium ${isDark ? 'text-green-400/60' : 'text-green-600'}`}>
-              Ventes confirmées
-            </p>
-          </div>
-
-          <div className={`rounded-[24px] p-6 border ${
-            isDark
-              ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-800/40'
-              : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${
-                isDark ? 'bg-blue-800/40' : 'bg-blue-100'
-              }`}>
-                <Ticket className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              <div className={`text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {totalRevenue.toLocaleString()} F
               </div>
-              <span className={`text-xs font-bold ${isDark ? 'text-blue-400/80' : 'text-blue-700'}`}>
-                BILLETS
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-blue-400/60' : 'text-blue-600'}`}>
-                  Vendus
-                </p>
-                <p className={`text-2xl font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                  {totalTicketsSold}
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-sm font-semibold">+15% ↑</span>
               </div>
-              <div>
-                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-blue-400/60' : 'text-blue-600'}`}>
-                  Restants
-                </p>
-                <p className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
-                  {events.reduce((sum, e) => sum + (eventStats[e.id]?.remainingTickets || 0), 0)}
-                </p>
+              <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Confirmés
               </div>
             </div>
           </div>
 
-          <div className={`rounded-[24px] p-6 border ${
-            isDark
-              ? 'bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-800/40'
-              : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${
-                isDark ? 'bg-purple-800/40' : 'bg-purple-100'
-              }`}>
-                <DollarSign className={`w-6 h-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+          {/* Tickets Card */}
+          <div className={`relative rounded-xl overflow-hidden ${
+            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+          } shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6B00]"></div>
+            <div className="p-5 pl-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🎫</span>
+                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  BILLETS
+                </span>
               </div>
-              <span className={`text-xs font-bold ${isDark ? 'text-purple-400/80' : 'text-purple-700'}`}>
-                FRAIS
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
-                  Frais Mobile Money
-                </p>
-                <p className={`text-lg font-black ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                  {mobileMoneyFees.toLocaleString()} F
-                </p>
-                <p className={`text-xs ${isDark ? 'text-purple-400/40' : 'text-purple-500'}`}>
-                  1,5%
-                </p>
+              <div className={`text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {totalTicketsSold}
               </div>
-              <div>
-                <p className={`text-xs font-medium mb-1 ${isDark ? 'text-purple-400/60' : 'text-purple-600'}`}>
-                  Commission EvenPass
-                </p>
-                <p className={`text-lg font-black ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                  {platformCommission.toLocaleString()} F
-                </p>
-                <p className={`text-xs ${isDark ? 'text-purple-400/40' : 'text-purple-500'}`}>
-                  5%
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-sm font-semibold">Vendus</span>
+              </div>
+              <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {events.reduce((sum, e) => sum + (eventStats[e.id]?.remainingTickets || 0), 0)} restants
               </div>
             </div>
           </div>
 
-          <div className={`rounded-[24px] p-6 border ${
-            isDark
-              ? 'bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-800/40'
-              : 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${
-                isDark ? 'bg-orange-800/40' : 'bg-orange-100'
-              }`}>
-                <Package className={`w-6 h-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+          {/* Payments Card */}
+          <div className={`relative rounded-xl overflow-hidden ${
+            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+          } shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6B00]"></div>
+            <div className="p-5 pl-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">💳</span>
+                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  PAIEMENTS
+                </span>
               </div>
-              <span className={`text-xs font-bold ${isDark ? 'text-orange-400/80' : 'text-orange-700'}`}>
-                BLOC DE BILLET
-              </span>
+              <div className={`text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {payouts.filter(p => p.status === 'completed').length}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-sm font-semibold">Complétés</span>
+              </div>
+              <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {payouts.filter(p => p.status === 'pending').length} en attente
+              </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <p className={`text-xs font-medium ${isDark ? 'text-orange-400/60' : 'text-orange-600'}`}>
-                  Restants
-                </p>
-                <p className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {bulkStock}
-                </p>
+          </div>
+
+          {/* Scans Card */}
+          <div className={`relative rounded-xl overflow-hidden ${
+            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+          } shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6B00]"></div>
+            <div className="p-5 pl-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📊</span>
+                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  SCANS
+                </span>
               </div>
-              <p className={`text-xs font-medium ${isDark ? 'text-orange-400/40' : 'text-orange-500'}`}>
-                Générés par Admin Finance
-              </p>
+              <div className={`text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {totalTicketsSold}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-500 text-sm font-semibold">Billets actifs</span>
+              </div>
+              <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Prêts à scanner
+              </div>
             </div>
           </div>
         </div>
 
-        <div className={`rounded-[32px] p-6 border mb-8 ${
-          isDark
-            ? 'bg-gradient-to-br from-indigo-950/40 to-purple-950/40 border-indigo-800/40'
-            : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-lg'
-        }`}>
-          <div className="flex items-center gap-3 mb-6">
-            <div className={`p-3 rounded-xl ${
-              isDark ? 'bg-indigo-800/40' : 'bg-indigo-100'
-            }`}>
-              <CheckCircle className={`w-6 h-6 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
-            </div>
-            <div>
-              <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Aperçu Scans Entrée
-              </h2>
-              <p className={`text-sm font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
-                Suivi en temps réel des validations d'accès
-              </p>
-            </div>
-          </div>
-
-          {events.filter(e => e.status === 'published').length === 0 ? (
-            <div className="text-center py-8">
-              <AlertCircle className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-indigo-400/40' : 'text-indigo-300'}`} />
-              <p className={`font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
-                Aucun événement actif pour le moment
-              </p>
-            </div>
-          ) : (
+        {/* Real-time Scan Preview */}
+        {events.filter(e => e.status === 'published').length > 0 && (
+          <div className={`rounded-xl mb-8 ${
+            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+          } shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6`}>
+            <h2 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Événements en cours
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {events.filter(e => e.status === 'published').map(event => {
+              {events.filter(e => e.status === 'published').slice(0, 3).map(event => {
                 const stats = eventStats[event.id];
                 const scanRate = stats && stats.totalTickets > 0
                   ? Math.round((stats.soldTickets / stats.totalTickets) * 100)
@@ -554,231 +483,305 @@ export default function OrganizerDashboardPage() {
                 return (
                   <div
                     key={event.id}
-                    className={`p-4 rounded-2xl border transition-all ${
-                      isDark
-                        ? 'bg-indigo-900/20 border-indigo-800/40 hover:bg-indigo-900/30'
-                        : 'bg-white border-indigo-200 hover:shadow-md'
+                    className={`p-4 rounded-lg border ${
+                      isDark ? 'bg-[#1a1a1a] border-gray-800' : 'bg-gray-50 border-gray-200'
                     }`}
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {event.title}
                       </h3>
-                      <div className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                        isDark ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-700'
-                      }`}>
-                        Actif
-                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        🟢 Actif
+                      </span>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className={`text-xs font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
-                          Billets vendus
+                    <div className="space-y-2 mb-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                          Vendus
                         </span>
-                        <span className={`text-lg font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                        <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           {stats?.soldTickets || 0}
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center">
-                        <span className={`text-xs font-medium ${isDark ? 'text-indigo-400/60' : 'text-indigo-600'}`}>
-                          Total billets
+                      <div className="flex justify-between items-center text-sm">
+                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                          Total
                         </span>
-                        <span className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           {stats?.totalTickets || 0}
                         </span>
                       </div>
+                    </div>
 
-                      <div className="mt-3 pt-3 border-t ${isDark ? 'border-indigo-800/40' : 'border-indigo-200'}">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className={`text-xs font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                            Taux de vente
-                          </span>
-                          <span className={`text-sm font-black ${isDark ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                            {scanRate}%
-                          </span>
-                        </div>
-                        <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-indigo-900/40' : 'bg-indigo-100'}`}>
-                          <div
-                            className={`h-full transition-all duration-500 ${
-                              isDark ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-gradient-to-r from-indigo-600 to-purple-600'
-                            }`}
-                            style={{ width: `${scanRate}%` }}
-                          />
-                        </div>
+                    <div className="mb-2">
+                      <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                        <div
+                          className="h-full bg-[#FF6B00] transition-all duration-500"
+                          style={{ width: `${scanRate}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {scanRate}% vendus
+                        </span>
+                        <button className="text-xs text-[#FF6B00] hover:underline font-medium">
+                          Voir détails →
+                        </button>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className={`rounded-[32px] p-6 border ${
-              isDark
-                ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 border-amber-800/40'
-                : 'bg-white border-slate-200 shadow-lg'
-            }`}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-2xl font-black flex items-center gap-2 ${
-                  isDark ? 'text-white' : 'text-slate-900'
-                }`}>
-                  <Calendar className="w-6 h-6" />
-                  Mes Événements
-                </h2>
+        {/* Events List */}
+        <div className={`rounded-xl ${
+          isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+        } shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6 mb-8`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Mes Événements
+            </h2>
+
+            {/* Tabs and Search */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className={`flex gap-2 p-1 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                <button
+                  onClick={() => setEventFilter('all')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    eventFilter === 'all'
+                      ? 'bg-[#FF6B00] text-white'
+                      : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Tous
+                </button>
+                <button
+                  onClick={() => setEventFilter('upcoming')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    eventFilter === 'upcoming'
+                      ? 'bg-[#FF6B00] text-white'
+                      : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  À venir
+                </button>
+                <button
+                  onClick={() => setEventFilter('ongoing')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    eventFilter === 'ongoing'
+                      ? 'bg-[#FF6B00] text-white'
+                      : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  En cours
+                </button>
+                <button
+                  onClick={() => setEventFilter('past')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    eventFilter === 'past'
+                      ? 'bg-[#FF6B00] text-white'
+                      : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Passés
+                </button>
               </div>
 
-              {events.length === 0 ? (
-                <div className="text-center py-12">
-                  <Calendar className={`w-20 h-20 mx-auto mb-4 ${
-                    isDark ? 'text-amber-700/40' : 'text-slate-300'
-                  }`} />
-                  <p className={`${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
-                    Aucun événement créé
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {events.map((event) => {
-                    const stats = eventStats[event.id] || {
-                      totalTickets: 0,
-                      soldTickets: 0,
-                      remainingTickets: 0,
-                      revenue: 0,
-                    };
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`pl-4 pr-10 py-2 rounded-lg border text-sm ${
+                    isDark
+                      ? 'bg-[#1a1a1a] border-gray-700 text-white placeholder-gray-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                  } focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50`}
+                />
+              </div>
+            </div>
+          </div>
 
-                    return (
-                      <div
-                        key={event.id}
-                        className={`rounded-2xl p-5 border ${
-                          isDark
-                            ? 'bg-amber-950/20 border-amber-800/40'
-                            : 'bg-slate-50 border-slate-200'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <h3 className={`text-lg font-black mb-1 ${
-                              isDark ? 'text-white' : 'text-slate-900'
-                            }`}>
-                              {event.title}
-                            </h3>
-                            <p className={`text-sm ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
-                              {new Date(event.start_date).toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                              })} • {event.venue_city}
-                            </p>
+          {events.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} />
+              <p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Aucun événement créé
+              </p>
+              <button
+                onClick={() => setShowCreateEventModal(true)}
+                className="mt-4 px-4 py-2 bg-[#FF6B00] hover:bg-[#E55F00] text-white font-semibold rounded-lg transition-colors"
+              >
+                Créer votre premier événement
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {events
+                .filter(event => {
+                  if (searchQuery) {
+                    return event.title.toLowerCase().includes(searchQuery.toLowerCase());
+                  }
+                  const now = new Date();
+                  const eventDate = new Date(event.start_date);
+
+                  if (eventFilter === 'upcoming') return eventDate > now && event.status !== 'published';
+                  if (eventFilter === 'ongoing') return event.status === 'published';
+                  if (eventFilter === 'past') return eventDate < now;
+                  return true;
+                })
+                .map((event) => {
+                  const stats = eventStats[event.id] || {
+                    totalTickets: 0,
+                    soldTickets: 0,
+                    remainingTickets: 0,
+                    revenue: 0,
+                  };
+
+                  const statusConfig = {
+                    published: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: '🟢' },
+                    draft: { label: 'Draft', color: 'bg-yellow-100 text-yellow-700', icon: '🟡' },
+                    cancelled: { label: 'Terminé', color: 'bg-gray-400 text-gray-700', icon: '🔴' },
+                  };
+
+                  const status = statusConfig[event.status as keyof typeof statusConfig] || statusConfig.draft;
+
+                  return (
+                    <div
+                      key={event.id}
+                      className={`rounded-lg border overflow-hidden ${
+                        isDark ? 'bg-[#1a1a1a] border-gray-800' : 'bg-gray-50 border-gray-200'
+                      } hover:shadow-md transition-shadow`}
+                    >
+                      <div className="flex flex-col md:flex-row">
+                        {/* Event Image */}
+                        {event.banner_url && (
+                          <div className="md:w-64 h-48 md:h-auto flex-shrink-0">
+                            <img
+                              src={event.banner_url}
+                              alt={event.title}
+                              className="w-full h-full object-cover"
+                              style={{ aspectRatio: '16/9' }}
+                            />
                           </div>
-                          <span
-                            className={`px-3 py-1 rounded-xl text-xs font-bold ${
-                              event.status === 'published'
-                                ? 'bg-green-500/20 text-green-400'
-                                : event.status === 'draft'
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-slate-500/20 text-slate-400'
-                            }`}
-                          >
-                            {event.status === 'published' ? 'Publié' : event.status === 'draft' ? 'Brouillon' : event.status}
-                          </span>
-                        </div>
+                        )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className={`p-3 rounded-xl ${
-                            isDark ? 'bg-amber-900/20' : 'bg-orange-50'
-                          }`}>
-                            <p className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-amber-500' : 'text-slate-500'
-                            }`}>
-                              Vendus
-                            </p>
-                            <p className={`text-xl font-black ${
-                              isDark ? 'text-green-400' : 'text-green-600'
-                            }`}>
-                              {stats.soldTickets}
-                            </p>
+                        {/* Event Info */}
+                        <div className="flex-1 p-5">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {event.title}
+                              </h3>
+                              <p className={`text-sm flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <Calendar className="w-4 h-4" />
+                                {new Date(event.start_date).toLocaleDateString('fr-FR', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}
+                              </p>
+                              <p className={`text-sm flex items-center gap-2 mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <span>📍</span>
+                                {event.venue_city}
+                              </p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
+                              {status.icon} {status.label}
+                            </span>
                           </div>
 
-                          <div className={`p-3 rounded-xl ${
-                            isDark ? 'bg-amber-900/20' : 'bg-orange-50'
-                          }`}>
-                            <p className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-amber-500' : 'text-slate-500'
-                            }`}>
-                              Restants
-                            </p>
-                            <p className={`text-xl font-black ${
-                              isDark ? 'text-orange-400' : 'text-orange-600'
-                            }`}>
-                              {stats.remainingTickets}
-                            </p>
+                          {/* Mini Stats */}
+                          <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Vendus</p>
+                              <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {stats.soldTickets}
+                              </p>
+                            </div>
+                            <div>
+                              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Revenus</p>
+                              <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {stats.revenue.toLocaleString()} F
+                              </p>
+                            </div>
+                            <div>
+                              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Statut</p>
+                              <p className={`text-sm font-semibold ${status.color.includes('green') ? 'text-green-600' : status.color.includes('yellow') ? 'text-yellow-600' : 'text-gray-600'}`}>
+                                {status.label}
+                              </p>
+                            </div>
                           </div>
 
-                          <div className={`p-3 rounded-xl ${
-                            isDark ? 'bg-amber-900/20' : 'bg-orange-50'
-                          }`}>
-                            <p className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-amber-500' : 'text-slate-500'
-                            }`}>
-                              Total
-                            </p>
-                            <p className={`text-xl font-black ${
-                              isDark ? 'text-white' : 'text-slate-900'
-                            }`}>
-                              {stats.totalTickets}
-                            </p>
-                          </div>
-
-                          <div className={`p-3 rounded-xl ${
-                            isDark ? 'bg-amber-900/20' : 'bg-orange-50'
-                          }`}>
-                            <p className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-amber-500' : 'text-slate-500'
-                            }`}>
-                              Revenus
-                            </p>
-                            <p className={`text-lg font-black ${
-                              isDark ? 'text-green-400' : 'text-green-600'
-                            }`}>
-                              {stats.revenue.toLocaleString()} F
-                            </p>
+                          {/* Action Buttons */}
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => navigate(`/organizer/events/${event.id}/stats`)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                isDark
+                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              📊 Stats
+                            </button>
+                            <button
+                              onClick={() => navigate(`/organizer/events/${event.id}/edit`)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                isDark
+                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              ✏️ Modifier
+                            </button>
+                            <button
+                              onClick={() => navigate(`/events/${event.id}`)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                isDark
+                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                  : 'border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-[#FF6B00]'
+                              }`}
+                            >
+                              👁️ Voir page
+                            </button>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+                  );
+                })}
             </div>
+          )}
+        </div>
 
-            <div className={`rounded-[32px] p-6 border ${
-              isDark
-                ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 border-amber-800/40'
-                : 'bg-white border-slate-200 shadow-lg'
-            }`}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-2xl font-black flex items-center gap-2 ${
-                  isDark ? 'text-white' : 'text-slate-900'
-                }`}>
-                  <DollarSign className="w-6 h-6" />
+        {/* Payouts and Requests Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className={`rounded-xl ${
+              isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+            } shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6`}>
+              <div className="flex items-center gap-3 mb-6">
+                <DollarSign className={`w-6 h-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Historique Payouts
                 </h2>
               </div>
 
               {payouts.length === 0 ? (
                 <div className="text-center py-12">
-                  <DollarSign className={`w-20 h-20 mx-auto mb-4 ${
-                    isDark ? 'text-amber-700/40' : 'text-slate-300'
-                  }`} />
-                  <p className={`${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                  <DollarSign className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} />
+                  <p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     Aucun payout effectué
                   </p>
-                  <p className={`text-sm mt-2 ${isDark ? 'text-amber-400/40' : 'text-slate-400'}`}>
+                  <p className={`text-sm mt-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                     Les virements sont automatisés par l'admin
                   </p>
                 </div>
@@ -787,30 +790,28 @@ export default function OrganizerDashboardPage() {
                   {payouts.map((payout) => (
                     <div
                       key={payout.id}
-                      className={`rounded-2xl p-5 border ${
-                        isDark
-                          ? 'bg-amber-950/20 border-amber-800/40'
-                          : 'bg-slate-50 border-slate-200'
+                      className={`rounded-lg p-4 border ${
+                        isDark ? 'bg-[#1a1a1a] border-gray-800' : 'bg-gray-50 border-gray-200'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {payout.request_number}
                           </p>
-                          <p className={`text-sm ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {new Date(payout.created_at).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
                         <span
-                          className={`px-3 py-1 rounded-xl text-xs font-bold ${
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             payout.status === 'completed'
-                              ? 'bg-green-500/20 text-green-400'
+                              ? 'bg-green-100 text-green-700'
                               : payout.status === 'pending'
-                              ? 'bg-yellow-500/20 text-yellow-400'
+                              ? 'bg-yellow-100 text-yellow-700'
                               : payout.status === 'rejected'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-blue-500/20 text-blue-400'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-blue-100 text-blue-700'
                           }`}
                         >
                           {payout.status === 'completed' && 'Complété'}
@@ -821,37 +822,37 @@ export default function OrganizerDashboardPage() {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-[2fr_3fr_2fr] gap-4">
+                      <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <p className={`text-xs ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             Montant
                           </p>
-                          <p className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {payout.amount_requested.toLocaleString()} F
                           </p>
                         </div>
                         <div>
-                          <p className={`text-xs ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             Frais
                           </p>
-                          <p className={`text-lg font-black ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                          <p className={`text-lg font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
                             -{payout.technical_fees.toLocaleString()} F
                           </p>
                         </div>
                         <div>
-                          <p className={`text-xs ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             Net reçu
                           </p>
-                          <p className={`text-lg font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                          <p className={`text-lg font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                             {payout.net_amount.toLocaleString()} F
                           </p>
                         </div>
                       </div>
 
                       {payout.rejection_reason && (
-                        <div className={`mt-3 p-3 rounded-xl border ${
+                        <div className={`mt-3 p-3 rounded-lg border ${
                           isDark
-                            ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                            ? 'bg-red-900/20 border-red-800 text-red-300'
                             : 'bg-red-50 border-red-200 text-red-700'
                         }`}>
                           <p className="text-sm font-medium">
@@ -867,56 +868,48 @@ export default function OrganizerDashboardPage() {
           </div>
 
           <div>
-            <div className={`rounded-[32px] p-6 border sticky top-24 ${
-              isDark
-                ? 'bg-gradient-to-br from-amber-950/40 to-orange-950/40 border-amber-800/40'
-                : 'bg-white border-slate-200 shadow-lg'
-            }`}>
-              <h2 className={`text-xl font-black mb-6 flex items-center gap-2 ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>
-                <Send className="w-5 h-5" />
-                Demandes
-              </h2>
+            <div className={`rounded-xl ${
+              isDark ? 'bg-[#0a0a0a]' : 'bg-white'
+            } shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6 sticky top-24`}>
+              <div className="flex items-center gap-3 mb-6">
+                <Send className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Demandes
+                </h2>
+              </div>
 
               <button
                 onClick={() => setShowRequestModal(true)}
                 disabled={events.length === 0}
-                className={`w-full px-6 py-3 rounded-xl transition-all font-bold mb-6 ${
+                className={`w-full px-4 py-2.5 rounded-lg transition-colors font-semibold mb-6 ${
                   events.length === 0
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                } ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
-                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
+                    ? 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500'
+                    : 'bg-[#FF6B00] hover:bg-[#E55F00] text-white'
                 }`}
               >
                 Nouvelle demande
               </button>
 
-              {modificationRequests.length > 0 && (
+              {modificationRequests.length > 0 ? (
                 <div className="space-y-3">
                   {modificationRequests.slice(0, 5).map((request) => (
                     <div
                       key={request.id}
-                      className={`rounded-xl p-4 border ${
-                        isDark
-                          ? 'bg-amber-950/20 border-amber-800/40'
-                          : 'bg-slate-50 border-slate-200'
+                      className={`rounded-lg p-3 border ${
+                        isDark ? 'bg-[#1a1a1a] border-gray-800' : 'bg-gray-50 border-gray-200'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           {request.event_name}
                         </p>
                         <span
-                          className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                             request.status === 'approved'
-                              ? 'bg-green-500/20 text-green-400'
+                              ? 'bg-green-100 text-green-700'
                               : request.status === 'pending'
-                              ? 'bg-yellow-500/20 text-yellow-400'
-                              : 'bg-red-500/20 text-red-400'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
                           }`}
                         >
                           {request.status === 'approved' && 'Approuvé'}
@@ -924,12 +917,16 @@ export default function OrganizerDashboardPage() {
                           {request.status === 'rejected' && 'Rejeté'}
                         </span>
                       </div>
-                      <p className={`text-xs ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {request.request_type === 'report' ? 'Report' : 'Modification'}
                       </p>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p className={`text-sm text-center ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Aucune demande pour le moment
+                </p>
               )}
             </div>
           </div>
@@ -947,48 +944,42 @@ export default function OrganizerDashboardPage() {
       )}
 
       {showRequestModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`rounded-[32px] max-w-lg w-full border ${
-            isDark
-              ? 'bg-gradient-to-br from-amber-950/95 to-orange-950/95 border-amber-800/40'
-              : 'bg-white border-slate-200'
-          }`}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`rounded-xl max-w-lg w-full border ${
+            isDark ? 'bg-[#0a0a0a] border-gray-800' : 'bg-white border-gray-200'
+          } shadow-2xl`}>
             <div className={`p-6 border-b flex justify-between items-center ${
-              isDark
-                ? 'bg-amber-950/95 backdrop-blur-xl border-amber-800/40'
-                : 'bg-white backdrop-blur-xl border-slate-200'
+              isDark ? 'border-gray-800' : 'border-gray-200'
             }`}>
-              <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Nouvelle demande
               </h2>
               <button
                 onClick={() => setShowRequestModal(false)}
-                className={`p-2 rounded-xl transition-colors ${
-                  isDark
-                    ? 'hover:bg-amber-900/40 text-amber-400'
-                    : 'hover:bg-slate-100 text-slate-600'
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
                 }`}
                 disabled={processing}
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitRequest} className="p-6 space-y-6">
+            <form onSubmit={handleSubmitRequest} className="p-6 space-y-5">
               <div>
-                <label className={`block text-sm font-bold mb-2 ${
-                  isDark ? 'text-amber-300' : 'text-slate-700'
+                <label className={`block text-sm font-semibold mb-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Événement concerné
                 </label>
                 <select
                   value={requestForm.event_id}
                   onChange={(e) => setRequestForm({ ...requestForm, event_id: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                  className={`w-full px-4 py-2.5 rounded-lg border font-medium transition-colors ${
                     isDark
-                      ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                      : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                  } focus:outline-none`}
+                      ? 'bg-[#1a1a1a] border-gray-700 text-white focus:border-[#FF6B00]'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-[#FF6B00]'
+                  } focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50`}
                   required
                   disabled={processing}
                 >
@@ -1002,61 +993,57 @@ export default function OrganizerDashboardPage() {
               </div>
 
               <div>
-                <label className={`block text-sm font-bold mb-3 ${
-                  isDark ? 'text-amber-300' : 'text-slate-700'
+                <label className={`block text-sm font-semibold mb-3 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Type de demande
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setRequestForm({ ...requestForm, request_type: 'report' })}
-                    className={`p-4 rounded-2xl border-2 transition-all ${
+                    className={`p-3 rounded-lg border-2 transition-all font-medium ${
                       requestForm.request_type === 'report'
-                        ? 'border-orange-500 bg-orange-500/20'
+                        ? 'border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]'
                         : isDark
-                          ? 'border-amber-800/40 hover:border-amber-700'
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-gray-700 text-gray-400 hover:border-gray-600'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
                     }`}
                     disabled={processing}
                   >
-                    <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      Report
-                    </div>
+                    Report
                   </button>
                   <button
                     type="button"
                     onClick={() => setRequestForm({ ...requestForm, request_type: 'modification' })}
-                    className={`p-4 rounded-2xl border-2 transition-all ${
+                    className={`p-3 rounded-lg border-2 transition-all font-medium ${
                       requestForm.request_type === 'modification'
-                        ? 'border-orange-500 bg-orange-500/20'
+                        ? 'border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]'
                         : isDark
-                          ? 'border-amber-800/40 hover:border-amber-700'
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-gray-700 text-gray-400 hover:border-gray-600'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
                     }`}
                     disabled={processing}
                   >
-                    <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      Modification
-                    </div>
+                    Modification
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className={`block text-sm font-bold mb-2 ${
-                  isDark ? 'text-amber-300' : 'text-slate-700'
+                <label className={`block text-sm font-semibold mb-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Description de la demande
                 </label>
                 <textarea
                   value={requestForm.description}
                   onChange={(e) => setRequestForm({ ...requestForm, description: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
+                  className={`w-full px-4 py-2.5 rounded-lg border font-medium transition-colors ${
                     isDark
-                      ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                      : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                  } focus:outline-none`}
+                      ? 'bg-[#1a1a1a] border-gray-700 text-white focus:border-[#FF6B00]'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-[#FF6B00]'
+                  } focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50`}
                   placeholder="Décrivez votre demande..."
                   rows={4}
                   required
@@ -1067,12 +1054,10 @@ export default function OrganizerDashboardPage() {
               <button
                 type="submit"
                 disabled={processing}
-                className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl flex items-center justify-center gap-2 ${
-                  processing ? 'opacity-50 cursor-not-allowed' : ''
-                } ${
-                  isDark
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
-                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
+                className={`w-full px-4 py-3 rounded-lg transition-colors font-semibold flex items-center justify-center gap-2 ${
+                  processing
+                    ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-200'
+                    : 'bg-[#FF6B00] hover:bg-[#E55F00] text-white'
                 }`}
               >
                 {processing ? (

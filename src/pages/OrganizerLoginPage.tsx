@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Ticket, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { auth, db } from '../firebase';
+import Logo from '../components/Logo';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
@@ -13,7 +14,31 @@ export default function OrganizerLoginPage() {
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [logoTapCount, setLogoTapCount] = useState(0);
+  const [logoTapTimeout, setLogoTapTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const handleLogoClick = () => {
+    // Clear existing timeout
+    if (logoTapTimeout) {
+      clearTimeout(logoTapTimeout);
+    }
+
+    const newCount = logoTapCount + 1;
+    setLogoTapCount(newCount);
+
+    // Triple tap for admin access
+    if (newCount === 3) {
+      navigate('/admin/login');
+      setLogoTapCount(0);
+      return;
+    }
+
+    // Reset counter after 1 second
+    const timeout = setTimeout(() => {
+      setLogoTapCount(0);
+    }, 1000);
+    setLogoTapTimeout(timeout);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,142 +95,158 @@ export default function OrganizerLoginPage() {
 
   const handlePasswordReset = async () => {
     if (!email || !email.includes('@')) {
-      alert('⚠️ Veuillez entrer votre email d\'abord');
+      setError('Veuillez entrer votre email d\'abord');
       return;
     }
 
     try {
       await sendPasswordResetEmail(auth, email);
       setResetEmailSent(true);
-      alert('✅ Email de réinitialisation envoyé!\n\nVérifiez votre boîte mail (et vos spams) pour réinitialiser votre mot de passe.');
+      setError('');
+      alert('Email de réinitialisation envoyé!\n\nVérifiez votre boîte mail (et vos spams) pour réinitialiser votre mot de passe.');
     } catch (err: any) {
       console.error('[FIREBASE] Error sending password reset:', err);
       if (err.code === 'auth/user-not-found') {
-        alert('❌ Aucun compte trouvé avec cet email');
+        setError('Aucun compte trouvé avec cet email');
       } else {
-        alert('❌ Erreur: ' + err.message);
+        setError('Erreur: ' + err.message);
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-[#FF7A00] mb-6 shadow-2xl shadow-[#FF7A00]/30">
-            <Ticket className="w-10 h-10 text-[#0F0F0F]" />
+        {/* Logo - Triple tap for admin access */}
+        <div
+          className="text-center mb-8 cursor-pointer select-none"
+          onClick={handleLogoClick}
+        >
+          <div className="flex justify-center mb-6">
+            <Logo size="xl" showText={true} forceMode="event" />
           </div>
-          <h1 className="text-4xl font-black text-[#FFFFFF] mb-2">
+          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">
             Espace Organisateur
           </h1>
-          <p className="text-[#B5B5B5]">
-            Connectez-vous pour gérer vos événements
+          <p className="text-[#6B7280] text-base">
+            Gérez vos événements en toute simplicité
           </p>
         </div>
 
-        <div className="bg-[#2A2A2A] rounded-3xl p-8 shadow-2xl border border-[#2A2A2A]">
+        {/* Card */}
+        <div className="bg-white rounded-2xl p-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+          {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-500">{error}</p>
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Input */}
             <div>
-              <label className="block text-sm font-bold text-[#FFFFFF] mb-2">
+              <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#B5B5B5]" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF7A00] transition-colors"
+                  className="w-full h-[52px] pl-12 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#1A1A1A] placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:bg-white transition-all duration-200"
                   placeholder="votre@email.com"
                 />
               </div>
             </div>
 
+            {/* Password Input */}
             <div>
-              <label className="block text-sm font-bold text-[#FFFFFF] mb-2">
+              <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
                 Mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#B5B5B5]" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => setPasswordFocused(false)}
                   required
-                  className={`w-full pl-12 pr-14 py-3 border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF7A00] transition-all ${
-                    passwordFocused ? 'bg-[#0F0F0F]' : 'bg-[#1A1A1A]'
-                  }`}
+                  className="w-full h-[52px] pl-12 pr-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#1A1A1A] placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:bg-white transition-all duration-200"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1.5 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-white" />
+                    <EyeOff className="w-5 h-5 text-[#6B7280]" />
                   ) : (
-                    <Eye className="w-5 h-5 text-white" />
+                    <Eye className="w-5 h-5 text-[#6B7280]" />
                   )}
                 </button>
               </div>
             </div>
 
+            {/* Forgot Password Link */}
             <div className="text-right">
               <button
                 type="button"
                 onClick={handlePasswordReset}
-                className="text-sm text-[#FF7A00] hover:text-[#FF8C42] transition-colors underline"
+                className="text-sm text-[#FF6B00] hover:text-[#FF8533] transition-colors duration-200 font-medium"
               >
                 Mot de passe oublié ?
               </button>
             </div>
 
+            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-[#0F0F0F] font-black py-4 rounded-2xl transition-all shadow-lg shadow-[#FF7A00]/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-[52px] bg-[#FF6B00] hover:bg-[#FF8533] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-3 border-[#0F0F0F] border-t-transparent rounded-full animate-spin" />
-                  Connexion...
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Connexion...</span>
                 </>
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
-                  Se connecter
+                  <span>SE CONNECTER</span>
+                  <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center space-y-4">
-            <div className="border-t border-[#2A2A2A] pt-6">
-              <p className="text-[#B5B5B5] mb-4 text-lg">
-                Pas encore organisateur ?
-              </p>
-              <button
-                onClick={() => navigate('/organizer/signup')}
-                className="w-full px-8 py-4 bg-gradient-to-r from-[#FF5F05] to-[#FF8C42] hover:from-[#FF7A00] hover:to-[#FFA05D] text-white rounded-2xl font-black text-lg transition-all shadow-lg shadow-[#FF5F05]/30 hover:scale-[1.02]"
-              >
-                Créer un compte organisateur
-              </button>
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E5E7EB]"></div>
             </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-[#6B7280]">ou</span>
+            </div>
+          </div>
+
+          {/* Create Account Button */}
+          <button
+            onClick={() => navigate('/organizer/signup')}
+            className="w-full h-[52px] bg-transparent border-2 border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/5 font-semibold rounded-xl transition-all duration-200"
+          >
+            Créer un compte organisateur
+          </button>
+
+          {/* Back to Home Link */}
+          <div className="mt-6 text-center">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-[#B5B5B5] hover:text-[#FF7A00] transition-colors block w-full pt-4"
+              className="text-sm text-[#6B7280] hover:text-[#FF6B00] transition-colors duration-200"
             >
               Retour à l'accueil
             </button>
