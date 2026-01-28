@@ -1,0 +1,58 @@
+{
+  "name": "DEM⇄DEM",
+  "short_name": "DemDem",
+  "description": "Super-App Mobilité & Événements - Sénégal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0A1628",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "fr-SN",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/assets/demdem-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/demdem-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/demdem-icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["entertainment", "travel", "business"],
+  "screenshots": [
+    {
+      "src": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=540",
+      "sizes": "540x720",
+      "type": "image/jpeg",
+      "label": "Événements à découvrir"
+    },
+    {
+      "src": "https://images.pexels.com/photos/631986/pexels-photo-631986.jpeg?auto=compress&cs=tinysrgb&w=540",
+      "sizes": "540x720",
+      "type": "image/jpeg",
+      "label": "Réservation transport"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+PLACEHOLDER: Please replace this with your actual 512x512 PNG icon.
+
+The icon should:
+- Be 512x512 pixels
+- Represent the DemDem brand
+- Work well as a home screen icon
+- Be in PNG format
+
+For now, the app will fall back to showing the logo or text-based branding.

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvenPass | Admin Master</title>
+    <script>
+        window.ENV = {
+            FIREBASE_API_KEY: 'AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo',
+            FIREBASE_AUTH_DOMAIN: 'evenpasssenegal.firebaseapp.com',
+            FIREBASE_DATABASE_URL: 'https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app',
+            FIREBASE_PROJECT_ID: 'evenpasssenegal',
+            FIREBASE_STORAGE_BUCKET: 'evenpasssenegal.firebasestorage.app',
+            FIREBASE_MESSAGING_SENDER_ID: '882782977052',
+            FIREBASE_APP_ID: '1:882782977052:web:1f2ea147010066017cf3d9',
+            ADMIN_UID: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .glass-card {
+            background: rgba(31, 31, 31, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+        .glow-orange {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+        .btn-master-go {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        .btn-master-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        #auth-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(249, 115, 22, 0.2);
+            border-top: 4px solid #f97316;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #main-content {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+    <div id="auth-loader">
+        <div class="loader-spinner"></div>
+        <p class="mt-6 text-gray-400 text-sm uppercase tracking-wider">Vérification accès Superviseur...</p>
+    </div>
+
+    <div id="main-content">
+    <header class="glass-card border-b border-orange-500/30 p-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">
+                    <span class="text-white">EVEN</span><span class="text-orange-500">PASS</span>
+                    <span class="text-gray-400 text-sm font-normal ml-3">| Admin Master</span>
+                </h1>
+                <button onclick="window.location.href='/ops-manager.html'" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
+                    <i class="fas fa-arrow-right"></i> Ops Manager
+                </button>
+            </div>
+            <div id="stats-summary" class="flex gap-8 text-sm">
+                <div class="text-right">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">CA Global</div>
+                    <div id="total-ca" class="text-2xl font-black text-green-400">0 F</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Com. EvenPass (5%)</div>
+                    <div id="total-commission" class="text-2xl font-black text-orange-500">0 F</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <section class="mb-12">
+            <h2 class="text-2xl font-black mb-6 flex items-center gap-3 text-orange-500">
+                <i class="fas fa-hourglass-start"></i> Événements en Attente
+            </h2>
+            <div id="pending-events" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black mb-6 flex items-center gap-3 text-orange-500">
+                <i class="fas fa-chart-line"></i> Suivi des Revenus & Reversements
+            </h2>
+            <div class="glass-card rounded-xl overflow-hidden glow-orange">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-black/50 text-gray-300 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="p-4 font-black">Master GO</th>
+                            <th class="p-4 font-black">Événement</th>
+                            <th class="p-4 font-black">CA Total</th>
+                            <th class="p-4 font-black">Frais Mob. (1.5%)</th>
+                            <th class="p-4 font-black">EvenPass (5%)</th>
+                            <th class="p-4 font-black text-green-400">Net Organisateur (93.5%)</th>
+                            <th class="p-4 text-right font-black">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finance-table-body" class="text-sm">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: window.ENV.FIREBASE_API_KEY,
+            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
+            projectId: window.ENV.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV.FIREBASE_APP_ID
+        };
+
+        console.log('Initialisation Firebase...');
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+        console.log('Firebase connectée avec succès');
+
+        const SUPERVISOR_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+
+        let authCheckCompleted = false;
+
+        onAuthStateChanged(auth, (user) => {
+            if (authCheckCompleted) return;
+            authCheckCompleted = true;
+
+            console.log('Vérification authentification - User:', user?.uid);
+
+            if (!user) {
+                console.log('Aucun utilisateur connecté - Redirection vers login');
+                setTimeout(() => {
+                    window.location.href = '/admin-login.html';
+                }, 500);
+                return;
+            }
+
+            if (user.uid !== SUPERVISOR_UID) {
+                console.log('UID incorrect - Accès refusé');
+                alert('Accès refusé : Cette page est réservée au Superviseur');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 500);
+                return;
+            }
+
+            console.log('Accès autorisé - Affichage du contenu');
+            document.getElementById('auth-loader').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        });
+
+        const eventsRef = ref(db, 'evenpass/events');
+        const ordersRef = ref(db, 'evenpass/orders');
+
+        console.log('Écoute des événements...');
+        onValue(eventsRef, (snapshot) => {
+            console.log('Données événements reçues:', snapshot.val());
+            const eventsData = snapshot.val();
+
+            onValue(ordersRef, (ordersSnapshot) => {
+                console.log('Données commandes reçues:', ordersSnapshot.val());
+                const ordersData = ordersSnapshot.val();
+                renderAdmin(eventsData, ordersData);
+            }, (error) => {
+                console.error('Erreur lors de la récupération des commandes:', error);
+            });
+        }, (error) => {
+            console.error('Erreur lors de la récupération des événements:', error);
+        });
+
+        function calculateEventRevenue(eventId, ordersData) {
+            let totalCA = 0;
+            if (ordersData) {
+                Object.values(ordersData).forEach(order => {
+                    if (order.eventId === eventId && order.status === 'completed') {
+                        totalCA += order.amount || 0;
+                    }
+                });
+            }
+            return totalCA;
+        }
+
+        function renderAdmin(events, orders) {
+            console.log('Rendu admin avec:', { events, orders });
+            const pendingContainer = document.getElementById('pending-events');
+            const tableBody = document.getElementById('finance-table-body');
+            let globalCA = 0;
+            let globalComm = 0;
+
+            pendingContainer.innerHTML = '';
+            tableBody.innerHTML = '';
+
+            if (!events) {
+                console.log('Aucun événement trouvé');
+                pendingContainer.innerHTML = '<p class="text-gray-400 col-span-full text-center">Aucun événement en attente</p>';
+                tableBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400">Aucune donnée financière disponible</td></tr>';
+                return;
+            }
+
+            for (let id in events) {
+                const event = events[id];
+                const ca = calculateEventRevenue(id, orders);
+                const fraisMobile = ca * 0.015;
+                const evenPassComm = ca * 0.05;
+                const netOrganisateur = ca * 0.935;
+
+                globalCA += ca;
+                globalComm += evenPassComm;
+
+                if (event.status === 'pending') {
+                    pendingContainer.innerHTML += `
+                        <div class="glass-card p-6 rounded-xl border-l-4 border-orange-500">
+                            <h3 class="font-black text-xl text-white">${event.name || event.title || 'Sans titre'}</h3>
+                            <p class="text-sm text-gray-400 mt-1">Par: ${event.organizerName || event.organizer || 'N/A'}</p>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <p class="flex items-center gap-2"><i class="fas fa-calendar text-orange-500"></i> ${event.date || 'Non définie'}</p>
+                                <p class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-orange-500"></i> ${event.venue || 'Non défini'}</p>
+                            </div>
+                            <div class="mt-6 flex gap-2">
+                                <button onclick="activateEvent('${id}')" class="btn-master-go px-6 py-3 rounded-lg text-sm font-black uppercase tracking-wider transition">
+                                    <i class="fas fa-check mr-2"></i> Valider & Activer
+                                </button>
+                                <button onclick="deleteEvent('${id}')" class="bg-gray-800 hover:bg-red-600 text-red-400 hover:text-white px-4 py-3 rounded-lg text-xs transition border border-red-500/30">
+                                    <i class="fas fa-trash mr-1"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const goButton = event.status === 'active'
+                    ? `<button onclick="toggleMasterGo('${id}', 'pending')" class="btn-master-stop px-5 py-3 rounded-lg font-black text-sm uppercase tracking-wider transition flex items-center gap-2 justify-center">
+                         <i class="fas fa-stop-circle"></i> STOP
+                       </button>`
+                    : `<button onclick="toggleMasterGo('${id}', 'active')" class="btn-master-go px-5 py-3 rounded-lg font-black text-sm uppercase tracking-wider transition flex items-center gap-2 justify-center">
+                         <i class="fas fa-play-circle"></i> GO
+                       </button>`;
+
+                const statusBadge = event.status === 'active'
+                    ? '<span class="px-3 py-1 bg-green-600/20 border border-green-500 rounded-lg text-xs font-black text-green-400 uppercase tracking-wider">ACTIF</span>'
+                    : '<span class="px-3 py-1 bg-yellow-600/20 border border-yellow-500 rounded-lg text-xs font-black text-yellow-400 uppercase tracking-wider">PENDING</span>';
+
+                tableBody.innerHTML += `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                        <td class="p-4">${goButton}</td>
+                        <td class="p-4">
+                            <div class="font-bold text-white">${event.name || event.title || 'Sans titre'}</div>
+                            <div class="mt-2">${statusBadge}</div>
+                        </td>
+                        <td class="p-4 font-bold text-white text-lg">${ca.toLocaleString()} F</td>
+                        <td class="p-4 text-gray-400 font-semibold">${Math.round(fraisMobile).toLocaleString()} F</td>
+                        <td class="p-4 text-orange-500 font-bold text-lg">${Math.round(evenPassComm).toLocaleString()} F</td>
+                        <td class="p-4 font-black text-green-400 text-lg">${Math.round(netOrganisateur).toLocaleString()} F</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteEvent('${id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition-transform p-2">
+                                <i class="fas fa-trash text-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('total-ca').innerText = globalCA.toLocaleString() + ' F';
+            document.getElementById('total-commission').innerText = Math.round(globalComm).toLocaleString() + ' F';
+
+            console.log('Rendu terminé - CA Global:', globalCA, 'Commission:', globalComm);
+        }
+
+        window.toggleMasterGo = (id, newStatus) => {
+            const message = newStatus === 'active'
+                ? "ACTIVER cet événement ? Il sera visible sur le site public et dans l'Ops Manager."
+                : "ARRÊTER cet événement ? Il sera retiré du site public et de l'Ops Manager.";
+
+            if(confirm(message)) {
+                console.log('Toggle Master GO:', id, newStatus);
+                const updateData = {
+                    status: newStatus,
+                    updatedAt: Date.now(),
+                    updatedBy: auth.currentUser?.uid || 'admin'
+                };
+
+                if (newStatus === 'active') {
+                    updateData.activatedAt = Date.now();
+                } else {
+                    updateData.stoppedAt = Date.now();
+                }
+
+                update(ref(db, `evenpass/events/${id}`), updateData)
+                    .then(() => {
+                        console.log('Statut mis à jour avec succès');
+                        const statusText = newStatus === 'active' ? 'ACTIVÉ ✓' : 'ARRÊTÉ';
+                        alert(`Événement ${statusText}`);
+                    })
+                    .catch(err => {
+                        console.error('Erreur mise à jour:', err);
+                        alert('Erreur: ' + err.message);
+                    });
+            }
+        };
+
+        window.deleteEvent = (id) => {
+            if(confirm("Supprimer cet événement définitivement ?")) {
+                console.log('Suppression événement:', id);
+                remove(ref(db, `evenpass/events/${id}`))
+                    .then(() => {
+                        console.log('Événement supprimé');
+                        alert('Événement supprimé');
+                    })
+                    .catch(err => {
+                        console.error('Erreur suppression:', err);
+                        alert('Erreur: ' + err.message);
+                    });
+            }
+        };
+
+        window.reportEvent = (id) => {
+            console.log('Report événement:', id);
+            alert('Fonctionnalité de report à venir');
+        };
+    </script>
+    </div>
+
+</body>
+</html>
