@@ -1,4 +1,4 @@
-name: Deploy DemDem to Firebase
+name: Deploy DemDem to Firebase Hosting
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
@@ -43,45 +43,38 @@ jobs:
           projectId: evenpasssenegal
 ```
 
-**Note** : J'ai mis directement `projectId: evenpasssenegal` en dur dans le workflow (plus simple).
-
 ---
 
-### **Option 2 : Créer un nouveau projet Firebase `demdem`** (Propre mais plus long)
+## ✅ SECRETS GITHUB À AJOUTER/VÉRIFIER
 
-Si tu veux vraiment séparer les projets :
+Avant de push ce fichier, assure-toi d'avoir **TOUS** ces secrets dans GitHub :
+```
+✅ FIREBASE_SERVICE_ACCOUNT (déjà ajouté)
+✅ VITE_FIREBASE_API_KEY (déjà ajouté)
+✅ VITE_FIREBASE_APP_ID (déjà ajouté)
+✅ VITE_FIREBASE_AUTH_DOMAIN (déjà ajouté)
+✅ VITE_FIREBASE_DATABASE_URL (déjà ajouté)
+✅ VITE_FIREBASE_MESSAGING_SENDER_ID (déjà ajouté)
+✅ VITE_FIREBASE_PROJECT_ID (déjà ajouté)
+✅ VITE_FIREBASE_STORAGE_BUCKET (déjà ajouté)
 
-1. Crée un nouveau projet Firebase `demdem`
-2. Récupère les nouvelles clés
-3. Mets à jour tous tes secrets GitHub
-4. Génère un nouveau `FIREBASE_SERVICE_ACCOUNT` pour le projet `demdem`
+❌ VITE_FIREBASE_MEASUREMENT_ID (À AJOUTER)
+```
 
----
-
-## 🚀 SOLUTION IMMÉDIATE (Option 1)
-
-### Étape 1 : Ajoute les 2 secrets manquants
+### Ajoute ce dernier secret :
 
 **GitHub → Settings → Secrets → New repository secret**
 ```
-Secret 1:
-Name: FIREBASE_PROJECT_ID
-Value: evenpasssenegal
-
-Secret 2:
 Name: VITE_FIREBASE_MEASUREMENT_ID
 Value: G-FVQTV8TMLJ
 ```
 
-### Étape 2 : Vérifie tes secrets GitHub actuels
+---
 
-Assure-toi qu'ils correspondent **EXACTEMENT** à tes clés Firebase :
+## 🚀 COMMENT L'UTILISER
+
+### 1. Remplace le fichier YML
+
+Copie le code ci-dessus et remplace **complètement** le contenu de :
 ```
-VITE_FIREBASE_API_KEY = AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo
-VITE_FIREBASE_AUTH_DOMAIN = evenpasssenegal.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL = https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app
-VITE_FIREBASE_PROJECT_ID = evenpasssenegal
-VITE_FIREBASE_STORAGE_BUCKET = evenpasssenegal.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID = 882782977052
-VITE_FIREBASE_APP_ID = 1:882782977052:web:1f2ea147010066017cf3d9
-VITE_FIREBASE_MEASUREMENT_ID = G-FVQTV8TMLJ
+.github/workflows/final_deploy.yml
