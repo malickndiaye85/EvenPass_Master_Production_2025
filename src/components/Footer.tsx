@@ -34,9 +34,13 @@ const Footer: React.FC = () => {
                 <Phone size={18} />
                 <span>77 139 29 26</span>
               </a>
-              <a href="mailto:contact@evenpass.sn" className="flex items-center gap-2 hover:text-orange-500 transition-colors">
+              <a href="mailto:contact@demdem.sn" className="flex items-center gap-2 hover:text-orange-500 transition-colors">
                 <Mail size={18} />
-                <span>contact@evenpass.sn</span>
+                <span>contact@demdem.sn</span>
+              </a>
+              <a href="mailto:commercial@demdem.sn" className="flex items-center gap-2 hover:text-orange-500 transition-colors">
+                <Mail size={18} />
+                <span>commercial@demdem.sn</span>
               </a>
             </div>
             <div className="flex gap-4 mt-6">
@@ -63,11 +67,16 @@ const Footer: React.FC = () => {
                 </a>
                 {' '}<span className="text-gray-600">|</span>{' '}
                 <span className="text-gray-300 font-semibold">Contact:</span>{' '}
-                <a href="mailto:contact@evenpass.sn" className="text-orange-500 hover:text-orange-400 transition-colors">
-                  contact@evenpass.sn
+                <a href="mailto:contact@demdem.sn" className="text-orange-500 hover:text-orange-400 transition-colors">
+                  contact@demdem.sn
+                </a>
+                {' '}<span className="text-gray-600">|</span>{' '}
+                <span className="text-gray-300 font-semibold">Commercial:</span>{' '}
+                <a href="mailto:commercial@demdem.sn" className="text-orange-500 hover:text-orange-400 transition-colors">
+                  commercial@demdem.sn
                 </a>
               </p>
-              <p className="text-gray-500">&copy; 2026 EvenPass. Tous droits réservés.</p>
+              <p className="text-gray-500">&copy; 2026 DemDem. Tous droits réservés.</p>
             </div>
             <div className="flex items-center gap-2">
               <button

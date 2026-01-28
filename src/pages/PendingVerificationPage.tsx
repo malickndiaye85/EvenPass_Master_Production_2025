@@ -75,7 +75,7 @@ export default function PendingVerificationPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="w-4 h-4 text-[#FF8C42]" />
-                    <span className="text-white font-medium">contact@evenpass.sn</span>
+                    <span className="text-white font-medium">contact@demdem.sn</span>
                   </div>
                 </div>
               </div>

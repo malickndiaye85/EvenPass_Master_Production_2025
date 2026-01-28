@@ -159,10 +159,10 @@ export default function TermsPage() {
               <p>
                 Pour toute question concernant ces CGU, vous pouvez nous contacter à l'adresse :
                 <a
-                  href="mailto:contact@evenpass.sn"
+                  href="mailto:contact@demdem.sn"
                   className={`font-bold ml-1 ${isDark ? 'text-amber-400' : 'text-orange-500'}`}
                 >
-                  contact@evenpass.sn
+                  contact@demdem.sn
                 </a>
               </p>
             </section>

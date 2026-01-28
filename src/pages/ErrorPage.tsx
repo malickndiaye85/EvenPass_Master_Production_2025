@@ -158,11 +158,11 @@ export default function ErrorPage() {
                 </a>
                 <span className="hidden sm:block text-[#B5B5B5]">•</span>
                 <a
-                  href="mailto:support@evenpass.sn"
+                  href="mailto:contact@demdem.sn"
                   className="flex items-center gap-2 text-white hover:text-[#FF5F05] transition-colors"
                 >
                   <Mail className="w-5 h-5" />
-                  <span className="font-bold">support@evenpass.sn</span>
+                  <span className="font-bold">contact@demdem.sn</span>
                 </a>
               </div>
               <p className="text-xs text-[#B5B5B5] mt-4">

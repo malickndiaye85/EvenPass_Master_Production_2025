@@ -607,7 +607,7 @@ export default function OrganizerSignupPage() {
                     Vous serez notifié par email une fois votre compte approuvé (sous 24h).
                   </p>
                   <div className="mt-3 text-sm text-[#FF8C42]">
-                    📞 Contact : 77 139 29 26 | 📧 contact@evenpass.sn
+                    📞 Contact : 77 139 29 26 | 📧 contact@demdem.sn
                   </div>
                 </div>
 

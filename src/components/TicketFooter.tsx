@@ -5,7 +5,7 @@ export interface TicketFooterProps {
 
 export default function TicketFooter({
   supportPhone = '+221 77 123 45 67',
-  contactEmail = 'support@evenpass.sn',
+  contactEmail = 'contact@demdem.sn',
 }: TicketFooterProps) {
   return (
     <div className="bg-gradient-to-r from-[#0F0F0F] to-[#1A1A1A] border-t-2 border-[#FF6B35] px-6 py-4 mt-6">
@@ -43,7 +43,7 @@ export function TicketFooterCompact() {
   return (
     <div className="text-center py-2 px-4 text-[10px] text-gray-600 border-t border-gray-300">
       <p className="font-medium">
-        Support: +221 77 123 45 67 | Contact: support@evenpass.sn
+        Support: +221 77 123 45 67 | Contact: contact@demdem.sn
       </p>
       <p className="mt-1">© 2026 EvenPass - Tous droits réservés</p>
     </div>

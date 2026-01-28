@@ -93,7 +93,7 @@ export default function HelpPage() {
 
               <div className="grid md:grid-cols-3 gap-4">
                 <a
-                  href="mailto:support@evenpass.sn"
+                  href="mailto:contact@demdem.sn"
                   className={`p-6 rounded-xl text-center transition-all ${
                     isDark
                       ? 'bg-slate-700 hover:bg-slate-600'
@@ -103,7 +103,7 @@ export default function HelpPage() {
                   <Mail className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-amber-400' : 'text-orange-500'}`} />
                   <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Email</h3>
                   <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    support@evenpass.sn
+                    contact@demdem.sn
                   </p>
                 </a>
 

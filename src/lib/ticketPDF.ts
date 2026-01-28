@@ -233,7 +233,7 @@ export function generateTicketHTML(ticket: TicketData, options: TicketPDFOptions
     <div class="ticket-footer">
       <div class="footer-content">
         <p><strong>Support:</strong> <a href="tel:+221771234567">+221 77 123 45 67</a> |
-           <strong>Contact:</strong> <a href="mailto:support@evenpass.sn">support@evenpass.sn</a></p>
+           <strong>Contact:</strong> <a href="mailto:contact@demdem.sn">contact@demdem.sn</a></p>
         <p style="margin-top: 8px;">© 2026 <strong>EvenPass</strong> - Tous droits réservés</p>
         <p style="margin-top: 4px; font-size: 9px; opacity: 0.7;">
           ${options.showRealPhone ? 'Document interne - Informations complètes' : 'Billet client - Téléphone masqué (RGPD)'}

@@ -76,7 +76,7 @@ export default function SuccessModal({
                   </div>
                   <div>
                     <p className={`text-xs ${isDark ? 'text-[#B5B5B5]' : 'text-gray-600'}`}>Envoyez un email</p>
-                    <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>support@evenpass.sn</p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>contact@demdem.sn</p>
                   </div>
                 </div>
               </div>
