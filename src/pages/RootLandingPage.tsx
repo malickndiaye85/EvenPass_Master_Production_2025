@@ -1,38 +1,91 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Ticket, Music, Bus, Ship } from 'lucide-react';
 
 export const RootLandingPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-6">
-      <div className="max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-orange-200 rounded-full mb-12 shadow-sm">
-          <Zap size={16} className="text-orange-500" />
-          <span className="text-sm text-gray-700 font-medium">Nouvelle expérience de billetterie</span>
+    <div className="min-h-screen flex flex-col">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-4 px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <h1 className="text-2xl font-display font-bold text-gray-900 tracking-tight">
+            DEM⇄DEM
+          </h1>
+        </div>
+        <p className="text-center text-gray-600 text-sm mt-1 font-display">
+          Gënaa Wóor • Gënaa Gaaw • Gënaa Yomb
+        </p>
+      </header>
+
+      <div className="flex-1 flex flex-col md:flex-row mt-20 md:mt-0">
+        <div
+          className="relative flex-1 min-h-[50vh] md:min-h-screen flex items-center justify-center cursor-pointer group overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0A1628 0%, #1a2942 100%)'
+          }}
+          onClick={() => navigate('/voyage')}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+          <div className="relative z-10 text-center text-white space-y-8 p-8 transform group-hover:scale-105 transition-transform duration-300">
+            <div className="flex justify-center gap-6 mb-8">
+              <Bus size={56} strokeWidth={1.5} className="animate-pulse" />
+              <Ship size={56} strokeWidth={1.5} className="animate-pulse" style={{ animationDelay: '0.3s' }} />
+            </div>
+
+            <h2 className="text-5xl md:text-6xl font-display font-black tracking-tight">
+              DEM VOYAGE
+            </h2>
+
+            <p className="text-2xl text-blue-300 font-semibold">
+              Transport • Ferry • Express
+            </p>
+
+            <div className="pt-6">
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-lg">
+                <span className="text-sm font-medium">Cliquez pour explorer</span>
+                <span className="text-xl">→</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </div>
 
-        <h1 className="text-6xl md:text-7xl lg:text-8xl font-black text-gray-900 leading-tight mb-6 tracking-tight">
-          Gënaa Wóor<br />
-          Gënaa Gaaw<br />
-          Gënaa Yomb
-        </h1>
-
-        <p className="text-xl md:text-2xl text-gray-700 mb-4 font-medium">
-          La plateforme premium pour vos événements au Sénégal
-        </p>
-
-        <p className="text-lg text-gray-600 mb-12">
-          Concerts • Lutte • Théâtre • Sport • Culture
-        </p>
-
-        <button
+        <div
+          className="relative flex-1 min-h-[50vh] md:min-h-screen flex items-center justify-center cursor-pointer group overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #1A1A1A 0%, #2d2d2d 100%)'
+          }}
           onClick={() => navigate('/evenement')}
-          className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
         >
-          Découvrir les événements
-        </button>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+          <div className="relative z-10 text-center text-white space-y-8 p-8 transform group-hover:scale-105 transition-transform duration-300">
+            <div className="flex justify-center gap-6 mb-8">
+              <Ticket size={56} strokeWidth={1.5} className="animate-pulse" />
+              <Music size={56} strokeWidth={1.5} className="animate-pulse" style={{ animationDelay: '0.3s' }} />
+            </div>
+
+            <h2 className="text-5xl md:text-6xl font-display font-black tracking-tight">
+              DEM ÉVÉNEMENT
+            </h2>
+
+            <p className="text-2xl text-orange-300 font-semibold">
+              Concerts • Théâtre • Sport
+            </p>
+
+            <div className="pt-6">
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 rounded-lg">
+                <span className="text-sm font-medium">Cliquez pour découvrir</span>
+                <span className="text-xl">→</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        </div>
       </div>
     </div>
   );
