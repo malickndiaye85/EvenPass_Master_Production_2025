@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/assets/demdem-icon-512.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DemDem - La Super-App sénégalaise pour sortir et bouger. Événements, transport, covoiturage. Une seule app pour tout ! 🇸🇳" />
+    <meta name="keywords" content="demdem, sénégal, événements, transport, covoiturage, bus, navette, billetterie, allo dakar, pass maritime" />
+    <meta name="author" content="DemDem" />
+    <meta name="theme-color" content="#0A1628" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/demdem-icon-512.png" />
+    <link rel="apple-touch-icon" href="/assets/demdem-icon-512.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DemDem" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <title>DEM⇄DEM | Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw</title>
+    <meta property="og:title" content="DemDem - Sortir & Bouger au Sénégal" />
+    <meta property="og:description" content="La Super-App sénégalaise : événements, transport, covoiturage. Une seule app pour tout ! 🇸🇳" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://demdem.sn" />
+    <meta property="og:image" content="https://demdem.sn/assets/demdem-icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="fr_SN" />
+    <meta property="og:site_name" content="DemDem" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DemDem - Sortir & Bouger au Sénégal" />
+    <meta name="twitter:description" content="La Super-App sénégalaise : événements, transport, covoiturage. Une seule app pour tout ! 🇸🇳" />
+    <meta name="twitter:image" content="https://demdem.sn/assets/demdem-icon-512.png" />
+    <meta name="twitter:site" content="@demdem_sn" />
+    <meta name="twitter:creator" content="@demdem_sn" />
+    <script type="module" crossorigin src="/assets/index-CujQYBTt.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Y_aBP-L-.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered:', registration))
+            .catch(error => console.log('SW registration failed:', error));
+        });
+      }
+    </script>
+  </body>
+</html>

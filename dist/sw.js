@@ -1,4 +1,4 @@
-const CACHE_VERSION = Date.now();
+const CACHE_VERSION = 1769561877556;
 const CACHE_NAME = `evenpass-v${CACHE_VERSION}`;
 const urlsToCache = [
   '/manifest.json'
