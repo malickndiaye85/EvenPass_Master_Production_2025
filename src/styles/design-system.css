@@ -1,0 +1,268 @@
+/* ===================================================================
+   DEM⇄DEM DESIGN SYSTEM
+   Version: 3.1 Final
+   Date: 28 Janvier 2026
+   =================================================================== */
+
+:root {
+  /* ===== PALETTE DEM ÉVÉNEMENT ===== */
+  --event-primary: #FF6B00;      /* Orange Vif - Actions */
+  --event-secondary: #1A1A1A;    /* Noir - Textes */
+  --event-bg: #FFFFFF;           /* Blanc - Fond */
+  --event-accent: #FF8C42;       /* Orange Clair - Hover */
+  --event-muted: #6B7280;        /* Gris - Textes secondaires */
+
+  /* ===== PALETTE DEM VOYAGE ===== */
+  --voyage-primary: #0A1628;     /* Bleu Nuit - Headers */
+  --voyage-secondary: #10B981;   /* Vert Émeraude - Actions */
+  --voyage-bg: #F8FAFC;          /* Gris Très Clair - Fond */
+  --voyage-accent: #0EA5E9;      /* Cyan - Liens */
+  --voyage-muted: #64748B;       /* Gris Slate - Secondaires */
+
+  /* ===== TYPOGRAPHIE ===== */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Poppins', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 48px;
+
+  /* ===== ESPACEMENTS (Multiple de 4) ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ===== OMBRES SUBTILES (Anti-AI Generic) ===== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 20px rgba(0, 0, 0, 0.12);
+
+  /* ===== BORDER RADIUS (Max 16px sauf avatars) ===== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 200ms ease-out;
+  --transition-base: 300ms ease-out;
+  --transition-slow: 400ms ease-out;
+
+  /* ===== VARIABLES DYNAMIQUES (Modifiées par ThemeContext) ===== */
+  --primary: var(--voyage-primary);
+  --secondary: var(--voyage-secondary);
+  --bg: var(--voyage-bg);
+  --accent: var(--voyage-accent);
+  --muted: var(--voyage-muted);
+}
+
+/* ===== THEME EVENT ===== */
+html[data-theme="event"] {
+  --primary: var(--event-primary);
+  --secondary: var(--event-secondary);
+  --bg: var(--event-bg);
+  --accent: var(--event-accent);
+  --muted: var(--event-muted);
+}
+
+/* ===== THEME VOYAGE ===== */
+html[data-theme="voyage"] {
+  --primary: var(--voyage-primary);
+  --secondary: var(--voyage-secondary);
+  --bg: var(--voyage-bg);
+  --accent: var(--voyage-accent);
+  --muted: var(--voyage-muted);
+}
+
+/* ===== THEME NEUTRAL (Par défaut) ===== */
+html[data-theme="neutral"] {
+  --primary: #0A1628;
+  --secondary: #10B981;
+  --bg: #FFFFFF;
+  --accent: #0EA5E9;
+  --muted: #6B7280;
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--secondary);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--secondary);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+
+/* ===== RÈGLES ANTI-GÉNÉRIQUE AI ===== */
+
+/* Interdiction gradients multicolores */
+.no-gradient {
+  background-image: none !important;
+}
+
+/* Ombres limitées à 20px blur max */
+.shadow-controlled {
+  box-shadow: var(--shadow-md);
+}
+
+/* Border-radius max 16px (sauf avatars) */
+.rounded-controlled {
+  border-radius: var(--radius-lg);
+}
+
+/* Pas d'animations bounce/pulse excessives */
+.animate-subtle {
+  animation-duration: var(--transition-base);
+  animation-timing-function: ease-out;
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Espacements */
+.space-1 { margin: var(--space-1); }
+.space-2 { margin: var(--space-2); }
+.space-3 { margin: var(--space-3); }
+.space-4 { margin: var(--space-4); }
+.space-6 { margin: var(--space-6); }
+.space-8 { margin: var(--space-8); }
+
+/* Ombres */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+
+/* Transitions */
+.transition-fast { transition: all var(--transition-fast); }
+.transition-base { transition: all var(--transition-base); }
+.transition-slow { transition: all var(--transition-slow); }
+
+/* Couleurs dynamiques */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--muted); }
+
+.bg-primary { background-color: var(--primary); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-accent { background-color: var(--accent); }
+.bg-page { background-color: var(--bg); }
+
+.border-primary { border-color: var(--primary); }
+.border-secondary { border-color: var(--secondary); }
+
+/* Boutons branded */
+.btn-primary {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+
+/* Cards */
+.card {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-base);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Inputs */
+.input-base {
+  width: 100%;
+  height: 56px;
+  padding: var(--space-4);
+  border: 1px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-family: var(--font-primary);
+  transition: var(--transition-fast);
+  background-color: #F9FAFB;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  :root {
+    --font-size-3xl: 36px;
+    --font-size-2xl: 28px;
+    --font-size-xl: 20px;
+  }
+}
+
+/* ===== PWA OPTIMIZATIONS ===== */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}

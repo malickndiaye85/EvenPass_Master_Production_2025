@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FirebaseAuthProvider, useAuth } from './context/FirebaseAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { DemDemThemeProvider } from './contexts/DemDemThemeContext';
 import ThemeWrapper from './components/ThemeWrapper';
 import DemDemLandingPage from './pages/DemDemLandingPage';
+import { RootLandingPage } from './pages/RootLandingPage';
+import { VoyageLandingPage } from './pages/VoyageLandingPage';
+import { EventLandingPageNew } from './pages/EventLandingPageNew';
 import HomePageNew from './pages/HomePageNew';
 import EventDetailPage from './pages/EventDetailPage';
 import SuccessPage from './pages/SuccessPage';
@@ -64,11 +68,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<DemDemLandingPage />} />
+      <Route path="/" element={<RootLandingPage />} />
+      <Route path="/old-landing" element={<DemDemLandingPage />} />
 
-      <Route path="/evenement" element={
+      <Route path="/evenement" element={<EventLandingPageNew />} />
+      <Route path="/even/:slug" element={
         <ThemeWrapper mode="event">
-          <HomePageNew />
+          <EventDetailPage />
         </ThemeWrapper>
       } />
       <Route path="/event/:slug" element={
@@ -77,28 +83,62 @@ function AppRoutes() {
         </ThemeWrapper>
       } />
 
-      <Route path="/voyage" element={
+      <Route path="/voyage" element={<VoyageLandingPage />} />
+      <Route path="/voyage/hub" element={
         <ThemeWrapper mode="transport">
           <TransportHubPage />
         </ThemeWrapper>
       } />
 
+      <Route path="/voyage/express" element={
+        <ThemeWrapper mode="transport">
+          <DemDemExpressPage />
+        </ThemeWrapper>
+      } />
       <Route path="/transport/demdem-express" element={
         <ThemeWrapper mode="transport">
           <DemDemExpressPage />
         </ThemeWrapper>
       } />
 
+      <Route path="/voyage/allo-dakar" element={
+        <ThemeWrapper mode="transport">
+          <AlloDakarPage />
+        </ThemeWrapper>
+      } />
       <Route path="/transport/allo-dakar" element={
         <ThemeWrapper mode="transport">
           <AlloDakarPage />
         </ThemeWrapper>
       } />
 
+      <Route path="/voyage/ferry" element={
+        <ThemeWrapper mode="transport">
+          <COSAMABookingPage />
+        </ThemeWrapper>
+      } />
+
+      <Route path="/voyage/wallet" element={
+        <ThemeWrapper mode="transport">
+          <WalletPage />
+        </ThemeWrapper>
+      } />
+
+      <Route path="/voyage/conducteur/dashboard" element={
+        <ThemeWrapper mode="transport">
+          <div className="p-8 text-center">
+            <h1 className="text-2xl font-bold">Chauffeur Bii - Bientôt disponible</h1>
+          </div>
+        </ThemeWrapper>
+      } />
+
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
       <Route path="/how-it-works" element={<HowItWorksPage />} />
+      <Route path="/comment-ca-marche" element={<HowItWorksPage />} />
       <Route path="/for-organizers" element={<ForOrganizersPage />} />
+      <Route path="/organisateur" element={<ForOrganizersPage />} />
+      <Route path="/become-organizer" element={<ForOrganizersPage />} />
       <Route path="/help" element={<HelpPage />} />
       <Route path="/terms" element={<TermsPage />} />
 
@@ -224,11 +264,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <FirebaseAuthProvider>
-          <AppRoutes />
-        </FirebaseAuthProvider>
-      </ThemeProvider>
+      <DemDemThemeProvider>
+        <ThemeProvider>
+          <FirebaseAuthProvider>
+            <AppRoutes />
+          </FirebaseAuthProvider>
+        </ThemeProvider>
+      </DemDemThemeProvider>
     </BrowserRouter>
   );
 }
