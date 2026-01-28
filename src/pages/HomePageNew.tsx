@@ -123,27 +123,11 @@ export default function HomePageNew() {
     <div className="min-h-screen bg-white">
       <header className="bg-white border-b border-gray-100 py-4 px-6 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="h-10 w-auto"
-              style={{
-                objectFit: 'contain',
-                maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
-              }}
-            >
-              <source src="/assets/logo_demdem_dynamic.mp4" type="video/mp4" />
-            </video>
-            <div
-              className="text-xl font-display font-bold text-gray-900 cursor-pointer tracking-tight"
-              onClick={() => navigate('/')}
-            >
-              DEM⇄DEM
-            </div>
+          <div
+            className="text-2xl font-display font-bold text-gray-900 cursor-pointer tracking-tight"
+            onClick={() => navigate('/')}
+          >
+            DEM⇄DEM
           </div>
 
           <div className="flex items-center gap-4">
@@ -168,7 +152,7 @@ export default function HomePageNew() {
               placeholder="Rechercher un événement, artiste, lieu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-14 pl-12 pr-4 border border-gray-200 rounded-xl text-base focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/10 transition-all bg-white shadow-sm hover:shadow-md"
+              className="w-full h-14 pl-12 pr-4 border border-gray-200 rounded-lg text-base focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/10 transition-all bg-white shadow-sm hover:shadow-md"
             />
             <Search
               size={20}
@@ -190,7 +174,7 @@ export default function HomePageNew() {
           <div className="flex flex-wrap gap-3 mb-10">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+              className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                 selectedCategory === null
                   ? 'bg-[#FF6B00] text-white shadow-md hover:bg-[#FF8C42]'
                   : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -204,7 +188,7 @@ export default function HomePageNew() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                  className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                     selectedCategory === category.id
                       ? 'bg-[#FF6B00] text-white shadow-md hover:bg-[#FF8C42]'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -238,7 +222,7 @@ export default function HomePageNew() {
                 return (
                   <div
                     key={event.id}
-                    className="bg-white rounded-xl overflow-hidden border border-gray-100 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group shadow-sm"
+                    className="bg-white rounded-lg overflow-hidden border border-gray-100 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group shadow-sm"
                     onClick={() => navigate(`/event/${event.slug}`)}
                   >
                     <div className="aspect-video overflow-hidden relative">
@@ -359,7 +343,7 @@ export default function HomePageNew() {
           </>
         )}
 
-        <div className="mt-16 bg-[#F9FAFB] rounded-xl p-10 text-center border border-gray-100">
+        <div className="mt-16 bg-[#F9FAFB] rounded-lg p-10 text-center border border-gray-100">
           <h2 className="text-3xl font-display font-bold text-gray-900 mb-4">
             Vous organisez un événement ?
           </h2>
@@ -367,7 +351,7 @@ export default function HomePageNew() {
             Créez, vendez et gérez vos billets en quelques clics. Tableau de bord en temps réel, paiements sécurisés.
           </p>
           <button
-            className="px-8 py-3.5 bg-[#FF6B00] hover:bg-[#FF8C42] text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
+            className="px-8 py-3.5 bg-[#FF6B00] hover:bg-[#FF8C42] text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
             onClick={() => navigate('/organisateur')}
           >
             Devenir Organisateur →
