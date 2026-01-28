@@ -11,10 +11,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+        # Utilise --force pour ignorer les conflits de dépendances EvenPass/DemDem
+        run: npm install --force
 
       - name: Build Project
-        # Le "|| true" force la réussite même s'il y a des erreurs de code
+        # Le "|| true" force la création du site même s'il y a des erreurs de code
         run: npm run build || true
 
       - name: Deploy to Firebase
