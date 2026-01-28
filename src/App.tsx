@@ -71,7 +71,11 @@ function AppRoutes() {
       <Route path="/" element={<RootLandingPage />} />
       <Route path="/old-landing" element={<DemDemLandingPage />} />
 
-      <Route path="/evenement" element={<EventLandingPageNew />} />
+      <Route path="/evenement" element={
+        <ThemeWrapper mode="event">
+          <HomePageNew />
+        </ThemeWrapper>
+      } />
       <Route path="/even/:slug" element={
         <ThemeWrapper mode="event">
           <EventDetailPage />
