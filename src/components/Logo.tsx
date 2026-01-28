@@ -27,7 +27,7 @@ export default function Logo({ size = 'md', showText = true, className = '', for
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       <img
-        src="/assets/logo.png"
+        src="/assets/dem-dem.svg"
         alt="DemDem"
         className={`${sizeClasses.height} w-auto object-contain transition-all duration-300`}
         style={{ filter: logoFilter }}
