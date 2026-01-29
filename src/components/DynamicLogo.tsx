@@ -1,73 +1,124 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
-export default function DynamicLogo() {
+interface DynamicLogoProps {
+  className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  mode?: 'transport' | 'event' | 'auto';
+  onClick?: () => void;
+}
+
+export default function DynamicLogo({
+  className = '',
+  size = 'lg',
+  mode = 'auto',
+  onClick
+}: DynamicLogoProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const [scrolled, setScrolled] = useState(false);
-  const [hoveredPart, setHoveredPart] = useState<'even' | 'pass' | null>(null);
 
-  const isPassUniverse = location.pathname.includes('/pass');
-  const isEvenUniverse = !isPassUniverse;
+  const isVoyageUniverse = location.pathname.includes('/voyage') ||
+                           location.pathname.includes('/pass') ||
+                           location.pathname.includes('/transport');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+  const actualMode = mode === 'auto'
+    ? (isVoyageUniverse ? 'transport' : 'event')
+    : mode;
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const sizeMap = {
+    sm: { text: 'text-xl', svg: 120 },
+    md: { text: 'text-2xl', svg: 140 },
+    lg: { text: 'text-3xl', svg: 160 },
+    xl: { text: 'text-4xl md:text-5xl', svg: 200 }
+  };
 
-  const getLogoSize = () => {
-    if (scrolled) {
-      return 'text-3xl sm:text-4xl';
+  const currentSize = sizeMap[size];
+
+  const getColors = () => {
+    if (actualMode === 'transport') {
+      return {
+        dem: '#0C1E3E',
+        arrow: '#10B981',
+        demSecondary: '#0C1E3E'
+      };
+    } else {
+      if (isDark) {
+        return {
+          dem: '#FFFFFF',
+          arrow: '#F97316',
+          demSecondary: '#FFFFFF'
+        };
+      } else {
+        return {
+          dem: '#1F2937',
+          arrow: '#F97316',
+          demSecondary: '#1F2937'
+        };
+      }
     }
-    return 'text-4xl sm:text-5xl md:text-6xl';
+  };
+
+  const colors = getColors();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate('/');
+    }
   };
 
   return (
-    <button
-      onClick={() => navigate('/')}
-      className={`group transition-all duration-300 ease-in-out ${getLogoSize()} font-black flex items-center justify-center gap-0 hover:scale-105`}
-      aria-label="Retour à l'accueil"
+    <div
+      className={`inline-flex items-center justify-center cursor-pointer hover:opacity-80 transition-all duration-300 ${className}`}
+      onClick={handleClick}
     >
-      <span
-        onMouseEnter={() => setHoveredPart('even')}
-        onMouseLeave={() => setHoveredPart(null)}
-        className={`transition-all duration-300 ease-in-out ${
-          hoveredPart === 'even' ? 'scale-110' : 'scale-100'
-        } ${
-          isEvenUniverse || hoveredPart === 'even'
-            ? isDark
-              ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-transparent'
-              : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 bg-clip-text text-transparent'
-            : isDark
-              ? 'text-amber-500/40'
-              : 'text-orange-400/40'
-        }`}
+      <svg
+        width={currentSize.svg}
+        height={currentSize.svg * 0.35}
+        viewBox="0 0 300 105"
+        xmlns="http://www.w3.org/2000/svg"
+        className="select-none"
       >
-        Even
-      </span>
-      <span
-        onMouseEnter={() => setHoveredPart('pass')}
-        onMouseLeave={() => setHoveredPart(null)}
-        className={`transition-all duration-300 ease-in-out ${
-          hoveredPart === 'pass' ? 'scale-110' : 'scale-100'
-        } ${
-          isPassUniverse || hoveredPart === 'pass'
-            ? isDark
-              ? 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-600 bg-clip-text text-transparent'
-              : 'bg-gradient-to-r from-[#0A7EA3] via-cyan-500 to-blue-600 bg-clip-text text-transparent'
-            : isDark
-              ? 'text-cyan-500/40'
-              : 'text-cyan-400/40'
-        }`}
-      >
-        Pass
-      </span>
-    </button>
+        <text
+          x="10"
+          y="70"
+          fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
+          fontSize="48"
+          fontWeight="900"
+          fill={colors.dem}
+          className="transition-colors duration-300"
+        >
+          DEM
+        </text>
+
+        <g className="transition-transform duration-300 hover:scale-110" transform="translate(125, 52)">
+          <path
+            d="M -15 0 L 0 -8 L 0 -3 L 15 -3 L 15 3 L 0 3 L 0 8 Z"
+            fill={colors.arrow}
+            className="transition-colors duration-300"
+          />
+          <path
+            d="M 15 0 L 0 8 L 0 3 L -15 3 L -15 -3 L 0 -3 L 0 -8 Z"
+            fill={colors.arrow}
+            className="transition-colors duration-300"
+          />
+        </g>
+
+        <text
+          x="175"
+          y="70"
+          fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
+          fontSize="48"
+          fontWeight="900"
+          fill={colors.demSecondary}
+          className="transition-colors duration-300"
+        >
+          DEM
+        </text>
+      </svg>
+    </div>
   );
 }

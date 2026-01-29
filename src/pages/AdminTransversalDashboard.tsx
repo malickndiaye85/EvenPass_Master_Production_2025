@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 import {
   getFinancialSummary,
   getPartnerReports,

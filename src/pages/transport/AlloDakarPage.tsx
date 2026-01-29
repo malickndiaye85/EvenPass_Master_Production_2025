@@ -4,7 +4,7 @@ import { Car, MapPin, User, Star, Phone, Wallet, ArrowRight } from 'lucide-react
 import { getCarpoolRides, bookCarpoolRide, getUserWallet } from '../../lib/transportFirebase';
 import { CarpoolRide, UserWallet as UserWalletType } from '../../types/transport';
 import { useAuth } from '../../context/FirebaseAuthContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 import { Timestamp } from 'firebase/firestore';
 
 export default function AlloDakarPage() {

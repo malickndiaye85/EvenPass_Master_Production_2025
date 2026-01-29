@@ -4,7 +4,7 @@ import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { auth, db } from '../firebase';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ export default function OrganizerLoginPage() {
           onClick={handleLogoClick}
         >
           <div className="flex justify-center mb-6">
-            <Logo size="xl" showText={true} forceMode="event" />
+            <DynamicLogo size="xl" mode="event" />
           </div>
           <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">
             Espace Organisateur

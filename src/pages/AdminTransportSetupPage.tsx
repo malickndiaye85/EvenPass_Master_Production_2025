@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Database, Check, AlertCircle, DollarSign } from 'lucide-react';
 import { initializeTransportDatabase, getPricing, updateRoutePricing } from '../lib/transportFirebase';
 import { PricingConfig } from '../types/transport';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function AdminTransportSetupPage() {
   const navigate = useNavigate();
@@ -96,7 +96,7 @@ export default function AdminTransportSetupPage() {
       <nav className="bg-[#0A192F] shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Logo size="md" showText={true} />
+            <DynamicLogo size="md" mode="transport" />
             <button
               onClick={() => navigate('/admin/ops')}
               className="text-white hover:text-[#10B981] transition"

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Camera, Upload, User, CreditCard, Phone, Check, Calendar, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 import {
   uploadSubscriptionPhoto,
   createSubscription,
@@ -141,7 +141,7 @@ const SubscriptionPage: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-3">
-              <Logo size="sm" variant="default" />
+              <DynamicLogo size="sm" mode="transport" />
               <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Gënaa Gaaw</span>
             </div>
           </div>

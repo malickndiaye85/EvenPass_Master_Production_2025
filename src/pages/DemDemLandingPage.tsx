@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Bus, ArrowRight } from 'lucide-react';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 
 export default function DemDemLandingPage() {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function DemDemLandingPage() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
-        <Logo size="lg" showText={true} />
+        <DynamicLogo size="lg" mode="auto" />
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row">

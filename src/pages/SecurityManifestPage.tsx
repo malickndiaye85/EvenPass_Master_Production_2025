@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Printer, Download, Users, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import Logo from '../components/Logo';
+import DynamicLogo from '../components/DynamicLogo';
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import { db } from '../firebase';
 import { exportToCSV } from '../lib/financialReports';
@@ -144,7 +144,7 @@ const SecurityManifestPage: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-3">
-              <Logo size="sm" variant="default" />
+              <DynamicLogo size="sm" mode="transport" />
               <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Manifeste de Sécurité</span>
             </div>
           </div>
