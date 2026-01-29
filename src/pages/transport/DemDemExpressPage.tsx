@@ -4,7 +4,7 @@ import { Bus, Clock, MapPin, AlertCircle, CreditCard, Calendar } from 'lucide-re
 import { getRoutes, getPricing, createBusBooking } from '../../lib/transportFirebase';
 import { BusRoute, PricingConfig, isComfortAvailable } from '../../types/transport';
 import { useAuth } from '../../context/FirebaseAuthContext';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 import { Timestamp } from 'firebase/firestore';
 
 export default function DemDemExpressPage() {
@@ -110,7 +110,7 @@ export default function DemDemExpressPage() {
       <nav className="bg-[#0A192F] shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Logo size="md" showText={true} />
+            <DynamicLogo size="md" mode="transport" />
             <button
               onClick={() => navigate('/voyage')}
               className="text-white hover:text-[#10B981] transition"

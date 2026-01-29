@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Bus, Car, Ship, ArrowRight, Home } from 'lucide-react';
-import Logo from '../../components/Logo';
+import DynamicLogo from '../../components/DynamicLogo';
 
 export default function TransportHubPage() {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ export default function TransportHubPage() {
       <nav className="bg-[#0A192F]/50 backdrop-blur-xl border-b border-[#10B981]/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Logo size="md" showText={true} />
+            <DynamicLogo size="md" mode="transport" />
             <button
               onClick={() => navigate('/')}
               className="flex items-center space-x-2 text-white hover:text-[#10B981] transition-all group"
