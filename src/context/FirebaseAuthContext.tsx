@@ -98,7 +98,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         console.warn('[FIREBASE AUTH] Firebase database not configured');
       }
 
-      let role: 'customer' | 'organizer' | 'admin' | 'staff' = 'customer';
+      let role: 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff' = 'customer';
 
       console.log('[FIREBASE AUTH] Role determination checks:', {
         isAdmin,
@@ -109,9 +109,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         organizerStatusType: typeof organizerData?.verification_status
       });
 
-      if (isAdmin || (adminData && adminData.is_active)) {
+      if (isAdmin) {
+        role = 'super_admin';
+        console.log('[FIREBASE AUTH] Role set to SUPER ADMIN (Master UID)');
+      } else if (adminData && adminData.is_active) {
         role = 'admin';
-        console.log('[FIREBASE AUTH] Role set to admin (isAdmin:', isAdmin, 'adminData:', !!adminData, ')');
+        console.log('[FIREBASE AUTH] Role set to admin (adminData exists)');
       } else if (organizerData) {
         if (organizerData.is_active === true && organizerData.verification_status === 'verified') {
           role = 'organizer';
@@ -179,14 +182,14 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       setUser({
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
-        full_name: firebaseUser.displayName || 'Utilisateur',
+        full_name: firebaseUser.displayName || 'Super Admin',
         phone: null,
         avatar_url: firebaseUser.photoURL || null,
         preferred_language: 'fr',
         preferred_payment_method: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        role: isAdmin ? 'admin' : 'customer',
+        role: isAdmin ? 'super_admin' : 'customer',
       });
     } finally {
       setLoading(false);

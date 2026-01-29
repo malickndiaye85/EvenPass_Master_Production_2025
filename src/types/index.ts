@@ -45,7 +45,7 @@ export interface CheckoutForm {
   payment_method: 'wave' | 'orange_money';
 }
 
-export type UserRole = 'customer' | 'organizer' | 'admin' | 'staff';
+export type UserRole = 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff';
 
 export interface AuthUser extends User {
   role: UserRole;

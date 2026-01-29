@@ -1,17 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, DollarSign, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 
+const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+
 export default function AdminFinanceLoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user && (user.role === 'admin' || user.role === 'super_admin')) {
+      if (user.role === 'super_admin' || user.id === SUPER_ADMIN_UID) {
+        navigate('/admin/transversal');
+      } else {
+        navigate('/admin/finance');
+      }
+    }
+  }, [user, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +39,8 @@ export default function AdminFinanceLoginPage() {
         return;
       }
 
-      navigate('/admin/finance');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
     } catch (err: any) {
       setError('Erreur de connexion');
       setLoading(false);

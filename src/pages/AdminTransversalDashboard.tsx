@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/FirebaseAuthContext';
 import DynamicLogo from '../components/DynamicLogo';
+import Logo from '../components/Logo';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -15,7 +17,9 @@ import {
 const AdminTransversalDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { user, loading: authLoading } = useAuth();
 
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage'>('overview');
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [partnerReports, setPartnerReports] = useState<PartnerReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,10 +74,34 @@ const AdminTransversalDashboard: React.FC = () => {
     exportToCSV(data, 'rapport_partenaires');
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
         <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== 'super_admin' && user.id !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
+        <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg max-w-md`}>
+          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Settings className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Accès Refusé
+          </h2>
+          <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Vous devez être Super Admin pour accéder à cette page.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white rounded-xl font-bold hover:from-cyan-600 hover:to-[#006B8C] transition-all"
+          >
+            Retour à l'accueil
+          </button>
+        </div>
       </div>
     );
   }
@@ -163,7 +191,55 @@ const AdminTransversalDashboard: React.FC = () => {
             </div>
           </div>
 
-          {summary && (
+          <div className={`rounded-2xl p-2 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg flex gap-2`}>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+                activeTab === 'overview'
+                  ? isDark
+                    ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white'
+                    : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] text-white'
+                  : isDark
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <TrendingUp className="w-5 h-5 inline-block mr-2" />
+              Vue d'ensemble
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+                activeTab === 'events'
+                  ? isDark
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : isDark
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Ticket className="w-5 h-5 inline-block mr-2" />
+              Gestion Événements (EVEN)
+            </button>
+            <button
+              onClick={() => setActiveTab('voyage')}
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+                activeTab === 'voyage'
+                  ? isDark
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
+                  : isDark
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Bus className="w-5 h-5 inline-block mr-2" />
+              Gestion Voyage (DEM-DEM)
+            </button>
+          </div>
+
+          {activeTab === 'overview' && summary && (
             <>
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className={`rounded-2xl p-6 ${isDark ? 'bg-gradient-to-br from-purple-900/50 to-pink-900/50' : 'bg-gradient-to-br from-purple-50 to-pink-50'} border-2 ${isDark ? 'border-purple-700' : 'border-purple-200'} shadow-lg transform hover:scale-105 transition-all`}>
@@ -350,6 +426,210 @@ const AdminTransversalDashboard: React.FC = () => {
                 )}
               </div>
             </>
+          )}
+
+          {activeTab === 'events' && (
+            <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+              <div className="flex items-center gap-3 mb-6">
+                <Ticket className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Gestion des Événements
+                </h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-purple-900/20 border-purple-700 hover:bg-purple-900/30'
+                      : 'bg-purple-50 border-purple-200 hover:bg-purple-100'
+                  }`}
+                >
+                  <Users className={`w-10 h-10 mb-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Dashboard Admin EVEN
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Gestion complète des événements, organisateurs, paiements et billets
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/organizer/dashboard')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-pink-900/20 border-pink-700 hover:bg-pink-900/30'
+                      : 'bg-pink-50 border-pink-200 hover:bg-pink-100'
+                  }`}
+                >
+                  <Ticket className={`w-10 h-10 mb-4 ${isDark ? 'text-pink-400' : 'text-pink-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Espace Organisateurs
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Vue organisateur pour la gestion de leurs événements
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/epscan-plus')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-indigo-900/20 border-indigo-700 hover:bg-indigo-900/30'
+                      : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
+                  }`}
+                >
+                  <Settings className={`w-10 h-10 mb-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    EPscan Plus
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Scanner de billets et contrôle d'accès aux événements
+                  </p>
+                </button>
+
+                <div className={`p-6 rounded-xl border-2 ${
+                  isDark
+                    ? 'bg-gray-900/20 border-gray-700'
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <CreditCard className={`w-10 h-10 mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Statistiques EVEN
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Chiffre d'affaires total de la section événements
+                  </p>
+                  <div className={`text-3xl font-black ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                    {summary ? formatCurrency(summary.even_revenue) : '0 FCFA'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'voyage' && (
+            <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+              <div className="flex items-center gap-3 mb-6">
+                <Bus className={`w-8 h-8 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
+                <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Gestion Transport & Voyage
+                </h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <button
+                  onClick={() => navigate('/pass')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-cyan-900/20 border-cyan-700 hover:bg-cyan-900/30'
+                      : 'bg-cyan-50 border-cyan-200 hover:bg-cyan-100'
+                  }`}
+                >
+                  <Bus className={`w-10 h-10 mb-4 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Pass Maritime
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Réservations LMDG, COSAMA et Interrégional
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/voyage/wallet')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-green-900/20 border-green-700 hover:bg-green-900/30'
+                      : 'bg-green-50 border-green-200 hover:bg-green-100'
+                  }`}
+                >
+                  <CreditCard className={`w-10 h-10 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    SAMA PASS
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Abonnements navettes DEM-DEM Express
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/transport')}
+                  className={`p-6 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-blue-900/20 border-blue-700 hover:bg-blue-900/30'
+                      : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                  }`}
+                >
+                  <Bus className={`w-10 h-10 mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Transport Hub
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Allo Dakar Taxi & DEM-DEM Express
+                  </p>
+                </button>
+
+                <div className={`p-6 rounded-xl border-2 ${
+                  isDark
+                    ? 'bg-gray-900/20 border-gray-700'
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <TrendingUp className={`w-10 h-10 mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Statistiques PASS
+                  </h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Chiffre d'affaires total de la section transport
+                  </p>
+                  <div className={`text-3xl font-black ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                    {summary ? formatCurrency(summary.total_pass_revenue) : '0 FCFA'}
+                  </div>
+                </div>
+              </div>
+
+              {summary && (
+                <div className={`mt-6 p-6 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Détail des revenus PASS
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                        LMDG
+                      </div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                        {formatCurrency(summary.pass_lmdg_revenue)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                        COSAMA
+                      </div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                        {formatCurrency(summary.pass_cosama_revenue)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                        Interrégional
+                      </div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                        {formatCurrency(summary.pass_interregional_revenue)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                        Abonnements
+                      </div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                        {formatCurrency(summary.pass_subscriptions_revenue)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
