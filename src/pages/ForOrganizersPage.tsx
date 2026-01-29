@@ -280,7 +280,7 @@ export default function ForOrganizersPage() {
       {/* Hidden Admin Access Button */}
       <div className="relative">
         <button
-          onClick={() => navigate('/admin-login')}
+          onClick={() => navigate('/admin/finance/login')}
           className="absolute left-1/2 transform -translate-x-1/2 -top-2 w-6 h-6 bg-green-500 rounded-full opacity-10 hover:opacity-100 transition-opacity duration-300 z-10"
           title="Admin Access"
           aria-label="Admin Access"
