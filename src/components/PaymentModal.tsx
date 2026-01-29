@@ -180,7 +180,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 required
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="77 123 45 67"
+                placeholder=""
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
               />
             </div>

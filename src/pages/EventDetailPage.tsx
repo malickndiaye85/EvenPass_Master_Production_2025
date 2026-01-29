@@ -827,7 +827,7 @@ export default function EventDetailPage() {
                       ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
                       : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
                   } focus:outline-none`}
-                  placeholder="77 123 45 67"
+                  placeholder=""
                   disabled={processing}
                   required
                 />

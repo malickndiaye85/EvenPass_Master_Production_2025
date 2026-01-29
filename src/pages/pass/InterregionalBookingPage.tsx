@@ -331,7 +331,7 @@ const InterregionalBookingPage: React.FC = () => {
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+221 XX XXX XX XX"
+                      placeholder=""
                       className={`w-full p-4 rounded-xl border-2 ${
                         isDark
                           ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'

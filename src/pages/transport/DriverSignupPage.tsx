@@ -82,7 +82,7 @@ export default function DriverSignupPage() {
 
     setUploadingLicense(true);
     try {
-      const url = await uploadToCloudinary(file, 'drivers/licenses');
+      const url = await uploadToCloudinary(file, 'drivers/licenses', user?.uid);
       setFormData({ ...formData, licenseUrl: url });
       setModal({
         isOpen: true,
@@ -119,7 +119,7 @@ export default function DriverSignupPage() {
 
     setUploadingInsurance(true);
     try {
-      const url = await uploadToCloudinary(file, 'drivers/insurance');
+      const url = await uploadToCloudinary(file, 'drivers/insurance', user?.uid);
       setFormData({ ...formData, insuranceUrl: url });
       setModal({
         isOpen: true,
@@ -156,7 +156,7 @@ export default function DriverSignupPage() {
 
     setUploadingCarteGrise(true);
     try {
-      const url = await uploadToCloudinary(file, 'drivers/carte-grise');
+      const url = await uploadToCloudinary(file, 'drivers/carte-grise', user?.uid);
       setFormData({ ...formData, carteGriseUrl: url });
       setModal({
         isOpen: true,
@@ -347,7 +347,7 @@ export default function DriverSignupPage() {
                     value={formData.phone}
                     onChange={handlePhoneChange}
                     className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
-                    placeholder="77 100****"
+                    placeholder=""
                     maxLength={11}
                   />
                 </div>

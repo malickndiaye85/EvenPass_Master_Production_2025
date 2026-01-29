@@ -143,14 +143,14 @@ export default function OrganizerSignupPage() {
 
       if (documents.cni) {
         console.log('[ORGANIZER SIGNUP] Uploading CNI document to Cloudinary...');
-        const cniUrl = await uploadToCloudinary(documents.cni, `verification-documents/${userId}`);
+        const cniUrl = await uploadToCloudinary(documents.cni, `verification-documents/${userId}`, userId);
         verificationDocuments.cni = cniUrl;
         console.log('[ORGANIZER SIGNUP] CNI uploaded successfully to Cloudinary');
       }
 
       if (documents.registre) {
         console.log('[ORGANIZER SIGNUP] Uploading registre document to Cloudinary...');
-        const registreUrl = await uploadToCloudinary(documents.registre, `verification-documents/${userId}`);
+        const registreUrl = await uploadToCloudinary(documents.registre, `verification-documents/${userId}`, userId);
         verificationDocuments.registre = registreUrl;
         console.log('[ORGANIZER SIGNUP] Registre uploaded successfully to Cloudinary');
       }
@@ -308,7 +308,7 @@ export default function OrganizerSignupPage() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                      placeholder="77100****"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export default function OrganizerSignupPage() {
                       value={formData.contact_phone}
                       onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
                       className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                      placeholder="77100****"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -549,7 +549,7 @@ export default function OrganizerSignupPage() {
                     value={formData.merchant_number}
                     onChange={(e) => setFormData({ ...formData, merchant_number: e.target.value })}
                     className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                    placeholder="77100****"
+                    placeholder=""
                   />
                   <p className="text-xs text-[#B5B5B5] mt-2">
                     Ce numéro sera utilisé pour tous vos reversements de fonds

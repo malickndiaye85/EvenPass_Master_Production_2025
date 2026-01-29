@@ -14,16 +14,23 @@ export interface CloudinaryUploadResult {
  * Upload un fichier vers Cloudinary (unsigned upload)
  * @param file Le fichier à uploader
  * @param folder Le dossier de destination dans Cloudinary
+ * @param userId UID de l'utilisateur Firebase (pour traçabilité)
  * @returns L'URL sécurisée du fichier uploadé
  */
 export async function uploadToCloudinary(
   file: File,
-  folder: string = 'verification-documents'
+  folder: string = 'verification-documents',
+  userId?: string
 ): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
   formData.append('folder', folder);
+
+  if (userId) {
+    formData.append('context', `user_id=${userId}`);
+    console.log('[CLOUDINARY] Adding user context:', userId);
+  }
 
   try {
     console.log('[CLOUDINARY] Uploading file:', file.name, 'to folder:', folder);
@@ -56,12 +63,14 @@ export async function uploadToCloudinary(
  * Upload plusieurs fichiers vers Cloudinary
  * @param files Tableau de fichiers à uploader
  * @param folder Le dossier de destination
+ * @param userId UID de l'utilisateur Firebase (pour traçabilité)
  * @returns Tableau d'URLs
  */
 export async function uploadMultipleToCloudinary(
   files: File[],
-  folder: string = 'verification-documents'
+  folder: string = 'verification-documents',
+  userId?: string
 ): Promise<string[]> {
-  const uploadPromises = files.map(file => uploadToCloudinary(file, folder));
+  const uploadPromises = files.map(file => uploadToCloudinary(file, folder, userId));
   return Promise.all(uploadPromises);
 }

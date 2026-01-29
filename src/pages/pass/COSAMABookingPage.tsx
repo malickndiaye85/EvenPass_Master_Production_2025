@@ -764,7 +764,7 @@ const COSAMABookingPage: React.FC = () => {
                     type="tel"
                     value={holderPhone}
                     onChange={(e) => setHolderPhone(e.target.value)}
-                    placeholder="+221 XX XXX XX XX"
+                    placeholder=""
                     className={`w-full p-5 text-xl font-bold border-2 ${
                       isDark
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
@@ -1108,7 +1108,7 @@ const COSAMABookingPage: React.FC = () => {
                     type="tel"
                     value={holderPhone}
                     onChange={(e) => setHolderPhone(e.target.value)}
-                    placeholder="+221 XX XXX XX XX"
+                    placeholder=""
                     className={`w-full p-5 text-xl font-bold border-2 ${
                       isDark
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'

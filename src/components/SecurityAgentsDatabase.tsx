@@ -291,7 +291,7 @@ export default function SecurityAgentsDatabase({ isDark, onClose }: SecurityAgen
                         ? 'bg-slate-900 border-slate-700 text-white'
                         : 'bg-white border-slate-200 text-slate-900'
                     } focus:outline-none`}
-                    placeholder="+221 77 123 45 67"
+                    placeholder=""
                     required
                   />
                 </div>

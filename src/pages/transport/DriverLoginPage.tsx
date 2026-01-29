@@ -121,7 +121,7 @@ export const DriverLoginPage: React.FC = () => {
                       value={formData.phone}
                       onChange={handlePhoneChange}
                       className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
-                      placeholder="77 100****"
+                      placeholder=""
                       maxLength={11}
                       required
                     />

@@ -43,6 +43,17 @@
   body {
     font-family: var(--font-primary);
   }
+
+  input,
+  textarea,
+  select {
+    color: #0A1628 !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9CA3AF;
+  }
 }
 
 @layer utilities {
