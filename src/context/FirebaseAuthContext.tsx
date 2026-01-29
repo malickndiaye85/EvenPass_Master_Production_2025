@@ -49,6 +49,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const loadUserProfile = async (firebaseUser: FirebaseUser) => {
+    console.log('[FIREBASE AUTH] ⏳ Starting loadUserProfile for:', firebaseUser.uid);
+    const startTime = Date.now();
+
     try {
       console.log('[FIREBASE AUTH] Loading user profile for:', firebaseUser.uid);
       const isAdmin = firebaseUser.uid === ADMIN_UID;
@@ -175,6 +178,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       });
 
       setUser(userProfile);
+      console.log('[FIREBASE AUTH] ✅ User state updated successfully');
     } catch (error) {
       console.error('[FIREBASE AUTH] Critical error loading user profile:', error);
 
@@ -192,19 +196,28 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         role: isAdmin ? 'super_admin' : 'customer',
       });
     } finally {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      console.log(`[FIREBASE AUTH] ✅ loadUserProfile completed in ${duration}ms`);
       setLoading(false);
+      console.log('[FIREBASE AUTH] Loading state set to FALSE');
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('[FIREBASE AUTH] 🔐 signIn called for:', email);
     if (!auth) {
+      console.error('[FIREBASE AUTH] ❌ Auth not configured!');
       return { error: new Error('Firebase auth not configured') };
     }
     try {
+      console.log('[FIREBASE AUTH] Calling signInWithEmailAndPassword...');
       await signInWithEmailAndPassword(auth, email, password);
+      console.log('[FIREBASE AUTH] ✅ signInWithEmailAndPassword successful');
+      console.log('[FIREBASE AUTH] onAuthStateChanged should trigger now...');
       return { error: null };
     } catch (error) {
-      console.error('[FIREBASE AUTH] Sign in error:', error);
+      console.error('[FIREBASE AUTH] ❌ Sign in error:', error);
       return { error: error as Error };
     }
   };

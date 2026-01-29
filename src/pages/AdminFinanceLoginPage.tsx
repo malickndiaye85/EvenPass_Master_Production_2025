@@ -15,13 +15,35 @@ export default function AdminFinanceLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  // Remettre loading à false si authContext a fini de charger
   useEffect(() => {
+    if (!authLoading && loading) {
+      console.log('[ADMIN LOGIN] AuthContext a fini de charger, déblocage du bouton');
+      setLoading(false);
+    }
+  }, [authLoading, loading]);
+
+  useEffect(() => {
+    console.log('[ADMIN LOGIN] Auth state changed:', {
+      authLoading,
+      hasUser: !!user,
+      userRole: user?.role,
+      userId: user?.id
+    });
+
     if (!authLoading && user && (user.role === 'admin' || user.role === 'super_admin')) {
+      console.log('[ADMIN LOGIN] Redirecting admin user...');
       if (user.role === 'super_admin' || user.id === SUPER_ADMIN_UID) {
+        console.log('[ADMIN LOGIN] → /admin/transversal');
         navigate('/admin/transversal');
       } else {
+        console.log('[ADMIN LOGIN] → /admin/finance');
         navigate('/admin/finance');
       }
+    } else if (!authLoading && user && user.role !== 'admin' && user.role !== 'super_admin') {
+      console.log('[ADMIN LOGIN] Utilisateur non autorisé:', user.role);
+      setError('Accès non autorisé. Compte administrateur requis.');
+      setLoading(false);
     }
   }, [user, authLoading, navigate]);
 
@@ -30,19 +52,35 @@ export default function AdminFinanceLoginPage() {
     setError('');
     setLoading(true);
 
+    // Timeout de sécurité pour éviter le blocage infini
+    const timeoutId = setTimeout(() => {
+      console.error('[ADMIN LOGIN] Timeout dépassé (10s)');
+      setError('Délai de connexion dépassé. Veuillez réessayer.');
+      setLoading(false);
+    }, 10000);
+
     try {
+      console.log('[ADMIN LOGIN] Tentative de connexion...');
       const { error: signInError } = await signIn(email, password);
 
       if (signInError) {
+        console.error('[ADMIN LOGIN] Erreur de connexion:', signInError.message);
         setError(signInError.message);
+        clearTimeout(timeoutId);
         setLoading(false);
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('[ADMIN LOGIN] Connexion réussie, attente du chargement du profil...');
+
+      // Attendre que le profil soit chargé via authContext
+      // Le useEffect se chargera de la redirection
+      clearTimeout(timeoutId);
 
     } catch (err: any) {
+      console.error('[ADMIN LOGIN] Exception:', err);
       setError('Erreur de connexion');
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
