@@ -308,7 +308,7 @@ export default function OrganizerSignupPage() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                      placeholder="77 123 45 67"
+                      placeholder="77100****"
                     />
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export default function OrganizerSignupPage() {
                       value={formData.contact_phone}
                       onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
                       className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                      placeholder="77 123 45 67"
+                      placeholder="77100****"
                     />
                   </div>
                 </div>
@@ -549,7 +549,7 @@ export default function OrganizerSignupPage() {
                     value={formData.merchant_number}
                     onChange={(e) => setFormData({ ...formData, merchant_number: e.target.value })}
                     className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-[#FF5F05]"
-                    placeholder="77 123 45 67"
+                    placeholder="77100****"
                   />
                   <p className="text-xs text-[#B5B5B5] mt-2">
                     Ce numéro sera utilisé pour tous vos reversements de fonds
