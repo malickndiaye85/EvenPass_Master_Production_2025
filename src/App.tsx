@@ -94,6 +94,10 @@ import TransportHubPage from './pages/transport/TransportHubPage';
 
 import AdminTransportSetupPage from './pages/AdminTransportSetupPage';
 
+import DriverSignupPage from './pages/transport/DriverSignupPage';
+
+import DriverDashboard from './pages/transport/DriverDashboard';
+
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -258,15 +262,43 @@ function AppRoutes() {
 
 
 
+      <Route path="/voyage/chauffeur/signup" element={
+
+        <ThemeWrapper mode="transport">
+
+          <DriverSignupPage />
+
+        </ThemeWrapper>
+
+      } />
+
+
+
+      <Route path="/voyage/chauffeur/dashboard" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ProtectedRoute>
+
+            <DriverDashboard />
+
+          </ProtectedRoute>
+
+        </ThemeWrapper>
+
+      } />
+
+
+
       <Route path="/voyage/conducteur/dashboard" element={
 
         <ThemeWrapper mode="transport">
 
-          <div className="p-8 text-center">
+          <ProtectedRoute>
 
-            <h1 className="text-2xl font-bold">Chauffeur Bii - Bientôt disponible</h1>
+            <DriverDashboard />
 
-          </div>
+          </ProtectedRoute>
 
         </ThemeWrapper>
 
