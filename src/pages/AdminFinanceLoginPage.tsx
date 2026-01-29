@@ -65,7 +65,14 @@ export default function AdminFinanceLoginPage() {
 
       if (signInError) {
         console.error('[ADMIN LOGIN] Erreur de connexion:', signInError.message);
-        setError(signInError.message);
+
+        // Gestion spéciale pour erreur 403 / PERMISSION_DENIED
+        if (signInError.message.includes('PERMISSION_DENIED') || signInError.message.includes('403')) {
+          setError('Accès refusé : Vérifiez vos privilèges admin dans Firebase Console (Security Rules)');
+        } else {
+          setError(signInError.message);
+        }
+
         clearTimeout(timeoutId);
         setLoading(false);
         return;
@@ -79,7 +86,14 @@ export default function AdminFinanceLoginPage() {
 
     } catch (err: any) {
       console.error('[ADMIN LOGIN] Exception:', err);
-      setError('Erreur de connexion');
+
+      // Gestion spéciale pour erreur 403 / PERMISSION_DENIED
+      if (err?.code === 'PERMISSION_DENIED' || err?.message?.includes('403')) {
+        setError('Accès refusé : Vérifiez vos privilèges admin dans Firebase Console (Security Rules)');
+      } else {
+        setError('Erreur de connexion');
+      }
+
       clearTimeout(timeoutId);
       setLoading(false);
     }

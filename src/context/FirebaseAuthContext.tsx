@@ -67,7 +67,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           const userSnapshot = await get(userRef);
           userData = userSnapshot.val();
           console.log('[FIREBASE AUTH] User data loaded:', !!userData);
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.code === 'PERMISSION_DENIED') {
+            console.error('[FIREBASE AUTH] ❌ 403 PERMISSION DENIED: Vérifiez les Firebase Security Rules pour users/');
+          }
           console.warn('[FIREBASE AUTH] Could not load user data:', error);
         }
 
@@ -82,7 +85,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             status: organizerData?.verification_status,
             orgName: organizerData?.organization_name
           });
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.code === 'PERMISSION_DENIED') {
+            console.error('[FIREBASE AUTH] ❌ 403 PERMISSION DENIED: Vérifiez les Firebase Security Rules pour organizers/');
+          }
           console.warn('[FIREBASE AUTH] Could not load organizer data:', error);
         }
 
@@ -94,7 +100,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             exists: !!adminData,
             isActive: adminData?.is_active
           });
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.code === 'PERMISSION_DENIED') {
+            console.error('[FIREBASE AUTH] ❌ 403 PERMISSION DENIED sur admins/: Vérifiez que cet UID a les privilèges admin dans Firebase Security Rules');
+          }
           console.warn('[FIREBASE AUTH] Could not load admin data:', error);
         }
       } else {
