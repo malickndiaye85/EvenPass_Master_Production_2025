@@ -1,20 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Camera, CheckCircle, AlertCircle, User, Phone, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, CheckCircle, AlertCircle, User, Phone, FileText, Shield, CreditCard } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { ref, set } from 'firebase/database';
 import { db } from '../../firebase';
 import DynamicLogo from '../../components/DynamicLogo';
-
-const CLOUDINARY_CLOUD_NAME = 'dus8ia9x8';
-const CLOUDINARY_UPLOAD_PRESET = 'unsigned_upload';
+import { CustomModal } from '../../components/CustomModal';
+import { uploadToCloudinary } from '../../lib/cloudinary';
 
 interface DriverFormData {
   firstName: string;
   lastName: string;
   phone: string;
+  licenseNumber: string;
   licenseUrl: string;
   insuranceUrl: string;
+  carteGriseUrl: string;
 }
 
 export default function DriverSignupPage() {
@@ -25,17 +26,28 @@ export default function DriverSignupPage() {
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
   const [uploadingInsurance, setUploadingInsurance] = useState(false);
+  const [uploadingCarteGrise, setUploadingCarteGrise] = useState(false);
+
+  const [modal, setModal] = useState({
+    isOpen: false,
+    type: 'info' as 'success' | 'error' | 'info',
+    title: '',
+    message: ''
+  });
 
   const [formData, setFormData] = useState<DriverFormData>({
     firstName: '',
     lastName: '',
     phone: '',
+    licenseNumber: '',
     licenseUrl: '',
-    insuranceUrl: ''
+    insuranceUrl: '',
+    carteGriseUrl: ''
   });
 
   const licenseInputRef = useRef<HTMLInputElement>(null);
   const insuranceInputRef = useRef<HTMLInputElement>(null);
+  const carteGriseInputRef = useRef<HTMLInputElement>(null);
 
   const formatPhoneNumber = (value: string): string => {
     const digits = value.replace(/\D/g, '');
@@ -54,44 +66,38 @@ export default function DriverSignupPage() {
     setFormData({ ...formData, phone: formatted });
   };
 
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
-
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: 'POST',
-        body: formData
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'upload de l\'image');
-    }
-
-    const data = await response.json();
-    return data.secure_url;
-  };
-
   const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('La photo ne doit pas dépasser 5 MB');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Fichier trop volumineux',
+        message: 'La photo ne doit pas dépasser 5 MB'
+      });
       return;
     }
 
     setUploadingLicense(true);
     try {
-      const url = await uploadToCloudinary(file);
+      const url = await uploadToCloudinary(file, 'drivers/licenses');
       setFormData({ ...formData, licenseUrl: url });
+      setModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Upload réussi',
+        message: 'Votre permis a été uploadé avec succès'
+      });
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Erreur lors de l\'upload du permis');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur d\'upload',
+        message: 'Erreur lors de l\'upload du permis. Veuillez réessayer.'
+      });
     } finally {
       setUploadingLicense(false);
     }
@@ -102,19 +108,72 @@ export default function DriverSignupPage() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('La photo ne doit pas dépasser 5 MB');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Fichier trop volumineux',
+        message: 'La photo ne doit pas dépasser 5 MB'
+      });
       return;
     }
 
     setUploadingInsurance(true);
     try {
-      const url = await uploadToCloudinary(file);
+      const url = await uploadToCloudinary(file, 'drivers/insurance');
       setFormData({ ...formData, insuranceUrl: url });
+      setModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Upload réussi',
+        message: 'Votre assurance a été uploadée avec succès'
+      });
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Erreur lors de l\'upload de l\'assurance');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur d\'upload',
+        message: 'Erreur lors de l\'upload de l\'assurance. Veuillez réessayer.'
+      });
     } finally {
       setUploadingInsurance(false);
+    }
+  };
+
+  const handleCarteGriseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Fichier trop volumineux',
+        message: 'La photo ne doit pas dépasser 5 MB'
+      });
+      return;
+    }
+
+    setUploadingCarteGrise(true);
+    try {
+      const url = await uploadToCloudinary(file, 'drivers/carte-grise');
+      setFormData({ ...formData, carteGriseUrl: url });
+      setModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Upload réussi',
+        message: 'Votre carte grise a été uploadée avec succès'
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur d\'upload',
+        message: 'Erreur lors de l\'upload de la carte grise. Veuillez réessayer.'
+      });
+    } finally {
+      setUploadingCarteGrise(false);
     }
   };
 
@@ -130,13 +189,20 @@ export default function DriverSignupPage() {
   };
 
   const canProceedStep2 = () => {
-    return formData.licenseUrl !== '' && formData.insuranceUrl !== '';
+    return formData.licenseUrl !== '' &&
+           formData.insuranceUrl !== '' &&
+           formData.carteGriseUrl !== '';
   };
 
   const handleSubmit = async () => {
     if (!user) {
-      alert('Vous devez être connecté');
-      navigate('/organizer/login');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Non connecté',
+        message: 'Vous devez être connecté pour créer un profil chauffeur'
+      });
+      setTimeout(() => navigate('/organizer/login'), 2000);
       return;
     }
 
@@ -148,8 +214,10 @@ export default function DriverSignupPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
+        licenseNumber: formData.licenseNumber || null,
         licenseUrl: formData.licenseUrl,
         insuranceUrl: formData.insuranceUrl,
+        carteGriseUrl: formData.carteGriseUrl,
         status: 'pending_verification',
         isOnline: false,
         createdAt: Date.now(),
@@ -159,10 +227,24 @@ export default function DriverSignupPage() {
       const driverRef = ref(db, `drivers/${user.uid}`);
       await set(driverRef, driverData);
 
-      navigate('/voyage/chauffeur/dashboard');
+      setModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Inscription réussie',
+        message: 'Votre profil a été créé avec succès. Redirection vers votre tableau de bord...'
+      });
+
+      setTimeout(() => {
+        navigate('/voyage/chauffeur/dashboard');
+      }, 2000);
     } catch (error) {
       console.error('Error creating driver profile:', error);
-      alert('Erreur lors de la création du profil');
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur',
+        message: 'Erreur lors de la création du profil. Veuillez réessayer.'
+      });
     } finally {
       setLoading(false);
     }
@@ -232,7 +314,7 @@ export default function DriverSignupPage() {
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
                     placeholder="Votre prénom"
                   />
                 </div>
@@ -248,7 +330,7 @@ export default function DriverSignupPage() {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
                     placeholder="Votre nom"
                   />
                 </div>
@@ -264,12 +346,27 @@ export default function DriverSignupPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={handlePhoneChange}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent"
-                    placeholder="77 123 45 67"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
+                    placeholder="77 100****"
                     maxLength={11}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Format: 77 XXX XX XX</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  N° Licence Transport <span className="text-gray-400 text-xs">(facultatif)</span>
+                </label>
+                <div className="relative">
+                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.licenseNumber}
+                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent text-[#1A1A1A]"
+                    placeholder="Votre numéro de licence"
+                  />
+                </div>
               </div>
             </div>
 
@@ -289,7 +386,7 @@ export default function DriverSignupPage() {
 
         {step === 2 && (
           <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
-            <h2 className="text-xl font-bold text-[#0A1628] mb-6">Documents KYC</h2>
+            <h2 className="text-xl font-bold text-[#0A1628] mb-6">Vos Documents</h2>
 
             <div className="space-y-6">
               <div>
@@ -393,6 +490,57 @@ export default function DriverSignupPage() {
                   </button>
                 )}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Photo de la Carte Grise
+                </label>
+                <input
+                  ref={carteGriseInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCarteGriseUpload}
+                  className="hidden"
+                />
+                {formData.carteGriseUrl ? (
+                  <div className="relative">
+                    <img
+                      src={formData.carteGriseUrl}
+                      alt="Carte Grise"
+                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      onClick={() => setFormData({ ...formData, carteGriseUrl: '' })}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Uploadé
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => carteGriseInputRef.current?.click()}
+                    disabled={uploadingCarteGrise}
+                    className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-3 hover:border-[#10B981] hover:bg-gray-50 transition-all"
+                  >
+                    {uploadingCarteGrise ? (
+                      <>
+                        <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-gray-600">Upload en cours...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-10 h-10 text-gray-400" />
+                        <span className="text-gray-600 font-medium">Cliquez pour uploader</span>
+                        <span className="text-sm text-gray-400">Max 5 MB</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -448,9 +596,19 @@ export default function DriverSignupPage() {
                 <FileText className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-500">Documents</p>
-                  <p className="font-semibold text-gray-900">Permis & Assurance uploadés</p>
+                  <p className="font-semibold text-gray-900">Permis, Assurance & Carte Grise uploadés</p>
                 </div>
               </div>
+
+              {formData.licenseNumber && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <CreditCard className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500">N° Licence Transport</p>
+                    <p className="font-semibold text-gray-900">{formData.licenseNumber}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -483,6 +641,14 @@ export default function DriverSignupPage() {
           </div>
         )}
       </div>
+
+      <CustomModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+      />
     </div>
   );
 }

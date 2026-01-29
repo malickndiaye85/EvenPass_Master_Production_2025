@@ -96,6 +96,8 @@ import AdminTransportSetupPage from './pages/AdminTransportSetupPage';
 
 import DriverSignupPage from './pages/transport/DriverSignupPage';
 
+import { DriverLoginPage } from './pages/transport/DriverLoginPage';
+
 import DriverDashboard from './pages/transport/DriverDashboard';
 
 
@@ -267,6 +269,16 @@ function AppRoutes() {
         <ThemeWrapper mode="transport">
 
           <DriverSignupPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/voyage/chauffeur/login" element={
+
+        <ThemeWrapper mode="transport">
+
+          <DriverLoginPage />
 
         </ThemeWrapper>
 
