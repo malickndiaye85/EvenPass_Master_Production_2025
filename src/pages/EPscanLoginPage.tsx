@@ -70,7 +70,7 @@ export default function EPscanLoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full pl-12 pr-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-red-500 transition-colors"
-                  placeholder="admin@evenpass.sn"
+                  placeholder="admin@demdem.sn"
                 />
               </div>
             </div>

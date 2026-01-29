@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function MockAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>({
     id: ADMIN_UID,
-    email: 'admin@evenpass.sn',
+    email: 'admin@demdem.sn',
     full_name: 'Admin EvenPass',
     phone: '+221771234567',
     avatar_url: null,
@@ -38,7 +38,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
 
   const [firebaseUser] = useState({
     uid: ADMIN_UID,
-    email: 'admin@evenpass.sn',
+    email: 'admin@demdem.sn',
     displayName: 'Admin EvenPass',
     photoURL: null,
   });
@@ -74,7 +74,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setUser({
         id: ADMIN_UID,
-        email: 'admin@evenpass.sn',
+        email: 'admin@demdem.sn',
         full_name: 'Admin EvenPass',
         phone: '+221771234567',
         avatar_url: null,
@@ -102,7 +102,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
     console.log('[MOCK AUTH] Sign out');
     setUser({
       id: ADMIN_UID,
-      email: 'admin@evenpass.sn',
+      email: 'admin@demdem.sn',
       full_name: 'Admin EvenPass',
       phone: '+221771234567',
       avatar_url: null,

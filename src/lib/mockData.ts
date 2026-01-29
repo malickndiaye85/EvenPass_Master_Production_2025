@@ -378,14 +378,14 @@ export const mockPayouts = [
 export const mockUsers = {
   admin: {
     id: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3',
-    email: 'admin@evenpass.sn',
+    email: 'admin@demdem.sn',
     role: 'admin',
     full_name: 'Admin EvenPass',
     permissions: ['finance', 'ops_manager', 'scanner', 'all_access']
   },
   organizer: {
     id: 'org-user-1',
-    email: 'organisateur@evenpass.sn',
+    email: 'organisateur@demdem.sn',
     role: 'organizer',
     full_name: 'Organisateur Test',
     organization_id: '1'

@@ -103,14 +103,14 @@ export default function AdminFinanceLoginPage() {
     <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-green-500 mb-6 shadow-2xl shadow-green-500/30">
-            <DollarSign className="w-10 h-10 text-[#0F0F0F]" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-[#0A1628] mb-6 shadow-2xl shadow-[#0A1628]/50">
+            <DollarSign className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-black text-[#FFFFFF] mb-2">
             Admin Finance
           </h1>
           <p className="text-[#B5B5B5]">
-            Accès sécurisé pour administrateurs
+            Portail Super Admin DEM-DEM
           </p>
         </div>
 
@@ -134,8 +134,8 @@ export default function AdminFinanceLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-green-500 transition-colors"
-                  placeholder="admin@evenpass.sn"
+                  className="w-full pl-12 pr-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-[#0A1628] transition-colors"
+                  placeholder="admin@demdem.sn"
                 />
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function AdminFinanceLoginPage() {
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
                   required
-                  className={`w-full pl-12 pr-14 py-3 border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-green-500 transition-all ${
+                  className={`w-full pl-12 pr-14 py-3 border border-[#2A2A2A] rounded-2xl text-[#FFFFFF] placeholder-[#B5B5B5] focus:outline-none focus:border-[#0A1628] transition-all ${
                     passwordFocused ? 'bg-[#0F0F0F]' : 'bg-[#1A1A1A]'
                   }`}
                   placeholder="••••••••"
@@ -176,11 +176,11 @@ export default function AdminFinanceLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-400 text-[#0F0F0F] font-black py-4 rounded-2xl transition-all shadow-lg shadow-green-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#0A1628] hover:bg-[#0D1F3A] text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-[#0A1628]/50 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-3 border-[#0F0F0F] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
                   Connexion...
                 </>
               ) : (
@@ -195,7 +195,7 @@ export default function AdminFinanceLoginPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-[#B5B5B5] hover:text-green-500 transition-colors"
+              className="text-sm text-[#B5B5B5] hover:text-[#0A1628] transition-colors"
             >
               Retour à l'accueil
             </button>

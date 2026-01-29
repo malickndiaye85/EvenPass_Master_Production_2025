@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/FirebaseAuthContext';
 import DynamicLogo from '../components/DynamicLogo';
@@ -17,7 +17,7 @@ import {
 const AdminTransversalDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage'>('overview');
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
@@ -74,6 +74,15 @@ const AdminTransversalDashboard: React.FC = () => {
     exportToCSV(data, 'rapport_partenaires');
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/admin/finance/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
@@ -118,9 +127,23 @@ const AdminTransversalDashboard: React.FC = () => {
               </span>
             </button>
 
-            <div className="flex items-center gap-3">
-              <Logo size="sm" variant="default" />
-              <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard Transversal</span>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Logo size="sm" variant="default" />
+                <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard Transversal</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
+                  isDark
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
+                }`}
+                title="Déconnexion"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </button>
             </div>
           </div>
         </div>
