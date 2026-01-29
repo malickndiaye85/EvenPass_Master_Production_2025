@@ -31,7 +31,7 @@ export const VoyageLandingPage: React.FC = () => {
             </button>
             <button
               className="px-5 py-2.5 bg-amber-400 text-blue-950 rounded-lg font-semibold text-sm hover:bg-amber-300 transition-all flex items-center gap-2"
-              onClick={() => navigate('/voyage/conducteur/dashboard')}
+              onClick={() => navigate('/voyage/chauffeur/signup')}
             >
               <User size={18} />
               Espace Chauffeur

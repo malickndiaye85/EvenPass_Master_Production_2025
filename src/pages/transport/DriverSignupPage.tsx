@@ -37,6 +37,23 @@ export default function DriverSignupPage() {
   const licenseInputRef = useRef<HTMLInputElement>(null);
   const insuranceInputRef = useRef<HTMLInputElement>(null);
 
+  const formatPhoneNumber = (value: string): string => {
+    const digits = value.replace(/\D/g, '');
+
+    if (digits.length === 0) return '';
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 9) {
+      return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+    }
+
+    return `${digits.slice(0, 2)} ${digits.slice(2, 9)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormData({ ...formData, phone: formatted });
+  };
+
   const uploadToCloudinary = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
@@ -102,9 +119,14 @@ export default function DriverSignupPage() {
   };
 
   const canProceedStep1 = () => {
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    const validPrefixes = ['77', '78', '76', '70', '75'];
+    const hasValidPrefix = validPrefixes.some(prefix => phoneDigits.startsWith(prefix));
+
     return formData.firstName.trim() !== '' &&
            formData.lastName.trim() !== '' &&
-           formData.phone.length >= 9;
+           phoneDigits.length === 9 &&
+           hasValidPrefix;
   };
 
   const canProceedStep2 = () => {
@@ -241,11 +263,13 @@ export default function DriverSignupPage() {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={handlePhoneChange}
                     className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent"
                     placeholder="77 123 45 67"
+                    maxLength={11}
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Format: 77 XXX XX XX</p>
               </div>
             </div>
 
