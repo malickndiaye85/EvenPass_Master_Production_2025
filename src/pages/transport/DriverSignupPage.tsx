@@ -271,24 +271,16 @@ export default function DriverSignupPage() {
   };
 
   const handleSubmit = async () => {
-    if (!user) {
-      setModal({
-        isOpen: true,
-        type: 'error',
-        title: 'Non connecté',
-        message: 'Vous devez être connecté pour créer un profil chauffeur'
-      });
-      setTimeout(() => navigate('/transport/driver/login'), 2000);
-      return;
-    }
-
     setLoading(true);
 
     try {
       const pinHash = await hashPIN(formData.pin);
 
+      const cleanPhone = formData.phone.replace(/\s+/g, '');
+      const uid = `driver_${cleanPhone}`;
+
       const driverData = {
-        uid: user.uid,
+        uid: uid,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
@@ -313,12 +305,13 @@ export default function DriverSignupPage() {
         updatedAt: Date.now()
       };
 
-      const driverRef = ref(db, `drivers/${user.uid}`);
+      const driverRef = ref(db, `drivers/${uid}`);
       await set(driverRef, driverData);
 
-      await set(ref(db, `users/${user.uid}`), {
-        email: user.email,
+      await set(ref(db, `users/${uid}`), {
         phone: formData.phone,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         role: 'driver_pending',
         silo: 'voyage',
         silo_id: 'voyage',
@@ -329,12 +322,12 @@ export default function DriverSignupPage() {
       setModal({
         isOpen: true,
         type: 'success',
-        title: 'Documents envoyés',
-        message: 'Votre compte est en attente de validation par l\'Admin Voyage.'
+        title: 'Dossier reçu !',
+        message: 'Connectez-vous avec votre Numéro + PIN pour suivre l\'avancée.'
       });
 
       setTimeout(() => {
-        navigate('/transport/driver/login');
+        navigate('/voyage/chauffeur/pending-approval');
       }, 3000);
     } catch (error) {
       console.error('Error creating driver profile:', error);

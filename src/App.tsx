@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { FirebaseAuthProvider, useAuth } from './context/FirebaseAuthContext';
 
@@ -96,6 +96,8 @@ import AdminTransportSetupPage from './pages/AdminTransportSetupPage';
 
 import DriverSignupPage from './pages/transport/DriverSignupPage';
 
+import DriverPendingApprovalPage from './pages/transport/DriverPendingApprovalPage';
+
 import { DriverLoginPage } from './pages/transport/DriverLoginPage';
 
 import DriverDashboard from './pages/transport/DriverDashboard';
@@ -107,6 +109,8 @@ import PublishTripPage from './pages/transport/PublishTripPage';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   const { user, loading } = useAuth();
+
+  const location = useLocation();
 
 
 
@@ -126,7 +130,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 
 
-  if (!user) {
+  if (!user && !location.pathname.startsWith('/voyage/chauffeur/signup') && !location.pathname.startsWith('/transport/driver/')) {
 
     return <Navigate to="/" replace />;
 
@@ -271,6 +275,16 @@ function AppRoutes() {
         <ThemeWrapper mode="transport">
 
           <DriverSignupPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/voyage/chauffeur/pending-approval" element={
+
+        <ThemeWrapper mode="transport">
+
+          <DriverPendingApprovalPage />
 
         </ThemeWrapper>
 

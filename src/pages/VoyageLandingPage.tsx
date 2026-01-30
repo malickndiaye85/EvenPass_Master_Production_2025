@@ -52,76 +52,94 @@ export const VoyageLandingPage: React.FC = () => {
 
         <div className="space-y-5">
           <div
-            className="bg-white rounded-2xl p-10 border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group"
-            onClick={() => navigate('/voyage/allo-dakar')}
+            className="bg-white rounded-2xl p-8 md:p-10 border-2 border-gray-200 shadow-md hover:shadow-2xl hover:border-[#10B981] transition-all duration-300 cursor-pointer group"
+            onClick={() => navigate('/voyage/recherche-trajets')}
           >
-            <div className="flex items-start gap-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                <Car size={36} className="text-blue-950" strokeWidth={1.5} />
+            <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#10B981]/20 to-[#059669]/20 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 border-2 border-[#10B981]/30">
+                <svg className="w-10 h-10 text-[#10B981]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 17H19M5 17C5 18.1046 4.10457 19 3 19C1.89543 19 1 18.1046 1 17C1 15.8954 1.89543 15 3 15M5 17C5 15.8954 5.89543 15 7 15M19 17C19 18.1046 19.8954 19 21 19C22.1046 19 23 18.1046 23 17C23 15.8954 22.1046 15 21 15M19 17C19 15.8954 18.1046 15 17 15M7 15H17M7 15V11M17 15V11M7 11H10M7 11H5L3 9L5 5H9L11 7M17 11H14M17 11H19L21 9L19 5H15L13 7M10 11H14M10 11V7M14 11V7M10 7H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
 
               <div className="flex-1">
-                <h3 className="text-3xl font-display font-bold text-blue-950 mb-3 tracking-tight">
-                  ALLO DAKAR
-                </h3>
-                <p className="text-gray-600 text-lg mb-5 leading-relaxed">
-                  Covoiturage entre particuliers pour tous vos trajets au Sénégal
-                </p>
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-950 text-white rounded-lg text-sm font-medium group-hover:bg-blue-900 transition-colors">
-                  Covoiturage National
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-blue-950 tracking-tight">
+                    ALLO DAKAR
+                  </h3>
+                  <span className="px-3 py-1 bg-gradient-to-r from-[#10B981] to-[#059669] text-white text-xs font-bold rounded-full">
+                    Covoiturage Rapide
+                  </span>
                 </div>
+                <p className="text-gray-600 text-base md:text-lg mb-5 leading-relaxed">
+                  Covoiturage entre particuliers pour tous vos trajets au Sénégal. Économique, convivial et écologique.
+                </p>
+                <button className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-xl text-base font-bold shadow-lg hover:shadow-xl group-hover:scale-105 transition-all">
+                  Rechercher un trajet
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
             </div>
           </div>
 
           <div
-            className="bg-white rounded-2xl p-10 border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group"
+            className="bg-white rounded-2xl p-8 md:p-10 border-2 border-gray-200 shadow-md hover:shadow-2xl hover:border-amber-500 transition-all duration-300 cursor-pointer group"
             onClick={() => navigate('/voyage/express')}
           >
-            <div className="flex items-start gap-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                <Bus size={36} className="text-blue-950" strokeWidth={1.5} />
+            <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 border-2 border-amber-300">
+                <Bus size={40} className="text-amber-600" strokeWidth={2} />
               </div>
 
               <div className="flex-1">
-                <h3 className="text-3xl font-display font-bold text-blue-950 mb-3 tracking-tight">
-                  DEM-DEM EXPRESS
-                </h3>
-                <p className="text-gray-600 text-lg mb-2 leading-relaxed">
-                  Navettes avec abonnement SAMA PASS
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-blue-950 tracking-tight">
+                    DEM-DEM EXPRESS
+                  </h3>
+                  <span className="px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold rounded-full animate-pulse">
+                    Exclusif Abonnés SAMA PASS
+                  </span>
+                </div>
+                <p className="text-gray-600 text-base md:text-lg mb-2 leading-relaxed">
+                  Navettes confortables avec abonnement mensuel illimité
                 </p>
-                <p className="text-sm text-amber-600 font-semibold mb-5">
+                <p className="text-sm text-amber-600 font-semibold mb-5 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-600 rounded-full"></span>
                   Keur Massar ⇄ Dakar
                 </p>
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-950 text-white rounded-lg text-sm font-medium group-hover:bg-blue-900 transition-colors">
+                <button className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-950 to-blue-800 text-white rounded-xl text-base font-bold shadow-lg hover:shadow-xl group-hover:scale-105 transition-all">
                   Voir les lignes
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
             </div>
           </div>
 
           <div
-            className="bg-white rounded-2xl p-10 border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group"
+            className="bg-white rounded-2xl p-8 md:p-10 border-2 border-gray-200 shadow-md hover:shadow-2xl hover:border-blue-500 transition-all duration-300 cursor-pointer group"
             onClick={() => navigate('/voyage/ferry')}
           >
-            <div className="flex items-start gap-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                <Ship size={36} className="text-blue-950" strokeWidth={1.5} />
+            <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 border-2 border-blue-300">
+                <Ship size={40} className="text-blue-600" strokeWidth={2} />
               </div>
 
               <div className="flex-1">
-                <h3 className="text-3xl font-display font-bold text-blue-950 mb-3 tracking-tight">
-                  DEM ZIGUINCHOR
-                </h3>
-                <p className="text-gray-600 text-lg mb-5 leading-relaxed">
-                  Ferry maritime Dakar ⇄ Ziguinchor avec COSAMA
-                </p>
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-950 text-white rounded-lg text-sm font-medium group-hover:bg-blue-900 transition-colors">
-                  Réserver votre traversée
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-blue-950 tracking-tight">
+                    DEM ZIGUINCHOR
+                  </h3>
+                  <span className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                    Ferry COSAMA
+                  </span>
                 </div>
+                <p className="text-gray-600 text-base md:text-lg mb-5 leading-relaxed">
+                  Traversée maritime Dakar ⇄ Ziguinchor en toute sécurité avec la compagnie COSAMA
+                </p>
+                <button className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-950 to-blue-800 text-white rounded-xl text-base font-bold shadow-lg hover:shadow-xl group-hover:scale-105 transition-all">
+                  Réserver votre traversée
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
             </div>
           </div>
