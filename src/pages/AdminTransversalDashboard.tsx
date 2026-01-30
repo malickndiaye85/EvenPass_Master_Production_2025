@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings, LogOut } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings, LogOut, Shield } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/FirebaseAuthContext';
 import DynamicLogo from '../components/DynamicLogo';
 import Logo from '../components/Logo';
 import AdminLandingBackgroundsManager from '../components/AdminLandingBackgroundsManager';
+import StaffManagementTab from '../components/StaffManagementTab';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -20,7 +21,7 @@ const AdminTransversalDashboard: React.FC = () => {
   const { isDark } = useTheme();
   const { user, loading: authLoading, signOut } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage' | 'staff' | 'settings'>('overview');
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [partnerReports, setPartnerReports] = useState<PartnerReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,10 +200,10 @@ const AdminTransversalDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl p-2 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl flex gap-2">
+          <div className="rounded-2xl p-2 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl flex gap-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -213,29 +214,40 @@ const AdminTransversalDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('events')}
-              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
                 activeTab === 'events'
                   ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <Ticket className="w-5 h-5 inline-block mr-2" />
-              Gestion Événements (EVEN)
+              EVEN
             </button>
             <button
               onClick={() => setActiveTab('voyage')}
-              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
                 activeTab === 'voyage'
                   ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <Bus className="w-5 h-5 inline-block mr-2" />
-              Gestion Voyage (DEM-DEM)
+              DEM-DEM
+            </button>
+            <button
+              onClick={() => setActiveTab('staff')}
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
+                activeTab === 'staff'
+                  ? 'bg-[#10B981] text-black'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Shield className="w-5 h-5 inline-block mr-2" />
+              Staff
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
                 activeTab === 'settings'
                   ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -634,6 +646,12 @@ const AdminTransversalDashboard: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'staff' && (
+            <div className="rounded-2xl p-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
+              <StaffManagementTab isDark={isDark} superAdminId={user?.id || ''} />
             </div>
           )}
 

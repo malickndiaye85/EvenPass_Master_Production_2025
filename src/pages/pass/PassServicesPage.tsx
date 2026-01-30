@@ -318,7 +318,7 @@ const PassServicesPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <img src="/evenpass-logo.png" alt="EvenPass" className="h-8 w-auto object-contain" />
+              <img src="/assets/logo-demdem.svg" alt="DemDem" className="h-8 w-auto object-contain" />
               <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                 © 2026 EvenPass. Tous droits réservés.
               </div>
