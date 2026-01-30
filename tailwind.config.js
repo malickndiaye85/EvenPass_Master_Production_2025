@@ -8,6 +8,7 @@ export default {
         fadeIn: 'fadeIn 0.3s ease-out',
         slideUp: 'slideUp 0.3s ease-out',
         slideDown: 'slideDown 0.3s ease-out',
+        shimmer: 'shimmer 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -21,6 +22,10 @@ export default {
         slideDown: {
           '0%': { opacity: '0', transform: 'translateY(-20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-200%)' },
+          '100%': { transform: 'translateX(200%)' },
         },
       },
     },
