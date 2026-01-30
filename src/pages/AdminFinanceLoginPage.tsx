@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, DollarSign, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { LogIn, DollarSign, Mail, Lock, AlertCircle, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { auth } from '../firebase';
+import { initSuperAdminRole } from '../lib/initFirebaseRoles';
 
 const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
@@ -15,6 +16,8 @@ export default function AdminFinanceLoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [initializingRoles, setInitializingRoles] = useState(false);
+  const [showRoleInitButton, setShowRoleInitButton] = useState(false);
 
   // Remettre loading à false si authContext a fini de charger
   useEffect(() => {
@@ -29,22 +32,40 @@ export default function AdminFinanceLoginPage() {
       authLoading,
       hasUser: !!user,
       userRole: user?.role,
-      userId: user?.id
+      userId: user?.id,
+      isSuperAdminUID: user?.id === SUPER_ADMIN_UID
     });
 
-    if (!authLoading && user && (user.role === 'admin' || user.role === 'super_admin')) {
-      console.log('[ADMIN LOGIN] Redirecting admin user...');
-      if (user.role === 'super_admin' || user.id === SUPER_ADMIN_UID) {
-        console.log('[ADMIN LOGIN] → /admin/transversal');
+    if (!authLoading && user) {
+      // Force redirect if UID matches super admin, regardless of role
+      if (user.id === SUPER_ADMIN_UID) {
+        console.log('[ADMIN LOGIN] ✅ Super Admin UID detected, forcing redirect to /admin/transversal');
         navigate('/admin/transversal');
-      } else {
-        console.log('[ADMIN LOGIN] → /admin/finance');
-        navigate('/admin/finance');
+        return;
       }
-    } else if (!authLoading && user && user.role !== 'admin' && user.role !== 'super_admin') {
-      console.log('[ADMIN LOGIN] Utilisateur non autorisé:', user.role);
-      setError('Accès non autorisé. Compte administrateur requis.');
-      setLoading(false);
+
+      // Regular admin role check
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        console.log('[ADMIN LOGIN] Redirecting admin user...');
+        if (user.role === 'super_admin') {
+          console.log('[ADMIN LOGIN] → /admin/transversal');
+          navigate('/admin/transversal');
+        } else {
+          console.log('[ADMIN LOGIN] → /admin/finance');
+          navigate('/admin/finance');
+        }
+      } else {
+        console.log('[ADMIN LOGIN] ⚠️ Utilisateur connecté mais rôle incorrect:', user.role);
+
+        // Show button to initialize roles for super admin
+        if (user.id === SUPER_ADMIN_UID) {
+          setShowRoleInitButton(true);
+          setError('Rôle super-admin non initialisé. Cliquez sur "Initialiser les rôles" ci-dessous.');
+        } else {
+          setError('Accès non autorisé. Compte administrateur requis.');
+        }
+        setLoading(false);
+      }
     }
   }, [user, authLoading, navigate]);
 
@@ -115,6 +136,31 @@ export default function AdminFinanceLoginPage() {
     }
   };
 
+  const handleInitializeRoles = async () => {
+    setInitializingRoles(true);
+    setError('');
+
+    try {
+      console.log('[ADMIN LOGIN] 🔧 Initializing Super Admin role...');
+      const result = await initSuperAdminRole();
+
+      if (result.success) {
+        console.log('[ADMIN LOGIN] ✅ Role initialized successfully');
+        setError('');
+        // Reload the page to trigger auth state change
+        window.location.reload();
+      } else {
+        console.error('[ADMIN LOGIN] ❌ Failed to initialize role:', result.message);
+        setError(result.message);
+      }
+    } catch (err: any) {
+      console.error('[ADMIN LOGIN] 💥 Exception during role initialization:', err);
+      setError('Erreur lors de l\'initialisation des rôles: ' + err.message);
+    } finally {
+      setInitializingRoles(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -136,6 +182,27 @@ export default function AdminFinanceLoginPage() {
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-500">{error}</p>
             </div>
+          )}
+
+          {showRoleInitButton && (
+            <button
+              type="button"
+              onClick={handleInitializeRoles}
+              disabled={initializingRoles}
+              className="w-full mb-6 py-3 bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white font-bold rounded-2xl hover:from-cyan-600 hover:to-[#006B8C] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {initializingRoles ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  Initialisation...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5" />
+                  Initialiser les rôles Super Admin
+                </>
+              )}
+            </button>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">

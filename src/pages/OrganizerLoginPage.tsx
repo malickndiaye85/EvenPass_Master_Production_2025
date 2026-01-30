@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight, RefreshCw } from 'lucide-react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { auth, db } from '../firebase';
 import DynamicLogo from '../components/DynamicLogo';
+import { verifyOrganizersByEvents } from '../lib/initFirebaseRoles';
 
 export default function OrganizerLoginPage() {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function OrganizerLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [logoTapCount, setLogoTapCount] = useState(0);
   const [logoTapTimeout, setLogoTapTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [initializingRoles, setInitializingRoles] = useState(false);
+  const [showRoleInitButton, setShowRoleInitButton] = useState(false);
 
   const handleLogoClick = () => {
     // Clear existing timeout
@@ -54,7 +57,9 @@ export default function OrganizerLoginPage() {
       const organizerData = organizerSnapshot.val();
 
       if (!organizerData) {
-        setError('Aucun compte organisateur trouvé pour cet email');
+        console.log('[ORGANIZER LOGIN] ⚠️ Aucun compte organisateur trouvé pour:', user.uid);
+        setError('Aucun compte organisateur trouvé. Si vous avez des événements créés, cliquez sur "Vérifier les rôles" ci-dessous.');
+        setShowRoleInitButton(true);
         await auth.signOut();
         setLoading(false);
         return;
@@ -114,6 +119,31 @@ export default function OrganizerLoginPage() {
     }
   };
 
+  const handleVerifyOrganizers = async () => {
+    setInitializingRoles(true);
+    setError('');
+
+    try {
+      console.log('[ORGANIZER LOGIN] 🔧 Verifying organizers from events...');
+      const result = await verifyOrganizersByEvents();
+
+      if (result.success) {
+        console.log('[ORGANIZER LOGIN] ✅ Organizers verified successfully');
+        setError('');
+        alert('Vérification terminée!\n\n' + result.message + '\n\nVeuillez vous reconnecter.');
+        setShowRoleInitButton(false);
+      } else {
+        console.error('[ORGANIZER LOGIN] ❌ Failed to verify organizers:', result.message);
+        setError(result.message);
+      }
+    } catch (err: any) {
+      console.error('[ORGANIZER LOGIN] 💥 Exception during role verification:', err);
+      setError('Erreur lors de la vérification des rôles: ' + err.message);
+    } finally {
+      setInitializingRoles(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -141,6 +171,28 @@ export default function OrganizerLoginPage() {
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-600">{error}</p>
             </div>
+          )}
+
+          {/* Role Verification Button */}
+          {showRoleInitButton && (
+            <button
+              type="button"
+              onClick={handleVerifyOrganizers}
+              disabled={initializingRoles}
+              className="w-full mb-6 py-3 bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white font-bold rounded-xl hover:from-cyan-600 hover:to-[#006B8C] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {initializingRoles ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  Vérification en cours...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5" />
+                  Vérifier et corriger les rôles organisateurs
+                </>
+              )}
+            </button>
           )}
 
           {/* Login Form */}
