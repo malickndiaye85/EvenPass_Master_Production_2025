@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, DollarSign, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
+import { auth } from '../firebase';
 
 const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
@@ -52,23 +53,32 @@ export default function AdminFinanceLoginPage() {
     setError('');
     setLoading(true);
 
+    console.log('[ADMIN LOGIN] 🔐 Début de la connexion pour:', email);
+    console.log('[ADMIN LOGIN] Firebase Auth disponible:', !!auth);
+
     // Timeout de sécurité pour éviter le blocage infini
     const timeoutId = setTimeout(() => {
-      console.error('[ADMIN LOGIN] Timeout dépassé (10s)');
+      console.error('[ADMIN LOGIN] ⏰ Timeout dépassé (10s)');
       setError('Délai de connexion dépassé. Veuillez réessayer.');
       setLoading(false);
     }, 10000);
 
     try {
-      console.log('[ADMIN LOGIN] Tentative de connexion...');
+      console.log('[ADMIN LOGIN] 📨 Appel de signIn...');
       const { error: signInError } = await signIn(email, password);
 
       if (signInError) {
-        console.error('[ADMIN LOGIN] Erreur de connexion:', signInError.message);
+        console.error('[ADMIN LOGIN] ❌ Erreur de connexion:', signInError.message);
 
         // Gestion spéciale pour erreur 403 / PERMISSION_DENIED
         if (signInError.message.includes('PERMISSION_DENIED') || signInError.message.includes('403')) {
           setError('Accès refusé : Vérifiez vos privilèges admin dans Firebase Console (Security Rules)');
+        } else if (signInError.message.includes('auth/invalid-credential') || signInError.message.includes('auth/wrong-password')) {
+          setError('Email ou mot de passe incorrect');
+        } else if (signInError.message.includes('auth/user-not-found')) {
+          setError('Aucun compte trouvé avec cet email');
+        } else if (signInError.message.includes('auth/too-many-requests')) {
+          setError('Trop de tentatives. Réessayez dans quelques minutes');
         } else {
           setError(signInError.message);
         }
@@ -78,20 +88,26 @@ export default function AdminFinanceLoginPage() {
         return;
       }
 
-      console.log('[ADMIN LOGIN] Connexion réussie, attente du chargement du profil...');
+      console.log('[ADMIN LOGIN] ✅ Connexion réussie, attente du chargement du profil...');
 
       // Attendre que le profil soit chargé via authContext
       // Le useEffect se chargera de la redirection
       clearTimeout(timeoutId);
 
     } catch (err: any) {
-      console.error('[ADMIN LOGIN] Exception:', err);
+      console.error('[ADMIN LOGIN] 💥 Exception:', err);
 
       // Gestion spéciale pour erreur 403 / PERMISSION_DENIED
       if (err?.code === 'PERMISSION_DENIED' || err?.message?.includes('403')) {
         setError('Accès refusé : Vérifiez vos privilèges admin dans Firebase Console (Security Rules)');
+      } else if (err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password') {
+        setError('Email ou mot de passe incorrect');
+      } else if (err?.code === 'auth/user-not-found') {
+        setError('Aucun compte trouvé avec cet email');
+      } else if (err?.code === 'auth/too-many-requests') {
+        setError('Trop de tentatives. Réessayez dans quelques minutes');
       } else {
-        setError('Erreur de connexion');
+        setError('Erreur de connexion. Vérifiez votre connexion Internet.');
       }
 
       clearTimeout(timeoutId);

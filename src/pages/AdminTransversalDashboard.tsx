@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/FirebaseAuthContext';
 import DynamicLogo from '../components/DynamicLogo';
 import Logo from '../components/Logo';
+import AdminLandingBackgroundsManager from '../components/AdminLandingBackgroundsManager';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -19,7 +20,7 @@ const AdminTransversalDashboard: React.FC = () => {
   const { isDark } = useTheme();
   const { user, loading: authLoading, signOut } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage' | 'settings'>('overview');
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [partnerReports, setPartnerReports] = useState<PartnerReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -259,6 +260,21 @@ const AdminTransversalDashboard: React.FC = () => {
             >
               <Bus className="w-5 h-5 inline-block mr-2" />
               Gestion Voyage (DEM-DEM)
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
+                activeTab === 'settings'
+                  ? isDark
+                    ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
+                    : 'bg-gradient-to-r from-gray-700 to-gray-800 text-white'
+                  : isDark
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Settings className="w-5 h-5 inline-block mr-2" />
+              Paramètres
             </button>
           </div>
 
@@ -652,6 +668,12 @@ const AdminTransversalDashboard: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+              <AdminLandingBackgroundsManager isDark={isDark} userId={user?.id || ''} />
             </div>
           )}
         </div>

@@ -1,9 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Music, Bus, Ship } from 'lucide-react';
+import { useLandingBackgrounds } from '../lib/landingBackgrounds';
 
 export const RootLandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { backgrounds, loading } = useLandingBackgrounds();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white text-xl">Chargement...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -22,10 +32,13 @@ export const RootLandingPage: React.FC = () => {
         <div
           className="relative flex-1 min-h-[50vh] md:min-h-screen flex items-center justify-center cursor-pointer group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #0A1628 0%, #1a2942 100%)'
+            backgroundImage: `url(${backgrounds.express})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
           }}
           onClick={() => navigate('/voyage')}
         >
+          <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           <div className="relative z-10 text-center text-white space-y-8 p-8 transform group-hover:scale-105 transition-transform duration-300">
@@ -35,11 +48,11 @@ export const RootLandingPage: React.FC = () => {
             </div>
 
             <h2 className="text-5xl md:text-6xl font-display font-black tracking-tight">
-              DEM VOYAGE
+              DEM EXPRESS
             </h2>
 
-            <p className="text-2xl text-blue-300 font-semibold">
-              Transport • Ferry • Express
+            <p className="text-2xl text-green-400 font-semibold">
+              Navette Express • Ferry • Allo Dakar
             </p>
 
             <div className="pt-6">
@@ -56,10 +69,13 @@ export const RootLandingPage: React.FC = () => {
         <div
           className="relative flex-1 min-h-[50vh] md:min-h-screen flex items-center justify-center cursor-pointer group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #1A1A1A 0%, #2d2d2d 100%)'
+            backgroundImage: `url(${backgrounds.evenement})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
           }}
           onClick={() => navigate('/evenement')}
         >
+          <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           <div className="relative z-10 text-center text-white space-y-8 p-8 transform group-hover:scale-105 transition-transform duration-300">
