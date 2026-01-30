@@ -202,7 +202,7 @@ export default function DriverSignupPage() {
         title: 'Non connecté',
         message: 'Vous devez être connecté pour créer un profil chauffeur'
       });
-      setTimeout(() => navigate('/organizer/login'), 2000);
+      setTimeout(() => navigate('/transport/driver/login'), 2000);
       return;
     }
 
@@ -230,13 +230,13 @@ export default function DriverSignupPage() {
       setModal({
         isOpen: true,
         type: 'success',
-        title: 'Inscription réussie',
-        message: 'Votre profil a été créé avec succès. Redirection vers votre tableau de bord...'
+        title: 'Documents envoyés',
+        message: 'Votre compte est en attente de validation par l\'Admin Voyage.'
       });
 
       setTimeout(() => {
-        navigate('/voyage/chauffeur/dashboard');
-      }, 2000);
+        navigate('/transport/driver/login');
+      }, 3000);
     } catch (error) {
       console.error('Error creating driver profile:', error);
       setModal({

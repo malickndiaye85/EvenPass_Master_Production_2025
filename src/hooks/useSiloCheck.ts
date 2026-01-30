@@ -64,15 +64,15 @@ export function useSiloCheck({ requiredSilo, redirectTo = '/', allowAdmin = true
 }
 
 export function getSiloForRole(role: string): SiloType {
-  if (role === 'driver' || role === 'driver_pending') {
+  if (role === 'driver' || role === 'driver_pending' || role === 'ops_transport' || role === 'admin_maritime' || role === 'admin_finance_voyage') {
     return 'voyage';
   }
 
-  if (role === 'organizer' || role === 'organizer_pending') {
+  if (role === 'organizer' || role === 'organizer_pending' || role === 'ops_event' || role === 'admin_finance_event') {
     return 'evenement';
   }
 
-  if (role === 'super_admin' || role === 'admin') {
+  if (role === 'super_admin' || role === 'admin' || role === 'sub_admin') {
     return 'admin';
   }
 
@@ -80,12 +80,20 @@ export function getSiloForRole(role: string): SiloType {
 }
 
 export function checkSiloAccess(userSiloId: SiloType, requiredSilo: SiloType, userRole: string): boolean {
-  if (userRole === 'super_admin' || userRole === 'admin') {
+  if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'sub_admin') {
     return true;
   }
 
   if (requiredSilo === null) {
     return true;
+  }
+
+  if (requiredSilo === 'voyage') {
+    return userSiloId === 'voyage' || ['ops_transport', 'admin_maritime', 'admin_finance_voyage', 'driver', 'driver_pending'].includes(userRole);
+  }
+
+  if (requiredSilo === 'evenement') {
+    return userSiloId === 'evenement' || ['ops_event', 'admin_finance_event', 'organizer', 'organizer_pending'].includes(userRole);
   }
 
   return userSiloId === requiredSilo;

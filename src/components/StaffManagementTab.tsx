@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Edit2, Shield, Eye, EyeOff } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { ref, set, get, remove } from 'firebase/database';
+import { ref, set, get, remove, onValue } from 'firebase/database';
 import { auth, db } from '../firebase';
+
+type StaffRole = 'Sub_Admin' | 'Ops_Manager' | 'ops_transport' | 'ops_event' | 'admin_finance_voyage' | 'admin_finance_event' | 'admin_maritime' | 'sub_admin' | 'ops_manager';
 
 interface StaffMember {
   id: string;
   email: string;
-  role: 'Sub_Admin' | 'Ops_Manager';
-  silo: 'Voyage' | 'Événement';
+  role: StaffRole;
+  silo: 'Voyage' | 'Événement' | 'voyage' | 'événement';
+  silo_id?: string;
   created_at: string;
   created_by: string;
 }
@@ -25,7 +28,7 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'Ops_Manager' as 'Sub_Admin' | 'Ops_Manager',
+    role: 'ops_event' as StaffRole,
     silo: 'Événement' as 'Voyage' | 'Événement'
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -34,37 +37,40 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    loadStaffMembers();
-  }, []);
+    if (!db) return;
 
-  const loadStaffMembers = async () => {
-    try {
-      setLoading(true);
-      if (!db) return;
+    setLoading(true);
+    const staffRef = ref(db, 'staff');
 
-      const staffRef = ref(db, 'staff');
-      const snapshot = await get(staffRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const members: StaffMember[] = Object.entries(data).map(([id, value]: [string, any]) => ({
-          id,
-          email: value.email,
-          role: value.role,
-          silo: value.silo,
-          created_at: value.created_at,
-          created_by: value.created_by
-        }));
-        setStaffMembers(members);
-      } else {
-        setStaffMembers([]);
+    const unsubscribe = onValue(staffRef, (snapshot) => {
+      try {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const members: StaffMember[] = Object.entries(data).map(([id, value]: [string, any]) => ({
+            id,
+            email: value.email,
+            role: value.role,
+            silo: value.silo,
+            silo_id: value.silo_id || value.silo?.toLowerCase(),
+            created_at: value.created_at,
+            created_by: value.created_by
+          }));
+          setStaffMembers(members);
+        } else {
+          setStaffMembers([]);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du staff:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement du staff:', error);
-    } finally {
+    }, (error) => {
+      console.error('Erreur onValue staff:', error);
       setLoading(false);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,11 +95,14 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
 
       const newStaffId = userCredential.user.uid;
 
+      const silo_id = formData.silo.toLowerCase();
+
       const staffData: StaffMember = {
         id: newStaffId,
         email: formData.email,
         role: formData.role,
         silo: formData.silo,
+        silo_id: silo_id,
         created_at: new Date().toISOString(),
         created_by: superAdminId
       };
@@ -102,8 +111,9 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
 
       await set(ref(db, `users/${newStaffId}`), {
         email: formData.email,
-        role: formData.role === 'Sub_Admin' ? 'sub_admin' : 'ops_manager',
-        silo: formData.silo.toLowerCase(),
+        role: formData.role,
+        silo: silo_id,
+        silo_id: silo_id,
         created_at: new Date().toISOString()
       });
 
@@ -111,12 +121,10 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
       setFormData({
         email: '',
         password: '',
-        role: 'Ops_Manager',
+        role: 'ops_event',
         silo: 'Événement'
       });
       setShowCreateModal(false);
-
-      await loadStaffMembers();
 
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
@@ -149,8 +157,6 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
       await remove(ref(db, `users/${staffId}`));
 
       setSuccess('Membre supprimé avec succès');
-      await loadStaffMembers();
-
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
@@ -159,16 +165,23 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   };
 
   const getRoleBadge = (role: string) => {
-    if (role === 'Sub_Admin') {
-      return (
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400">
-          Sous-Admin
-        </span>
-      );
-    }
+    const roleMap: Record<string, { label: string; color: string }> = {
+      'Sub_Admin': { label: 'Sous-Admin', color: 'purple' },
+      'sub_admin': { label: 'Sous-Admin', color: 'purple' },
+      'Ops_Manager': { label: 'Ops Manager', color: 'blue' },
+      'ops_manager': { label: 'Ops Manager', color: 'blue' },
+      'ops_transport': { label: 'Ops Transport', color: 'cyan' },
+      'ops_event': { label: 'Ops Event', color: 'orange' },
+      'admin_finance_voyage': { label: 'Admin Finance Voyage', color: 'green' },
+      'admin_finance_event': { label: 'Admin Finance Event', color: 'pink' },
+      'admin_maritime': { label: 'Admin Maritime', color: 'indigo' }
+    };
+
+    const roleInfo = roleMap[role] || { label: role, color: 'gray' };
+
     return (
-      <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400">
-        Ops Manager
+      <span className={`px-3 py-1 rounded-full text-xs font-bold bg-${roleInfo.color}-500/20 text-${roleInfo.color}-400`}>
+        {roleInfo.label}
       </span>
     );
   };
@@ -253,6 +266,7 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                   <th className="text-left py-3 px-4 font-bold text-white/80">Email</th>
                   <th className="text-left py-3 px-4 font-bold text-white/80">Rôle</th>
                   <th className="text-left py-3 px-4 font-bold text-white/80">Silo</th>
+                  <th className="text-left py-3 px-4 font-bold text-white/80">Silo ID</th>
                   <th className="text-left py-3 px-4 font-bold text-white/80">Créé le</th>
                   <th className="text-right py-3 px-4 font-bold text-white/80">Actions</th>
                 </tr>
@@ -263,6 +277,11 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                     <td className="py-3 px-4 text-white font-medium">{member.email}</td>
                     <td className="py-3 px-4">{getRoleBadge(member.role)}</td>
                     <td className="py-3 px-4">{getSiloBadge(member.silo)}</td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-1 rounded bg-white/10 text-white/60 text-xs font-mono">
+                        {member.silo_id || 'N/A'}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 text-white/60 text-sm">
                       {new Date(member.created_at).toLocaleDateString('fr-FR')}
                     </td>
@@ -353,15 +372,26 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                 </label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'Sub_Admin' | 'Ops_Manager' })}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as StaffRole })}
                   className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#10B981]/50 focus:bg-white/10 transition-all"
                   required
                 >
-                  <option value="Ops_Manager">Ops Manager (accès limité)</option>
-                  <option value="Sub_Admin">Sous-Admin (accès étendu)</option>
+                  <optgroup label="Rôles Événement">
+                    <option value="ops_event">🎫 Ops Event (gestion événements)</option>
+                    <option value="admin_finance_event">💰 Admin Finance Event</option>
+                  </optgroup>
+                  <optgroup label="Rôles Voyage">
+                    <option value="ops_transport">🚗 Ops Transport (chauffeurs, navettes)</option>
+                    <option value="admin_maritime">🚢 Admin Maritime (LMDG, COSAMA)</option>
+                    <option value="admin_finance_voyage">💳 Admin Finance Voyage</option>
+                  </optgroup>
+                  <optgroup label="Rôles Transversaux">
+                    <option value="sub_admin">👑 Sous-Admin (accès étendu)</option>
+                    <option value="ops_manager">⚙️ Ops Manager (accès limité)</option>
+                  </optgroup>
                 </select>
                 <p className="text-xs text-white/40 mt-1">
-                  Ops Manager = gestion opérationnelle | Sous-Admin = gestion complète
+                  Le rôle détermine les permissions et l'accès aux fonctionnalités
                 </p>
               </div>
 

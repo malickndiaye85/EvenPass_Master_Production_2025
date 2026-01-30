@@ -7,6 +7,7 @@ import DynamicLogo from '../components/DynamicLogo';
 import Logo from '../components/Logo';
 import AdminLandingBackgroundsManager from '../components/AdminLandingBackgroundsManager';
 import StaffManagementTab from '../components/StaffManagementTab';
+import AccessDenied from '../components/AccessDenied';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -95,25 +96,10 @@ const AdminTransversalDashboard: React.FC = () => {
 
   if (!user || (user.role !== 'super_admin' && user.id !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]">
-        <div className="rounded-2xl p-8 text-center bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl max-w-md">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Settings className="w-10 h-10 text-red-500" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2 text-white">
-            Accès Refusé
-          </h2>
-          <p className="mb-6 text-white/60">
-            Vous devez être Super Admin pour accéder à cette page.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-6 py-3 bg-[#10B981] text-black rounded-xl font-bold hover:bg-[#059669] transition-all"
-          >
-            Retour à l'accueil
-          </button>
-        </div>
-      </div>
+      <AccessDenied
+        title="Accès Réservé Super Admin"
+        message="Vous devez être Super Admin pour accéder au Dashboard Transversal."
+      />
     );
   }
 
