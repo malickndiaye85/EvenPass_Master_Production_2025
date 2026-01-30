@@ -86,28 +86,28 @@ const AdminTransversalDashboard: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]">
+        <div className="w-12 h-12 border-4 border-[#00FF00] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!user || (user.role !== 'super_admin' && user.id !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-        <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg max-w-md`}>
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]">
+        <div className="rounded-2xl p-8 text-center bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl max-w-md">
           <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Settings className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className="text-2xl font-bold mb-2 text-white">
             Accès Refusé
           </h2>
-          <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className="mb-6 text-white/60">
             Vous devez être Super Admin pour accéder à cette page.
           </p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white rounded-xl font-bold hover:from-cyan-600 hover:to-[#006B8C] transition-all"
+            className="px-6 py-3 bg-[#00FF00] text-black rounded-xl font-bold hover:bg-[#00DD00] transition-all"
           >
             Retour à l'accueil
           </button>
@@ -117,13 +117,13 @@ const AdminTransversalDashboard: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+    <div className="min-h-screen bg-[#0A0A0B]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0B]/95 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
-              <ArrowLeft className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'} group-hover:translate-x-[-4px] transition-transform`} />
-              <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <ArrowLeft className="w-5 h-5 text-[#00FF00] group-hover:translate-x-[-4px] transition-transform" />
+              <span className="font-medium text-white/80">
                 Accueil
               </span>
             </button>
@@ -131,15 +131,11 @@ const AdminTransversalDashboard: React.FC = () => {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <Logo size="sm" variant="default" />
-                <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard Transversal</span>
+                <span className="text-lg font-bold text-white">Dashboard Transversal</span>
               </div>
               <button
                 onClick={handleLogout}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
-                  isDark
-                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                    : 'bg-red-50 text-red-600 hover:bg-red-100'
-                }`}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all bg-red-500/20 text-red-400 hover:bg-red-500/30"
                 title="Déconnexion"
               >
                 <LogOut className="w-4 h-4" />
@@ -153,61 +149,49 @@ const AdminTransversalDashboard: React.FC = () => {
       <div className="pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className="text-4xl font-black mb-2 text-white">
               Vue Transversale Admin
             </h1>
-            <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-lg text-white/60">
               Chiffre d'affaires EVEN & PASS
             </p>
           </div>
 
-          <div className={`rounded-2xl p-6 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+          <div className="rounded-2xl p-6 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <Calendar className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-              <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Filtres</span>
+              <Calendar className="w-5 h-5 text-[#00FF00]" />
+              <span className="font-bold text-white">Filtres</span>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
                   Date de début
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className={`w-full p-3 rounded-xl border-2 ${
-                    isDark
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  } focus:outline-none focus:border-cyan-500`}
+                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#00FF00]/50 focus:bg-white/10 transition-all"
                 />
               </div>
 
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
                   Date de fin
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className={`w-full p-3 rounded-xl border-2 ${
-                    isDark
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  } focus:outline-none focus:border-cyan-500`}
+                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#00FF00]/50 focus:bg-white/10 transition-all"
                 />
               </div>
 
               <div className="flex items-end">
                 <button
                   onClick={handleFilter}
-                  className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
-                    isDark
-                      ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] hover:from-cyan-600 hover:to-[#006B8C]'
-                      : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] hover:from-[#006B8C] hover:to-[#00475E]'
-                  }`}
+                  className="w-full py-3 rounded-xl font-bold bg-[#00FF00] text-black hover:bg-[#00DD00] transition-all"
                 >
                   Appliquer
                 </button>
@@ -215,17 +199,13 @@ const AdminTransversalDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`rounded-2xl p-2 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg flex gap-2`}>
+          <div className="rounded-2xl p-2 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl flex gap-2">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'overview'
-                  ? isDark
-                    ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white'
-                    : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] text-white'
-                  : isDark
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-[#00FF00] text-black'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <TrendingUp className="w-5 h-5 inline-block mr-2" />
@@ -235,12 +215,8 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('events')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'events'
-                  ? isDark
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : isDark
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-[#00FF00] text-black'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <Ticket className="w-5 h-5 inline-block mr-2" />
@@ -250,12 +226,8 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('voyage')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'voyage'
-                  ? isDark
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
-                  : isDark
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-[#00FF00] text-black'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <Bus className="w-5 h-5 inline-block mr-2" />
@@ -265,12 +237,8 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('settings')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'settings'
-                  ? isDark
-                    ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
-                    : 'bg-gradient-to-r from-gray-700 to-gray-800 text-white'
-                  : isDark
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-[#00FF00] text-black'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
               <Settings className="w-5 h-5 inline-block mr-2" />
@@ -281,64 +249,66 @@ const AdminTransversalDashboard: React.FC = () => {
           {activeTab === 'overview' && summary && (
             <>
               <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className={`rounded-2xl p-6 ${isDark ? 'bg-gradient-to-br from-purple-900/50 to-pink-900/50' : 'bg-gradient-to-br from-purple-50 to-pink-50'} border-2 ${isDark ? 'border-purple-700' : 'border-purple-200'} shadow-lg transform hover:scale-105 transition-all`}>
+                <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-orange-500/20 shadow-2xl transform hover:scale-105 transition-all">
                   <div className="flex items-center gap-3 mb-4">
-                    <Ticket className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                    <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="p-2 rounded-lg bg-orange-500/20">
+                      <Ticket className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <span className="text-lg font-bold text-white">
                       EVEN
                     </span>
                   </div>
-                  <div className={`text-3xl font-black ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                  <div className="text-3xl font-black text-orange-400">
                     {formatCurrency(summary.even_revenue)}
                   </div>
-                  <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="text-sm mt-2 text-white/60">
                     Événements & Billetterie
                   </div>
                 </div>
 
-                <div className={`rounded-2xl p-6 ${isDark ? 'bg-gradient-to-br from-cyan-900/50 to-blue-900/50' : 'bg-gradient-to-br from-cyan-50 to-blue-50'} border-2 ${isDark ? 'border-cyan-700' : 'border-cyan-200'} shadow-lg transform hover:scale-105 transition-all`}>
+                <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-cyan-500/20 shadow-2xl transform hover:scale-105 transition-all">
                   <div className="flex items-center gap-3 mb-4">
-                    <Bus className={`w-8 h-8 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
-                    <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      PASS
+                    <div className="p-2 rounded-lg bg-cyan-500/20">
+                      <Bus className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <span className="text-lg font-bold text-white">
+                      DEM-DEM
                     </span>
                   </div>
-                  <div className={`text-3xl font-black ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                  <div className="text-3xl font-black text-cyan-400">
                     {formatCurrency(summary.total_pass_revenue)}
                   </div>
-                  <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="text-sm mt-2 text-white/60">
                     Transport & Abonnements
                   </div>
                 </div>
 
-                <div className={`rounded-2xl p-6 ${isDark ? 'bg-gradient-to-br from-green-900/50 to-emerald-900/50' : 'bg-gradient-to-br from-green-50 to-emerald-50'} border-2 ${isDark ? 'border-green-700' : 'border-green-200'} shadow-lg transform hover:scale-105 transition-all`}>
+                <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-[#00FF00]/20 shadow-2xl transform hover:scale-105 transition-all">
                   <div className="flex items-center gap-3 mb-4">
-                    <TrendingUp className={`w-8 h-8 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                    <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="p-2 rounded-lg bg-[#00FF00]/20">
+                      <TrendingUp className="w-6 h-6 text-[#00FF00]" />
+                    </div>
+                    <span className="text-lg font-bold text-white">
                       TOTAL
                     </span>
                   </div>
-                  <div className={`text-3xl font-black ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  <div className="text-3xl font-black text-[#00FF00]">
                     {formatCurrency(summary.total_revenue)}
                   </div>
-                  <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="text-sm mt-2 text-white/60">
                     Chiffre d'affaires global
                   </div>
                 </div>
               </div>
 
-              <div className={`rounded-2xl p-6 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+              <div className="rounded-2xl p-6 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Détails PASS
+                  <h2 className="text-2xl font-black text-white">
+                    Détails DEM-DEM
                   </h2>
                   <button
                     onClick={handleExportSummary}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
-                      isDark
-                        ? 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30'
-                        : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-                    }`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#00FF00]/20 text-[#00FF00] hover:bg-[#00FF00]/30"
                   >
                     <Download className="w-4 h-4" />
                     Export CSV
@@ -346,56 +316,52 @@ const AdminTransversalDashboard: React.FC = () => {
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="text-sm font-semibold mb-1 text-white/60">
                       LMDG
                     </div>
-                    <div className={`text-xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    <div className="text-xl font-black text-cyan-400">
                       {formatCurrency(summary.pass_lmdg_revenue)}
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="text-sm font-semibold mb-1 text-white/60">
                       COSAMA
                     </div>
-                    <div className={`text-xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    <div className="text-xl font-black text-cyan-400">
                       {formatCurrency(summary.pass_cosama_revenue)}
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="text-sm font-semibold mb-1 text-white/60">
                       Interrégional
                     </div>
-                    <div className={`text-xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    <div className="text-xl font-black text-cyan-400">
                       {formatCurrency(summary.pass_interregional_revenue)}
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="text-sm font-semibold mb-1 text-white/60">
                       Abonnements
                     </div>
-                    <div className={`text-xl font-black ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    <div className="text-xl font-black text-cyan-400">
                       {formatCurrency(summary.pass_subscriptions_revenue)}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className={`rounded-2xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+              <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <h2 className="text-2xl font-black text-white">
                     Rapports Partenaires
                   </h2>
                   <button
                     onClick={handleExportPartners}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
-                      isDark
-                        ? 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30'
-                        : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-                    }`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#00FF00]/20 text-[#00FF00] hover:bg-[#00FF00]/30"
                   >
                     <FileText className="w-4 h-4" />
                     Export CSV
