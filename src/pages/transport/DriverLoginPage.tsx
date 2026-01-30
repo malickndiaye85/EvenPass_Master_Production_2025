@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, Lock, ArrowLeft } from 'lucide-react';
 import { CustomModal } from '../../components/CustomModal';
+import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
+import { db } from '../../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 export const DriverLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,12 +38,22 @@ export const DriverLoginPage: React.FC = () => {
     setFormData({ ...formData, phone: formatted });
   };
 
+  const hashPIN = async (pin: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const phoneDigits = formData.phone.replace(/\D/g, '');
+      const phoneFormatted = formatPhoneNumber(phoneDigits);
 
       if (phoneDigits.length !== 9) {
         setModal({
@@ -48,6 +62,7 @@ export const DriverLoginPage: React.FC = () => {
           title: 'Erreur',
           message: 'Numéro de téléphone invalide'
         });
+        setIsLoading(false);
         return;
       }
 
@@ -58,28 +73,84 @@ export const DriverLoginPage: React.FC = () => {
           title: 'Erreur',
           message: 'Le code PIN doit contenir 4 chiffres'
         });
+        setIsLoading(false);
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const driversRef = ref(db, 'drivers');
+      const driversQuery = query(driversRef, orderByChild('phone'), equalTo(phoneFormatted));
+      const snapshot = await get(driversQuery);
 
-      setModal({
-        isOpen: true,
-        type: 'success',
-        title: 'Connexion réussie',
-        message: 'Bienvenue dans votre espace Chauffeur'
-      });
+      if (!snapshot.exists()) {
+        setModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Compte introuvable',
+          message: 'Aucun compte chauffeur trouvé avec ce numéro. Veuillez vous inscrire d\'abord.'
+        });
+        setIsLoading(false);
+        return;
+      }
 
-      setTimeout(() => {
-        navigate('/voyage/chauffeur/dashboard');
-      }, 1500);
+      const drivers = snapshot.val();
+      const driverData = Object.values(drivers)[0] as any;
+
+      const pinHash = await hashPIN(formData.pin);
+
+      if (driverData.pinHash !== pinHash) {
+        setModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Code PIN incorrect',
+          message: 'Le code PIN saisi est incorrect. Veuillez réessayer.'
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (driverData.status === 'pending_verification') {
+        setModal({
+          isOpen: true,
+          type: 'info',
+          title: 'Compte en attente',
+          message: 'Votre compte est en cours de validation par l\'Admin Voyage. Vous serez notifié dès que votre compte sera validé.'
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (driverData.status === 'rejected') {
+        const rejectionReason = driverData.rejectionReason || 'Aucune raison spécifiée.';
+        setModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Compte rejeté',
+          message: `Votre demande a été rejetée. Motif: ${rejectionReason}`
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (driverData.status === 'verified') {
+        setModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Connexion réussie',
+          message: `Bienvenue ${driverData.firstName} !`
+        });
+
+        setTimeout(() => {
+          navigate('/voyage/chauffeur/dashboard');
+        }, 1500);
+      }
 
     } catch (error) {
+      console.error('Login error:', error);
       setModal({
         isOpen: true,
         type: 'error',
         title: 'Erreur de connexion',
-        message: 'Téléphone ou code PIN incorrect'
+        message: 'Une erreur est survenue. Veuillez réessayer.'
       });
     } finally {
       setIsLoading(false);

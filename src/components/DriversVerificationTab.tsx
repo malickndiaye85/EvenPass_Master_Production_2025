@@ -1,26 +1,29 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, User, Car, Shield, Clock, X, AlertTriangle } from 'lucide-react';
-import { ref, get, update } from 'firebase/database';
+import { CheckCircle, XCircle, Eye, FileText, Phone, User, Car, Shield, Clock, X, AlertTriangle, Calendar, Hash } from 'lucide-react';
+import { ref, get, update, onValue } from 'firebase/database';
 import { db } from '../firebase';
-import { maskPhoneNumber } from '../lib/phoneUtils';
-import AlertModal from './AlertModal';
-import ConfirmModal from './ConfirmModal';
 
 interface Driver {
   uid: string;
-  user_id: string;
-  full_name: string;
-  email: string;
+  firstName: string;
+  lastName: string;
   phone: string;
-  driver_license: string;
-  vehicle_insurance: string;
-  national_id: string;
-  vehicle_type?: string;
-  vehicle_model?: string;
-  plate_number?: string;
-  verification_status: string;
+  licenseNumber?: string;
+  licenseUrl: string;
+  insuranceUrl: string;
+  carteGriseUrl: string;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: string;
+  vehiclePlateNumber: string;
+  vehicleSeats: number;
+  vehiclePhotoUrl: string;
+  status: string;
+  role: string;
+  silo: string;
   silo_id: string;
-  created_at: string;
+  createdAt: number;
+  rejectionReason?: string;
 }
 
 interface RejectionModalState {
@@ -58,51 +61,46 @@ export default function DriversVerificationTab() {
   });
 
   useEffect(() => {
-    loadDrivers();
-  }, []);
+    if (!db) return;
 
-  const loadDrivers = async () => {
-    try {
-      const driversRef = ref(db, 'drivers');
-      const snapshot = await get(driversRef);
+    setLoading(true);
+    const driversRef = ref(db, 'drivers');
 
-      if (snapshot.exists()) {
-        const driversData = snapshot.val();
-        const driversList: Driver[] = [];
+    const unsubscribe = onValue(driversRef, (snapshot) => {
+      try {
+        if (snapshot.exists()) {
+          const driversData = snapshot.val();
+          const driversList: Driver[] = [];
 
-        for (const userId in driversData) {
-          const driver = driversData[userId];
+          for (const userId in driversData) {
+            const driver = driversData[userId];
 
-          if (driver.verification_status === 'pending' && driver.role === 'driver_pending') {
-            const userRef = ref(db, `users/${userId}`);
-            const userSnapshot = await get(userRef);
-            const userData = userSnapshot.val();
-
-            driversList.push({
-              ...driver,
-              uid: userId,
-              full_name: userData?.full_name || driver.full_name || '',
-              email: userData?.email || driver.email || '',
-              phone: userData?.phone || driver.phone || '',
-              silo_id: 'voyage',
-            });
+            if (driver.status === 'pending_verification' && driver.silo === 'voyage') {
+              driversList.push({
+                ...driver,
+                uid: userId,
+              });
+            }
           }
+
+          driversList.sort((a, b) => b.createdAt - a.createdAt);
+
+          setDrivers(driversList);
+        } else {
+          setDrivers([]);
         }
-
-        driversList.sort((a, b) => {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-
-        setDrivers(driversList);
-      } else {
-        setDrivers([]);
+      } catch (error) {
+        console.error('[FIREBASE] Error loading drivers:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('[FIREBASE] Error loading drivers:', error);
-    } finally {
+    }, (error) => {
+      console.error('[FIREBASE] Error onValue drivers:', error);
       setLoading(false);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleApproveClick = (driver: Driver) => {
     setDriverToApprove(driver);
@@ -118,30 +116,30 @@ export default function DriversVerificationTab() {
     try {
       const driverRef = ref(db, `drivers/${driverToApprove.uid}`);
       await update(driverRef, {
-        verification_status: 'verified',
+        status: 'verified',
         role: 'driver',
-        is_active: true,
+        isOnline: false,
         silo_id: 'voyage',
-        verified_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        verifiedAt: Date.now(),
+        updatedAt: Date.now(),
       });
 
       const userRef = ref(db, `users/${driverToApprove.uid}`);
       await update(userRef, {
         role: 'driver',
         silo_id: 'voyage',
+        status: 'verified',
       });
 
       setAlertModal({
         isOpen: true,
         type: 'success',
         title: 'Chauffeur approuvé',
-        message: `${driverToApprove.full_name} a été approuvé avec succès. Il peut maintenant accéder à l'espace chauffeur DEM-DEM Express.`,
+        message: `${driverToApprove.firstName} ${driverToApprove.lastName} a été approuvé avec succès. Il peut maintenant accéder à l'espace chauffeur Allo Dakar.`,
       });
 
       setSelectedDriver(null);
       setDriverToApprove(null);
-      loadDrivers();
     } catch (error: any) {
       console.error('[FIREBASE] Error approving driver:', error);
       setAlertModal({
@@ -183,16 +181,17 @@ export default function DriversVerificationTab() {
     try {
       const driverRef = ref(db, `drivers/${rejectionModal.driverId}`);
       await update(driverRef, {
-        verification_status: 'rejected',
+        status: 'rejected',
         role: 'driver_rejected',
-        rejection_reason: rejectionReason,
-        rejected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        rejectionReason: rejectionReason,
+        rejectedAt: Date.now(),
+        updatedAt: Date.now(),
       });
 
       const userRef = ref(db, `users/${rejectionModal.driverId}`);
       await update(userRef, {
         role: 'driver_rejected',
+        status: 'rejected',
       });
 
       setAlertModal({
