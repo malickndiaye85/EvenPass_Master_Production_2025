@@ -470,94 +470,90 @@ const COSAMABookingPage: React.FC = () => {
 
             {bookingType === 'passenger' && step === 2 && (
               <div>
-                <div className="text-center mb-8">
-                  <Ship className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-                  <h2 className={`text-4xl font-black mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <div className="text-center mb-6">
+                  <Ship className="w-12 h-12 mx-auto mb-3 text-cyan-400" />
+                  <h2 className="text-2xl md:text-3xl font-black mb-2 text-white">
                     Type d'hébergement
                   </h2>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className="text-sm text-white/70">
                     Cabines ou Pullman
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                <div className="grid md:grid-cols-2 gap-3 mb-6">
                   <button
                     onClick={() => setAccommodationType('cabin_2')}
-                    className={`p-6 transition-all ${
+                    className={`p-4 transition-all rounded-2xl ${
                       accommodationType === 'cabin_2'
-                        ? isDark ? 'bg-cyan-500/20 border-4 border-cyan-500' : 'bg-[#E6F1F5] border-4 border-[#0A7EA3]'
-                        : isDark ? 'bg-gray-700/50 border-2 border-gray-700' : 'bg-gray-50 border-2 border-gray-300'
+                        ? 'bg-cyan-500/20 border-2 border-cyan-400'
+                        : 'bg-white/5 border-2 border-white/10'
                     }`}
-                    style={{ borderRadius: '30px 10px 30px 10px' }}
                   >
-                    <div className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="text-base font-bold mb-1.5 text-white">
                       Cabine 2 places
                     </div>
-                    <div className={`text-3xl font-black mb-1 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                      {getTarif('cabin_2').toLocaleString()} FCFA
+                    <div className="text-2xl font-black mb-1 text-cyan-400">
+                      {getTarif('cabin_2').toLocaleString()} F
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Cabine privée • Confort optimal
+                    <div className="text-xs text-white/60">
+                      Privée • Confort
                     </div>
                   </button>
 
                   <button
                     onClick={() => setAccommodationType('cabin_4')}
-                    className={`p-6 transition-all ${
+                    className={`p-4 transition-all rounded-2xl ${
                       accommodationType === 'cabin_4'
-                        ? isDark ? 'bg-cyan-500/20 border-4 border-cyan-500' : 'bg-[#E6F1F5] border-4 border-[#0A7EA3]'
-                        : isDark ? 'bg-gray-700/50 border-2 border-gray-700' : 'bg-gray-50 border-2 border-gray-300'
+                        ? 'bg-cyan-500/20 border-2 border-cyan-400'
+                        : 'bg-white/5 border-2 border-white/10'
                     }`}
-                    style={{ borderRadius: '10px 30px 10px 30px' }}
                   >
-                    <div className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="text-base font-bold mb-1.5 text-white">
                       Cabine 4 places
                     </div>
-                    <div className={`text-3xl font-black mb-1 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                      {getTarif('cabin_4').toLocaleString()} FCFA
+                    <div className="text-2xl font-black mb-1 text-cyan-400">
+                      {getTarif('cabin_4').toLocaleString()} F
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Cabine partagée • Rapport qualité/prix
+                    <div className="text-xs text-white/60">
+                      Partagée • Qualité/Prix
                     </div>
                   </button>
 
                   <button
                     onClick={() => setAccommodationType('cabin_8')}
-                    className={`p-6 transition-all ${
+                    className={`p-4 transition-all rounded-2xl ${
                       accommodationType === 'cabin_8'
-                        ? isDark ? 'bg-cyan-500/20 border-4 border-cyan-500' : 'bg-[#E6F1F5] border-4 border-[#0A7EA3]'
-                        : isDark ? 'bg-gray-700/50 border-2 border-gray-700' : 'bg-gray-50 border-2 border-gray-300'
+                        ? 'bg-cyan-500/20 border-2 border-cyan-400'
+                        : 'bg-white/5 border-2 border-white/10'
                     }`}
-                    style={{ borderRadius: '30px 10px 30px 10px' }}
                   >
-                    <div className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="text-base font-bold mb-1.5 text-white">
                       Cabine 8 places
                     </div>
-                    <div className={`text-3xl font-black mb-1 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                      {getTarif('cabin_8').toLocaleString()} FCFA
+                    <div className="text-2xl font-black mb-1 text-cyan-400">
+                      {getTarif('cabin_8').toLocaleString()} F
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Dortoir • Prix économique
+                    <div className="text-xs text-white/60">
+                      Dortoir • Économique
                     </div>
                   </button>
 
                   <button
                     onClick={() => setAccommodationType('pullman')}
-                    className={`p-6 transition-all ${
+                    className={`p-4 transition-all rounded-2xl ${
                       accommodationType === 'pullman'
-                        ? isDark ? 'bg-cyan-500/20 border-4 border-cyan-500' : 'bg-[#E6F1F5] border-4 border-[#0A7EA3]'
-                        : isDark ? 'bg-gray-700/50 border-2 border-gray-700' : 'bg-gray-50 border-2 border-gray-300'
+                        ? 'bg-cyan-500/20 border-2 border-cyan-400'
+                        : 'bg-white/5 border-2 border-white/10'
                     }`}
-                    style={{ borderRadius: '10px 30px 10px 30px' }}
                   >
-                    <div className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="text-base font-bold mb-1.5 text-white">
                       Fauteuil Pullman
                     </div>
-                    <div className={`text-3xl font-black mb-1 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                      {getTarif('pullman').toLocaleString()} FCFA
+                    <div className="text-2xl font-black mb-1 text-cyan-400">
+                      {getTarif('pullman').toLocaleString()} F
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Siège inclinable • Climatisé
+                    <div className="text-xs text-white/60">
+                      Inclinable • Climatisé
                     </div>
                   </button>
                 </div>
@@ -631,16 +627,16 @@ const COSAMABookingPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="space-y-6 mb-6">
+                <div className="space-y-4 mb-6">
                   {passengers.map((passenger, index) => (
-                    <div key={index} className={`p-6 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`} style={{ borderRadius: index % 2 === 0 ? '30px 10px 30px 10px' : '10px 30px 10px 30px' }}>
-                      <div className={`text-lg font-black mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
+                    <div key={index} className="p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
+                      <div className="text-base font-bold mb-3 text-cyan-400">
                         Passager {index + 1}
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div>
-                          <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          <label className="block text-xs font-semibold mb-1.5 text-white/80">
                             Nom complet
                           </label>
                           <input
@@ -648,22 +644,18 @@ const COSAMABookingPage: React.FC = () => {
                             value={passenger.name}
                             onChange={(e) => updatePassenger(index, 'name', e.target.value)}
                             placeholder="Prénom et nom"
-                            className={`w-full p-4 border-2 ${
-                              isDark
-                                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                            } focus:outline-none focus:border-cyan-500`}
-                            style={{ borderRadius: '15px 8px 15px 8px' }}
+                            className="w-full p-3 border-2 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 rounded-xl"
                           />
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-3">
                           <div>
-                            <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <label className="block text-xs font-semibold mb-1.5 text-white/80">
                               Numéro CNI {isResident && '(13 chiffres)'}
                             </label>
                             <input
                               type="text"
+                              inputMode="numeric"
                               value={passenger.cni}
                               onChange={(e) => {
                                 const cleaned = e.target.value.replace(/\D/g, '');
@@ -681,24 +673,22 @@ const COSAMABookingPage: React.FC = () => {
                               }}
                               placeholder="1234567890123"
                               maxLength={13}
-                              className={`w-full p-4 font-mono border-2 ${
-                                passenger.cni && passenger.cni.length !== 13 && passenger.passport.length === 0 ? 'border-red-500' :
-                                isDark
-                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                              } focus:outline-none focus:border-cyan-500`}
-                              style={{ borderRadius: '8px 15px 8px 15px' }}
+                              className={`w-full p-3 font-mono border-2 ${
+                                passenger.cni && passenger.cni.length !== 13 && passenger.passport.length === 0
+                                  ? 'border-red-400 bg-red-500/10'
+                                  : 'bg-white/10 backdrop-blur-sm border-white/20'
+                              } text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 rounded-xl`}
                             />
                             {passenger.cni && passenger.cni.length !== 13 && passenger.passport.length === 0 && (
-                              <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                                <AlertCircle className="w-4 h-4" />
+                              <div className="flex items-center gap-1.5 mt-1.5 text-red-400 text-xs">
+                                <AlertCircle className="w-3.5 h-3.5" />
                                 <span>13 chiffres requis ({passenger.cni.length}/13)</span>
                               </div>
                             )}
                           </div>
 
                           <div>
-                            <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <label className="block text-xs font-semibold mb-1.5 text-white/80">
                               Numéro de Passeport
                             </label>
                             <input
@@ -717,25 +707,20 @@ const COSAMABookingPage: React.FC = () => {
                                 }
                               }}
                               placeholder="AB1234567"
-                              className={`w-full p-4 font-mono uppercase border-2 ${
-                                isDark
-                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                              } focus:outline-none focus:border-cyan-500`}
-                              style={{ borderRadius: '15px 8px 15px 8px' }}
+                              className="w-full p-3 font-mono uppercase border-2 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 rounded-xl"
                             />
                             {passenger.passport.length > 0 && passenger.passport.length < 6 && (
-                              <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                                <AlertCircle className="w-4 h-4" />
+                              <div className="flex items-center gap-1.5 mt-1.5 text-red-400 text-xs">
+                                <AlertCircle className="w-3.5 h-3.5" />
                                 <span>Min. 6 caractères ({passenger.passport.length}/6)</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className={`p-3 text-xs ${isDark ? 'bg-gray-700/30 text-gray-400' : 'bg-blue-50 text-blue-700'}`} style={{ borderRadius: '12px' }}>
+                        <div className="p-2.5 text-xs bg-cyan-500/10 text-cyan-300 rounded-xl border border-cyan-400/20">
                           <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                             <span>Renseignez soit votre CNI (résidents), soit votre Passeport (non-résidents)</span>
                           </div>
                         </div>
@@ -744,39 +729,34 @@ const COSAMABookingPage: React.FC = () => {
                   ))}
                 </div>
 
-                <div className={`p-6 mb-6 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`} style={{ borderRadius: '25px 12px 25px 12px' }}>
-                  <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <div className="p-4 mb-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
+                  <label className="block text-xs font-semibold mb-2 text-white/80">
                     Téléphone (pour recevoir les billets)
                   </label>
                   <input
                     type="tel"
+                    inputMode="tel"
                     value={holderPhone}
                     onChange={(e) => setHolderPhone(e.target.value)}
-                    placeholder=""
-                    className={`w-full p-5 text-xl font-bold border-2 ${
-                      isDark
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                    } focus:outline-none focus:border-cyan-500`}
-                    style={{ borderRadius: '20px 8px 20px 8px' }}
+                    placeholder="77 123 45 67"
+                    className="w-full p-3 text-lg font-bold border-2 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 rounded-xl"
                   />
                 </div>
 
-                <button
-                  onClick={() => setStep(4)}
-                  disabled={!canProceed()}
-                  className={`w-full py-5 font-black text-xl text-white transition-all flex items-center justify-center gap-3 ${
-                    canProceed()
-                      ? isDark
-                        ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] hover:from-cyan-600 hover:to-[#006B8C]'
-                        : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] hover:from-[#006B8C] hover:to-[#00475E]'
-                      : 'bg-gray-400 cursor-not-allowed'
-                  }`}
-                  style={{ borderRadius: '25px 10px 25px 10px' }}
-                >
-                  Continuer
-                  <ArrowRight className="w-6 h-6" />
-                </button>
+                <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-blue-950 via-blue-950 to-transparent pt-4 pb-6 -mx-8 md:-mx-12 px-8 md:px-12">
+                  <button
+                    onClick={() => setStep(4)}
+                    disabled={!canProceed()}
+                    className={`w-full py-4 font-black text-lg text-white transition-all flex items-center justify-center gap-2 rounded-2xl shadow-lg ${
+                      canProceed()
+                        ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 hover:scale-[1.02]'
+                        : 'bg-gray-600 cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    Continuer
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             )}
 
