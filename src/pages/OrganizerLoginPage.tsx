@@ -145,7 +145,7 @@ export default function OrganizerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-[#0A0A0B] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo - Triple tap for admin access */}
         <div
@@ -155,21 +155,21 @@ export default function OrganizerLoginPage() {
           <div className="flex justify-center mb-6">
             <DynamicLogo size="xl" mode="event" />
           </div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Espace Organisateur
           </h1>
-          <p className="text-[#6B7280] text-base">
+          <p className="text-white/60 text-base">
             Gérez vos événements en toute simplicité
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl p-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
@@ -179,7 +179,7 @@ export default function OrganizerLoginPage() {
               type="button"
               onClick={handleVerifyOrganizers}
               disabled={initializingRoles}
-              className="w-full mb-6 py-3 bg-gradient-to-r from-cyan-500 to-[#0A7EA3] text-white font-bold rounded-xl hover:from-cyan-600 hover:to-[#006B8C] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mb-6 py-3 bg-[#10B981] text-white font-bold rounded-xl hover:bg-[#059669] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {initializingRoles ? (
                 <>
@@ -199,17 +199,17 @@ export default function OrganizerLoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
+              <label className="block text-sm font-medium text-white/80 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full h-[52px] pl-12 pr-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#1A1A1A] placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:bg-white transition-all duration-200"
+                  className="w-full h-[52px] pl-12 pr-4 bg-[#1E293B] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#10B981]/50 focus:bg-[#1E293B] transition-all duration-200"
                   placeholder="votre@email.com"
                 />
               </div>
@@ -217,29 +217,29 @@ export default function OrganizerLoginPage() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
+              <label className="block text-sm font-medium text-white/80 mb-2">
                 Mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full h-[52px] pl-12 pr-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#1A1A1A] placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:bg-white transition-all duration-200"
+                  className="w-full h-[52px] pl-12 pr-14 bg-[#1E293B] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#10B981]/50 focus:bg-[#1E293B] transition-all duration-200"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1.5 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1.5 rounded-lg hover:bg-white/10 transition-all duration-200"
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-[#6B7280]" />
+                    <EyeOff className="w-5 h-5 text-white/60" />
                   ) : (
-                    <Eye className="w-5 h-5 text-[#6B7280]" />
+                    <Eye className="w-5 h-5 text-white/60" />
                   )}
                 </button>
               </div>
@@ -250,7 +250,7 @@ export default function OrganizerLoginPage() {
               <button
                 type="button"
                 onClick={handlePasswordReset}
-                className="text-sm text-[#FF6B00] hover:text-[#FF8533] transition-colors duration-200 font-medium"
+                className="text-sm text-[#10B981] hover:text-[#059669] transition-colors duration-200 font-medium"
               >
                 Mot de passe oublié ?
               </button>
@@ -260,7 +260,7 @@ export default function OrganizerLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-[52px] bg-[#FF6B00] hover:bg-[#FF8533] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-[52px] bg-[#10B981] hover:bg-[#059669] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -279,17 +279,17 @@ export default function OrganizerLoginPage() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E5E7EB]"></div>
+              <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-[#6B7280]">ou</span>
+              <span className="px-4 bg-white/5 text-white/60">ou</span>
             </div>
           </div>
 
           {/* Create Account Button */}
           <button
             onClick={() => navigate('/organizer/signup')}
-            className="w-full h-[52px] bg-transparent border-2 border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/5 font-semibold rounded-xl transition-all duration-200"
+            className="w-full h-[52px] bg-transparent border-2 border-[#10B981] text-[#10B981] hover:bg-[#10B981]/10 font-semibold rounded-xl transition-all duration-200"
           >
             Créer un compte organisateur
           </button>
@@ -298,7 +298,7 @@ export default function OrganizerLoginPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-[#6B7280] hover:text-[#FF6B00] transition-colors duration-200"
+              className="text-sm text-white/60 hover:text-[#10B981] transition-colors duration-200"
             >
               Retour à l'accueil
             </button>
