@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, X, Clock, LogOut, Package, Plus, Loader, Users, Ship, TrendingUp } from 'lucide-react';
+import { Calendar, MapPin, X, Clock, LogOut, Package, Plus, Loader, Users, Ship, TrendingUp, Car, Ticket } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { mockEvents } from '../lib/mockData';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
+import DriversVerificationTab from '../components/DriversVerificationTab';
 import AdminKPICards from '../components/AdminKPICards';
 import AdminBulkStockManager from '../components/AdminBulkStockManager';
 import AdminPayoutManager from '../components/AdminPayoutManager';
@@ -33,7 +34,7 @@ export default function AdminFinancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'verification' | 'bulk' | 'ads' | 'maritime' | 'organizers'>('events');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'events' | 'voyage_validation' | 'evenement_validation' | 'bulk' | 'ads' | 'maritime' | 'organizers'>('events');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [organizers, setOrganizers] = useState<any[]>([]);
@@ -424,14 +425,26 @@ export default function AdminFinancePage() {
                 📦 Stocks Blocs
               </button>
               <button
-                onClick={() => setActiveTab('verification')}
-                className={`px-6 py-3 font-black transition-colors relative ${
-                  activeTab === 'verification'
+                onClick={() => setActiveTab('voyage_validation')}
+                className={`px-6 py-3 font-black transition-colors relative flex items-center gap-2 ${
+                  activeTab === 'voyage_validation'
+                    ? 'text-[#10B981] border-b-2 border-[#10B981]'
+                    : 'text-[#B5B5B5] hover:text-white'
+                }`}
+              >
+                <Car className="w-5 h-5" />
+                VOYAGE
+              </button>
+              <button
+                onClick={() => setActiveTab('evenement_validation')}
+                className={`px-6 py-3 font-black transition-colors relative flex items-center gap-2 ${
+                  activeTab === 'evenement_validation'
                     ? 'text-[#FF5F05] border-b-2 border-[#FF5F05]'
                     : 'text-[#B5B5B5] hover:text-white'
                 }`}
               >
-                ✅ Vérification
+                <Ticket className="w-5 h-5" />
+                ÉVÉNEMENT
                 {pendingOrganizers > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs font-black rounded-full flex items-center justify-center animate-pulse">
                     {pendingOrganizers}
@@ -474,7 +487,8 @@ export default function AdminFinancePage() {
           {activeTab === 'events' && <AdminEventsManager />}
           {activeTab === 'payouts' && <AdminPayoutManager />}
           {activeTab === 'bulk' && <AdminBulkStockManager />}
-          {activeTab === 'verification' && <OrganizerVerificationTab />}
+          {activeTab === 'voyage_validation' && <DriversVerificationTab />}
+          {activeTab === 'evenement_validation' && <OrganizerVerificationTab />}
           {activeTab === 'ads' && <AdminHomeAdsManager />}
           {activeTab === 'organizers' && <OrganizersManagementTab />}
           {activeTab === 'maritime' && (

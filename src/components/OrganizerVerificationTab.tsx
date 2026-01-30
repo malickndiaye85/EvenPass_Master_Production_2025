@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Clock, X } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Clock, X, AlertTriangle } from 'lucide-react';
 import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
 import { db } from '../firebase';
 import { maskPhoneNumber } from '../lib/phoneUtils';
+import AlertModal from './AlertModal';
+import ConfirmModal from './ConfirmModal';
 
 interface Organizer {
   uid: string;
@@ -17,18 +19,46 @@ interface Organizer {
   website: string | null;
   city: string | null;
   bank_account_info: any;
+  silo_id: string;
   created_at: string;
   full_name?: string;
   email?: string;
   phone?: string;
 }
 
+interface RejectionModalState {
+  isOpen: boolean;
+  organizerId: string | null;
+  organizerName: string;
+}
+
 export default function OrganizerVerificationTab() {
   const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrganizer, setSelectedOrganizer] = useState<Organizer | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [organizerToApprove, setOrganizerToApprove] = useState<Organizer | null>(null);
+
+  const [rejectionModal, setRejectionModal] = useState<RejectionModalState>({
+    isOpen: false,
+    organizerId: null,
+    organizerName: '',
+  });
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
   useEffect(() => {
     loadOrganizers();
@@ -57,6 +87,7 @@ export default function OrganizerVerificationTab() {
               full_name: userData?.full_name || '',
               email: userData?.email || '',
               phone: userData?.phone || '',
+              silo_id: 'evenement',
             });
           }
         }
@@ -76,58 +107,114 @@ export default function OrganizerVerificationTab() {
     }
   };
 
-  const handleApprove = async (organizerId: string) => {
-    if (!confirm('✅ Approuver cet organisateur ? Il pourra créer des événements immédiatement.')) {
-      return;
-    }
+  const handleApproveClick = (organizer: Organizer) => {
+    setOrganizerToApprove(organizer);
+    setShowApproveModal(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!organizerToApprove) return;
 
     setProcessing(true);
+    setShowApproveModal(false);
+
     try {
-      const organizerRef = ref(db, `organizers/${organizerId}`);
+      const organizerRef = ref(db, `organizers/${organizerToApprove.uid}`);
       await update(organizerRef, {
         verification_status: 'verified',
         is_active: true,
+        silo_id: 'evenement',
+        verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
 
-      alert('✅ Organisateur approuvé avec succès!');
+      const userRef = ref(db, `users/${organizerToApprove.uid}`);
+      await update(userRef, {
+        role: 'organizer',
+        silo_id: 'evenement',
+      });
+
+      setAlertModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Organisateur approuvé',
+        message: `${organizerToApprove.organization_name} a été approuvé avec succès. Il peut maintenant créer des événements.`,
+      });
+
       setSelectedOrganizer(null);
+      setOrganizerToApprove(null);
       loadOrganizers();
     } catch (error: any) {
       console.error('[FIREBASE] Error approving organizer:', error);
-      alert('❌ Erreur: ' + error.message);
+      setAlertModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur',
+        message: error.message || 'Une erreur est survenue lors de l\'approbation.',
+      });
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleReject = async (organizerId: string) => {
-    if (!rejectionReason.trim()) {
-      alert('⚠️ Veuillez fournir une raison pour le refus');
-      return;
-    }
+  const handleRejectClick = (organizer: Organizer) => {
+    setRejectionModal({
+      isOpen: true,
+      organizerId: organizer.uid,
+      organizerName: organizer.organization_name,
+    });
+    setRejectionReason('');
+  };
 
-    if (!confirm('❌ Rejeter cet organisateur ? Il sera notifié par email.')) {
+  const handleRejectConfirm = async () => {
+    if (!rejectionModal.organizerId) return;
+
+    if (!rejectionReason.trim()) {
+      setAlertModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Motif requis',
+        message: 'Veuillez préciser le motif du rejet (ex: Documents incomplets).',
+      });
       return;
     }
 
     setProcessing(true);
+    setRejectionModal({ isOpen: false, organizerId: null, organizerName: '' });
+
     try {
-      const organizerRef = ref(db, `organizers/${organizerId}`);
+      const organizerRef = ref(db, `organizers/${rejectionModal.organizerId}`);
       await update(organizerRef, {
         verification_status: 'rejected',
         is_active: false,
         rejection_reason: rejectionReason,
+        rejected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
 
-      alert('❌ Organisateur rejeté');
+      const userRef = ref(db, `users/${rejectionModal.organizerId}`);
+      await update(userRef, {
+        role: 'organizer_rejected',
+      });
+
+      setAlertModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Organisateur rejeté',
+        message: `Le compte a été rejeté. Motif: ${rejectionReason}`,
+      });
+
       setSelectedOrganizer(null);
       setRejectionReason('');
       loadOrganizers();
     } catch (error: any) {
       console.error('[FIREBASE] Error rejecting organizer:', error);
-      alert('❌ Erreur: ' + error.message);
+      setAlertModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Erreur',
+        message: error.message || 'Une erreur est survenue lors du rejet.',
+      });
     } finally {
       setProcessing(false);
     }
@@ -164,9 +251,14 @@ export default function OrganizerVerificationTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">
-          Vérification des Organisateurs ({organizers.length})
-        </h2>
+        <div>
+          <h2 className="text-2xl font-black text-white mb-2">
+            🎫 Validation des Organisateurs (SILO ÉVÉNEMENT)
+          </h2>
+          <p className="text-white/60">
+            {organizers.length} organisateur{organizers.length !== 1 ? 's' : ''} en attente de validation
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -353,43 +445,106 @@ export default function OrganizerVerificationTab() {
               <div className="border-t border-[#0F0F0F] pt-6">
                 <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
 
-                <div className="space-y-4">
-                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                    <button
-                      onClick={() => handleApprove(selectedOrganizer.uid)}
-                      disabled={processing}
-                      className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      Approuver l'organisateur
-                    </button>
-                    <p className="text-xs text-green-500 mt-2">
-                      L'organisateur pourra créer des événements immédiatement
-                    </p>
-                  </div>
-
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                    <textarea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Raison du refus (obligatoire)"
-                      rows={3}
-                      className="w-full px-4 py-3 bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg text-white placeholder-[#B5B5B5] focus:outline-none focus:border-red-500 mb-3"
-                    />
-                    <button
-                      onClick={() => handleReject(selectedOrganizer.uid)}
-                      disabled={processing || !rejectionReason.trim()}
-                      className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      <XCircle className="w-5 h-5" />
-                      Rejeter la demande
-                    </button>
-                  </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleApproveClick(selectedOrganizer)}
+                    disabled={processing}
+                    className="flex-1 py-3 bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Approuver
+                  </button>
+                  <button
+                    onClick={() => handleRejectClick(selectedOrganizer)}
+                    disabled={processing}
+                    className="flex-1 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Rejeter
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modale de confirmation d'approbation */}
+      {showApproveModal && organizerToApprove && (
+        <ConfirmModal
+          title="Approuver cet organisateur ?"
+          message={`Êtes-vous sûr de vouloir approuver ${organizerToApprove.organization_name} ? Il pourra créer des événements immédiatement.`}
+          onConfirm={handleApproveConfirm}
+          onCancel={() => {
+            setShowApproveModal(false);
+            setOrganizerToApprove(null);
+          }}
+          confirmText="Approuver"
+          confirmColor="bg-[#10B981] hover:bg-[#059669]"
+        />
+      )}
+
+      {/* Modale de rejet avec motif */}
+      {rejectionModal.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Rejeter cet organisateur</h3>
+                <p className="text-sm text-white/60">{rejectionModal.organizerName}</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white/80 mb-2">
+                Motif du rejet *
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Ex: Documents incomplets, informations incorrectes, NINEA invalide..."
+                rows={4}
+                className="w-full px-4 py-3 bg-[#1E293B] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-red-500/50 transition-all resize-none"
+              />
+              <p className="text-xs text-white/50 mt-2">
+                Ce motif sera enregistré et pourra être consulté par l'organisateur.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRejectConfirm}
+                disabled={processing || !rejectionReason.trim()}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? 'Traitement...' : 'Confirmer le rejet'}
+              </button>
+              <button
+                onClick={() => {
+                  setRejectionModal({ isOpen: false, organizerId: null, organizerName: '' });
+                  setRejectionReason('');
+                }}
+                disabled={processing}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale d'alerte */}
+      {alertModal.isOpen && (
+        <AlertModal
+          type={alertModal.type}
+          title={alertModal.title}
+          message={alertModal.message}
+          onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        />
       )}
     </div>
   );
