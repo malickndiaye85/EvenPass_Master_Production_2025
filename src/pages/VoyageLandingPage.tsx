@@ -87,7 +87,7 @@ export const VoyageLandingPage: React.FC = () => {
           </div>
           <button
             className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-bold rounded-2xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-            onClick={() => navigate('/voyage/recherche-trajets')}
+            onClick={() => navigate('/voyage/allo-dakar')}
           >
             <Search size={20} />
             Rechercher un trajet
@@ -97,7 +97,7 @@ export const VoyageLandingPage: React.FC = () => {
         <div className="space-y-5">
           <div
             className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl p-8 md:p-10 border-2 border-white/10 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.3)] hover:border-[#10B981]/50 transition-all duration-300 cursor-pointer group"
-            onClick={() => navigate('/voyage/recherche-trajets')}
+            onClick={() => navigate('/voyage/allo-dakar')}
           >
             <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8">
               <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-300 border border-white/20">
@@ -189,10 +189,12 @@ export const VoyageLandingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-20 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl p-12 text-white shadow-2xl border border-amber-400/20">
-          <div className="flex flex-col md:flex-row items-center gap-12">
+        <div className="mt-20 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl p-12 text-white shadow-2xl border border-amber-400/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-[1500ms]"></div>
+
+          <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
             <div className="flex-1">
-              <div className="inline-block px-4 py-1.5 bg-amber-400/20 text-amber-300 rounded-full text-xs font-semibold mb-4 border border-amber-400/30">
+              <div className="inline-block px-4 py-1.5 bg-amber-400/20 text-amber-300 rounded-full text-xs font-semibold mb-4 border border-amber-400/30 animate-pulse">
                 OFFRE PREMIUM
               </div>
               <h2 className="text-4xl font-display font-bold mb-5 tracking-tight">
@@ -202,7 +204,7 @@ export const VoyageLandingPage: React.FC = () => {
                 Abonnements illimités pour vos trajets quotidiens. Économisez jusqu'à 40% sur vos déplacements et voyagez en toute sérénité.
               </p>
               <button
-                className="px-8 py-4 bg-amber-400 text-blue-950 font-bold rounded-xl hover:bg-amber-300 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-3"
+                className="px-8 py-4 bg-amber-400 text-blue-950 font-bold rounded-xl hover:bg-amber-300 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-3 hover:scale-105"
                 onClick={() => navigate('/voyage/express')}
               >
                 Découvrir les Pass
@@ -210,8 +212,9 @@ export const VoyageLandingPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="w-72 h-48 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-xl">
-              <CreditCard size={72} className="text-amber-300/80" strokeWidth={1} />
+            <div className="w-72 h-48 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent -skew-x-12 animate-shimmer"></div>
+              <CreditCard size={72} className="text-amber-300/80 relative z-10" strokeWidth={1} />
             </div>
           </div>
         </div>

@@ -248,8 +248,8 @@ const COSAMABookingPage: React.FC = () => {
   const steps = getSteps();
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-blue-950/95 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <DynamicLogo />
@@ -265,19 +265,15 @@ const COSAMABookingPage: React.FC = () => {
                 <div className="flex flex-col items-center">
                   <div className={`w-10 h-10 flex items-center justify-center text-sm font-bold transition-all ${
                     step >= s.number
-                      ? isDark
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-[#0A7EA3] text-white'
-                      : isDark
-                        ? 'bg-gray-800 text-gray-600'
-                        : 'bg-gray-200 text-gray-400'
+                      ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/50'
+                      : 'bg-white/10 text-white/40'
                   }`} style={{ borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' }}>
                     {step > s.number ? <Check className="w-5 h-5" /> : s.number}
                   </div>
                   <span className={`text-xs mt-1 hidden md:block ${
                     step >= s.number
-                      ? isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'
-                      : isDark ? 'text-gray-600' : 'text-gray-400'
+                      ? 'text-cyan-400 font-bold'
+                      : 'text-white/40'
                   }`}>
                     {s.label}
                   </span>
@@ -285,23 +281,23 @@ const COSAMABookingPage: React.FC = () => {
                 {index < steps.length - 1 && (
                   <div className={`h-0.5 w-12 ${
                     step > s.number
-                      ? isDark ? 'bg-cyan-500' : 'bg-[#0A7EA3]'
-                      : isDark ? 'bg-gray-800' : 'bg-gray-200'
+                      ? 'bg-cyan-500'
+                      : 'bg-white/10'
                   }`} />
                 )}
               </React.Fragment>
             ))}
           </div>
 
-          <div className={`p-8 md:p-12 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-2xl`} style={{ borderRadius: '50px 20px 50px 20px' }}>
+          <div className="p-8 md:p-12 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 shadow-2xl border-2 border-white/10" style={{ borderRadius: '50px 20px 50px 20px' }}>
             {step === 0 && (
               <div>
                 <div className="text-center mb-8">
-                  <Ship className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-                  <h2 className={`text-4xl font-black mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <Ship className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
+                  <h2 className="text-4xl font-black mb-3 text-white">
                     Type de réservation
                   </h2>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className="text-lg text-white/70">
                     Passager ou Transport de marchandises
                   </p>
                 </div>
@@ -312,21 +308,17 @@ const COSAMABookingPage: React.FC = () => {
                       setBookingType('passenger');
                       setStep(1);
                     }}
-                    className={`p-8 transition-all transform hover:scale-105 ${
-                      isDark
-                        ? 'bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border-4 border-cyan-500 hover:border-cyan-400'
-                        : 'bg-gradient-to-br from-[#E6F1F5] to-[#B3D9E6] border-4 border-[#0A7EA3] hover:border-[#006B8C]'
-                    }`}
+                    className="p-10 md:p-12 transition-all transform hover:scale-105 bg-white/10 backdrop-blur-sm border-4 border-cyan-400 hover:border-cyan-300 hover:bg-white/15 active:scale-95"
                     style={{ borderRadius: '40px 15px 40px 15px' }}
                   >
-                    <User className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-                    <div className={`text-3xl font-black mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <User className="w-20 h-20 mx-auto mb-4 text-cyan-400" />
+                    <div className="text-3xl md:text-4xl font-black mb-3 text-white">
                       PASSAGER
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-base text-white/80 mb-2">
                       Réservez votre traversée
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-base text-white/80">
                       Cabines & Pullman
                     </div>
                   </button>
@@ -336,21 +328,17 @@ const COSAMABookingPage: React.FC = () => {
                       setBookingType('fret');
                       setStep(1);
                     }}
-                    className={`p-8 transition-all transform hover:scale-105 ${
-                      isDark
-                        ? 'bg-gradient-to-br from-orange-900/40 to-amber-900/40 border-4 border-orange-500 hover:border-orange-400'
-                        : 'bg-gradient-to-br from-orange-100 to-amber-100 border-4 border-orange-500 hover:border-orange-600'
-                    }`}
+                    className="p-10 md:p-12 transition-all transform hover:scale-105 bg-white/10 backdrop-blur-sm border-4 border-orange-400 hover:border-orange-300 hover:bg-white/15 active:scale-95"
                     style={{ borderRadius: '15px 40px 15px 40px' }}
                   >
-                    <Package className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
-                    <div className={`text-3xl font-black mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <Package className="w-20 h-20 mx-auto mb-4 text-orange-400" />
+                    <div className="text-3xl md:text-4xl font-black mb-3 text-white">
                       FRET
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-base text-white/80 mb-2">
                       Véhicules & Bagages
                     </div>
-                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-base text-white/80">
                       Transport de marchandises
                     </div>
                   </button>
