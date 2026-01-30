@@ -100,6 +100,8 @@ import { DriverLoginPage } from './pages/transport/DriverLoginPage';
 
 import DriverDashboard from './pages/transport/DriverDashboard';
 
+import PublishTripPage from './pages/transport/PublishTripPage';
+
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -293,6 +295,22 @@ function AppRoutes() {
           <ProtectedRoute>
 
             <DriverDashboard />
+
+          </ProtectedRoute>
+
+        </ThemeWrapper>
+
+      } />
+
+
+
+      <Route path="/voyage/chauffeur/publier-trajet" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ProtectedRoute>
+
+            <PublishTripPage />
 
           </ProtectedRoute>
 
