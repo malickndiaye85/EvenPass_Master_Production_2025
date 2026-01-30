@@ -87,7 +87,7 @@ const AdminTransversalDashboard: React.FC = () => {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]">
-        <div className="w-12 h-12 border-4 border-[#00FF00] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -107,7 +107,7 @@ const AdminTransversalDashboard: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-[#00FF00] text-black rounded-xl font-bold hover:bg-[#00DD00] transition-all"
+            className="px-6 py-3 bg-[#10B981] text-black rounded-xl font-bold hover:bg-[#059669] transition-all"
           >
             Retour à l'accueil
           </button>
@@ -122,7 +122,7 @@ const AdminTransversalDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
-              <ArrowLeft className="w-5 h-5 text-[#00FF00] group-hover:translate-x-[-4px] transition-transform" />
+              <ArrowLeft className="w-5 h-5 text-[#10B981] group-hover:translate-x-[-4px] transition-transform" />
               <span className="font-medium text-white/80">
                 Accueil
               </span>
@@ -159,7 +159,7 @@ const AdminTransversalDashboard: React.FC = () => {
 
           <div className="rounded-2xl p-6 mb-8 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5 text-[#00FF00]" />
+              <Calendar className="w-5 h-5 text-[#10B981]" />
               <span className="font-bold text-white">Filtres</span>
             </div>
 
@@ -172,7 +172,7 @@ const AdminTransversalDashboard: React.FC = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#00FF00]/50 focus:bg-white/10 transition-all"
+                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#10B981]/50 focus:bg-white/10 transition-all"
                 />
               </div>
 
@@ -184,14 +184,14 @@ const AdminTransversalDashboard: React.FC = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#00FF00]/50 focus:bg-white/10 transition-all"
+                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#10B981]/50 focus:bg-white/10 transition-all"
                 />
               </div>
 
               <div className="flex items-end">
                 <button
                   onClick={handleFilter}
-                  className="w-full py-3 rounded-xl font-bold bg-[#00FF00] text-black hover:bg-[#00DD00] transition-all"
+                  className="w-full py-3 rounded-xl font-bold bg-[#10B981] text-black hover:bg-[#059669] transition-all"
                 >
                   Appliquer
                 </button>
@@ -204,7 +204,7 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('overview')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'overview'
-                  ? 'bg-[#00FF00] text-black'
+                  ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -215,7 +215,7 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('events')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'events'
-                  ? 'bg-[#00FF00] text-black'
+                  ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -226,7 +226,7 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('voyage')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'voyage'
-                  ? 'bg-[#00FF00] text-black'
+                  ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -237,7 +237,7 @@ const AdminTransversalDashboard: React.FC = () => {
               onClick={() => setActiveTab('settings')}
               className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
                 activeTab === 'settings'
-                  ? 'bg-[#00FF00] text-black'
+                  ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -283,16 +283,16 @@ const AdminTransversalDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-[#00FF00]/20 shadow-2xl transform hover:scale-105 transition-all">
+                <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-[#10B981]/20 shadow-2xl transform hover:scale-105 transition-all">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-[#00FF00]/20">
-                      <TrendingUp className="w-6 h-6 text-[#00FF00]" />
+                    <div className="p-2 rounded-lg bg-[#10B981]/20">
+                      <TrendingUp className="w-6 h-6 text-[#10B981]" />
                     </div>
                     <span className="text-lg font-bold text-white">
                       TOTAL
                     </span>
                   </div>
-                  <div className="text-3xl font-black text-[#00FF00]">
+                  <div className="text-3xl font-black text-[#10B981]">
                     {formatCurrency(summary.total_revenue)}
                   </div>
                   <div className="text-sm mt-2 text-white/60">
@@ -308,7 +308,7 @@ const AdminTransversalDashboard: React.FC = () => {
                   </h2>
                   <button
                     onClick={handleExportSummary}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#00FF00]/20 text-[#00FF00] hover:bg-[#00FF00]/30"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30"
                   >
                     <Download className="w-4 h-4" />
                     Export CSV
@@ -361,7 +361,7 @@ const AdminTransversalDashboard: React.FC = () => {
                   </h2>
                   <button
                     onClick={handleExportPartners}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#00FF00]/20 text-[#00FF00] hover:bg-[#00FF00]/30"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30"
                   >
                     <FileText className="w-4 h-4" />
                     Export CSV

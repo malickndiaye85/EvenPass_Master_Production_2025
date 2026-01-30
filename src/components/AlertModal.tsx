@@ -46,7 +46,7 @@ export default function AlertModal({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-12 h-12 text-[#00FF00]" />;
+        return <CheckCircle className="w-12 h-12 text-[#10B981]" />;
       case 'error':
         return <XCircle className="w-12 h-12 text-red-500" />;
       case 'warning':
@@ -59,7 +59,7 @@ export default function AlertModal({
   const getButtonColor = () => {
     switch (type) {
       case 'success':
-        return 'bg-[#00FF00] hover:bg-[#00DD00] text-black';
+        return 'bg-[#10B981] hover:bg-[#059669] text-white';
       case 'error':
         return 'bg-red-500 hover:bg-red-600 text-white';
       case 'warning':

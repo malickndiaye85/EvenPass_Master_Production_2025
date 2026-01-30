@@ -44,15 +44,26 @@
     font-family: var(--font-primary);
   }
 
-  input,
-  textarea,
-  select {
-    color: #0A1628 !important;
+  input:not([class*="text-white"]),
+  textarea:not([class*="text-white"]),
+  select:not([class*="text-white"]) {
+    color: #0A1628;
   }
 
   input::placeholder,
   textarea::placeholder {
     color: #9CA3AF;
+  }
+
+  .dark input,
+  .dark textarea,
+  .dark select {
+    color: #FFFFFF !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
   }
 }
 
