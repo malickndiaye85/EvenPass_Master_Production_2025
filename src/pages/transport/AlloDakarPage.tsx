@@ -1,22 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, MapPin, Search, Calendar, Users, AlertCircle } from 'lucide-react';
+import { Car, MapPin, Search, Clock, Users, AlertCircle } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
+
+type DayFilter = 'today' | 'tomorrow' | 'day2';
 
 export default function AlloDakarPage() {
   const navigate = useNavigate();
 
   const [searchOrigin, setSearchOrigin] = useState('');
   const [searchDestination, setSearchDestination] = useState('');
-  const [searchDate, setSearchDate] = useState('');
+  const [selectedDay, setSelectedDay] = useState<DayFilter>('today');
   const [searchSeats, setSearchSeats] = useState('1');
+
+  const getDateForFilter = (filter: DayFilter): Date => {
+    const date = new Date();
+    if (filter === 'tomorrow') {
+      date.setDate(date.getDate() + 1);
+    } else if (filter === 'day2') {
+      date.setDate(date.getDate() + 2);
+    }
+    return date;
+  };
+
+  const formatDayLabel = (filter: DayFilter): string => {
+    const date = getDateForFilter(filter);
+    const options: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' };
+
+    if (filter === 'today') return 'Aujourd\'hui';
+    if (filter === 'tomorrow') return 'Demain';
+    return date.toLocaleDateString('fr-FR', options);
+  };
+
+  const availableTripsCount = 0;
 
   const handleSearch = () => {
     if (!searchOrigin.trim() || !searchDestination.trim()) {
       alert('Veuillez renseigner le départ et l\'arrivée');
       return;
     }
-    alert(`Recherche en cours...\nDépart: ${searchOrigin}\nArrivée: ${searchDestination}\nDate: ${searchDate || 'Aujourd\'hui'}\nPlaces: ${searchSeats}`);
+    const dayLabel = formatDayLabel(selectedDay);
+    alert(`Recherche en cours...\nDépart: ${searchOrigin}\nArrivée: ${searchDestination}\nDate: ${dayLabel}\nPlaces: ${searchSeats}`);
   };
 
   return (
@@ -76,39 +100,45 @@ export default function AlloDakarPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-2">
-                    Date de départ
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#10B981] w-5 h-5" />
-                    <input
-                      type="date"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl text-white focus:outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981] transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-2">
-                    Nombre de places
-                  </label>
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#10B981] w-5 h-5" />
-                    <select
-                      value={searchSeats}
-                      onChange={(e) => setSearchSeats(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl text-white focus:outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981] transition-all appearance-none"
+              <div>
+                <label className="block text-sm font-semibold text-white/80 mb-2">
+                  Quand partez-vous ?
+                </label>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {(['today', 'tomorrow', 'day2'] as DayFilter[]).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setSelectedDay(filter)}
+                      className={`py-3 px-2 rounded-xl font-bold text-sm transition-all ${
+                        selectedDay === filter
+                          ? 'bg-[#10B981] text-white shadow-lg shadow-[#10B981]/50'
+                          : 'bg-white/10 text-white/70 border-2 border-white/20 hover:border-[#10B981]/50'
+                      }`}
                     >
-                      <option value="1" className="bg-blue-950">1 place</option>
-                      <option value="2" className="bg-blue-950">2 places</option>
-                      <option value="3" className="bg-blue-950">3 places</option>
-                      <option value="4" className="bg-blue-950">4 places</option>
-                    </select>
-                  </div>
+                      {formatDayLabel(filter)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-white/80 mb-2">
+                  Nombre de places
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['1', '2', '3', '4'].map((seats) => (
+                    <button
+                      key={seats}
+                      onClick={() => setSearchSeats(seats)}
+                      className={`py-3 rounded-xl font-bold transition-all ${
+                        searchSeats === seats
+                          ? 'bg-[#10B981] text-white shadow-lg'
+                          : 'bg-white/10 text-white/70 border-2 border-white/20 hover:border-[#10B981]/50'
+                      }`}
+                    >
+                      {seats}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -122,13 +152,27 @@ export default function AlloDakarPage() {
             </div>
           </div>
 
-          <div className="bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">
+          <div className="bg-[#10B981]/20 border-l-4 border-[#10B981] p-6 rounded-r-2xl backdrop-blur-sm">
+            <div className="flex items-start">
+              <Clock className="w-6 h-6 text-[#10B981] mt-0.5 mr-3 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-white mb-1">
+                  {availableTripsCount} trajet{availableTripsCount > 1 ? 's' : ''} disponible{availableTripsCount > 1 ? 's' : ''} pour les prochaines 72h
+                </h3>
+                <p className="text-white/80 text-sm">
+                  Les trajets sont triés par heure de départ (le plus proche en premier). Réservez rapidement pour obtenir les meilleures places.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">
             <div className="flex items-start">
               <AlertCircle className="w-6 h-6 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
               <div>
                 <h3 className="font-bold text-white mb-1">Service en cours de déploiement</h3>
                 <p className="text-white/80 text-sm">
-                  Les trajets disponibles s'afficheront ici une fois que des chauffeurs publient leurs trajets. En attendant, vous pouvez vous inscrire comme chauffeur pour proposer des trajets.
+                  Les trajets publiés par les chauffeurs s'afficheront ici. Vous pouvez aussi vous inscrire comme chauffeur pour proposer des trajets et rentabiliser vos trajets quotidiens.
                 </p>
               </div>
             </div>

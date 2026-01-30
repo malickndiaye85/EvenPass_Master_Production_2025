@@ -134,7 +134,7 @@ export default function PublishTripPage() {
 
   const getMaxDate = () => {
     const today = new Date();
-    const maxDate = new Date(today.setMonth(today.getMonth() + 3));
+    const maxDate = new Date(today.setDate(today.getDate() + 3));
     return maxDate.toISOString().split('T')[0];
   };
 
@@ -317,6 +317,7 @@ export default function PublishTripPage() {
                   required
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">Max: 3 jours (72h)</p>
             </div>
 
             {/* Heure */}

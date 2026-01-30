@@ -656,19 +656,15 @@ const COSAMABookingPage: React.FC = () => {
                             <input
                               type="text"
                               inputMode="numeric"
+                              pattern="[0-9]*"
                               value={passenger.cni}
                               onChange={(e) => {
                                 const cleaned = e.target.value.replace(/\D/g, '');
                                 if (cleaned.length <= 13) {
                                   updatePassenger(index, 'cni', cleaned);
-                                  if (cleaned.length > 0) {
+                                  if (cleaned.length > 0 && passenger.passport.length > 0) {
                                     updatePassenger(index, 'passport', '');
                                   }
-                                }
-                              }}
-                              onFocus={(e) => {
-                                if (passenger.passport.length > 0) {
-                                  updatePassenger(index, 'passport', '');
                                 }
                               }}
                               placeholder="1234567890123"
@@ -697,12 +693,7 @@ const COSAMABookingPage: React.FC = () => {
                               onChange={(e) => {
                                 const value = e.target.value.toUpperCase();
                                 updatePassenger(index, 'passport', value);
-                                if (value.length > 0) {
-                                  updatePassenger(index, 'cni', '');
-                                }
-                              }}
-                              onFocus={(e) => {
-                                if (passenger.cni.length > 0) {
+                                if (value.length > 0 && passenger.cni.length > 0) {
                                   updatePassenger(index, 'cni', '');
                                 }
                               }}
