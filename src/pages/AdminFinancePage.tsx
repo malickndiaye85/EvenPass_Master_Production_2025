@@ -15,7 +15,7 @@ import MaritimeAccessManager from '../components/MaritimeAccessManager';
 import OrganizersManagementTab from '../components/OrganizersManagementTab';
 import ConfirmModal from '../components/ConfirmModal';
 import { firestore } from '../firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp, setDoc } from 'firebase/firestore';
 
 interface Event {
   id: string;
@@ -75,6 +75,33 @@ export default function AdminFinancePage() {
   const confirmLogout = () => {
     logout();
     navigate('/admin/finance/login');
+  };
+
+  const activateSuperAdmin = async () => {
+    if (!firebaseUser) {
+      alert('Aucun utilisateur connecté');
+      return;
+    }
+
+    try {
+      console.log('[SUPER ADMIN] Activating super admin for user:', firebaseUser.uid);
+
+      await setDoc(doc(firestore, 'users', firebaseUser.uid), {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        role: 'super_admin',
+        permissions: ['all'],
+        is_admin: true,
+        is_super_admin: true,
+        updated_at: Timestamp.now(),
+      }, { merge: true });
+
+      console.log('[SUPER ADMIN] Super admin activated successfully!');
+      alert('✅ Mode Super Admin activé!\n\nVous avez maintenant tous les droits pour approuver les comptes.\n\nRafraîchissez la page pour activer les permissions.');
+    } catch (error: any) {
+      console.error('[SUPER ADMIN] Error activating super admin:', error);
+      alert('❌ Erreur lors de l\'activation:\n' + error.message);
+    }
   };
 
   const loadData = async () => {
@@ -307,6 +334,13 @@ export default function AdminFinancePage() {
             >
               <Package className="w-4 h-4" />
               Créer Bloc
+            </button>
+            <button
+              onClick={activateSuperAdmin}
+              className="px-6 py-2.5 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-black font-black transition-all shadow-lg flex items-center gap-2 rounded-lg border-2 border-yellow-400"
+              title="Mode Debug : Activer tous les droits Super Admin"
+            >
+              ⚡ Mode Super Admin
             </button>
             <button
               onClick={handleLogout}
