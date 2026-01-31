@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, FileText, Phone, User, Car, Shield, Clock, X, AlertTriangle, Calendar, Hash } from 'lucide-react';
-import { ref, get, update, onValue } from 'firebase/database';
-import { db } from '../firebase';
+import { CheckCircle, XCircle, Eye, FileText, Phone, User, Car, Shield, Clock, X, AlertTriangle, Calendar, Hash, Mail } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { firestore } from '../firebase';
+import { maskPhoneNumber } from '../lib/phoneUtils';
 
 interface Driver {
   uid: string;
@@ -61,46 +62,60 @@ export default function DriversVerificationTab() {
   });
 
   useEffect(() => {
-    if (!db) return;
-
-    setLoading(true);
-    const driversRef = ref(db, 'drivers');
-
-    const unsubscribe = onValue(driversRef, (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const driversData = snapshot.val();
-          const driversList: Driver[] = [];
-
-          for (const userId in driversData) {
-            const driver = driversData[userId];
-
-            if (driver.status === 'pending_verification' && driver.silo === 'voyage') {
-              driversList.push({
-                ...driver,
-                uid: userId,
-              });
-            }
-          }
-
-          driversList.sort((a, b) => b.createdAt - a.createdAt);
-
-          setDrivers(driversList);
-        } else {
-          setDrivers([]);
-        }
-      } catch (error) {
-        console.error('[FIREBASE] Error loading drivers:', error);
-      } finally {
-        setLoading(false);
-      }
-    }, (error) => {
-      console.error('[FIREBASE] Error onValue drivers:', error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    loadDrivers();
   }, []);
+
+  const loadDrivers = async () => {
+    try {
+      console.log('[FIRESTORE] Loading drivers from Firestore...');
+      setLoading(true);
+      const driversRef = collection(firestore, 'drivers');
+      const snapshot = await getDocs(driversRef);
+
+      console.log('[FIRESTORE] Total drivers found:', snapshot.size);
+
+      const driversList: Driver[] = [];
+
+      snapshot.forEach((docSnapshot) => {
+        const driver = docSnapshot.data();
+        console.log('[FIRESTORE] Driver data:', docSnapshot.id, driver);
+
+        if (driver.verified === false || driver.status === 'pending_verification') {
+          driversList.push({
+            ...driver,
+            uid: docSnapshot.id,
+            firstName: driver.firstName || '',
+            lastName: driver.lastName || '',
+            full_name: driver.full_name || `${driver.firstName || ''} ${driver.lastName || ''}`,
+            email: driver.email || '',
+            phone: driver.phone || '',
+            driver_license: driver.driver_license || driver.licenseUrl || '',
+            vehicle_insurance: driver.vehicle_insurance || driver.insuranceUrl || '',
+            national_id: driver.national_id || driver.carteGriseUrl || '',
+            vehicle_type: driver.vehicle_type || driver.vehicleBrand || '',
+            vehicle_model: driver.vehicle_model || driver.vehicleModel || '',
+            plate_number: driver.plate_number || driver.vehiclePlateNumber || '',
+            status: driver.status || 'pending_verification',
+            role: driver.role || 'driver_pending',
+            silo: driver.silo || 'voyage',
+            silo_id: driver.silo_id || 'voyage',
+            createdAt: driver.createdAt || Date.now(),
+          } as Driver);
+        }
+      });
+
+      console.log('[FIRESTORE] Pending drivers found:', driversList.length);
+
+      driversList.sort((a, b) => b.createdAt - a.createdAt);
+
+      setDrivers(driversList);
+    } catch (error) {
+      console.error('[FIRESTORE] Error loading drivers:', error);
+      setDrivers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleApproveClick = (driver: Driver) => {
     setDriverToApprove(driver);
@@ -114,21 +129,14 @@ export default function DriversVerificationTab() {
     setShowApproveModal(false);
 
     try {
-      const driverRef = ref(db, `drivers/${driverToApprove.uid}`);
-      await update(driverRef, {
+      const driverRef = doc(firestore, 'drivers', driverToApprove.uid);
+      await updateDoc(driverRef, {
+        verified: true,
         status: 'verified',
         role: 'driver',
-        isOnline: false,
         silo_id: 'voyage',
-        verifiedAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-
-      const userRef = ref(db, `users/${driverToApprove.uid}`);
-      await update(userRef, {
-        role: 'driver',
-        silo_id: 'voyage',
-        status: 'verified',
+        verified_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
       });
 
       setAlertModal({
@@ -140,8 +148,9 @@ export default function DriversVerificationTab() {
 
       setSelectedDriver(null);
       setDriverToApprove(null);
+      loadDrivers();
     } catch (error: any) {
-      console.error('[FIREBASE] Error approving driver:', error);
+      console.error('[FIRESTORE] Error approving driver:', error);
       setAlertModal({
         isOpen: true,
         type: 'error',
@@ -179,19 +188,14 @@ export default function DriversVerificationTab() {
     setRejectionModal({ isOpen: false, driverId: null, driverName: '' });
 
     try {
-      const driverRef = ref(db, `drivers/${rejectionModal.driverId}`);
-      await update(driverRef, {
+      const driverRef = doc(firestore, 'drivers', rejectionModal.driverId);
+      await updateDoc(driverRef, {
+        verified: false,
         status: 'rejected',
         role: 'driver_rejected',
-        rejectionReason: rejectionReason,
-        rejectedAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-
-      const userRef = ref(db, `users/${rejectionModal.driverId}`);
-      await update(userRef, {
-        role: 'driver_rejected',
-        status: 'rejected',
+        rejection_reason: rejectionReason,
+        rejected_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
       });
 
       setAlertModal({
@@ -205,7 +209,7 @@ export default function DriversVerificationTab() {
       setRejectionReason('');
       loadDrivers();
     } catch (error: any) {
-      console.error('[FIREBASE] Error rejecting driver:', error);
+      console.error('[FIRESTORE] Error rejecting driver:', error);
       setAlertModal({
         isOpen: true,
         type: 'error',
@@ -412,7 +416,7 @@ export default function DriversVerificationTab() {
 
       {/* Modale de rejet avec motif */}
       {rejectionModal.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
