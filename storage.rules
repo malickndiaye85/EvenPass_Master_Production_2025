@@ -103,6 +103,19 @@ service firebase.storage {
     }
 
     // ============================================
+    // LANDING BACKGROUNDS (Images d'accueil)
+    // ============================================
+    match /landing-backgrounds/{fileName} {
+      // Public : Lecture des images d'accueil
+      allow read: if true;
+
+      // Admin Finance uniquement : Upload
+      allow write: if isAdminFinance() &&
+                     isValidFileSize() &&
+                     isValidImage();
+    }
+
+    // ============================================
     // LOGS ET BACKUPS
     // ============================================
     match /logs/{document=**} {

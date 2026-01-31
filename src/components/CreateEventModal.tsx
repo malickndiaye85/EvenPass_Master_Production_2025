@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, CheckCircle, Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, CheckCircle, Plus, Trash2, Upload, Image as ImageIcon, Shield, AlertCircle } from 'lucide-react';
 import { Timestamp, addDoc, collection } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { VIP_THRESHOLD, isEligibleForVIPFastTrack, formatCurrency } from '../lib/financialModel';
 
 interface CreateEventModalProps {
   isDark: boolean;
@@ -27,6 +28,9 @@ export default function CreateEventModal({
 }: CreateEventModalProps) {
   const [processing, setProcessing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showCGUModal, setShowCGUModal] = useState(false);
+  const [exclusivityAgreement, setExclusivityAgreement] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -89,6 +93,31 @@ export default function CreateEventModal({
     return ticketTypes.reduce((sum, t) => sum + Number(t.quantity), 0);
   };
 
+  const handleExclusivityToggle = (checked: boolean) => {
+    if (checked) {
+      // Si activé, afficher la modale CGU
+      setShowCGUModal(true);
+    } else {
+      // Si désactivé, réinitialiser
+      setExclusivityAgreement(false);
+      setCguAccepted(false);
+    }
+  };
+
+  const handleCGUAccept = () => {
+    setCguAccepted(true);
+    setExclusivityAgreement(true);
+    setShowCGUModal(false);
+  };
+
+  const handleCGUDecline = () => {
+    setCguAccepted(false);
+    setExclusivityAgreement(false);
+    setShowCGUModal(false);
+  };
+
+  const isVIPEligible = calculateTotalCapacity() >= VIP_THRESHOLD && exclusivityAgreement;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organizerData || !organizerData.id) {
@@ -123,6 +152,8 @@ export default function CreateEventModal({
 
       const totalCapacity = calculateTotalCapacity();
 
+      const isVIP = isEligibleForVIPFastTrack(totalCapacity, exclusivityAgreement);
+
       const eventData: any = {
         title: formData.title || 'Sans titre',
         description: formData.description || '',
@@ -138,6 +169,18 @@ export default function CreateEventModal({
         is_free: false,
         event_image_url: event_image_url,
         total_capacity: totalCapacity,
+
+        // Financial Model VIP & Fast Track (H.3)
+        vipThreshold: VIP_THRESHOLD,
+        exclusivityAgreement: exclusivityAgreement,
+        exclusivityCGUAccepted: cguAccepted,
+        fastTrackEnabled: isVIP,
+        totalTicketsSold: 0,
+        totalRevenue: 0,
+        releasedFunds: 0,
+        escrowFunds: 0,
+        platformCommission: 0,
+
         created_at: Timestamp.now(),
         updated_at: Timestamp.now(),
       };
@@ -546,6 +589,96 @@ export default function CreateEventModal({
             </div>
           </div>
 
+          <div className={`p-6 rounded-2xl border-2 ${
+            isDark ? 'bg-[#10B981]/10 border-[#10B981]/30' : 'bg-green-50 border-green-200'
+          }`}>
+            <div className="flex items-start gap-3 mb-4">
+              <Shield className={`w-6 h-6 mt-1 ${isDark ? 'text-[#10B981]' : 'text-green-600'}`} />
+              <div className="flex-1">
+                <h3 className={`text-lg font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Modèle Financier VIP & Fast Track
+                </h3>
+                <p className={`text-sm ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+                  Activez l'Accord Exclusivité pour bénéficier du reversement automatique et du statut VIP
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className={`flex items-center justify-between p-4 rounded-xl ${
+                isDark ? 'bg-white/5' : 'bg-white'
+              }`}>
+                <div className="flex-1">
+                  <div className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Accord Exclusivité
+                  </div>
+                  <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
+                    Commission 5% ajoutée au prix • Reversement automatique 70% pour VIP
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={exclusivityAgreement}
+                    onChange={(e) => handleExclusivityToggle(e.target.checked)}
+                    className="sr-only peer"
+                    disabled={processing}
+                  />
+                  <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#10B981]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#10B981]"></div>
+                </label>
+              </div>
+
+              {calculateTotalCapacity() >= VIP_THRESHOLD && (
+                <div className={`p-4 rounded-xl border-2 ${
+                  isVIPEligible
+                    ? 'bg-[#10B981]/20 border-[#10B981]/40'
+                    : 'bg-orange-500/10 border-orange-500/30'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {isVIPEligible ? (
+                      <>
+                        <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                        <span className="font-black text-[#10B981]">
+                          ⚡ STATUT VIP FAST TRACK ACTIVÉ
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-orange-400" />
+                        <span className="font-black text-orange-400">
+                          Éligible VIP • Activez l'Accord Exclusivité
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div className={`text-xs ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+                    {isVIPEligible ? (
+                      <>
+                        ✅ Reversement automatique de 70% du CA après chaque vente<br />
+                        ✅ 25% en séquestre de sécurité<br />
+                        ✅ 5% commission platform
+                      </>
+                    ) : (
+                      <>
+                        📊 Capacité : {calculateTotalCapacity()} / {VIP_THRESHOLD} places<br />
+                        🔓 Activez l'Accord Exclusivité pour débloquer le Fast Track
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!exclusivityAgreement && (
+                <div className={`p-3 rounded-xl text-xs ${
+                  isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-700'
+                }`}>
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Sans Accord Exclusivité : Commission 5% partagée (2.5% acheteur / 2.5% vendeur)
+                </div>
+              )}
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={processing}
@@ -571,6 +704,94 @@ export default function CreateEventModal({
           </button>
         </form>
       </div>
+
+      {showCGUModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className={`rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
+            isDark ? 'bg-[#0A0A0B] border border-white/10' : 'bg-white'
+          }`}>
+            <div className="p-6 border-b border-white/10">
+              <h3 className="text-2xl font-black text-white mb-2">
+                Conditions Générales d'Utilisation - Accord Exclusivité
+              </h3>
+              <p className="text-sm text-white/60">
+                Veuillez lire et accepter les conditions suivantes
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4 text-sm text-white/80">
+              <div>
+                <h4 className="font-bold text-white mb-2">1. COMMISSION ET TARIFICATION</h4>
+                <p>
+                  En activant l'Accord Exclusivité, vous acceptez que la commission de 5% soit ajoutée au prix de vente du billet et payée par l'acheteur final. Vous recevez l'intégralité du prix HT (Hors Taxes) que vous avez défini.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">2. PLAFOND DES FRAIS</h4>
+                <p>
+                  Les frais de service sont plafonnés à 2 500 FCFA maximum par billet, quel que soit le prix de vente.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">3. STATUT VIP FAST TRACK</h4>
+                <p>
+                  Si votre événement a une capacité totale d'au moins <strong>2 000 billets</strong> ET que l'Accord Exclusivité est activé, vous bénéficiez du statut <strong>VIP Fast Track ⚡</strong> :
+                </p>
+                <ul className="list-disc ml-6 mt-2 space-y-1">
+                  <li><strong>70% du chiffre d'affaires</strong> est reversé automatiquement sur votre solde après chaque vente</li>
+                  <li><strong>25%</strong> reste en séquestre de sécurité jusqu'à la tenue de l'événement</li>
+                  <li><strong>5%</strong> correspondent à la commission platform</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">4. FRAIS DE RETRAIT</h4>
+                <p>
+                  Lors du retrait de vos fonds, des frais techniques de <strong>2%</strong> sont appliqués pour couvrir les frais de transaction bancaire et mobile money.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">5. SÉQUESTRE DE SÉCURITÉ</h4>
+                <p>
+                  Le séquestre de sécurité (25% pour VIP, 95% pour Standard) est libéré après la tenue de l'événement et la validation des scans d'entrée. Ce mécanisme protège à la fois les organisateurs et les acheteurs.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">6. EXCLUSIVITÉ PLATFORM</h4>
+                <p>
+                  En activant cet accord, vous vous engagez à utiliser EvenPass comme plateforme exclusive de billetterie pour cet événement. Toute vente en dehors de la plateforme peut entraîner la suspension de votre compte organisateur.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                <AlertCircle className="w-5 h-5 inline mr-2 text-yellow-400" />
+                <span className="text-yellow-300 font-semibold">
+                  En acceptant ces conditions, vous reconnaissez avoir lu et compris l'ensemble des termes de l'Accord Exclusivité.
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-white/10 flex gap-3">
+              <button
+                onClick={handleCGUDecline}
+                className="flex-1 px-6 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+              >
+                Refuser
+              </button>
+              <button
+                onClick={handleCGUAccept}
+                className="flex-1 px-6 py-3 rounded-xl font-bold bg-[#10B981] hover:bg-[#059669] text-black transition-all"
+              >
+                ✓ Accepter les CGU
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

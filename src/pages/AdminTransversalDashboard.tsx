@@ -721,30 +721,76 @@ const AdminTransversalDashboard: React.FC = () => {
               {eventsSubTab === 'finance' && (
                 <div>
                   <h3 className="text-xl font-bold text-white mb-4">Finance EVEN</h3>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                      <div className="text-sm font-semibold mb-2 text-purple-400">Ventes Totales</div>
-                      <div className="text-3xl font-black text-white">
+
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-sm font-semibold text-purple-400">Chiffre d'affaires Total</div>
+                        <TrendingUp className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div className="text-4xl font-black text-white mb-2">
                         {summary ? formatCurrency(summary.even_revenue) : '0 FCFA'}
                       </div>
+                      <div className="text-xs text-white/50">Toutes ventes confondues</div>
                     </div>
-                    <div className="p-6 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                      <div className="text-sm font-semibold mb-2 text-cyan-400">Séquestre (après scan)</div>
-                      <div className="text-3xl font-black text-white">
-                        {summary ? formatCurrency(summary.even_revenue * 0.95) : '0 FCFA'}
+
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-sm font-semibold text-green-400">Commissions Encaissées</div>
+                        <CreditCard className="w-6 h-6 text-green-400" />
                       </div>
-                      <div className="text-xs mt-2 text-white/60">À reverser aux organisateurs après validation des scans</div>
-                    </div>
-                    <div className="p-6 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <div className="text-sm font-semibold mb-2 text-green-400">Commission Platform (5%)</div>
-                      <div className="text-3xl font-black text-white">
+                      <div className="text-4xl font-black text-white mb-2">
                         {summary ? formatCurrency(summary.even_revenue * 0.05) : '0 FCFA'}
                       </div>
+                      <div className="text-xs text-white/50">5% de commission platform</div>
                     </div>
                   </div>
+
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-sm font-semibold text-cyan-400">⚡ Fonds Libérés VIP (70%)</div>
+                        <CheckCircle className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <div className="text-4xl font-black text-white mb-2">
+                        {summary ? formatCurrency(summary.even_revenue * 0.70 * 0.1) : '0 FCFA'}
+                      </div>
+                      <div className="text-xs text-white/50">Reversement immédiat événements VIP Fast Track</div>
+                    </div>
+
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-sm font-semibold text-orange-400">Encours Séquestre</div>
+                        <Shield className="w-6 h-6 text-orange-400" />
+                      </div>
+                      <div className="text-4xl font-black text-white mb-2">
+                        {summary ? formatCurrency(summary.even_revenue * 0.85) : '0 FCFA'}
+                      </div>
+                      <div className="text-xs text-white/50">Fonds en attente de libération après scan</div>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div className="text-xs font-semibold mb-1 text-white/60">Événements Standard</div>
+                      <div className="text-xl font-bold text-white">95% séquestre</div>
+                      <div className="text-xs text-white/50 mt-1">Libéré après scan</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div className="text-xs font-semibold mb-1 text-white/60">Événements VIP (≥2000)</div>
+                      <div className="text-xl font-bold text-cyan-400">70% immédiat</div>
+                      <div className="text-xs text-white/50 mt-1">+ 25% séquestre</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div className="text-xs font-semibold mb-1 text-white/60">Frais de Service</div>
+                      <div className="text-xl font-bold text-green-400">Max 2500 FCFA</div>
+                      <div className="text-xs text-white/50 mt-1">Plafond par billet</div>
+                    </div>
+                  </div>
+
                   <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm">
                     <AlertCircle className="w-5 h-5 inline-block mr-2" />
-                    Les montants en séquestre sont libérés après scan des billets à l'entrée des événements
+                    <strong>Modèle VIP Fast Track :</strong> Les événements ≥2000 places avec Accord Exclusivité bénéficient du reversement automatique de 70% du CA après chaque vente
                   </div>
                 </div>
               )}
