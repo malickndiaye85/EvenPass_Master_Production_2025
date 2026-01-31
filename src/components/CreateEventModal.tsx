@@ -230,27 +230,15 @@ export default function CreateEventModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className={`rounded-[32px] max-w-4xl w-full max-h-[95vh] overflow-y-auto border my-8 ${
-        isDark
-          ? 'bg-gradient-to-br from-amber-950/95 to-orange-950/95 border-amber-800/40'
-          : 'bg-white border-slate-200'
-      }`}>
-        <div className={`sticky top-0 p-6 border-b flex justify-between items-center z-10 ${
-          isDark
-            ? 'bg-amber-950/95 backdrop-blur-xl border-amber-800/40'
-            : 'bg-white backdrop-blur-xl border-slate-200'
-        }`}>
-          <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto">
+      <div className="rounded-[32px] max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-[#FF6B00]/30 bg-[#0A0A0B] my-8">
+        <div className="sticky top-0 p-6 border-b border-[#FF6B00]/30 flex justify-between items-center z-10 bg-[#0A0A0B]/95 backdrop-blur-xl">
+          <h2 className="text-2xl font-black text-white">
             Créer un événement
           </h2>
           <button
             onClick={onClose}
-            className={`p-2 rounded-xl transition-colors ${
-              isDark
-                ? 'hover:bg-amber-900/40 text-amber-400'
-                : 'hover:bg-slate-100 text-slate-600'
-            }`}
+            className="p-2 rounded-xl transition-colors hover:bg-white/10 text-[#FF6B00]"
             disabled={processing}
           >
             <X className="w-6 h-6" />
@@ -260,16 +248,10 @@ export default function CreateEventModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Affiche de l'événement
               </label>
-              <div className={`relative border-2 border-dashed rounded-2xl p-6 transition-colors ${
-                isDark
-                  ? 'border-amber-800/40 hover:border-amber-700/60'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}>
+              <div className="relative border-2 border-dashed rounded-2xl p-6 transition-colors border-white/10 hover:border-[#FF6B00]/40">
                 {imagePreview ? (
                   <div className="relative">
                     <img
@@ -290,17 +272,11 @@ export default function CreateEventModal({
                   </div>
                 ) : (
                   <label className="flex flex-col items-center cursor-pointer">
-                    <ImageIcon className={`w-12 h-12 mb-2 ${
-                      isDark ? 'text-amber-400' : 'text-slate-400'
-                    }`} />
-                    <span className={`text-sm font-medium ${
-                      isDark ? 'text-amber-400' : 'text-slate-600'
-                    }`}>
+                    <ImageIcon className="w-12 h-12 mb-2 text-[#FF6B00]" />
+                    <span className="text-sm font-medium text-white">
                       Cliquer pour télécharger une image
                     </span>
-                    <span className={`text-xs mt-1 ${
-                      isDark ? 'text-amber-400/60' : 'text-slate-500'
-                    }`}>
+                    <span className="text-xs mt-1 text-white/60">
                       PNG, JPG jusqu'à 10MB
                     </span>
                     <input
@@ -316,20 +292,14 @@ export default function CreateEventModal({
             </div>
 
             <div className="md:col-span-2">
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Titre de l'événement
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] focus:outline-none placeholder-white/40"
                 placeholder="Concert de Youssou N'Dour..."
                 required
                 disabled={processing}
@@ -337,19 +307,13 @@ export default function CreateEventModal({
             </div>
 
             <div className="md:col-span-2">
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Description
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 placeholder="Décrivez votre événement..."
                 rows={4}
                 required
@@ -358,19 +322,13 @@ export default function CreateEventModal({
             </div>
 
             <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Catégorie
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 required
                 disabled={processing}
               >
@@ -383,60 +341,42 @@ export default function CreateEventModal({
             </div>
 
             <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Date et heure de début
               </label>
               <input
                 type="datetime-local"
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 required
                 disabled={processing}
               />
             </div>
 
             <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Date et heure de fin
               </label>
               <input
                 type="datetime-local"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 placeholder="Optionnel - pour événements longue durée"
                 disabled={processing}
               />
             </div>
 
             <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Nom du lieu
               </label>
               <input
                 type="text"
                 value={formData.venue_name}
                 onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 placeholder="Stade Demba Diop"
                 required
                 disabled={processing}
@@ -444,20 +384,14 @@ export default function CreateEventModal({
             </div>
 
             <div>
-              <label className={`block text-sm font-bold mb-2 ${
-                isDark ? 'text-amber-300' : 'text-slate-700'
-              }`}>
+              <label className="block text-sm font-bold mb-2 text-[#FF6B00]">
                 Ville
               </label>
               <input
                 type="text"
                 value={formData.venue_city}
                 onChange={(e) => setFormData({ ...formData, venue_city: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                    : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                } focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white/5 border-white/10 text-white focus:border-[#FF6B00] placeholder-white/40 focus:outline-none"
                 placeholder="Dakar"
                 required
                 disabled={processing}
@@ -465,11 +399,9 @@ export default function CreateEventModal({
             </div>
           </div>
 
-          <div className={`p-6 rounded-2xl border-2 ${
-            isDark ? 'bg-amber-950/20 border-amber-800/40' : 'bg-slate-50 border-slate-200'
-          }`}>
+          <div className="p-6 rounded-2xl border-2 bg-white/5 border-white/10">
             <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h3 className="text-lg font-black text-white">
                 Types de billets
               </h3>
               <button
@@ -477,7 +409,7 @@ export default function CreateEventModal({
                 onClick={addTicketType}
                 className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 ${
                   isDark
-                    ? 'bg-amber-800/40 hover:bg-amber-800/60 text-amber-300'
+                    ? 'bg-[#FF6B00]/20 hover:bg-[#FF6B00]/30 text-[#FF6B00]'
                     : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
                 }`}
                 disabled={processing}
@@ -491,14 +423,10 @@ export default function CreateEventModal({
               {ticketTypes.map((ticket, index) => (
                 <div
                   key={index}
-                  className={`grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-xl border ${
-                    isDark ? 'bg-amber-950/40 border-amber-800/40' : 'bg-white border-slate-200'
-                  }`}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-xl border bg-white/5 border-white/10"
                 >
                   <div>
-                    <label className={`block text-xs font-bold mb-2 ${
-                      isDark ? 'text-amber-400' : 'text-slate-600'
-                    }`}>
+                    <label className="block text-xs font-bold mb-2 text-white">
                       Nom
                     </label>
                     <input
@@ -507,7 +435,7 @@ export default function CreateEventModal({
                       onChange={(e) => updateTicketType(index, 'name', e.target.value)}
                       className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
                         isDark
-                          ? 'bg-amber-950/60 border-amber-800/40 text-white'
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#FF6B00]'
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="VIP, Standard..."
@@ -516,9 +444,7 @@ export default function CreateEventModal({
                   </div>
 
                   <div>
-                    <label className={`block text-xs font-bold mb-2 ${
-                      isDark ? 'text-amber-400' : 'text-slate-600'
-                    }`}>
+                    <label className="block text-xs font-bold mb-2 text-white">
                       Prix (FCFA)
                     </label>
                     <input
@@ -527,7 +453,7 @@ export default function CreateEventModal({
                       onChange={(e) => updateTicketType(index, 'price', Number(e.target.value))}
                       className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
                         isDark
-                          ? 'bg-amber-950/60 border-amber-800/40 text-white'
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#FF6B00]'
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="5000"
@@ -537,9 +463,7 @@ export default function CreateEventModal({
                   </div>
 
                   <div>
-                    <label className={`block text-xs font-bold mb-2 ${
-                      isDark ? 'text-amber-400' : 'text-slate-600'
-                    }`}>
+                    <label className="block text-xs font-bold mb-2 text-white">
                       Quantité
                     </label>
                     <input
@@ -548,7 +472,7 @@ export default function CreateEventModal({
                       onChange={(e) => updateTicketType(index, 'quantity', Number(e.target.value))}
                       className={`w-full px-3 py-2 rounded-lg border font-medium text-sm ${
                         isDark
-                          ? 'bg-amber-950/60 border-amber-800/40 text-white'
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#FF6B00]'
                           : 'bg-white border-slate-200 text-slate-900'
                       } focus:outline-none`}
                       placeholder="100"
@@ -573,16 +497,12 @@ export default function CreateEventModal({
               ))}
             </div>
 
-            <div className={`mt-4 p-4 rounded-xl ${
-              isDark ? 'bg-amber-900/20' : 'bg-orange-50'
-            }`}>
+            <div className="mt-4 p-4 rounded-xl bg-[#FF6B00]/10">
               <div className="flex justify-between items-center">
-                <span className={`font-bold ${isDark ? 'text-amber-300' : 'text-slate-700'}`}>
+                <span className="font-bold text-[#FF6B00]">
                   Capacité totale
                 </span>
-                <span className={`text-2xl font-black ${
-                  isDark ? 'text-white' : 'text-slate-900'
-                }`}>
+                <span className="text-2xl font-black text-white">
                   {calculateTotalCapacity()} places
                 </span>
               </div>
@@ -593,12 +513,12 @@ export default function CreateEventModal({
             isDark ? 'bg-[#10B981]/10 border-[#10B981]/30' : 'bg-green-50 border-green-200'
           }`}>
             <div className="flex items-start gap-3 mb-4">
-              <Shield className={`w-6 h-6 mt-1 ${isDark ? 'text-[#10B981]' : 'text-green-600'}`} />
+              <Shield className="w-6 h-6 mt-1 text-[#10B981]" />
               <div className="flex-1">
-                <h3 className={`text-lg font-black mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <h3 className="text-lg font-black mb-1 text-white">
                   Modèle Financier VIP & Fast Track
                 </h3>
-                <p className={`text-sm ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+                <p className={`text-sm ${text-white/70}`}>
                   Activez l'Accord Exclusivité pour bénéficier du reversement automatique et du statut VIP
                 </p>
               </div>
@@ -609,10 +529,10 @@ export default function CreateEventModal({
                 isDark ? 'bg-white/5' : 'bg-white'
               }`}>
                 <div className="flex-1">
-                  <div className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <div className={`font-bold mb-1 ${text-white}`}>
                     Accord Exclusivité
                   </div>
-                  <div className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
+                  <div className={`text-xs ${text-white/60}`}>
                     Commission 5% ajoutée au prix • Reversement automatique 70% pour VIP
                   </div>
                 </div>
@@ -651,7 +571,7 @@ export default function CreateEventModal({
                       </>
                     )}
                   </div>
-                  <div className={`text-xs ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
+                  <div className={`text-xs ${text-white/70}`}>
                     {isVIPEligible ? (
                       <>
                         ✅ Reversement automatique de 70% du CA après chaque vente<br />
@@ -682,12 +602,8 @@ export default function CreateEventModal({
           <button
             type="submit"
             disabled={processing}
-            className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl flex items-center justify-center gap-2 ${
+            className={`w-full px-6 py-4 rounded-2xl transition-all font-black text-lg shadow-xl flex items-center justify-center gap-2 bg-[#FF6B00] hover:bg-[#E55F00] text-black ${
               processing ? 'opacity-50 cursor-not-allowed' : ''
-            } ${
-              isDark
-                ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-black'
-                : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white'
             }`}
           >
             {processing ? (
@@ -706,10 +622,8 @@ export default function CreateEventModal({
       </div>
 
       {showCGUModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className={`rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
-            isDark ? 'bg-[#0A0A0B] border border-white/10' : 'bg-white'
-          }`}>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
+          <div className="rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-[#0A0A0B] border border-white/10">
             <div className="p-6 border-b border-white/10">
               <h3 className="text-2xl font-black text-white mb-2">
                 Conditions Générales d'Utilisation - Accord Exclusivité
