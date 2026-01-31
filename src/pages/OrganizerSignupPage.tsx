@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Mail, Phone, User, FileText, Globe, MapPin, ArrowLeft, Lock, Wallet, Upload, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
-import { auth, db } from '../firebase';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { auth, firestore } from '../firebase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import SuccessModal from '../components/SuccessModal';
 
@@ -127,17 +127,18 @@ export default function OrganizerSignupPage() {
       const userId = user.uid;
       console.log('[ORGANIZER SIGNUP] User created with ID:', userId);
 
-      console.log('[ORGANIZER SIGNUP] Creating user profile in database...');
-      await set(ref(db, `users/${userId}`), {
+      console.log('[ORGANIZER SIGNUP] Creating user profile in Firestore...');
+      await setDoc(doc(firestore, 'users', userId), {
         uid: userId,
         email: formData.email,
         full_name: formData.full_name,
         phone: formData.phone,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        role: 'organizer'
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
+        role: 'organizer',
+        silo_id: 'evenement'
       });
-      console.log('[ORGANIZER SIGNUP] User profile created');
+      console.log('[ORGANIZER SIGNUP] User profile created in Firestore');
 
       const verificationDocuments: any = {};
 
@@ -155,18 +156,23 @@ export default function OrganizerSignupPage() {
         console.log('[ORGANIZER SIGNUP] Registre uploaded successfully to Cloudinary');
       }
 
-      console.log('[ORGANIZER SIGNUP] Creating organizer profile...');
-      await set(ref(db, `organizers/${userId}`), {
+      console.log('[ORGANIZER SIGNUP] Creating organizer profile in Firestore...');
+      await setDoc(doc(firestore, 'organizers', userId), {
         uid: userId,
         user_id: userId,
         organization_name: formData.organization_name,
         organization_type: formData.organization_type,
         description: formData.description,
+        contact_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
+        address: formData.city || null,
         website: formData.website || null,
         city: formData.city || null,
-        verification_status: 'pending',
+        verified: false,
+        status: 'pending',
         verification_documents: verificationDocuments,
         bank_account_info: {
           provider: formData.merchant_provider,
@@ -175,11 +181,11 @@ export default function OrganizerSignupPage() {
         commission_rate: 10,
         total_events_created: 0,
         total_tickets_sold: 0,
-        is_active: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        silo_id: 'evenement',
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now()
       });
-      console.log('[ORGANIZER SIGNUP] Organizer profile created successfully');
+      console.log('[ORGANIZER SIGNUP] Organizer profile created successfully in Firestore');
 
       console.log('[ORGANIZER SIGNUP] Signing out user...');
       await auth.signOut();

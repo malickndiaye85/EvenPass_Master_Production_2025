@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Camera, CheckCircle, AlertCircle, User, Phone, FileText, Shield, CreditCard, Lock, Car, Calendar, Hash } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
-import { ref, set } from 'firebase/database';
-import { db } from '../../firebase';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { firestore } from '../../firebase';
 import DynamicLogo from '../../components/DynamicLogo';
 import { CustomModal } from '../../components/CustomModal';
 import { uploadToCloudinary } from '../../lib/cloudinary';
@@ -305,18 +305,34 @@ export default function DriverSignupPage() {
         updatedAt: Date.now()
       };
 
-      const driverRef = ref(db, `drivers/${uid}`);
-      await set(driverRef, driverData);
-
-      await set(ref(db, `users/${uid}`), {
+      await setDoc(doc(firestore, 'drivers', uid), {
+        ...driverData,
+        verified: false,
+        status: 'pending_verification',
+        full_name: `${formData.firstName} ${formData.lastName}`,
+        email: null,
         phone: formData.phone,
+        driver_license: formData.licenseUrl,
+        vehicle_insurance: formData.insuranceUrl,
+        national_id: formData.carteGriseUrl,
+        vehicle_type: formData.vehicleBrand,
+        vehicle_model: formData.vehicleModel,
+        plate_number: formData.vehiclePlateNumber,
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now()
+      });
+
+      await setDoc(doc(firestore, 'users', uid), {
+        phone: formData.phone,
+        full_name: `${formData.firstName} ${formData.lastName}`,
         firstName: formData.firstName,
         lastName: formData.lastName,
         role: 'driver_pending',
         silo: 'voyage',
         silo_id: 'voyage',
         status: 'pending_verification',
-        created_at: new Date().toISOString()
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now()
       });
 
       setModal({

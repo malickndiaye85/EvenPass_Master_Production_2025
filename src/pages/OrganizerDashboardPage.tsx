@@ -59,7 +59,8 @@ interface ModificationRequest {
 export default function OrganizerDashboardPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading, logout, firebaseUser } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
+  const isDark = true;
   const [events, setEvents] = useState<Event[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [modificationRequests, setModificationRequests] = useState<ModificationRequest[]>([]);
@@ -304,7 +305,7 @@ export default function OrganizerDashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className={`min-h-screen ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} flex items-center justify-center`}>
+      <div className={`min-h-screen bg-[#0A0A0B] flex items-center justify-center`}>
         <div className="text-center">
           <div className={`w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 ${
             isDark ? 'border-[#FF6B00]' : 'border-orange-500'
@@ -318,9 +319,9 @@ export default function OrganizerDashboardPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-[#0A0A0B]' : 'bg-[#F9FAFB]'}`}>
+    <div className={`min-h-screen bg-[#0A0A0B]`}>
       {/* Header */}
-      <header className={`${isDark ? 'bg-[#0A0A0B]/95 backdrop-blur-xl' : 'bg-white'} border-b ${isDark ? 'border-white/10' : 'border-gray-200'} sticky top-0 z-50`}>
+      <header className="bg-[#0A0A0B]/95 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
