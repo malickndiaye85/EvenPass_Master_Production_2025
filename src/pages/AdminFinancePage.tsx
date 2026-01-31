@@ -296,7 +296,7 @@ export default function AdminFinancePage() {
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-white">💰 Admin Finance</h1>
-            <p className="text-[#B5B5B5] mt-1">Centre névralgique de la plateforme EvenPass</p>
+            <p className="text-[#B5B5B5] mt-1">Centre névralgique de la plateforme DemDem Transports & Events</p>
           </div>
           <div className="flex items-center gap-3">
             <AdminExportManager />

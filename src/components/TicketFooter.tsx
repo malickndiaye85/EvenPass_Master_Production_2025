@@ -32,7 +32,7 @@ export default function TicketFooter({
           </div>
         </div>
         <div className="text-[#B5B5B5] text-center md:text-right">
-          © 2026 <span className="text-white font-semibold">EvenPass</span> - Tous droits réservés
+          © 2026 <span className="text-white font-semibold">DemDem Transports & Events</span> - Tous droits réservés
         </div>
       </div>
     </div>
@@ -45,7 +45,7 @@ export function TicketFooterCompact() {
       <p className="font-medium">
         Support: +221 77 123 45 67 | Contact: contact@demdem.sn
       </p>
-      <p className="mt-1">© 2026 EvenPass - Tous droits réservés</p>
+      <p className="mt-1">© 2026 DemDem Transports & Events - Tous droits réservés</p>
     </div>
   );
 }

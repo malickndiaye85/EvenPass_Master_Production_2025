@@ -134,7 +134,7 @@ export default function AdminKPICards() {
             <span className="text-sm opacity-90 font-bold">5%</span>
           </div>
           <p className="text-3xl font-black mb-1">{formatAmount(kpiData.platformCommission)} F</p>
-          <p className="text-sm opacity-75 mb-3">Commission EvenPass</p>
+          <p className="text-sm opacity-75 mb-3">Commission DemDem Transports & Events</p>
           <div className="text-xs opacity-70 pt-3 border-t border-white/20">
             <p>Prélevé sur toutes les ventes</p>
             <p className="text-[10px] mt-1">EVEN + PASS (Web + Bloc)</p>

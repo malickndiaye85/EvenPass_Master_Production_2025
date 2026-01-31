@@ -225,7 +225,7 @@ export default function OrganizerSignupPage() {
             Devenir <span className="text-[#FF5F05]">Organisateur</span>
           </h1>
           <p className="text-[#B5B5B5]">
-            Créez et gérez vos événements sur EvenPass
+            Créez et gérez vos événements sur DemDem Transports & Events
           </p>
         </div>
 

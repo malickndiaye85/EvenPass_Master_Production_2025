@@ -43,7 +43,7 @@ export default function PendingVerificationPage() {
               <div>
                 <p className="text-white font-bold mb-1">Vérification en cours</p>
                 <p className="text-sm text-[#B5B5B5]">
-                  EvenPass procède à la vérification de vos documents et informations
+                  DemDem Transports & Events procède à la vérification de vos documents et informations
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function PendingVerificationPage() {
         </div>
 
         <p className="text-center text-[#B5B5B5] mt-6 text-sm">
-          En attendant la validation, vous pouvez découvrir les événements sur EvenPass
+          En attendant la validation, vous pouvez découvrir les événements sur DemDem Transports & Events
         </p>
       </div>
     </div>

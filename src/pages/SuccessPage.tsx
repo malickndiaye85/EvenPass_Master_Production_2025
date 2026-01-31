@@ -234,7 +234,7 @@ export default function SuccessPage() {
             🎉 Gënaa Wóor!
           </p>
           <p className="text-[#B5B5B5] text-lg">
-            Merci d'avoir choisi EvenPass pour vos événements
+            Merci d'avoir choisi DemDem Transports & Events pour vos événements
           </p>
         </div>
       </div>

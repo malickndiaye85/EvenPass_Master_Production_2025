@@ -243,7 +243,7 @@ const PassLandingPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex items-center justify-between">
               <p className={`text-sm ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
-                © 2026 EvenPass. Tous droits réservés.
+                © 2026 DemDem Transports & Events. Tous droits réservés.
               </p>
               <div className="flex items-center gap-2">
                 <button

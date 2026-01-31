@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Clock, X, AlertTriangle } from 'lucide-react';
-import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
-import { db } from '../firebase';
+import { firestore } from '../firebase';
+import { collection, query, where, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { maskPhoneNumber } from '../lib/phoneUtils';
 import AlertModal from './AlertModal';
 import ConfirmModal from './ConfirmModal';
@@ -66,42 +66,44 @@ export default function OrganizerVerificationTab() {
 
   const loadOrganizers = async () => {
     try {
-      const organizersRef = ref(db, 'organizers');
-      const snapshot = await get(organizersRef);
+      const organizersRef = collection(firestore, 'organizers');
+      const q = query(organizersRef, where('verified', '==', false));
+      const snapshot = await getDocs(q);
 
-      if (snapshot.exists()) {
-        const organizersData = snapshot.val();
-        const organizersList: Organizer[] = [];
+      const organizersList: Organizer[] = [];
 
-        for (const userId in organizersData) {
-          const organizer = organizersData[userId];
+      snapshot.forEach((docSnapshot) => {
+        const organizer = docSnapshot.data();
+        organizersList.push({
+          ...organizer,
+          uid: docSnapshot.id,
+          user_id: docSnapshot.id,
+          organization_name: organizer.organization_name || organizer.contact_name || 'Organisation',
+          organization_type: organizer.organization_type || 'Entreprise',
+          description: organizer.description || null,
+          verification_status: 'pending',
+          verification_documents: organizer.verification_documents || {},
+          contact_email: organizer.email || '',
+          contact_phone: organizer.phone || '',
+          website: organizer.website || null,
+          city: organizer.address || null,
+          bank_account_info: organizer.bank_account_info || {},
+          silo_id: 'evenement',
+          created_at: organizer.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+          full_name: organizer.contact_name || '',
+          email: organizer.email || '',
+          phone: organizer.phone || '',
+        } as Organizer);
+      });
 
-          if (organizer.verification_status === 'pending') {
-            const userRef = ref(db, `users/${userId}`);
-            const userSnapshot = await get(userRef);
-            const userData = userSnapshot.val();
+      organizersList.sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
 
-            organizersList.push({
-              ...organizer,
-              uid: userId,
-              full_name: userData?.full_name || '',
-              email: userData?.email || '',
-              phone: userData?.phone || '',
-              silo_id: 'evenement',
-            });
-          }
-        }
-
-        organizersList.sort((a, b) => {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-
-        setOrganizers(organizersList);
-      } else {
-        setOrganizers([]);
-      }
+      setOrganizers(organizersList);
     } catch (error) {
-      console.error('[FIREBASE] Error loading organizers:', error);
+      console.error('[FIRESTORE] Error loading organizers:', error);
+      setOrganizers([]);
     } finally {
       setLoading(false);
     }
@@ -119,19 +121,13 @@ export default function OrganizerVerificationTab() {
     setShowApproveModal(false);
 
     try {
-      const organizerRef = ref(db, `organizers/${organizerToApprove.uid}`);
-      await update(organizerRef, {
-        verification_status: 'verified',
-        is_active: true,
+      const organizerRef = doc(firestore, 'organizers', organizerToApprove.uid);
+      await updateDoc(organizerRef, {
+        verified: true,
+        status: 'active',
         silo_id: 'evenement',
-        verified_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      const userRef = ref(db, `users/${organizerToApprove.uid}`);
-      await update(userRef, {
-        role: 'organizer',
-        silo_id: 'evenement',
+        verified_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
       });
 
       setAlertModal({
@@ -145,7 +141,7 @@ export default function OrganizerVerificationTab() {
       setOrganizerToApprove(null);
       loadOrganizers();
     } catch (error: any) {
-      console.error('[FIREBASE] Error approving organizer:', error);
+      console.error('[FIRESTORE] Error approving organizer:', error);
       setAlertModal({
         isOpen: true,
         type: 'error',
@@ -183,18 +179,13 @@ export default function OrganizerVerificationTab() {
     setRejectionModal({ isOpen: false, organizerId: null, organizerName: '' });
 
     try {
-      const organizerRef = ref(db, `organizers/${rejectionModal.organizerId}`);
-      await update(organizerRef, {
-        verification_status: 'rejected',
-        is_active: false,
+      const organizerRef = doc(firestore, 'organizers', rejectionModal.organizerId);
+      await updateDoc(organizerRef, {
+        verified: false,
+        status: 'rejected',
         rejection_reason: rejectionReason,
-        rejected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      const userRef = ref(db, `users/${rejectionModal.organizerId}`);
-      await update(userRef, {
-        role: 'organizer_rejected',
+        rejected_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
       });
 
       setAlertModal({
@@ -208,7 +199,7 @@ export default function OrganizerVerificationTab() {
       setRejectionReason('');
       loadOrganizers();
     } catch (error: any) {
-      console.error('[FIREBASE] Error rejecting organizer:', error);
+      console.error('[FIRESTORE] Error rejecting organizer:', error);
       setAlertModal({
         isOpen: true,
         type: 'error',

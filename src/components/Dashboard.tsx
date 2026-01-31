@@ -99,7 +99,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
           <div>
             <h1 className="text-4xl font-black text-gray-900 dark:text-white">
-              Dashboard <span className="text-orange-500">EvenPass</span>
+              Dashboard <span className="text-orange-500">DemDem Transports & Events</span>
             </h1>
             <p className="text-gray-600 dark:text-gray-400 font-medium">
               Vue d'ensemble de vos événements

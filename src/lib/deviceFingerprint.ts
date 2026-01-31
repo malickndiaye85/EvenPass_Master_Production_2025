@@ -1,4 +1,4 @@
-const DB_NAME = 'EvenPassSecure';
+const DB_NAME = 'DemDem Transports & EventsSecure';
 const DB_VERSION = 1;
 const STORE_NAME = 'deviceFingerprint';
 const FINGERPRINT_KEY = 'hardware_uuid';

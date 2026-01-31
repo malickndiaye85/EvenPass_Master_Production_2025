@@ -729,7 +729,7 @@ const COSAMABookingPage: React.FC = () => {
                     inputMode="tel"
                     value={holderPhone}
                     onChange={(e) => setHolderPhone(e.target.value)}
-                    placeholder="77 123 45 67"
+                    placeholder="7x xxx xx xx"
                     className="w-full p-3 text-lg font-bold border-2 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 rounded-xl"
                   />
                 </div>

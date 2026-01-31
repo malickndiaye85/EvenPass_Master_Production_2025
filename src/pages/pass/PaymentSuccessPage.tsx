@@ -345,7 +345,7 @@ export default function PaymentSuccessPage() {
             🎉 Gënaa Wóor!
           </p>
           <p className={`${isDark ? 'text-[#B5B5B5]' : 'text-gray-600'} text-lg mb-8`}>
-            Merci d'avoir choisi EvenPass pour vos déplacements
+            Merci d'avoir choisi DemDem Transports & Events pour vos déplacements
           </p>
 
           <button

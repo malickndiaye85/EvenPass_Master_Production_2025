@@ -34,7 +34,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les modalités
-                et conditions d'utilisation de la plateforme EvenPass ainsi que les droits et obligations
+                et conditions d'utilisation de la plateforme DemDem Transports & Events ainsi que les droits et obligations
                 des utilisateurs et de l'éditeur.
               </p>
             </section>
@@ -44,7 +44,7 @@ export default function TermsPage() {
                 2. Acceptation des CGU
               </h2>
               <p>
-                L'accès et l'utilisation de la plateforme EvenPass impliquent l'acceptation pleine et entière
+                L'accès et l'utilisation de la plateforme DemDem Transports & Events impliquent l'acceptation pleine et entière
                 des présentes CGU. En cas de non-acceptation, l'utilisateur doit renoncer à l'utilisation
                 de nos services.
               </p>
@@ -59,7 +59,7 @@ export default function TermsPage() {
                 Les frais d'accès et d'utilisation du réseau de télécommunication sont à la charge de l'utilisateur.
               </p>
               <p>
-                EvenPass met tout en œuvre pour assurer la disponibilité de la plateforme 24h/24, 7j/7,
+                DemDem Transports & Events met tout en œuvre pour assurer la disponibilité de la plateforme 24h/24, 7j/7,
                 sauf en cas de force majeure ou de maintenance nécessaire.
               </p>
             </section>
@@ -75,7 +75,7 @@ export default function TermsPage() {
                 </p>
                 <p>
                   <strong>4.2 Paiement :</strong> Les paiements sont effectués via Wave ou Orange Money.
-                  Aucune information bancaire n'est stockée par EvenPass.
+                  Aucune information bancaire n'est stockée par DemDem Transports & Events.
                 </p>
                 <p>
                   <strong>4.3 Confirmation :</strong> Après validation du paiement, un billet électronique
@@ -94,7 +94,7 @@ export default function TermsPage() {
               </h2>
               <div className="space-y-2">
                 <p>
-                  <strong>5.1 EvenPass :</strong> EvenPass agit en tant qu'intermédiaire entre les organisateurs
+                  <strong>5.1 DemDem Transports & Events :</strong> DemDem Transports & Events agit en tant qu'intermédiaire entre les organisateurs
                   et les participants. La responsabilité du contenu des événements incombe exclusivement
                   aux organisateurs.
                 </p>
@@ -115,7 +115,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi sénégalaise
-                relative à la protection des données personnelles, EvenPass s'engage à protéger les données
+                relative à la protection des données personnelles, DemDem Transports & Events s'engage à protéger les données
                 personnelles de ses utilisateurs. Les données collectées sont utilisées uniquement pour
                 le traitement des commandes et l'amélioration de nos services.
               </p>
@@ -126,7 +126,7 @@ export default function TermsPage() {
                 7. Propriété intellectuelle
               </h2>
               <p>
-                Tous les éléments de la plateforme EvenPass (logos, textes, images, technologies) sont
+                Tous les éléments de la plateforme DemDem Transports & Events (logos, textes, images, technologies) sont
                 protégés par le droit d'auteur et le droit des marques. Toute reproduction non autorisée
                 est strictement interdite.
               </p>
@@ -137,7 +137,7 @@ export default function TermsPage() {
                 8. Modification des CGU
               </h2>
               <p>
-                EvenPass se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs
+                DemDem Transports & Events se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs
                 seront informés de toute modification significative via la plateforme.
               </p>
             </section>

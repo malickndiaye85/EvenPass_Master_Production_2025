@@ -148,7 +148,7 @@ export function generateTicketHTML(ticket: TicketData, options: TicketPDFOptions
 <body>
   <div class="ticket">
     <div class="ticket-header">
-      <h1>🎟️ EvenPass</h1>
+      <h1>🎟️ DemDem Transports & Events</h1>
       <p>Votre Billet Électronique</p>
     </div>
 
@@ -234,7 +234,7 @@ export function generateTicketHTML(ticket: TicketData, options: TicketPDFOptions
       <div class="footer-content">
         <p><strong>Support:</strong> <a href="tel:+221771234567">+221 77 123 45 67</a> |
            <strong>Contact:</strong> <a href="mailto:contact@demdem.sn">contact@demdem.sn</a></p>
-        <p style="margin-top: 8px;">© 2026 <strong>EvenPass</strong> - Tous droits réservés</p>
+        <p style="margin-top: 8px;">© 2026 <strong>DemDem Transports & Events</strong> - Tous droits réservés</p>
         <p style="margin-top: 4px; font-size: 9px; opacity: 0.7;">
           ${options.showRealPhone ? 'Document interne - Informations complètes' : 'Billet client - Téléphone masqué (RGPD)'}
         </p>

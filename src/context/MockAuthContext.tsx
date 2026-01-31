@@ -17,7 +17,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>({
     id: ADMIN_UID,
     email: 'admin@demdem.sn',
-    full_name: 'Admin EvenPass',
+    full_name: 'Admin DemDem Transports & Events',
     phone: '+221771234567',
     avatar_url: null,
     preferred_language: 'fr',
@@ -39,7 +39,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser] = useState({
     uid: ADMIN_UID,
     email: 'admin@demdem.sn',
-    displayName: 'Admin EvenPass',
+    displayName: 'Admin DemDem Transports & Events',
     photoURL: null,
   });
 
@@ -75,7 +75,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
       setUser({
         id: ADMIN_UID,
         email: 'admin@demdem.sn',
-        full_name: 'Admin EvenPass',
+        full_name: 'Admin DemDem Transports & Events',
         phone: '+221771234567',
         avatar_url: null,
         preferred_language: 'fr',
@@ -103,7 +103,7 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
     setUser({
       id: ADMIN_UID,
       email: 'admin@demdem.sn',
-      full_name: 'Admin EvenPass',
+      full_name: 'Admin DemDem Transports & Events',
       phone: '+221771234567',
       avatar_url: null,
       preferred_language: 'fr',

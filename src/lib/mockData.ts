@@ -380,7 +380,7 @@ export const mockUsers = {
     id: 'Tnq8Isi0fATmidMwEuVrw1SAJkI3',
     email: 'admin@demdem.sn',
     role: 'admin',
-    full_name: 'Admin EvenPass',
+    full_name: 'Admin DemDem Transports & Events',
     permissions: ['finance', 'ops_manager', 'scanner', 'all_access']
   },
   organizer: {

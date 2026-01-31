@@ -763,7 +763,7 @@ export default function CreateEventModal({
               <div>
                 <h4 className="font-bold text-white mb-2">6. EXCLUSIVITÉ PLATFORM</h4>
                 <p>
-                  En activant cet accord, vous vous engagez à utiliser EvenPass comme plateforme exclusive de billetterie pour cet événement. Toute vente en dehors de la plateforme peut entraîner la suspension de votre compte organisateur.
+                  En activant cet accord, vous vous engagez à utiliser DemDem Transports & Events comme plateforme exclusive de billetterie pour cet événement. Toute vente en dehors de la plateforme peut entraîner la suspension de votre compte organisateur.
                 </p>
               </div>
 
