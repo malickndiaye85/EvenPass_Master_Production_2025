@@ -5,13 +5,10 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, Bus, Ship, CreditCard, User, ArrowRight, MapPin, Calendar, Search } from 'lucide-react';
+import { Car, Bus, Ship, CreditCard, User, ArrowRight } from 'lucide-react';
 
 export const VoyageLandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchFrom, setSearchFrom] = useState('');
-  const [searchTo, setSearchTo] = useState('');
-  const [searchDate, setSearchDate] = useState('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
@@ -51,47 +48,6 @@ export const VoyageLandingPage: React.FC = () => {
           <p className="text-xl text-white/70 font-light">
             Choisissez votre mode de transport privilégié
           </p>
-        </div>
-
-        <div className="mb-12 bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={20} />
-              <input
-                type="text"
-                placeholder="Départ"
-                value={searchFrom}
-                onChange={(e) => setSearchFrom(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
-              />
-            </div>
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={20} />
-              <input
-                type="text"
-                placeholder="Destination"
-                value={searchTo}
-                onChange={(e) => setSearchTo(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
-              />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={20} />
-              <input
-                type="date"
-                value={searchDate}
-                onChange={(e) => setSearchDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-          <button
-            className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-bold rounded-2xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-            onClick={() => navigate('/voyage/allo-dakar')}
-          >
-            <Search size={20} />
-            Rechercher un trajet
-          </button>
         </div>
 
         <div className="space-y-5">

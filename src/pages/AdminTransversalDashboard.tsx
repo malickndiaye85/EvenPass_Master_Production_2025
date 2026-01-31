@@ -453,7 +453,7 @@ const AdminTransversalDashboard: React.FC = () => {
                       DemDem Express
                     </div>
                     <div className="text-xl font-black text-blue-400">
-                      {formatCurrency(summary.pass_subscriptions_revenue)}
+                      0 FCFA
                     </div>
                   </div>
 
@@ -463,6 +463,18 @@ const AdminTransversalDashboard: React.FC = () => {
                     </div>
                     <div className="text-xl font-black text-cyan-400">
                       {formatCurrency(summary.pass_cosama_revenue)}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                    <div className="text-sm font-semibold mb-1 text-purple-400">
+                      Abonnements
+                    </div>
+                    <div className="text-xl font-black text-purple-300">
+                      {formatCurrency(summary.pass_subscriptions_revenue)}
+                    </div>
+                    <div className="text-xs text-white/50 mt-1">
+                      GENAA & GAAW
                     </div>
                   </div>
                 </div>

@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Image, Upload, Loader, Check, X } from 'lucide-react';
 import { updateLandingBackground, useLandingBackgrounds } from '../lib/landingBackgrounds';
 import AlertModal from './AlertModal';
-import { storage } from '../firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface AdminLandingBackgroundsManagerProps {
   isDark: boolean;
@@ -56,58 +54,66 @@ export default function AdminLandingBackgroundsManager({ isDark, userId }: Admin
     }
 
     setUploading(section);
-    setUploadProgress(0);
+    setUploadProgress(20);
 
     try {
-      const storageRef = ref(storage, `landing-backgrounds/${section}-${Date.now()}.${file.name.split('.').pop()}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Convert image to base64
+      const reader = new FileReader();
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = (e.loaded / e.total) * 80 + 20;
           setUploadProgress(Math.round(progress));
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          setModalConfig({
-            type: 'error',
-            title: 'Erreur d\'upload',
-            message: 'Une erreur est survenue lors de l\'upload de l\'image.'
-          });
-          setShowModal(true);
-          setUploading(null);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const result = await updateLandingBackground(section, downloadURL, userId);
+        }
+      };
 
-          if (result.success) {
-            if (section === 'express') {
-              setExpressUrl(downloadURL);
-            } else {
-              setEvenementUrl(downloadURL);
-            }
+      reader.onload = async () => {
+        setUploadProgress(80);
+        const base64String = reader.result as string;
 
-            setModalConfig({
-              type: 'success',
-              title: 'Upload réussi',
-              message: `L'image ${section === 'express' ? 'DEM EXPRESS' : 'DEM ÉVÉNEMENT'} a été uploadée avec succès.`
-            });
-            setShowModal(true);
+        // Store base64 image in Supabase
+        const result = await updateLandingBackground(section, base64String, userId);
+
+        if (result.success) {
+          if (section === 'express') {
+            setExpressUrl(base64String);
           } else {
-            setModalConfig({
-              type: 'error',
-              title: 'Erreur',
-              message: result.error || 'Une erreur est survenue lors de la mise à jour.'
-            });
-            setShowModal(true);
+            setEvenementUrl(base64String);
           }
 
-          setUploading(null);
-          setUploadProgress(0);
+          setUploadProgress(100);
+          setModalConfig({
+            type: 'success',
+            title: 'Upload réussi',
+            message: `L'image ${section === 'express' ? 'DEM EXPRESS' : 'DEM ÉVÉNEMENT'} a été uploadée avec succès.`
+          });
+          setShowModal(true);
+        } else {
+          setModalConfig({
+            type: 'error',
+            title: 'Erreur',
+            message: result.error || 'Une erreur est survenue lors de la mise à jour.'
+          });
+          setShowModal(true);
         }
-      );
+
+        setUploading(null);
+        setUploadProgress(0);
+      };
+
+      reader.onerror = () => {
+        console.error('File reading error');
+        setModalConfig({
+          type: 'error',
+          title: 'Erreur de lecture',
+          message: 'Impossible de lire le fichier sélectionné.'
+        });
+        setShowModal(true);
+        setUploading(null);
+        setUploadProgress(0);
+      };
+
+      reader.readAsDataURL(file);
     } catch (error: any) {
       console.error('Error uploading file:', error);
       setModalConfig({

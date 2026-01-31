@@ -37,6 +37,7 @@ import {
 import DynamicLogo from '../components/DynamicLogo';
 import CreateEventModal from '../components/CreateEventModal';
 import type { Event, PayoutRequest } from '../types';
+import { isEligibleForVIPFastTrack, VIP_THRESHOLD } from '../lib/financialModel';
 
 interface EventStats {
   totalTickets: number;
@@ -306,7 +307,7 @@ export default function OrganizerDashboardPage() {
       <div className={`min-h-screen ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} flex items-center justify-center`}>
         <div className="text-center">
           <div className={`w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4 ${
-            isDark ? 'border-[#10B981]' : 'border-orange-500'
+            isDark ? 'border-[#FF6B00]' : 'border-orange-500'
           }`}></div>
           <p className={`text-sm ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
             Chargement de votre espace...
@@ -337,7 +338,7 @@ export default function OrganizerDashboardPage() {
               <button
                 onClick={() => setShowCreateEventModal(true)}
                 className={`px-4 py-2.5 font-semibold rounded-lg transition-colors flex items-center gap-2 ${
-                  isDark ? 'bg-[#10B981] hover:bg-[#059669] text-white' : 'bg-[#FF6B00] hover:bg-[#E55F00] text-white'
+                  isDark ? 'bg-[#FF6B00] hover:bg-[#E55F00] text-white' : 'bg-[#FF6B00] hover:bg-[#E55F00] text-white'
                 }`}
               >
                 <Plus className="w-4 h-4" />
@@ -372,24 +373,37 @@ export default function OrganizerDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Revenue Card */}
           <div className={`relative rounded-xl overflow-hidden ${
-            isDark ? 'bg-[#0a0a0a]' : 'bg-white'
-          } shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6B00]"></div>
+            isDark ? 'bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border border-[#FF6B00]/20' : 'bg-white'
+          } shadow-[0_8px_32px_rgba(255,107,0,0.12)]`}>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF6B00] to-[#FF8C00]"></div>
             <div className="p-5 pl-6">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-2xl">💰</span>
-                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  REVENUS
+                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-[#FF6B00]' : 'text-gray-500'}`}>
+                  REVENUS TOTAUX
                 </span>
               </div>
-              <div className={`text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <div className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {totalRevenue.toLocaleString()} F
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-500 text-sm font-semibold">+15% ↑</span>
-              </div>
-              <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Confirmés
+
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10">
+                <div>
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Disponible
+                  </div>
+                  <div className={`text-lg font-bold ${isDark ? 'text-[#FF6B00]' : 'text-orange-600'}`}>
+                    {Math.round(totalRevenue * 0.70).toLocaleString()} F
+                  </div>
+                </div>
+                <div>
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Séquestre
+                  </div>
+                  <div className={`text-lg font-bold ${isDark ? 'text-orange-400' : 'text-orange-500'}`}>
+                    {Math.round(totalRevenue * 0.25).toLocaleString()} F
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -410,7 +424,7 @@ export default function OrganizerDashboardPage() {
                 {totalTicketsSold}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-green-500 text-sm font-semibold">Vendus</span>
+                <span className="text-orange-500 text-sm font-semibold">Vendus</span>
               </div>
               <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 {events.reduce((sum, e) => sum + (eventStats[e.id]?.remainingTickets || 0), 0)} restants
@@ -434,7 +448,7 @@ export default function OrganizerDashboardPage() {
                 {payouts.filter(p => p.status === 'completed').length}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-green-500 text-sm font-semibold">Complétés</span>
+                <span className="text-orange-500 text-sm font-semibold">Complétés</span>
               </div>
               <div className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 {payouts.filter(p => p.status === 'pending').length} en attente
@@ -493,7 +507,7 @@ export default function OrganizerDashboardPage() {
                       <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {event.title}
                       </h3>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
                         🟢 Actif
                       </span>
                     </div>
@@ -648,7 +662,7 @@ export default function OrganizerDashboardPage() {
                   };
 
                   const statusConfig = {
-                    published: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: '🟢' },
+                    published: { label: 'Actif', color: 'bg-orange-100 text-orange-700', icon: '🟢' },
                     draft: { label: 'Draft', color: 'bg-yellow-100 text-yellow-700', icon: '🟡' },
                     cancelled: { label: 'Terminé', color: 'bg-gray-400 text-gray-700', icon: '🔴' },
                   };
@@ -678,10 +692,21 @@ export default function OrganizerDashboardPage() {
                         {/* Event Info */}
                         <div className="flex-1 p-5">
                           <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {event.title}
-                              </h3>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  {event.title}
+                                </h3>
+                                {event.totalCapacity >= VIP_THRESHOLD && event.exclusivityAgreement && (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${
+                                    isDark
+                                      ? 'bg-gradient-to-r from-[#FF6B00] to-[#FFD700] text-black'
+                                      : 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white'
+                                  } shadow-lg animate-pulse`}>
+                                    ⚡ VIP FAST TRACK
+                                  </span>
+                                )}
+                              </div>
                               <p className={`text-sm flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 <Calendar className="w-4 h-4" />
                                 {new Date(event.start_date).toLocaleDateString('fr-FR', {
@@ -716,44 +741,67 @@ export default function OrganizerDashboardPage() {
                             </div>
                             <div>
                               <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Statut</p>
-                              <p className={`text-sm font-semibold ${status.color.includes('green') ? 'text-green-600' : status.color.includes('yellow') ? 'text-yellow-600' : 'text-gray-600'}`}>
+                              <p className={`text-sm font-semibold ${status.color.includes('green') ? 'text-orange-600' : status.color.includes('yellow') ? 'text-yellow-600' : 'text-gray-600'}`}>
                                 {status.label}
                               </p>
                             </div>
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => navigate(`/organizer/events/${event.id}/stats`)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                                isDark
-                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
-                                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              📊 Stats
-                            </button>
-                            <button
-                              onClick={() => navigate(`/organizer/events/${event.id}/edit`)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                                isDark
-                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
-                                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              ✏️ Modifier
-                            </button>
-                            <button
-                              onClick={() => navigate(`/events/${event.id}`)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                                isDark
-                                  ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
-                                  : 'border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-[#FF6B00]'
-                              }`}
-                            >
-                              👁️ Voir page
-                            </button>
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => navigate(`/organizer/events/${event.id}/stats`)}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                  isDark
+                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                📊 Stats
+                              </button>
+                              {event.status !== 'published' ? (
+                                <button
+                                  onClick={() => navigate(`/organizer/events/${event.id}/edit`)}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                    isDark
+                                      ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  ✏️ Modifier
+                                </button>
+                              ) : (
+                                <button
+                                  disabled
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors opacity-50 cursor-not-allowed ${
+                                    isDark
+                                      ? 'border-gray-700 text-gray-500'
+                                      : 'border-gray-300 text-gray-400'
+                                  }`}
+                                  title="Modifications verrouillées (Ventes en cours)"
+                                >
+                                  🔒 Verrouillé
+                                </button>
+                              )}
+                              <button
+                                onClick={() => navigate(`/events/${event.id}`)}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                  isDark
+                                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+                                    : 'border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-[#FF6B00]'
+                                }`}
+                              >
+                                👁️ Voir page
+                              </button>
+                            </div>
+                            {event.status === 'published' && (
+                              <div className={`px-3 py-2 rounded-lg text-xs ${
+                                isDark ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'
+                              }`}>
+                                🔒 <strong>Modifications verrouillées</strong> (Ventes en cours). Utilisez l'onglet "Demandes" pour toute requête.
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -768,13 +816,30 @@ export default function OrganizerDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className={`rounded-xl ${
-              isDark ? 'bg-[#0a0a0a]' : 'bg-white'
-            } shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6`}>
-              <div className="flex items-center gap-3 mb-6">
-                <DollarSign className={`w-6 h-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Historique Payouts
-                </h2>
+              isDark ? 'bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border border-[#FF6B00]/20' : 'bg-white'
+            } shadow-[0_8px_32px_rgba(255,107,0,0.12)] p-6`}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <DollarSign className={`w-6 h-6 ${isDark ? 'text-[#FF6B00]' : 'text-orange-600'}`} />
+                  <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Historique Payouts
+                  </h2>
+                </div>
+                <button
+                  onClick={() => alert('Fonctionnalité de demande de virement disponible prochainement')}
+                  disabled={Math.round(totalRevenue * 0.70) <= 0}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all ${
+                    Math.round(totalRevenue * 0.70) > 0
+                      ? isDark
+                        ? 'bg-[#FF6B00] hover:bg-[#E55F00] text-black'
+                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                  }`}
+                  title={Math.round(totalRevenue * 0.70) <= 0 ? 'Aucun solde disponible' : 'Demander un virement'}
+                >
+                  <Send className="w-4 h-4" />
+                  Demander un virement
+                </button>
               </div>
 
               {payouts.length === 0 ? (
@@ -808,7 +873,7 @@ export default function OrganizerDashboardPage() {
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             payout.status === 'completed'
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-orange-100 text-orange-700'
                               : payout.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-700'
                               : payout.status === 'rejected'
@@ -845,7 +910,7 @@ export default function OrganizerDashboardPage() {
                           <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             Net reçu
                           </p>
-                          <p className={`text-lg font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                          <p className={`text-lg font-bold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
                             {payout.net_amount.toLocaleString()} F
                           </p>
                         </div>
@@ -908,7 +973,7 @@ export default function OrganizerDashboardPage() {
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                             request.status === 'approved'
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-orange-100 text-orange-700'
                               : request.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-700'
                               : 'bg-red-100 text-red-700'
