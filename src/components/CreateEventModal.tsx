@@ -518,7 +518,7 @@ export default function CreateEventModal({
                 <h3 className="text-lg font-black mb-1 text-white">
                   Modèle Financier VIP & Fast Track
                 </h3>
-                <p className={`text-sm ${text-white/70}`}>
+                <p className="text-sm text-white/70">
                   Activez l'Accord Exclusivité pour bénéficier du reversement automatique et du statut VIP
                 </p>
               </div>
@@ -529,10 +529,10 @@ export default function CreateEventModal({
                 isDark ? 'bg-white/5' : 'bg-white'
               }`}>
                 <div className="flex-1">
-                  <div className={`font-bold mb-1 ${text-white}`}>
+                  <div className="font-bold mb-1 text-white">
                     Accord Exclusivité
                   </div>
-                  <div className={`text-xs ${text-white/60}`}>
+                  <div className="text-xs text-white/60">
                     Commission 5% ajoutée au prix • Reversement automatique 70% pour VIP
                   </div>
                 </div>
@@ -571,7 +571,7 @@ export default function CreateEventModal({
                       </>
                     )}
                   </div>
-                  <div className={`text-xs ${text-white/70}`}>
+                  <div className="text-xs text-white/70">
                     {isVIPEligible ? (
                       <>
                         ✅ Reversement automatique de 70% du CA après chaque vente<br />

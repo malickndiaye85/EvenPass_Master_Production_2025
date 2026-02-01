@@ -281,11 +281,28 @@ export default function DriversVerificationTab() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg text-sm font-semibold flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      En attente
-                    </span>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleApproveClick(driver)}
+                      className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Approuver
+                    </button>
+                    <button
+                      onClick={() => handleRejectClick(driver)}
+                      className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Rejeter
+                    </button>
+                    <button
+                      onClick={() => setSelectedDriver(driver)}
+                      className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Détails
+                    </button>
                   </div>
                 </div>
 
@@ -382,16 +399,6 @@ export default function DriversVerificationTab() {
                       </button>
                     </div>
                   </div>
-                )}
-
-                {!selectedDriver && (
-                  <button
-                    onClick={() => setSelectedDriver(driver)}
-                    className="w-full mt-4 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Voir les détails et valider
-                  </button>
                 )}
               </div>
             ))}

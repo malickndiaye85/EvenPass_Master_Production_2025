@@ -295,13 +295,29 @@ export default function OrganizerVerificationTab() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedOrganizer(organizer)}
-                className="px-4 py-2 bg-[#FF5F05] hover:bg-[#FF7A00] text-white rounded-lg transition-colors font-bold flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Examiner
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => handleApproveClick(organizer)}
+                  className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Approuver
+                </button>
+                <button
+                  onClick={() => handleRejectClick(organizer)}
+                  className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Rejeter
+                </button>
+                <button
+                  onClick={() => setSelectedOrganizer(organizer)}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2 text-sm"
+                >
+                  <Eye className="w-4 h-4" />
+                  Détails
+                </button>
+              </div>
             </div>
           </div>
         ))}

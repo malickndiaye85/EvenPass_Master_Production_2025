@@ -126,8 +126,28 @@ service cloud.firestore {
       // Lecture publique des profils organisateurs
       allow read: if true;
 
+      // Création de profil organisateur par utilisateurs authentifiés
+      allow create: if isAuthenticated();
+
       // Organisateur : Modification de son propre profil
-      allow write: if isAuthenticated() && request.auth.uid == organizerId;
+      allow update, delete: if isAuthenticated() && request.auth.uid == organizerId;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // DRIVERS COLLECTION (Chauffeurs)
+    // ============================================
+    match /drivers/{driverId} {
+      // Lecture publique des profils chauffeurs
+      allow read: if true;
+
+      // Création de profil chauffeur par utilisateurs authentifiés
+      allow create: if isAuthenticated();
+
+      // Chauffeur : Modification de son propre profil
+      allow update, delete: if isAuthenticated() && request.auth.uid == driverId;
 
       // Admin : Accès total
       allow read, write: if isAdminFinance();
