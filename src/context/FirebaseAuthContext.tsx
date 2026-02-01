@@ -54,8 +54,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
     try {
       console.log('[FIREBASE AUTH] Loading user profile for:', firebaseUser.uid);
-      const isAdmin = firebaseUser.uid === ADMIN_UID;
-      console.log('[FIREBASE AUTH] Is admin UID?', isAdmin, 'Expected:', ADMIN_UID);
+      const isAdmin = firebaseUser.uid === ADMIN_UID ||
+                      firebaseUser.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' ||
+                      firebaseUser.email === 'sn.malickndiaye@gmail.com';
+      console.log('[FIREBASE AUTH] Is admin UID?', isAdmin, 'UID:', firebaseUser.uid, 'Email:', firebaseUser.email, 'Expected:', ADMIN_UID);
 
       let userData = null;
       let organizerData = null;

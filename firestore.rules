@@ -192,6 +192,39 @@ service cloud.firestore {
     }
 
     // ============================================
+    // BACKGROUNDS COLLECTION (Landing Pages)
+    // ============================================
+    match /backgrounds/{document=**} {
+      // Lecture publique pour affichage landing pages
+      allow read: if true;
+
+      // Modification admin uniquement
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // SETTINGS COLLECTION
+    // ============================================
+    match /settings/{document=**} {
+      // Lecture publique des paramètres
+      allow read: if true;
+
+      // Modification admin uniquement
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
+    // HOME ADS COLLECTION
+    // ============================================
+    match /home_ads/{document=**} {
+      // Lecture publique pour affichage page d'accueil
+      allow read: if true;
+
+      // Modification admin uniquement
+      allow write: if isAdminFinance();
+    }
+
+    // ============================================
     // CATEGORIES COLLECTION
     // ============================================
     match /categories/{categoryId} {

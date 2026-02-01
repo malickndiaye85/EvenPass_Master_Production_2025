@@ -217,19 +217,19 @@ export default function OrganizerDashboardPage() {
       setMobileMoneyFees(fees);
 
       const payoutsRef = collection(firestore, 'payout_requests');
-      const payoutsQuery = query(payoutsRef, where('organizer_id', '==', organizerDoc.id));
+      const payoutsQuery = query(payoutsRef, where('organizer_id', '==', organizer.id));
       const payoutsSnapshot = await getDocs(payoutsQuery);
       const loadedPayouts = payoutsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PayoutRequest[];
       setPayouts(loadedPayouts);
 
       const requestsRef = collection(firestore, 'modification_requests');
-      const requestsQuery = query(requestsRef, where('organizer_id', '==', organizerDoc.id));
+      const requestsQuery = query(requestsRef, where('organizer_id', '==', organizer.id));
       const requestsSnapshot = await getDocs(requestsQuery);
       const loadedRequests = requestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ModificationRequest[];
       setModificationRequests(loadedRequests);
 
       const bulkSalesRef = collection(firestore, 'bulk_sales');
-      const bulkSalesQuery = query(bulkSalesRef, where('organizer_id', '==', organizerDoc.id));
+      const bulkSalesQuery = query(bulkSalesRef, where('organizer_id', '==', organizer.id));
       const bulkSalesSnapshot = await getDocs(bulkSalesQuery);
       const totalBulk = bulkSalesSnapshot.docs.reduce((sum, doc) => {
         const data = doc.data();
