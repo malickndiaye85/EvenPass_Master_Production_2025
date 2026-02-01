@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc, Timestamp } from 'fi
 import { maskPhoneNumber } from '../lib/phoneUtils';
 import AlertModal from './AlertModal';
 import ConfirmModal from './ConfirmModal';
+import { DemDemModal } from './DemDemModal';
 
 interface Organizer {
   uid: string;
@@ -141,8 +142,8 @@ export default function OrganizerVerificationTab() {
       setAlertModal({
         isOpen: true,
         type: 'success',
-        title: 'Organisateur approuvé',
-        message: `${organizerToApprove.organization_name} a été approuvé avec succès. Il peut maintenant créer des événements.`,
+        title: 'Compte Validé avec Succès !',
+        message: `${organizerToApprove.organization_name} a été approuvé. Le compte organisateur est maintenant actif et peut créer des événements.`,
       });
 
       setSelectedOrganizer(null);

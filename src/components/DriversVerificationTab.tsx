@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, Eye, FileText, Phone, User, Car, Shield, Clock, X
 import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { maskPhoneNumber } from '../lib/phoneUtils';
+import { DemDemModal } from './DemDemModal';
 
 interface Driver {
   uid: string;
@@ -142,8 +143,8 @@ export default function DriversVerificationTab() {
       setAlertModal({
         isOpen: true,
         type: 'success',
-        title: 'Chauffeur approuvé',
-        message: `${driverToApprove.firstName} ${driverToApprove.lastName} a été approuvé avec succès. Il peut maintenant accéder à l'espace chauffeur Allo Dakar.`,
+        title: 'Compte Validé avec Succès !',
+        message: `${driverToApprove.firstName} ${driverToApprove.lastName} a été approuvé. Le compte chauffeur est maintenant actif sur Allo Dakar.`,
       });
 
       setSelectedDriver(null);

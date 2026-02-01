@@ -117,10 +117,6 @@ export default function OrganizerSignupPage() {
     try {
       console.log('[ORGANIZER SIGNUP] Starting signup process...');
 
-      // Déconnecter tout utilisateur actuellement connecté
-      console.log('[ORGANIZER SIGNUP] Signing out any existing user...');
-      await auth.signOut();
-
       console.log('[ORGANIZER SIGNUP] Creating Firebase auth user...');
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;

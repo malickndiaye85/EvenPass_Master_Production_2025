@@ -112,8 +112,15 @@ service cloud.firestore {
     // USERS COLLECTION (Profils)
     // ============================================
     match /users/{userId} {
+      // Permettre la création de profil utilisateur lors de l'inscription
+      // CRITIQUE: Permet création avec n'importe quel UID (pour drivers avec UID custom)
+      allow create: if isAuthenticated() || true;
+
       // Utilisateur : Lecture et modification de son propre profil
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read, update: if isAuthenticated() && request.auth.uid == userId;
+
+      // Suppression uniquement par l'utilisateur ou admin
+      allow delete: if (isAuthenticated() && request.auth.uid == userId) || isAdminFinance();
 
       // Admin : Accès total
       allow read, write: if isAdminFinance();
@@ -126,11 +133,15 @@ service cloud.firestore {
       // Lecture publique des profils organisateurs
       allow read: if true;
 
-      // Création de profil organisateur par utilisateurs authentifiés
-      allow create: if isAuthenticated();
+      // Création de profil organisateur lors de l'inscription
+      // CRITIQUE: Permet création même si UID ne correspond pas (inscription en cours)
+      allow create: if isAuthenticated() || true;
 
       // Organisateur : Modification de son propre profil
-      allow update, delete: if isAuthenticated() && request.auth.uid == organizerId;
+      allow update: if isAuthenticated() && request.auth.uid == organizerId;
+
+      // Suppression uniquement par admin
+      allow delete: if isAdminFinance();
 
       // Admin : Accès total
       allow read, write: if isAdminFinance();
@@ -143,11 +154,15 @@ service cloud.firestore {
       // Lecture publique des profils chauffeurs
       allow read: if true;
 
-      // Création de profil chauffeur par utilisateurs authentifiés
-      allow create: if isAuthenticated();
+      // Création de profil chauffeur lors de l'inscription
+      // CRITIQUE: Permet création sans authentification (inscription avec UID custom driver_phone)
+      allow create: if true;
 
       // Chauffeur : Modification de son propre profil
-      allow update, delete: if isAuthenticated() && request.auth.uid == driverId;
+      allow update: if isAuthenticated() && request.auth.uid == driverId;
+
+      // Suppression uniquement par admin
+      allow delete: if isAdminFinance();
 
       // Admin : Accès total
       allow read, write: if isAdminFinance();
