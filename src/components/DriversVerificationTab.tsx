@@ -128,6 +128,8 @@ export default function DriversVerificationTab() {
   };
 
   const handleApproveClick = (driver: Driver) => {
+    window.alert('🔍 CLIC DÉTECTÉ sur Approuver pour : ' + driver.firstName + ' ' + driver.lastName);
+    console.log('[DEBUG] Click detected on Approve button', driver);
     setDriverToApprove(driver);
     setShowApproveModal(true);
   };
@@ -139,7 +141,9 @@ export default function DriversVerificationTab() {
     setShowApproveModal(false);
 
     try {
+      console.log('[FIRESTORE] Attempting to approve driver:', driverToApprove.uid);
       const driverRef = doc(firestore, 'drivers', driverToApprove.uid);
+
       await updateDoc(driverRef, {
         verified: true,
         status: 'verified',
@@ -148,6 +152,8 @@ export default function DriversVerificationTab() {
         verified_at: Timestamp.now(),
         updated_at: Timestamp.now(),
       });
+
+      console.log('[FIRESTORE] Driver approved successfully');
 
       setSuccessModal({
         isOpen: true,
@@ -160,10 +166,16 @@ export default function DriversVerificationTab() {
       loadDrivers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error approving driver:', error);
+      console.error('[FIRESTORE] Full error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+      });
+
       setErrorModal({
         isOpen: true,
-        title: 'Erreur',
-        message: error.message || 'Une erreur est survenue lors de l\'approbation.',
+        title: 'Erreur Firebase',
+        message: `Code: ${error.code || 'unknown'}\n\nMessage: ${error.message || 'Une erreur est survenue lors de l\'approbation.'}\n\nVérifiez les règles Firebase Security Rules.`,
       });
     } finally {
       setProcessing(false);
@@ -289,17 +301,37 @@ export default function DriversVerificationTab() {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => handleApproveClick(driver)}
-                      className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
+                      disabled={processing}
+                      className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
                     >
-                      <CheckCircle className="w-4 h-4" />
-                      Approuver
+                      {processing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                          Validation...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Approuver
+                        </>
+                      )}
                     </button>
                     <button
                       onClick={() => handleRejectClick(driver)}
-                      className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2 whitespace-nowrap"
+                      disabled={processing}
+                      className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
                     >
-                      <XCircle className="w-4 h-4" />
-                      Rejeter
+                      {processing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Traitement...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4" />
+                          Rejeter
+                        </>
+                      )}
                     </button>
                     <button
                       onClick={() => setSelectedDriver(driver)}
