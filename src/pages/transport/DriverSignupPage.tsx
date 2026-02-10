@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Camera, CheckCircle, AlertCircle, User, Phone, FileText, Shield, CreditCard, Lock, Car, Calendar, Hash } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import { firestore } from '../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { firestore, auth } from '../../firebase';
 import DynamicLogo from '../../components/DynamicLogo';
 import { CustomModal } from '../../components/CustomModal';
 import { uploadToCloudinary } from '../../lib/cloudinary';
@@ -275,16 +276,44 @@ export default function DriverSignupPage() {
 
     try {
       const pinHash = await hashPIN(formData.pin);
-
       const cleanPhone = formData.phone.replace(/\s+/g, '');
-      const uid = `driver_${cleanPhone}`;
 
+      // CRÉER UN COMPTE FIREBASE AUTH
+      // Email généré : +221{phone}@driver.demdem.sn
+      // Password : PIN (minimum 6 caractères requis par Firebase)
+      const generatedEmail = `+221${cleanPhone}@driver.demdem.sn`;
+      const password = formData.pin.padEnd(6, '0'); // Assurer minimum 6 caractères
+
+      console.log('[DRIVER SIGNUP] 🔐 Creating Firebase Auth account:', generatedEmail);
+
+      let firebaseUID = '';
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, generatedEmail, password);
+        firebaseUID = userCredential.user.uid;
+        console.log('[DRIVER SIGNUP] ✅ Firebase Auth account created with UID:', firebaseUID);
+      } catch (authError: any) {
+        if (authError.code === 'auth/email-already-in-use') {
+          console.error('[DRIVER SIGNUP] ❌ Un compte existe déjà avec ce numéro');
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Compte existant',
+            message: 'Un compte chauffeur existe déjà avec ce numéro de téléphone.'
+          });
+          setLoading(false);
+          return;
+        }
+        throw authError;
+      }
+
+      // Utiliser l'UID Firebase Auth au lieu d'un custom UID
       const driverData = {
-        uid: uid,
+        uid: firebaseUID,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
         pinHash: pinHash,
+        email: generatedEmail,
         licenseNumber: formData.licenseNumber || null,
         licenseUrl: formData.licenseUrl,
         insuranceUrl: formData.insuranceUrl,
@@ -305,12 +334,11 @@ export default function DriverSignupPage() {
         updatedAt: Date.now()
       };
 
-      await setDoc(doc(firestore, 'drivers', uid), {
+      await setDoc(doc(firestore, 'drivers', firebaseUID), {
         ...driverData,
         verified: false,
         status: 'pending_verification',
         full_name: `${formData.firstName} ${formData.lastName}`,
-        email: null,
         phone: formData.phone,
         driver_license: formData.licenseUrl,
         vehicle_insurance: formData.insuranceUrl,
@@ -322,7 +350,7 @@ export default function DriverSignupPage() {
         updated_at: Timestamp.now()
       });
 
-      await setDoc(doc(firestore, 'users', uid), {
+      await setDoc(doc(firestore, 'users', firebaseUID), {
         phone: formData.phone,
         full_name: `${formData.firstName} ${formData.lastName}`,
         firstName: formData.firstName,

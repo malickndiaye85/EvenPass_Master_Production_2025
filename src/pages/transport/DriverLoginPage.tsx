@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, Lock, ArrowLeft } from 'lucide-react';
 import { CustomModal } from '../../components/CustomModal';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
@@ -79,101 +79,117 @@ export const DriverLoginPage: React.FC = () => {
         return;
       }
 
-      // Chercher dans Firestore
-      const driversRef = collection(firestore, 'drivers');
-      const driversQuery = query(driversRef, where('phone', '==', phoneFormatted));
-      const snapshot = await getDocs(driversQuery);
+      // CONNEXION VIA FIREBASE AUTH
+      // Email généré : +221{phone}@driver.demdem.sn
+      const generatedEmail = `+221${phoneDigits}@driver.demdem.sn`;
+      const password = formData.pin.padEnd(6, '0'); // Assurer minimum 6 caractères
 
-      console.log('[DRIVER LOGIN] 🔍 Documents trouvés:', snapshot.size);
+      console.log('[DRIVER LOGIN] 🔐 Tentative de connexion Firebase Auth:', generatedEmail);
 
-      if (snapshot.empty) {
-        console.log('[DRIVER LOGIN] ⚠️ Aucun chauffeur trouvé avec le téléphone:', phoneFormatted);
-        setModal({
-          isOpen: true,
-          type: 'error',
-          title: 'Compte introuvable',
-          message: 'Aucun compte chauffeur trouvé avec ce numéro. Veuillez vous inscrire d\'abord.'
-        });
+      try {
+        // Connexion Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, generatedEmail, password);
+        const firebaseUID = userCredential.user.uid;
+        console.log('[DRIVER LOGIN] ✅ Authentification Firebase réussie, UID:', firebaseUID);
+
+        // Vérifier le statut du chauffeur dans Firestore
+        const driverDocRef = doc(firestore, 'drivers', firebaseUID);
+        const driverDocSnap = await getDoc(driverDocRef);
+
+        if (!driverDocSnap.exists()) {
+          console.error('[DRIVER LOGIN] ❌ Document chauffeur introuvable pour UID:', firebaseUID);
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Erreur',
+            message: 'Profil chauffeur introuvable. Contactez le support.'
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const driverData = driverDocSnap.data();
+        console.log('[DRIVER LOGIN] 📄 Données chauffeur:', { status: driverData.status, verified: driverData.verified });
+
+        // Vérifier le statut
+        if (driverData.status === 'pending' || driverData.status === 'pending_verification' || driverData.verified === false) {
+          console.log('[DRIVER LOGIN] ⏳ Compte en attente de validation');
+          setModal({
+            isOpen: true,
+            type: 'info',
+            title: 'Compte en attente',
+            message: 'Votre compte est en cours de validation par l\'Admin Voyage. Vous serez notifié dès que votre compte sera validé.'
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        if (driverData.status === 'rejected') {
+          console.log('[DRIVER LOGIN] ❌ Compte rejeté');
+          const rejectionReason = driverData.rejection_reason || driverData.rejectionReason || 'Aucune raison spécifiée.';
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Compte rejeté',
+            message: `Votre demande a été rejetée. Motif: ${rejectionReason}`
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Compte vérifié : redirection
+        if (driverData.status === 'verified' || driverData.verified === true) {
+          console.log('[DRIVER LOGIN] ✅ Compte validé, redirection vers dashboard');
+
+          setModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Connexion réussie',
+            message: `Bienvenue ${driverData.firstName || driverData.full_name} !`
+          });
+
+          // Le AuthContext va automatiquement détecter l'utilisateur et le rôle "driver"
+          setTimeout(() => {
+            navigate('/voyage/chauffeur/dashboard');
+          }, 1500);
+        } else {
+          console.log('[DRIVER LOGIN] ⚠️ Statut invalide:', driverData.status);
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Compte non validé',
+            message: 'Votre compte n\'est pas encore actif. Statut: ' + (driverData.status || 'inconnu')
+          });
+          setIsLoading(false);
+        }
+
+      } catch (firebaseAuthError: any) {
+        console.error('[DRIVER LOGIN] ❌ Erreur Firebase Auth:', firebaseAuthError.code);
+
+        if (firebaseAuthError.code === 'auth/user-not-found' || firebaseAuthError.code === 'auth/invalid-credential') {
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Identifiants incorrects',
+            message: 'Aucun compte trouvé avec ces identifiants. Vérifiez votre numéro et votre code PIN.'
+          });
+        } else if (firebaseAuthError.code === 'auth/wrong-password' || firebaseAuthError.code === 'auth/invalid-credential') {
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Code PIN incorrect',
+            message: 'Le code PIN saisi est incorrect. Veuillez réessayer.'
+          });
+        } else {
+          setModal({
+            isOpen: true,
+            type: 'error',
+            title: 'Erreur de connexion',
+            message: 'Une erreur est survenue lors de la connexion. Code: ' + firebaseAuthError.code
+          });
+        }
         setIsLoading(false);
         return;
-      }
-
-      const driverDoc = snapshot.docs[0];
-      const driverData = driverDoc.data();
-
-      console.log('[DRIVER LOGIN] 📄 Chauffeur trouvé:', driverDoc.id, driverData);
-
-      const pinHash = await hashPIN(formData.pin);
-
-      if (driverData.pinHash !== pinHash) {
-        console.log('[DRIVER LOGIN] ❌ Code PIN incorrect');
-        setModal({
-          isOpen: true,
-          type: 'error',
-          title: 'Code PIN incorrect',
-          message: 'Le code PIN saisi est incorrect. Veuillez réessayer.'
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('[DRIVER LOGIN] 🔍 Statut:', driverData.status, 'Vérifié:', driverData.verified);
-
-      // Vérifier le statut (peut être 'pending', 'pending_verification', 'verified', 'rejected')
-      if (driverData.status === 'pending' || driverData.status === 'pending_verification' || driverData.verified === false) {
-        console.log('[DRIVER LOGIN] ⏳ Compte en attente de validation');
-        setModal({
-          isOpen: true,
-          type: 'info',
-          title: 'Compte en attente',
-          message: 'Votre compte est en cours de validation par l\'Admin Voyage. Vous serez notifié dès que votre compte sera validé.'
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (driverData.status === 'rejected') {
-        console.log('[DRIVER LOGIN] ❌ Compte rejeté');
-        const rejectionReason = driverData.rejection_reason || driverData.rejectionReason || 'Aucune raison spécifiée.';
-        setModal({
-          isOpen: true,
-          type: 'error',
-          title: 'Compte rejeté',
-          message: `Votre demande a été rejetée. Motif: ${rejectionReason}`
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Accepter 'verified' OU verified === true
-      if (driverData.status === 'verified' || driverData.verified === true) {
-        console.log('[DRIVER LOGIN] ✅ Compte validé, redirection vers dashboard');
-
-        // STOCKER L'ID DU CHAUFFEUR DANS LOCALSTORAGE
-        localStorage.setItem('driver_id', driverDoc.id);
-        localStorage.setItem('driver_phone', phoneFormatted);
-        localStorage.setItem('driver_name', driverData.firstName || driverData.full_name || 'Chauffeur');
-        console.log('[DRIVER LOGIN] 💾 ID chauffeur stocké:', driverDoc.id);
-
-        setModal({
-          isOpen: true,
-          type: 'success',
-          title: 'Connexion réussie',
-          message: `Bienvenue ${driverData.firstName || driverData.full_name} !`
-        });
-
-        setTimeout(() => {
-          navigate('/voyage/chauffeur/dashboard');
-        }, 1500);
-      } else {
-        console.log('[DRIVER LOGIN] ⚠️ Statut invalide:', driverData.status);
-        setModal({
-          isOpen: true,
-          type: 'error',
-          title: 'Compte non validé',
-          message: 'Votre compte n\'est pas encore actif. Statut: ' + (driverData.status || 'inconnu')
-        });
-        setIsLoading(false);
       }
 
     } catch (error: any) {

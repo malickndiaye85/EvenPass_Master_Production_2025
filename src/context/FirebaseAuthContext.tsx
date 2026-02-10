@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
-import { auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db, firestore } from '../firebase';
 import type { AuthUser } from '../types';
 
 const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
@@ -62,6 +63,28 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       let userData = null;
       let organizerData = null;
       let adminData = null;
+      let driverData = null;
+
+      // VÉRIFIER D'ABORD SI C'EST UN CHAUFFEUR (Firestore)
+      if (firestore) {
+        try {
+          const driverRef = doc(firestore, 'drivers', firebaseUser.uid);
+          const driverSnapshot = await getDoc(driverRef);
+          if (driverSnapshot.exists()) {
+            driverData = driverSnapshot.data();
+            console.log('[FIREBASE AUTH] 🚗 Driver data loaded:', {
+              exists: true,
+              status: driverData.status,
+              verified: driverData.verified,
+              firstName: driverData.firstName
+            });
+          } else {
+            console.log('[FIREBASE AUTH] 🚗 No driver document found for UID:', firebaseUser.uid);
+          }
+        } catch (error: any) {
+          console.warn('[FIREBASE AUTH] Could not load driver data:', error);
+        }
+      }
 
       if (db) {
         try {
@@ -112,10 +135,13 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         console.warn('[FIREBASE AUTH] Firebase database not configured');
       }
 
-      let role: 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff' = 'customer';
+      let role: 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff' | 'driver' = 'customer';
 
       console.log('[FIREBASE AUTH] Role determination checks:', {
         isAdmin,
+        hasDriverData: !!driverData,
+        driverStatus: driverData?.status,
+        driverVerified: driverData?.verified,
         hasOrganizerData: !!organizerData,
         organizerIsActive: organizerData?.is_active,
         organizerIsActiveType: typeof organizerData?.is_active,
@@ -125,16 +151,21 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       if (isAdmin) {
         role = 'super_admin';
-        console.log('[FIREBASE AUTH] Role set to SUPER ADMIN (Master UID)');
+        console.log('[FIREBASE AUTH] ✅ Role set to SUPER ADMIN (Master UID)');
       } else if (adminData && adminData.is_active) {
         role = 'admin';
-        console.log('[FIREBASE AUTH] Role set to admin (adminData exists)');
+        console.log('[FIREBASE AUTH] ✅ Role set to admin (adminData exists)');
+      } else if (driverData && (driverData.status === 'verified' || driverData.verified === true)) {
+        role = 'driver';
+        console.log('[FIREBASE AUTH] 🚗 ✅ Role set to DRIVER (verified)');
+      } else if (driverData && (driverData.status === 'pending' || driverData.status === 'pending_verification')) {
+        console.log('[FIREBASE AUTH] 🚗 ⏳ Driver account pending verification');
       } else if (organizerData) {
         if (organizerData.is_active === true && organizerData.verification_status === 'verified') {
           role = 'organizer';
-          console.log('[FIREBASE AUTH] Role set to organizer (verified)');
+          console.log('[FIREBASE AUTH] ✅ Role set to organizer (verified)');
         } else if (organizerData.verification_status === 'pending') {
-          console.log('[FIREBASE AUTH] Organizer pending verification');
+          console.log('[FIREBASE AUTH] ⏳ Organizer pending verification');
         } else {
           console.log('[FIREBASE AUTH] Organizer data exists but conditions not met:', {
             is_active: organizerData.is_active,
@@ -145,7 +176,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         }
       }
 
-      console.log('[FIREBASE AUTH] Final determined role:', role);
+      console.log('[FIREBASE AUTH] 🎯 Final determined role:', role);
 
       const userProfile: AuthUser = {
         id: firebaseUser.uid,

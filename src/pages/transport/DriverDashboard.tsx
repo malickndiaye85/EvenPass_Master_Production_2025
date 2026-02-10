@@ -69,9 +69,8 @@ interface Trip {
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
 
-  const [driverId, setDriverId] = useState<string | null>(null);
   const [driver, setDriver] = useState<DriverProfile | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,30 +78,41 @@ export default function DriverDashboard() {
   const [activeTab, setActiveTab] = useState<'home' | 'trips' | 'profile'>('home');
 
   useEffect(() => {
-    // Récupérer l'ID du chauffeur depuis localStorage
-    const storedDriverId = localStorage.getItem('driver_id');
-    console.log('[DRIVER DASHBOARD] ID stocké:', storedDriverId);
+    console.log('[DRIVER DASHBOARD] 🔒 Accès Dashboard Chauffeur - Rôle actuel:', user?.role);
+    console.log('[DRIVER DASHBOARD] 🔒 User:', user);
+    console.log('[DRIVER DASHBOARD] 🔒 Auth loading:', authLoading);
 
-    if (!storedDriverId) {
-      console.log('[DRIVER DASHBOARD] Pas d\'ID trouvé, redirection vers login');
+    if (authLoading) {
+      console.log('[DRIVER DASHBOARD] ⏳ Auth en cours de chargement...');
+      return;
+    }
+
+    if (!user) {
+      console.log('[DRIVER DASHBOARD] ❌ Pas d\'utilisateur, redirection vers login');
       navigate('/voyage/chauffeur/login');
       return;
     }
 
-    setDriverId(storedDriverId);
-    loadDriverData(storedDriverId);
-  }, [navigate]);
+    if (user.role !== 'driver') {
+      console.log('[DRIVER DASHBOARD] ⚠️ Utilisateur n\'est pas un chauffeur, rôle:', user.role);
+      navigate('/voyage/chauffeur/login');
+      return;
+    }
 
-  const loadDriverData = async (id: string) => {
-    if (!id) {
-      console.error('[DRIVER DASHBOARD] ID chauffeur manquant');
+    console.log('[DRIVER DASHBOARD] ✅ Utilisateur chauffeur authentifié, chargement des données...');
+    loadDriverData();
+  }, [user, authLoading, navigate]);
+
+  const loadDriverData = async () => {
+    if (!user) {
+      console.error('[DRIVER DASHBOARD] Impossible de charger : pas d\'utilisateur');
       return;
     }
 
     try {
-      console.log('[DRIVER DASHBOARD] Loading data for:', id);
+      console.log('[DRIVER DASHBOARD] Loading data for:', user.id);
 
-      const driverRef = doc(firestore, 'drivers', id);
+      const driverRef = doc(firestore, 'drivers', user.id);
       const driverSnap = await getDoc(driverRef);
 
       if (!driverSnap.exists()) {
@@ -116,7 +126,7 @@ export default function DriverDashboard() {
       setDriver(driverData);
 
       const tripsRef = collection(firestore, 'trips');
-      const tripsQuery = query(tripsRef, where('driver_id', '==', id));
+      const tripsQuery = query(tripsRef, where('driver_id', '==', user.id));
       const tripsSnap = await getDocs(tripsQuery);
 
       const tripsList: Trip[] = [];
@@ -140,11 +150,11 @@ export default function DriverDashboard() {
   };
 
   const handleToggleOnline = async () => {
-    if (!driverId || !driver) return;
+    if (!user || !driver) return;
 
     setSwitchLoading(true);
     try {
-      const driverRef = doc(firestore, 'drivers', driverId);
+      const driverRef = doc(firestore, 'drivers', user.id);
       await updateDoc(driverRef, {
         is_online: !driver.is_online,
         updated_at: Timestamp.now()
@@ -166,13 +176,14 @@ export default function DriverDashboard() {
       return;
     }
 
-    // Nettoyer le localStorage
-    localStorage.removeItem('driver_id');
-    localStorage.removeItem('driver_phone');
-    localStorage.removeItem('driver_name');
-    console.log('[DRIVER DASHBOARD] Session terminée, localStorage nettoyé');
-
-    navigate('/voyage/chauffeur/login');
+    try {
+      await signOut();
+      console.log('[DRIVER DASHBOARD] ✅ Déconnexion réussie');
+      navigate('/voyage/chauffeur/login');
+    } catch (error) {
+      console.error('[DRIVER DASHBOARD] ❌ Erreur de déconnexion:', error);
+      alert('Erreur lors de la déconnexion');
+    }
   };
 
   const handlePublishTrip = () => {
