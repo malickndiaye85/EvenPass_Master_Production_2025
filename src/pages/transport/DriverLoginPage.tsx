@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, Lock, ArrowLeft } from 'lucide-react';
 import { CustomModal } from '../../components/CustomModal';
-import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
-import { db } from '../../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
 
@@ -55,6 +55,8 @@ export const DriverLoginPage: React.FC = () => {
       const phoneDigits = formData.phone.replace(/\D/g, '');
       const phoneFormatted = formatPhoneNumber(phoneDigits);
 
+      console.log('[DRIVER LOGIN] 🔐 Tentative de connexion avec:', phoneFormatted);
+
       if (phoneDigits.length !== 9) {
         setModal({
           isOpen: true,
@@ -77,11 +79,15 @@ export const DriverLoginPage: React.FC = () => {
         return;
       }
 
-      const driversRef = ref(db, 'drivers');
-      const driversQuery = query(driversRef, orderByChild('phone'), equalTo(phoneFormatted));
-      const snapshot = await get(driversQuery);
+      // Chercher dans Firestore
+      const driversRef = collection(firestore, 'drivers');
+      const driversQuery = query(driversRef, where('phone', '==', phoneFormatted));
+      const snapshot = await getDocs(driversQuery);
 
-      if (!snapshot.exists()) {
+      console.log('[DRIVER LOGIN] 🔍 Documents trouvés:', snapshot.size);
+
+      if (snapshot.empty) {
+        console.log('[DRIVER LOGIN] ⚠️ Aucun chauffeur trouvé avec le téléphone:', phoneFormatted);
         setModal({
           isOpen: true,
           type: 'error',
@@ -92,12 +98,15 @@ export const DriverLoginPage: React.FC = () => {
         return;
       }
 
-      const drivers = snapshot.val();
-      const driverData = Object.values(drivers)[0] as any;
+      const driverDoc = snapshot.docs[0];
+      const driverData = driverDoc.data();
+
+      console.log('[DRIVER LOGIN] 📄 Chauffeur trouvé:', driverDoc.id, driverData);
 
       const pinHash = await hashPIN(formData.pin);
 
       if (driverData.pinHash !== pinHash) {
+        console.log('[DRIVER LOGIN] ❌ Code PIN incorrect');
         setModal({
           isOpen: true,
           type: 'error',
@@ -108,7 +117,11 @@ export const DriverLoginPage: React.FC = () => {
         return;
       }
 
-      if (driverData.status === 'pending_verification') {
+      console.log('[DRIVER LOGIN] 🔍 Statut:', driverData.status, 'Vérifié:', driverData.verified);
+
+      // Vérifier le statut (peut être 'pending', 'pending_verification', 'verified', 'rejected')
+      if (driverData.status === 'pending' || driverData.status === 'pending_verification' || driverData.verified === false) {
+        console.log('[DRIVER LOGIN] ⏳ Compte en attente de validation');
         setModal({
           isOpen: true,
           type: 'info',
@@ -120,7 +133,8 @@ export const DriverLoginPage: React.FC = () => {
       }
 
       if (driverData.status === 'rejected') {
-        const rejectionReason = driverData.rejectionReason || 'Aucune raison spécifiée.';
+        console.log('[DRIVER LOGIN] ❌ Compte rejeté');
+        const rejectionReason = driverData.rejection_reason || driverData.rejectionReason || 'Aucune raison spécifiée.';
         setModal({
           isOpen: true,
           type: 'error',
@@ -131,26 +145,37 @@ export const DriverLoginPage: React.FC = () => {
         return;
       }
 
-      if (driverData.status === 'verified') {
+      // Accepter 'verified' OU verified === true
+      if (driverData.status === 'verified' || driverData.verified === true) {
+        console.log('[DRIVER LOGIN] ✅ Compte validé, redirection vers dashboard');
         setModal({
           isOpen: true,
           type: 'success',
           title: 'Connexion réussie',
-          message: `Bienvenue ${driverData.firstName} !`
+          message: `Bienvenue ${driverData.firstName || driverData.full_name} !`
         });
 
         setTimeout(() => {
           navigate('/voyage/chauffeur/dashboard');
         }, 1500);
+      } else {
+        console.log('[DRIVER LOGIN] ⚠️ Statut invalide:', driverData.status);
+        setModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Compte non validé',
+          message: 'Votre compte n\'est pas encore actif. Statut: ' + (driverData.status || 'inconnu')
+        });
+        setIsLoading(false);
       }
 
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
+      console.error('[DRIVER LOGIN] 💥 Login error:', error);
       setModal({
         isOpen: true,
         type: 'error',
         title: 'Erreur de connexion',
-        message: 'Une erreur est survenue. Veuillez réessayer.'
+        message: 'Une erreur est survenue. Veuillez réessayer. Détails: ' + (error.message || 'Erreur inconnue')
       });
     } finally {
       setIsLoading(false);

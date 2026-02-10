@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight, RefreshCw } from 'lucide-react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { ref, get } from 'firebase/database';
-import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, firestore } from '../firebase';
 import DynamicLogo from '../components/DynamicLogo';
 import { verifyOrganizersByEvents } from '../lib/initFirebaseRoles';
 
@@ -49,15 +49,33 @@ export default function OrganizerLoginPage() {
     setLoading(true);
 
     try {
+      console.log('[ORGANIZER LOGIN] 🔐 Tentative de connexion avec:', email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const organizerRef = ref(db, `organizers/${user.uid}`);
-      const organizerSnapshot = await get(organizerRef);
-      const organizerData = organizerSnapshot.val();
+      console.log('[ORGANIZER LOGIN] ✅ Authentification Firebase réussie, UID:', user.uid);
+      console.log('[ORGANIZER LOGIN] 🔍 Recherche dans Firestore...');
+
+      // Chercher l'organisateur par UID OU par email/contact_email
+      const organizersRef = collection(firestore, 'organizers');
+
+      // D'abord chercher par UID (le doc ID)
+      const organizersSnapshot = await getDocs(organizersRef);
+      let organizerData: any = null;
+      let organizerDocId: string = '';
+
+      organizersSnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Chercher soit par doc.id === UID, soit par email ou contact_email
+        if (doc.id === user.uid || data.email === email || data.contact_email === email) {
+          organizerData = data;
+          organizerDocId = doc.id;
+          console.log('[ORGANIZER LOGIN] 📄 Organisateur trouvé:', doc.id, data);
+        }
+      });
 
       if (!organizerData) {
-        console.log('[ORGANIZER LOGIN] ⚠️ Aucun compte organisateur trouvé pour:', user.uid);
+        console.log('[ORGANIZER LOGIN] ⚠️ Aucun compte organisateur trouvé pour:', user.uid, email);
         setError('Aucun compte organisateur trouvé. Si vous avez des événements créés, cliquez sur "Vérifier les rôles" ci-dessous.');
         setShowRoleInitButton(true);
         await auth.signOut();
@@ -65,22 +83,30 @@ export default function OrganizerLoginPage() {
         return;
       }
 
-      if (organizerData.verification_status === 'pending') {
+      console.log('[ORGANIZER LOGIN] 🔍 Statut:', organizerData.status, 'Vérifié:', organizerData.verified);
+
+      // Vérifier le statut (peut être 'pending', 'active', 'rejected')
+      if (organizerData.status === 'pending' || organizerData.verified === false) {
+        console.log('[ORGANIZER LOGIN] ⏳ Compte en attente de validation');
         navigate('/organizer/pending');
         return;
       }
 
-      if (organizerData.verification_status === 'rejected') {
+      if (organizerData.status === 'rejected') {
+        console.log('[ORGANIZER LOGIN] ❌ Compte rejeté');
         setError('Votre compte a été rejeté. Veuillez contacter le support pour plus d\'informations.');
         await auth.signOut();
         setLoading(false);
         return;
       }
 
-      if (organizerData.verification_status === 'verified' && organizerData.is_active) {
+      // Accepter les statuts 'active' OU 'verified' OU verified === true
+      if (organizerData.status === 'active' || organizerData.verified === true) {
+        console.log('[ORGANIZER LOGIN] ✅ Compte validé, redirection vers dashboard');
         navigate('/organizer/dashboard');
       } else {
-        setError('Votre compte n\'est pas encore actif');
+        console.log('[ORGANIZER LOGIN] ⚠️ Statut invalide:', organizerData.status);
+        setError('Votre compte n\'est pas encore actif. Statut: ' + (organizerData.status || 'inconnu'));
         await auth.signOut();
         setLoading(false);
       }
