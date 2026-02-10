@@ -126,6 +126,8 @@ export default function OrganizerVerificationTab() {
   };
 
   const handleApproveClick = (organizer: Organizer) => {
+    window.alert('🔍 CLIC DÉTECTÉ sur Approuver pour : ' + organizer.organization_name);
+    console.log('[DEBUG] Click detected on Approve button', organizer);
     setOrganizerToApprove(organizer);
     setShowApproveModal(true);
   };
@@ -137,7 +139,9 @@ export default function OrganizerVerificationTab() {
     setShowApproveModal(false);
 
     try {
+      console.log('[FIRESTORE] Attempting to approve organizer:', organizerToApprove.uid);
       const organizerRef = doc(firestore, 'organizers', organizerToApprove.uid);
+
       await updateDoc(organizerRef, {
         verified: true,
         status: 'active',
@@ -145,6 +149,8 @@ export default function OrganizerVerificationTab() {
         verified_at: Timestamp.now(),
         updated_at: Timestamp.now(),
       });
+
+      console.log('[FIRESTORE] Organizer approved successfully');
 
       setSuccessModal({
         isOpen: true,
@@ -157,10 +163,16 @@ export default function OrganizerVerificationTab() {
       loadOrganizers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error approving organizer:', error);
+      console.error('[FIRESTORE] Full error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+      });
+
       setErrorModal({
         isOpen: true,
-        title: 'Erreur',
-        message: error.message || 'Une erreur est survenue lors de l\'approbation.',
+        title: 'Erreur Firebase',
+        message: `Code: ${error.code || 'unknown'}\n\nMessage: ${error.message || 'Une erreur est survenue lors de l\'approbation.'}\n\nVérifiez les règles Firebase Security Rules.`,
       });
     } finally {
       setProcessing(false);
@@ -301,17 +313,37 @@ export default function OrganizerVerificationTab() {
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => handleApproveClick(organizer)}
-                  className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg"
+                  disabled={processing}
+                  className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#E55F00] text-black rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  Approuver
+                  {processing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                      Validation...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Approuver
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => handleRejectClick(organizer)}
-                  className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2"
+                  disabled={processing}
+                  className="px-6 py-2.5 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
                 >
-                  <XCircle className="w-4 h-4" />
-                  Rejeter
+                  {processing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Traitement...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-4 h-4" />
+                      Rejeter
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setSelectedOrganizer(organizer)}

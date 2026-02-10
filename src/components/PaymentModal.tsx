@@ -164,7 +164,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Votre nom complet"
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-black placeholder-gray-400 focus:outline-none focus:border-orange-500 font-semibold"
+                style={{ color: '#000000' }}
               />
             </div>
           </div>
@@ -180,8 +181,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 required
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder=""
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                placeholder="77 123 45 67"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-black placeholder-gray-400 focus:outline-none focus:border-orange-500 font-semibold"
+                style={{ color: '#000000' }}
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
