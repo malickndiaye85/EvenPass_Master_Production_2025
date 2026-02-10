@@ -3,7 +3,8 @@ import { CheckCircle, XCircle, Eye, FileText, Phone, User, Car, Shield, Clock, X
 import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { maskPhoneNumber } from '../lib/phoneUtils';
-import { DemDemModal } from './DemDemModal';
+import DemDemModal from './DemDemModal';
+import ConfirmModal from './ConfirmModal';
 
 interface Driver {
   uid: string;
@@ -50,14 +51,22 @@ export default function DriversVerificationTab() {
   });
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const [alertModal, setAlertModal] = useState<{
+  const [successModal, setSuccessModal] = useState<{
     isOpen: boolean;
-    type: 'success' | 'error';
     title: string;
     message: string;
   }>({
     isOpen: false,
-    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
     title: '',
     message: '',
   });
@@ -140,9 +149,8 @@ export default function DriversVerificationTab() {
         updated_at: Timestamp.now(),
       });
 
-      setAlertModal({
+      setSuccessModal({
         isOpen: true,
-        type: 'success',
         title: 'Compte Validé avec Succès !',
         message: `${driverToApprove.firstName} ${driverToApprove.lastName} a été approuvé. Le compte chauffeur est maintenant actif sur Allo Dakar.`,
       });
@@ -152,9 +160,8 @@ export default function DriversVerificationTab() {
       loadDrivers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error approving driver:', error);
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Erreur',
         message: error.message || 'Une erreur est survenue lors de l\'approbation.',
       });
@@ -176,9 +183,8 @@ export default function DriversVerificationTab() {
     if (!rejectionModal.driverId) return;
 
     if (!rejectionReason.trim()) {
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Motif requis',
         message: 'Veuillez préciser le motif du rejet (ex: Photo du permis illisible).',
       });
@@ -199,9 +205,8 @@ export default function DriversVerificationTab() {
         updated_at: Timestamp.now(),
       });
 
-      setAlertModal({
+      setSuccessModal({
         isOpen: true,
-        type: 'success',
         title: 'Chauffeur rejeté',
         message: `Le compte a été rejeté. Motif: ${rejectionReason}`,
       });
@@ -211,9 +216,8 @@ export default function DriversVerificationTab() {
       loadDrivers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error rejecting driver:', error);
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Erreur',
         message: error.message || 'Une erreur est survenue lors du rejet.',
       });
@@ -248,10 +252,10 @@ export default function DriversVerificationTab() {
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
             <CheckCircle className="w-16 h-16 text-[#10B981] mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">
-              Aucun chauffeur en attente
+              Aucune demande en attente pour DemDem
             </h3>
             <p className="text-white/60">
-              Tous les chauffeurs ont été traités
+              Toutes les demandes de chauffeurs ont été traitées
             </p>
           </div>
         ) : (
@@ -475,15 +479,24 @@ export default function DriversVerificationTab() {
         </div>
       )}
 
-      {/* Modale d'alerte */}
-      {alertModal.isOpen && (
-        <AlertModal
-          type={alertModal.type}
-          title={alertModal.title}
-          message={alertModal.message}
-          onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
-        />
-      )}
+      {/* Modales de succès et erreur */}
+      <DemDemModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+        title={successModal.title}
+        message={successModal.message}
+        type="success"
+        confirmText="OK"
+      />
+
+      <DemDemModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        title={errorModal.title}
+        message={errorModal.message}
+        type="error"
+        confirmText="OK"
+      />
     </>
   );
 }

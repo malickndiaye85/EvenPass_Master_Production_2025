@@ -3,9 +3,8 @@ import { CheckCircle, XCircle, Eye, FileText, Phone, Mail, Building2, Wallet, Cl
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { maskPhoneNumber } from '../lib/phoneUtils';
-import AlertModal from './AlertModal';
+import DemDemModal from './DemDemModal';
 import ConfirmModal from './ConfirmModal';
-import { DemDemModal } from './DemDemModal';
 
 interface Organizer {
   uid: string;
@@ -49,14 +48,22 @@ export default function OrganizerVerificationTab() {
   });
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const [alertModal, setAlertModal] = useState<{
+  const [successModal, setSuccessModal] = useState<{
     isOpen: boolean;
-    type: 'success' | 'error';
     title: string;
     message: string;
   }>({
     isOpen: false,
-    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
     title: '',
     message: '',
   });
@@ -139,9 +146,8 @@ export default function OrganizerVerificationTab() {
         updated_at: Timestamp.now(),
       });
 
-      setAlertModal({
+      setSuccessModal({
         isOpen: true,
-        type: 'success',
         title: 'Compte Validé avec Succès !',
         message: `${organizerToApprove.organization_name} a été approuvé. Le compte organisateur est maintenant actif et peut créer des événements.`,
       });
@@ -151,9 +157,8 @@ export default function OrganizerVerificationTab() {
       loadOrganizers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error approving organizer:', error);
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Erreur',
         message: error.message || 'Une erreur est survenue lors de l\'approbation.',
       });
@@ -175,9 +180,8 @@ export default function OrganizerVerificationTab() {
     if (!rejectionModal.organizerId) return;
 
     if (!rejectionReason.trim()) {
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Motif requis',
         message: 'Veuillez préciser le motif du rejet (ex: Documents incomplets).',
       });
@@ -197,9 +201,8 @@ export default function OrganizerVerificationTab() {
         updated_at: Timestamp.now(),
       });
 
-      setAlertModal({
+      setSuccessModal({
         isOpen: true,
-        type: 'success',
         title: 'Organisateur rejeté',
         message: `Le compte a été rejeté. Motif: ${rejectionReason}`,
       });
@@ -209,9 +212,8 @@ export default function OrganizerVerificationTab() {
       loadOrganizers();
     } catch (error: any) {
       console.error('[FIRESTORE] Error rejecting organizer:', error);
-      setAlertModal({
+      setErrorModal({
         isOpen: true,
-        type: 'error',
         title: 'Erreur',
         message: error.message || 'Une erreur est survenue lors du rejet.',
       });
@@ -242,7 +244,7 @@ export default function OrganizerVerificationTab() {
     return (
       <div className="text-center py-12">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">Aucune demande en attente</h3>
+        <h3 className="text-xl font-bold text-white mb-2">Aucune demande en attente pour DemDem</h3>
         <p className="text-[#B5B5B5]">Toutes les demandes d'organisateurs ont été traitées</p>
       </div>
     );
@@ -553,15 +555,24 @@ export default function OrganizerVerificationTab() {
         </div>
       )}
 
-      {/* Modale d'alerte */}
-      {alertModal.isOpen && (
-        <AlertModal
-          type={alertModal.type}
-          title={alertModal.title}
-          message={alertModal.message}
-          onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
-        />
-      )}
+      {/* Modales de succès et erreur */}
+      <DemDemModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+        title={successModal.title}
+        message={successModal.message}
+        type="success"
+        confirmText="OK"
+      />
+
+      <DemDemModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        title={errorModal.title}
+        message={errorModal.message}
+        type="error"
+        confirmText="OK"
+      />
     </div>
   );
 }
