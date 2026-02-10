@@ -148,6 +148,13 @@ export const DriverLoginPage: React.FC = () => {
       // Accepter 'verified' OU verified === true
       if (driverData.status === 'verified' || driverData.verified === true) {
         console.log('[DRIVER LOGIN] ✅ Compte validé, redirection vers dashboard');
+
+        // STOCKER L'ID DU CHAUFFEUR DANS LOCALSTORAGE
+        localStorage.setItem('driver_id', driverDoc.id);
+        localStorage.setItem('driver_phone', phoneFormatted);
+        localStorage.setItem('driver_name', driverData.firstName || driverData.full_name || 'Chauffeur');
+        console.log('[DRIVER LOGIN] 💾 ID chauffeur stocké:', driverDoc.id);
+
         setModal({
           isOpen: true,
           type: 'success',

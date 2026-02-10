@@ -71,6 +71,7 @@ export default function DriverDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const [driverId, setDriverId] = useState<string | null>(null);
   const [driver, setDriver] = useState<DriverProfile | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,21 +79,30 @@ export default function DriverDashboard() {
   const [activeTab, setActiveTab] = useState<'home' | 'trips' | 'profile'>('home');
 
   useEffect(() => {
-    if (!user) {
+    // Récupérer l'ID du chauffeur depuis localStorage
+    const storedDriverId = localStorage.getItem('driver_id');
+    console.log('[DRIVER DASHBOARD] ID stocké:', storedDriverId);
+
+    if (!storedDriverId) {
+      console.log('[DRIVER DASHBOARD] Pas d\'ID trouvé, redirection vers login');
       navigate('/voyage/chauffeur/login');
       return;
     }
 
-    loadDriverData();
-  }, [user, navigate]);
+    setDriverId(storedDriverId);
+    loadDriverData(storedDriverId);
+  }, [navigate]);
 
-  const loadDriverData = async () => {
-    if (!user) return;
+  const loadDriverData = async (id: string) => {
+    if (!id) {
+      console.error('[DRIVER DASHBOARD] ID chauffeur manquant');
+      return;
+    }
 
     try {
-      console.log('[DRIVER DASHBOARD] Loading data for:', user.uid);
+      console.log('[DRIVER DASHBOARD] Loading data for:', id);
 
-      const driverRef = doc(firestore, 'drivers', user.uid);
+      const driverRef = doc(firestore, 'drivers', id);
       const driverSnap = await getDoc(driverRef);
 
       if (!driverSnap.exists()) {
@@ -106,7 +116,7 @@ export default function DriverDashboard() {
       setDriver(driverData);
 
       const tripsRef = collection(firestore, 'trips');
-      const tripsQuery = query(tripsRef, where('driver_id', '==', user.uid));
+      const tripsQuery = query(tripsRef, where('driver_id', '==', id));
       const tripsSnap = await getDocs(tripsQuery);
 
       const tripsList: Trip[] = [];
@@ -130,11 +140,11 @@ export default function DriverDashboard() {
   };
 
   const handleToggleOnline = async () => {
-    if (!user || !driver) return;
+    if (!driverId || !driver) return;
 
     setSwitchLoading(true);
     try {
-      const driverRef = doc(firestore, 'drivers', user.uid);
+      const driverRef = doc(firestore, 'drivers', driverId);
       await updateDoc(driverRef, {
         is_online: !driver.is_online,
         updated_at: Timestamp.now()
@@ -155,6 +165,13 @@ export default function DriverDashboard() {
       alert('Veuillez passer en mode Offline avant de vous déconnecter');
       return;
     }
+
+    // Nettoyer le localStorage
+    localStorage.removeItem('driver_id');
+    localStorage.removeItem('driver_phone');
+    localStorage.removeItem('driver_name');
+    console.log('[DRIVER DASHBOARD] Session terminée, localStorage nettoyé');
+
     navigate('/voyage/chauffeur/login');
   };
 
