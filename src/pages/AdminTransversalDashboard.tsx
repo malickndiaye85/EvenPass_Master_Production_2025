@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings, LogOut, Shield, CheckCircle, XCircle, AlertCircle, Clock, Eye, Ship, Car, Navigation2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Ticket, Bus, CreditCard, Download, FileText, Users, Settings, LogOut, Shield, Clock, Ship, Car, Navigation2, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/FirebaseAuthContext';
-import { ref, onValue, update, get } from 'firebase/database';
-import { db } from '../firebase';
 import DynamicLogo from '../components/DynamicLogo';
 import Logo from '../components/Logo';
 import AdminLandingBackgroundsManager from '../components/AdminLandingBackgroundsManager';
 import StaffManagementTab from '../components/StaffManagementTab';
 import AccessDenied from '../components/AccessDenied';
+import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
+import DriversVerificationTab from '../components/DriversVerificationTab';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -34,13 +34,8 @@ const AdminTransversalDashboard: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const [pendingOrganizers, setPendingOrganizers] = useState<any[]>([]);
-  const [pendingDrivers, setPendingDrivers] = useState<any[]>([]);
-
   useEffect(() => {
     loadData();
-    loadPendingOrganizers();
-    loadPendingDrivers();
   }, []);
 
   const loadData = async () => {
@@ -56,125 +51,6 @@ const AdminTransversalDashboard: React.FC = () => {
     loadData();
   };
 
-  const loadPendingOrganizers = () => {
-    const organizersRef = ref(db, 'organizers');
-    onValue(organizersRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const organizers = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        })).filter(org => {
-          if (filterStatus === 'all') return true;
-          if (filterStatus === 'pending') return org.status === 'pending' || org.status === 'pending_verification';
-          if (filterStatus === 'pending_docs') return org.status === 'pending_documents';
-          if (filterStatus === 'verified') return org.status === 'verified' || org.status === 'active';
-          return true;
-        });
-        setPendingOrganizers(organizers);
-      } else {
-        setPendingOrganizers([]);
-      }
-    });
-  };
-
-  const loadPendingDrivers = () => {
-    const driversRef = ref(db, 'drivers');
-    onValue(driversRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const drivers = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        })).filter(driver => {
-          if (filterStatus === 'all') return true;
-          if (filterStatus === 'pending') return driver.status === 'pending';
-          if (filterStatus === 'pending_docs') return driver.status === 'pending_documents';
-          if (filterStatus === 'verified') return driver.status === 'verified';
-          return true;
-        });
-        setPendingDrivers(drivers);
-      } else {
-        setPendingDrivers([]);
-      }
-    });
-  };
-
-  const handleValidateOrganizer = async (organizerId: string) => {
-    try {
-      const organizerRef = ref(db, `organizers/${organizerId}`);
-      await update(organizerRef, {
-        status: 'verified',
-        verifiedAt: new Date().toISOString(),
-        verifiedBy: user?.id
-      });
-      alert('Organisateur validé avec succès !');
-    } catch (error) {
-      console.error('Erreur validation organisateur:', error);
-      alert('Erreur lors de la validation');
-    }
-  };
-
-  const handleRejectOrganizer = async (organizerId: string) => {
-    const reason = prompt('Raison du rejet :');
-    if (!reason) return;
-
-    try {
-      const organizerRef = ref(db, `organizers/${organizerId}`);
-      await update(organizerRef, {
-        status: 'rejected',
-        rejectedAt: new Date().toISOString(),
-        rejectedBy: user?.id,
-        rejectionReason: reason
-      });
-      alert('Organisateur rejeté');
-    } catch (error) {
-      console.error('Erreur rejet organisateur:', error);
-      alert('Erreur lors du rejet');
-    }
-  };
-
-  const handleValidateDriver = async (driverId: string) => {
-    try {
-      const driverRef = ref(db, `drivers/${driverId}`);
-      await update(driverRef, {
-        status: 'verified',
-        verifiedAt: new Date().toISOString(),
-        verifiedBy: user?.id
-      });
-      alert('Chauffeur validé avec succès !');
-    } catch (error) {
-      console.error('Erreur validation chauffeur:', error);
-      alert('Erreur lors de la validation');
-    }
-  };
-
-  const handleRejectDriver = async (driverId: string) => {
-    const reason = prompt('Raison du rejet :');
-    if (!reason) return;
-
-    try {
-      const driverRef = ref(db, `drivers/${driverId}`);
-      await update(driverRef, {
-        status: 'rejected',
-        rejectedAt: new Date().toISOString(),
-        rejectedBy: user?.id,
-        rejectionReason: reason
-      });
-      alert('Chauffeur rejeté');
-    } catch (error) {
-      console.error('Erreur rejet chauffeur:', error);
-      alert('Erreur lors du rejet');
-    }
-  };
-
-  useEffect(() => {
-    loadPendingOrganizers();
-  }, [filterStatus]);
-
-  useEffect(() => {
-    loadPendingDrivers();
-  }, [filterStatus]);
 
   const handleExportSummary = () => {
     if (!summary) return;
@@ -612,122 +488,7 @@ const AdminTransversalDashboard: React.FC = () => {
               </div>
 
               {eventsSubTab === 'validation' && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-white">Validation Organisateurs (KYC)</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setFilterStatus('all')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'all'
-                            ? 'bg-[#10B981] text-black'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Tous
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('pending')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'pending'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Nouveaux
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('pending_docs')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'pending_docs'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        En attente docs
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('verified')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'verified'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Validés
-                      </button>
-                    </div>
-                  </div>
-
-                  {pendingOrganizers.length === 0 ? (
-                    <div className="text-center py-12 text-white/60">
-                      <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>Aucun organisateur {filterStatus !== 'all' ? 'dans ce statut' : ''}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {pendingOrganizers.map((org) => (
-                        <div key={org.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="text-lg font-bold text-white">{org.organizationName || org.companyName}</h4>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  org.status === 'verified' || org.status === 'active'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : org.status === 'rejected'
-                                    ? 'bg-red-500/20 text-red-400'
-                                    : 'bg-orange-500/20 text-orange-400'
-                                }`}>
-                                  {org.status === 'verified' || org.status === 'active' ? 'Vérifié' :
-                                   org.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                                </span>
-                              </div>
-                              <div className="grid md:grid-cols-2 gap-3 text-sm">
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Contact :</span> {org.firstName} {org.lastName}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Email :</span> {org.email}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Téléphone :</span> {org.phone}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">NINEA :</span> {org.ninea || 'Non fourni'}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">CNI :</span> {org.cni || 'Non fourni'}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Inscrit le :</span> {org.createdAt ? new Date(org.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {(org.status === 'pending' || org.status === 'pending_verification' || org.status === 'pending_documents') && (
-                            <div className="flex gap-2 mt-3">
-                              <button
-                                onClick={() => handleValidateOrganizer(org.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Valider
-                              </button>
-                              <button
-                                onClick={() => handleRejectOrganizer(org.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
-                              >
-                                <XCircle className="w-4 h-4" />
-                                Rejeter
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <OrganizerVerificationTab />
               )}
 
               {eventsSubTab === 'finance' && (
@@ -969,159 +730,7 @@ const AdminTransversalDashboard: React.FC = () => {
               )}
 
               {voyageSubTab === 'validation' && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-white">Validation Chauffeurs</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setFilterStatus('all')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'all'
-                            ? 'bg-[#10B981] text-black'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Tous
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('pending')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'pending'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Nouveaux
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('pending_docs')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'pending_docs'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        En attente docs
-                      </button>
-                      <button
-                        onClick={() => setFilterStatus('verified')}
-                        className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${
-                          filterStatus === 'verified'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                      >
-                        Validés
-                      </button>
-                    </div>
-                  </div>
-
-                  {pendingDrivers.length === 0 ? (
-                    <div className="text-center py-12 text-white/60">
-                      <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>Aucun chauffeur {filterStatus !== 'all' ? 'dans ce statut' : ''}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {pendingDrivers.map((driver) => (
-                        <div key={driver.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="text-lg font-bold text-white">{driver.firstName} {driver.lastName}</h4>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  driver.status === 'verified'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : driver.status === 'rejected'
-                                    ? 'bg-red-500/20 text-red-400'
-                                    : 'bg-orange-500/20 text-orange-400'
-                                }`}>
-                                  {driver.status === 'verified' ? 'Vérifié' :
-                                   driver.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                                </span>
-                              </div>
-                              <div className="grid md:grid-cols-2 gap-3 text-sm">
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Email :</span> {driver.email}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Téléphone :</span> {driver.phone}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Véhicule :</span> {driver.vehicleBrand} {driver.vehicleModel}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Places :</span> {driver.vehicleSeats}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Permis :</span> {driver.licenseNumber || 'Non fourni'}
-                                </div>
-                                <div className="text-white/70">
-                                  <span className="font-semibold">Inscrit le :</span> {driver.createdAt ? new Date(driver.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
-                                </div>
-                              </div>
-                              {(driver.licensePhotoURL || driver.insurancePhotoURL || driver.registrationPhotoURL) && (
-                                <div className="mt-3 flex gap-2">
-                                  {driver.licensePhotoURL && (
-                                    <a
-                                      href={driver.licensePhotoURL}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                      Permis
-                                    </a>
-                                  )}
-                                  {driver.insurancePhotoURL && (
-                                    <a
-                                      href={driver.insurancePhotoURL}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                      Assurance
-                                    </a>
-                                  )}
-                                  {driver.registrationPhotoURL && (
-                                    <a
-                                      href={driver.registrationPhotoURL}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                      Carte Grise
-                                    </a>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {driver.status === 'pending' && (
-                            <div className="flex gap-2 mt-3">
-                              <button
-                                onClick={() => handleValidateDriver(driver.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Valider
-                              </button>
-                              <button
-                                onClick={() => handleRejectDriver(driver.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
-                              >
-                                <XCircle className="w-4 h-4" />
-                                Rejeter
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <DriversVerificationTab />
               )}
 
               {voyageSubTab === 'finance' && (
