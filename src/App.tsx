@@ -112,7 +112,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   const location = useLocation();
 
-
+  console.log('[PROTECTED ROUTE] Check:', {
+    path: location.pathname,
+    hasUser: !!user,
+    userRole: user?.role,
+    loading
+  });
 
   if (loading) {
 
@@ -132,11 +137,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user && !location.pathname.startsWith('/voyage/chauffeur/signup') && !location.pathname.startsWith('/transport/driver/')) {
 
+    console.log('[PROTECTED ROUTE] ❌ Pas d\'utilisateur, redirection vers /');
     return <Navigate to="/" replace />;
 
   }
 
-
+  console.log('[PROTECTED ROUTE] ✅ Accès autorisé');
 
   return <>{children}</>;
 

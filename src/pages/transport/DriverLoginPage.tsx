@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, Lock, ArrowLeft } from 'lucide-react';
 import { CustomModal } from '../../components/CustomModal';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
 
 export const DriverLoginPage: React.FC = () => {
@@ -166,20 +166,114 @@ export const DriverLoginPage: React.FC = () => {
       } catch (firebaseAuthError: any) {
         console.error('[DRIVER LOGIN] ❌ Erreur Firebase Auth:', firebaseAuthError.code);
 
+        // Si compte Firebase Auth introuvable, essayer migration automatique
         if (firebaseAuthError.code === 'auth/user-not-found' || firebaseAuthError.code === 'auth/invalid-credential') {
-          setModal({
-            isOpen: true,
-            type: 'error',
-            title: 'Identifiants incorrects',
-            message: 'Aucun compte trouvé avec ces identifiants. Vérifiez votre numéro et votre code PIN.'
-          });
-        } else if (firebaseAuthError.code === 'auth/wrong-password' || firebaseAuthError.code === 'auth/invalid-credential') {
+          console.log('[DRIVER LOGIN] 🔄 Compte Firebase Auth introuvable, tentative de migration...');
+
+          try {
+            // Rechercher dans Firestore avec l'ancienne méthode
+            const driversRef = collection(firestore, 'drivers');
+            const driversQuery = query(driversRef, where('phone', '==', phoneFormatted));
+            const snapshot = await getDocs(driversQuery);
+
+            if (!snapshot.empty) {
+              const oldDriverDoc = snapshot.docs[0];
+              const oldDriverData = oldDriverDoc.data();
+              const oldDriverId = oldDriverDoc.id;
+
+              console.log('[DRIVER LOGIN] 📦 Ancien compte trouvé:', oldDriverId);
+
+              // Vérifier PIN hash
+              const pinHash = await hashPIN(formData.pin);
+              if (oldDriverData.pinHash !== pinHash) {
+                console.log('[DRIVER LOGIN] ❌ Code PIN incorrect pour ancien compte');
+                setModal({
+                  isOpen: true,
+                  type: 'error',
+                  title: 'Code PIN incorrect',
+                  message: 'Le code PIN saisi est incorrect.'
+                });
+                setIsLoading(false);
+                return;
+              }
+
+              // MIGRER vers Firebase Auth
+              console.log('[DRIVER LOGIN] 🔄 Migration vers Firebase Auth...');
+
+              const newUserCredential = await createUserWithEmailAndPassword(auth, generatedEmail, password);
+              const newFirebaseUID = newUserCredential.user.uid;
+
+              console.log('[DRIVER LOGIN] ✅ Compte Firebase Auth créé avec UID:', newFirebaseUID);
+
+              // Copier données vers nouveau document avec UID Firebase
+              await setDoc(doc(firestore, 'drivers', newFirebaseUID), {
+                ...oldDriverData,
+                uid: newFirebaseUID,
+                email: generatedEmail,
+                migrated_from: oldDriverId,
+                migration_date: Timestamp.now(),
+                updated_at: Timestamp.now()
+              });
+
+              // Supprimer ancien document
+              await deleteDoc(doc(firestore, 'drivers', oldDriverId));
+              console.log('[DRIVER LOGIN] 🗑️ Ancien document supprimé:', oldDriverId);
+
+              // Vérifier statut et rediriger
+              if (oldDriverData.status === 'verified' || oldDriverData.verified === true) {
+                setModal({
+                  isOpen: true,
+                  type: 'success',
+                  title: 'Compte migré !',
+                  message: `Bienvenue ${oldDriverData.firstName || oldDriverData.full_name}. Votre compte a été mis à jour.`
+                });
+
+                setTimeout(() => {
+                  navigate('/voyage/chauffeur/dashboard');
+                }, 2000);
+              } else {
+                setModal({
+                  isOpen: true,
+                  type: 'info',
+                  title: 'Compte en attente',
+                  message: 'Votre compte est en cours de validation.'
+                });
+                setIsLoading(false);
+              }
+
+              return;
+            } else {
+              // Aucun compte trouvé ni avec Firebase Auth ni avec ancienne méthode
+              console.log('[DRIVER LOGIN] ❌ Aucun compte trouvé');
+              setModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Compte introuvable',
+                message: 'Aucun compte chauffeur trouvé avec ce numéro. Veuillez vous inscrire.'
+              });
+              setIsLoading(false);
+              return;
+            }
+          } catch (migrationError: any) {
+            console.error('[DRIVER LOGIN] ❌ Erreur migration:', migrationError);
+            setModal({
+              isOpen: true,
+              type: 'error',
+              title: 'Erreur de migration',
+              message: 'Erreur lors de la migration du compte. Contactez le support.'
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else if (firebaseAuthError.code === 'auth/wrong-password') {
           setModal({
             isOpen: true,
             type: 'error',
             title: 'Code PIN incorrect',
             message: 'Le code PIN saisi est incorrect. Veuillez réessayer.'
           });
+          setIsLoading(false);
+          return;
         } else {
           setModal({
             isOpen: true,
@@ -187,9 +281,9 @@ export const DriverLoginPage: React.FC = () => {
             title: 'Erreur de connexion',
             message: 'Une erreur est survenue lors de la connexion. Code: ' + firebaseAuthError.code
           });
+          setIsLoading(false);
+          return;
         }
-        setIsLoading(false);
-        return;
       }
 
     } catch (error: any) {
