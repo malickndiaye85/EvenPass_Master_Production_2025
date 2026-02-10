@@ -133,24 +133,41 @@ export default function OrganizerVerificationTab() {
   };
 
   const handleApproveConfirm = async () => {
-    if (!organizerToApprove) return;
+    console.log('[DEBUG] handleApproveConfirm CALLED');
+    window.alert('🚀 CONFIRMATION VALIDÉE - Début du traitement Firestore');
 
+    if (!organizerToApprove) {
+      window.alert('❌ ERREUR : Aucun organisateur sélectionné');
+      console.error('[ERROR] organizerToApprove is null');
+      return;
+    }
+
+    console.log('[DEBUG] Setting processing to true');
     setProcessing(true);
+
+    console.log('[DEBUG] Closing approve modal');
     setShowApproveModal(false);
 
     try {
-      console.log('[FIRESTORE] Attempting to approve organizer:', organizerToApprove.uid);
-      const organizerRef = doc(firestore, 'organizers', organizerToApprove.uid);
+      console.log('[FIRESTORE] Tentative de mise à jour Firestore pour ID:', organizerToApprove.uid);
+      console.log('[FIRESTORE] Firestore instance:', firestore);
 
-      await updateDoc(organizerRef, {
+      const organizerRef = doc(firestore, 'organizers', organizerToApprove.uid);
+      console.log('[FIRESTORE] Document reference created:', organizerRef);
+
+      const updateData = {
         verified: true,
         status: 'active',
         silo_id: 'evenement',
         verified_at: Timestamp.now(),
         updated_at: Timestamp.now(),
-      });
+      };
+      console.log('[FIRESTORE] Update data:', updateData);
 
-      console.log('[FIRESTORE] Organizer approved successfully');
+      await updateDoc(organizerRef, updateData);
+
+      console.log('[FIRESTORE] ✅ Organizer approved successfully');
+      window.alert('✅ SUCCÈS : Organisateur approuvé dans Firestore');
 
       setSuccessModal({
         isOpen: true,
@@ -162,19 +179,35 @@ export default function OrganizerVerificationTab() {
       setOrganizerToApprove(null);
       loadOrganizers();
     } catch (error: any) {
-      console.error('[FIRESTORE] Error approving organizer:', error);
+      console.error('[FIRESTORE] ❌ Error approving organizer:', error);
       console.error('[FIRESTORE] Full error details:', {
         code: error.code,
         message: error.message,
         stack: error.stack,
+        name: error.name,
       });
+
+      const errorMessage = `❌ ERREUR FIRESTORE
+
+Code: ${error.code || 'unknown'}
+Message: ${error.message || 'Erreur inconnue'}
+
+Vérifiez :
+1. Les règles Firestore
+2. La connexion Firebase
+3. Les permissions du compte
+
+Stack: ${error.stack?.substring(0, 200) || 'N/A'}`;
+
+      window.alert(errorMessage);
 
       setErrorModal({
         isOpen: true,
         title: 'Erreur Firebase',
-        message: `Code: ${error.code || 'unknown'}\n\nMessage: ${error.message || 'Une erreur est survenue lors de l\'approbation.'}\n\nVérifiez les règles Firebase Security Rules.`,
+        message: errorMessage,
       });
     } finally {
+      console.log('[DEBUG] Setting processing to false');
       setProcessing(false);
     }
   };
@@ -522,15 +555,16 @@ export default function OrganizerVerificationTab() {
       {/* Modale de confirmation d'approbation */}
       {showApproveModal && organizerToApprove && (
         <ConfirmModal
+          isOpen={true}
           title="Approuver cet organisateur ?"
           message={`Êtes-vous sûr de vouloir approuver ${organizerToApprove.organization_name} ? Il pourra créer des événements immédiatement.`}
           onConfirm={handleApproveConfirm}
-          onCancel={() => {
+          onClose={() => {
             setShowApproveModal(false);
             setOrganizerToApprove(null);
           }}
           confirmText="Approuver"
-          confirmColor="bg-[#10B981] hover:bg-[#059669]"
+          type="success"
         />
       )}
 

@@ -135,25 +135,42 @@ export default function DriversVerificationTab() {
   };
 
   const handleApproveConfirm = async () => {
-    if (!driverToApprove) return;
+    console.log('[DEBUG] handleApproveConfirm CALLED');
+    window.alert('🚀 CONFIRMATION VALIDÉE - Début du traitement Firestore');
 
+    if (!driverToApprove) {
+      window.alert('❌ ERREUR : Aucun chauffeur sélectionné');
+      console.error('[ERROR] driverToApprove is null');
+      return;
+    }
+
+    console.log('[DEBUG] Setting processing to true');
     setProcessing(true);
+
+    console.log('[DEBUG] Closing approve modal');
     setShowApproveModal(false);
 
     try {
-      console.log('[FIRESTORE] Attempting to approve driver:', driverToApprove.uid);
-      const driverRef = doc(firestore, 'drivers', driverToApprove.uid);
+      console.log('[FIRESTORE] Tentative de mise à jour Firestore pour ID:', driverToApprove.uid);
+      console.log('[FIRESTORE] Firestore instance:', firestore);
 
-      await updateDoc(driverRef, {
+      const driverRef = doc(firestore, 'drivers', driverToApprove.uid);
+      console.log('[FIRESTORE] Document reference created:', driverRef);
+
+      const updateData = {
         verified: true,
         status: 'verified',
         role: 'driver',
         silo_id: 'voyage',
         verified_at: Timestamp.now(),
         updated_at: Timestamp.now(),
-      });
+      };
+      console.log('[FIRESTORE] Update data:', updateData);
 
-      console.log('[FIRESTORE] Driver approved successfully');
+      await updateDoc(driverRef, updateData);
+
+      console.log('[FIRESTORE] ✅ Driver approved successfully');
+      window.alert('✅ SUCCÈS : Chauffeur approuvé dans Firestore');
 
       setSuccessModal({
         isOpen: true,
@@ -165,19 +182,35 @@ export default function DriversVerificationTab() {
       setDriverToApprove(null);
       loadDrivers();
     } catch (error: any) {
-      console.error('[FIRESTORE] Error approving driver:', error);
+      console.error('[FIRESTORE] ❌ Error approving driver:', error);
       console.error('[FIRESTORE] Full error details:', {
         code: error.code,
         message: error.message,
         stack: error.stack,
+        name: error.name,
       });
+
+      const errorMessage = `❌ ERREUR FIRESTORE
+
+Code: ${error.code || 'unknown'}
+Message: ${error.message || 'Erreur inconnue'}
+
+Vérifiez :
+1. Les règles Firestore
+2. La connexion Firebase
+3. Les permissions du compte
+
+Stack: ${error.stack?.substring(0, 200) || 'N/A'}`;
+
+      window.alert(errorMessage);
 
       setErrorModal({
         isOpen: true,
         title: 'Erreur Firebase',
-        message: `Code: ${error.code || 'unknown'}\n\nMessage: ${error.message || 'Une erreur est survenue lors de l\'approbation.'}\n\nVérifiez les règles Firebase Security Rules.`,
+        message: errorMessage,
       });
     } finally {
+      console.log('[DEBUG] Setting processing to false');
       setProcessing(false);
     }
   };
@@ -446,15 +479,16 @@ export default function DriversVerificationTab() {
       {/* Modale de confirmation d'approbation */}
       {showApproveModal && driverToApprove && (
         <ConfirmModal
+          isOpen={true}
           title="Approuver ce chauffeur ?"
           message={`Êtes-vous sûr de vouloir approuver ${driverToApprove.full_name} ? Il pourra accéder à l'espace chauffeur DEM-DEM Express immédiatement.`}
           onConfirm={handleApproveConfirm}
-          onCancel={() => {
+          onClose={() => {
             setShowApproveModal(false);
             setDriverToApprove(null);
           }}
           confirmText="Approuver"
-          confirmColor="bg-[#10B981] hover:bg-[#059669]"
+          type="success"
         />
       )}
 
