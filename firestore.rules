@@ -398,6 +398,27 @@ service cloud.firestore {
     }
 
     // ============================================
+    // TRIPS COLLECTION (DemDem Transport)
+    // ============================================
+    match /trips/{tripId} {
+      // Lecture publique des trajets disponibles
+      allow read: if true;
+
+      // Création par chauffeurs authentifiés
+      allow create: if isAuthenticated() &&
+                      request.resource.data.driverId == request.auth.uid;
+
+      // Chauffeur : Modification de ses propres trajets
+      allow update: if isAuthenticated() && resource.data.driverId == request.auth.uid;
+
+      // Suppression par chauffeur propriétaire ou admin
+      allow delete: if (isAuthenticated() && resource.data.driverId == request.auth.uid) || isAdminFinance();
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut

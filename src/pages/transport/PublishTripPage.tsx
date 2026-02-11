@@ -12,8 +12,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
-import { ref, push, set, get } from 'firebase/database';
-import { db } from '../../firebase';
+import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore';
+import { firestore } from '../../firebase';
 import { CustomModal } from '../../components/CustomModal';
 
 interface DriverProfile {
@@ -87,18 +87,21 @@ export default function PublishTripPage() {
 
   const loadDriverData = async () => {
     if (!user) {
-      navigate('/transport/driver/login');
+      navigate('/voyage/chauffeur/login');
       return;
     }
 
     try {
-      const driverRef = ref(db, `drivers/${user.uid}`);
-      const snapshot = await get(driverRef);
+      console.log('[PUBLISH TRIP] Loading driver data for UID:', user.uid);
+      const driverRef = doc(firestore, 'drivers', user.uid);
+      const snapshot = await getDoc(driverRef);
 
       if (snapshot.exists()) {
-        const driverData = snapshot.val() as DriverProfile;
+        const driverData = snapshot.data() as DriverProfile;
+        console.log('[PUBLISH TRIP] Driver data loaded:', driverData);
 
-        if (driverData.status !== 'verified') {
+        if (driverData.status !== 'verified' && driverData.verified !== true) {
+          console.log('[PUBLISH TRIP] Driver not verified, status:', driverData.status);
           setModal({
             isOpen: true,
             type: 'error',
@@ -111,16 +114,18 @@ export default function PublishTripPage() {
 
         setDriver(driverData);
         setFormData({ ...formData, availableSeats: driverData.vehicleSeats.toString() });
+        console.log('[PUBLISH TRIP] Driver data loaded successfully');
       } else {
+        console.error('[PUBLISH TRIP] Driver document not found');
         navigate('/voyage/chauffeur/signup');
       }
     } catch (error) {
-      console.error('Error loading driver data:', error);
+      console.error('[PUBLISH TRIP] Error loading driver data:', error);
       setModal({
         isOpen: true,
         type: 'error',
         title: 'Erreur',
-        message: 'Impossible de charger vos données'
+        message: 'Impossible de charger vos données. Erreur: ' + (error as Error).message
       });
     } finally {
       setLoading(false);
@@ -176,8 +181,8 @@ export default function PublishTripPage() {
     setSubmitting(true);
 
     try {
-      const tripsRef = ref(db, `trips/${user.uid}`);
-      const newTripRef = push(tripsRef);
+      console.log('[PUBLISH TRIP] Creating trip...');
+      const tripsRef = collection(firestore, 'trips');
 
       const tripData = {
         driverId: user.uid,
@@ -190,11 +195,12 @@ export default function PublishTripPage() {
         availableSeats: parseInt(formData.availableSeats),
         totalSeats: parseInt(formData.availableSeats),
         status: 'active',
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
       };
 
-      await set(newTripRef, tripData);
+      const docRef = await addDoc(tripsRef, tripData);
+      console.log('[PUBLISH TRIP] Trip created with ID:', docRef.id);
 
       setModal({
         isOpen: true,
@@ -208,12 +214,12 @@ export default function PublishTripPage() {
       }, 2000);
 
     } catch (error) {
-      console.error('Error publishing trip:', error);
+      console.error('[PUBLISH TRIP] Error publishing trip:', error);
       setModal({
         isOpen: true,
         type: 'error',
         title: 'Erreur',
-        message: 'Impossible de publier le trajet. Veuillez réessayer.'
+        message: 'Impossible de publier le trajet. Erreur: ' + (error as Error).message
       });
     } finally {
       setSubmitting(false);
