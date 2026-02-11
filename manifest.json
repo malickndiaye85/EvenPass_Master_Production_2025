@@ -1,34 +1,35 @@
 {
-  "name": "EPscan - Scanner EvenPass",
-  "short_name": "EPscan",
-  "description": "Application de scan et contrôle pour agents EvenPass - Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw",
-  "start_url": "/scanner.html",
+  "name": "DEM⇄DEM - Sortir & Bouger au Sénégal",
+  "short_name": "DemDem",
+  "description": "La Super-App sénégalaise : événements, transport, covoiturage. Achetez vos billets, réservez vos trajets. Gënaa Yomb, Gënaa Wóor, Gënaa Gaaw 🇸🇳",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#F97316",
+  "background_color": "#0A1628",
+  "theme_color": "#10B981",
   "orientation": "portrait",
   "scope": "/",
   "lang": "fr-SN",
   "dir": "ltr",
   "icons": [
     {
-      "src": "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=192",
+      "src": "/assets/demdem_icon_pwa.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=512",
+      "src": "/assets/demdem_icon_pwa.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
+  "categories": ["entertainment", "lifestyle", "travel", "transportation"],
   "screenshots": [
     {
-      "src": "https://images.pexels.com/photos/3408356/pexels-photo-3408356.jpeg?auto=compress&cs=tinysrgb&w=540",
-      "sizes": "540x720",
-      "type": "image/jpeg"
+      "src": "/assets/logo-demdem.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

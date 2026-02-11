@@ -8,6 +8,8 @@ import { DemDemThemeProvider } from './contexts/DemDemThemeContext';
 
 import ThemeWrapper from './components/ThemeWrapper';
 
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+
 import DemDemLandingPage from './pages/DemDemLandingPage';
 
 import { RootLandingPage } from './pages/RootLandingPage';
@@ -636,6 +638,8 @@ export default function App() {
         <ThemeProvider>
 
           <FirebaseAuthProvider>
+
+            <PWAInstallPrompt />
 
             <AppRoutes />
 
