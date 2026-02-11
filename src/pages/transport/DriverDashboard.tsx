@@ -61,10 +61,10 @@ interface Trip {
   date: string;
   time: string;
   price: number;
-  available_seats: number;
-  total_seats: number;
+  availableSeats: number;
+  totalSeats: number;
   status: 'active' | 'completed' | 'cancelled';
-  created_at: any;
+  createdAt: any;
 }
 
 export default function DriverDashboard() {
@@ -126,7 +126,7 @@ export default function DriverDashboard() {
       setDriver(driverData);
 
       const tripsRef = collection(firestore, 'trips');
-      const tripsQuery = query(tripsRef, where('driver_id', '==', user.id));
+      const tripsQuery = query(tripsRef, where('driverId', '==', user.id));
       const tripsSnap = await getDocs(tripsQuery);
 
       const tripsList: Trip[] = [];
@@ -135,12 +135,12 @@ export default function DriverDashboard() {
       });
 
       tripsList.sort((a, b) => {
-        const aTime = a.created_at?.toMillis ? a.created_at.toMillis() : 0;
-        const bTime = b.created_at?.toMillis ? b.created_at.toMillis() : 0;
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
         return bTime - aTime;
       });
 
-      console.log('[DRIVER DASHBOARD] Trips loaded:', tripsList.length);
+      console.log('[DRIVER DASHBOARD] 🚗 Trajets trouvés dans Firestore:', tripsList.length);
       setTrips(tripsList);
     } catch (error) {
       console.error('[DRIVER DASHBOARD] Error loading data:', error);
@@ -467,7 +467,7 @@ export default function DriverDashboard() {
                           </div>
                           <div className="flex items-center gap-1">
                             <User className="w-4 h-4" />
-                            <span>{trip.available_seats}/{trip.total_seats}</span>
+                            <span>{trip.availableSeats}/{trip.totalSeats}</span>
                           </div>
                         </div>
                         <p className="font-bold text-lg text-[#FFC700]">{trip.price.toLocaleString()} F</p>
@@ -554,7 +554,7 @@ export default function DriverDashboard() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Places</p>
-                          <p className="text-sm font-semibold text-white">{trip.available_seats}/{trip.total_seats}</p>
+                          <p className="text-sm font-semibold text-white">{trip.availableSeats}/{trip.totalSeats}</p>
                         </div>
                       </div>
 

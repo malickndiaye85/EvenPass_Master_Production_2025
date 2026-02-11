@@ -1,9 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, MapPin, Search, Clock, Users, AlertCircle } from 'lucide-react';
+import { Car, MapPin, Search, Clock, Users, AlertCircle, Navigation, DollarSign, User, ArrowRight } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
+import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { firestore } from '../../firebase';
 
 type DayFilter = 'today' | 'tomorrow' | 'day2';
+
+interface Trip {
+  id: string;
+  driverId: string;
+  driverName: string;
+  departure: string;
+  destination: string;
+  date: string;
+  time: string;
+  price: number;
+  availableSeats: number;
+  totalSeats: number;
+  status: string;
+  createdAt: any;
+}
 
 export default function AlloDakarPage() {
   const navigate = useNavigate();
@@ -12,9 +29,48 @@ export default function AlloDakarPage() {
   const [searchDestination, setSearchDestination] = useState('');
   const [selectedDay, setSelectedDay] = useState<DayFilter>('today');
   const [searchSeats, setSearchSeats] = useState('1');
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [filteredTrips, setFilteredTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTrips();
+  }, []);
+
+  useEffect(() => {
+    filterTrips();
+  }, [trips, searchOrigin, searchDestination, selectedDay, searchSeats]);
+
+  const loadTrips = async () => {
+    try {
+      console.log('[ALLO DAKAR] 🔄 Chargement des trajets depuis Firestore...');
+      const tripsRef = collection(firestore, 'trips');
+      const tripsQuery = query(tripsRef, where('status', '==', 'active'));
+      const snapshot = await getDocs(tripsQuery);
+
+      const loadedTrips: Trip[] = [];
+      snapshot.forEach((doc) => {
+        loadedTrips.push({ id: doc.id, ...doc.data() } as Trip);
+      });
+
+      loadedTrips.sort((a, b) => {
+        const dateA = new Date(`${a.date} ${a.time}`);
+        const dateB = new Date(`${b.date} ${b.time}`);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      console.log('[ALLO DAKAR] 🚗 Trajets trouvés dans Firestore:', loadedTrips.length);
+      setTrips(loadedTrips);
+    } catch (error) {
+      console.error('[ALLO DAKAR] ❌ Erreur chargement trajets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDateForFilter = (filter: DayFilter): Date => {
     const date = new Date();
+    date.setHours(0, 0, 0, 0);
     if (filter === 'tomorrow') {
       date.setDate(date.getDate() + 1);
     } else if (filter === 'day2') {
@@ -32,15 +88,54 @@ export default function AlloDakarPage() {
     return date.toLocaleDateString('fr-FR', options);
   };
 
-  const availableTripsCount = 0;
+  const formatDateForComparison = (dateString: string): string => {
+    const [year, month, day] = dateString.split('-');
+    return `${year}-${month}-${day}`;
+  };
+
+  const filterTrips = () => {
+    let filtered = [...trips];
+
+    const targetDate = getDateForFilter(selectedDay);
+    const targetDateString = formatDateForComparison(targetDate.toISOString().split('T')[0]);
+
+    filtered = filtered.filter(trip => {
+      const tripDateString = formatDateForComparison(trip.date);
+      return tripDateString === targetDateString;
+    });
+
+    if (searchOrigin.trim()) {
+      filtered = filtered.filter(trip =>
+        trip.departure.toLowerCase().includes(searchOrigin.toLowerCase())
+      );
+    }
+
+    if (searchDestination.trim()) {
+      filtered = filtered.filter(trip =>
+        trip.destination.toLowerCase().includes(searchDestination.toLowerCase())
+      );
+    }
+
+    const requestedSeats = parseInt(searchSeats);
+    filtered = filtered.filter(trip => trip.availableSeats >= requestedSeats);
+
+    console.log('[ALLO DAKAR] 🔍 Filtres appliqués:', {
+      origin: searchOrigin,
+      destination: searchDestination,
+      date: targetDateString,
+      seats: searchSeats,
+      resultats: filtered.length
+    });
+
+    setFilteredTrips(filtered);
+  };
 
   const handleSearch = () => {
-    if (!searchOrigin.trim() || !searchDestination.trim()) {
-      alert('Veuillez renseigner le départ et l\'arrivée');
-      return;
-    }
-    const dayLabel = formatDayLabel(selectedDay);
-    alert(`Recherche en cours...\nDépart: ${searchOrigin}\nArrivée: ${searchDestination}\nDate: ${dayLabel}\nPlaces: ${searchSeats}`);
+    filterTrips();
+  };
+
+  const handleTripClick = (trip: Trip) => {
+    alert(`Réservation disponible prochainement !\n\nTrajet: ${trip.departure} → ${trip.destination}\nChauffeur: ${trip.driverName}\nPrix: ${trip.price.toLocaleString()} FCFA`);
   };
 
   return (
@@ -152,31 +247,86 @@ export default function AlloDakarPage() {
             </div>
           </div>
 
-          <div className="bg-[#10B981]/20 border-l-4 border-[#10B981] p-6 rounded-r-2xl backdrop-blur-sm">
+          <div className="bg-[#10B981]/20 border-l-4 border-[#10B981] p-6 rounded-r-2xl backdrop-blur-sm mb-6">
             <div className="flex items-start">
               <Clock className="w-6 h-6 text-[#10B981] mt-0.5 mr-3 flex-shrink-0" />
               <div>
                 <h3 className="font-bold text-white mb-1">
-                  {availableTripsCount} trajet{availableTripsCount > 1 ? 's' : ''} disponible{availableTripsCount > 1 ? 's' : ''} pour les prochaines 72h
+                  {filteredTrips.length} trajet{filteredTrips.length > 1 ? 's' : ''} disponible{filteredTrips.length > 1 ? 's' : ''} pour {formatDayLabel(selectedDay)}
                 </h3>
                 <p className="text-white/80 text-sm">
-                  Les trajets sont triés par heure de départ (le plus proche en premier). Réservez rapidement pour obtenir les meilleures places.
+                  Les trajets sont triés par heure de départ (le plus proche en premier).
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">
-            <div className="flex items-start">
-              <AlertCircle className="w-6 h-6 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
-              <div>
-                <h3 className="font-bold text-white mb-1">Service en cours de déploiement</h3>
-                <p className="text-white/80 text-sm">
-                  Les trajets publiés par les chauffeurs s'afficheront ici. Vous pouvez aussi vous inscrire comme chauffeur pour proposer des trajets et rentabiliser vos trajets quotidiens.
-                </p>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin w-12 h-12 border-4 border-[#10B981] border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-white/70">Chargement des trajets...</p>
+            </div>
+          ) : filteredTrips.length > 0 ? (
+            <div className="space-y-3">
+              {filteredTrips.map((trip) => (
+                <button
+                  key={trip.id}
+                  onClick={() => handleTripClick(trip)}
+                  className="w-full bg-gradient-to-br from-[#1A2332] to-[#0F1419] rounded-2xl p-5 border-2 border-gray-800 hover:border-[#10B981]/50 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="text-left">
+                        <div className="text-5xl font-black text-white mb-1">
+                          {trip.time}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <User className="w-4 h-4" />
+                          <span>{trip.driverName}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-left">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin className="w-5 h-5 text-[#10B981]" />
+                          <span className="text-lg font-bold text-white">{trip.departure}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Navigation className="w-5 h-5 text-cyan-400" />
+                          <span className="text-lg font-bold text-white">{trip.destination}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <div className="flex items-center gap-2 text-gray-400 mb-1">
+                          <Users className="w-5 h-5" />
+                          <span className="text-sm font-semibold">{trip.availableSeats} places</span>
+                        </div>
+                        <div className="text-4xl font-black text-[#10B981]">
+                          {trip.price.toLocaleString()} F
+                        </div>
+                      </div>
+                      <ArrowRight className="w-8 h-8 text-white/50" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">
+              <div className="flex items-start">
+                <AlertCircle className="w-6 h-6 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h3 className="font-bold text-white mb-1">Aucun trajet disponible</h3>
+                  <p className="text-white/80 text-sm">
+                    Aucun trajet ne correspond à votre recherche. Modifiez vos critères ou revenez plus tard.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
