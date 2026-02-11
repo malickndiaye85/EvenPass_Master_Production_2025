@@ -17,12 +17,13 @@ import { firestore } from '../../firebase';
 import { CustomModal } from '../../components/CustomModal';
 
 interface DriverProfile {
-  uid: string;
+  uid?: string;
   firstName: string;
   lastName: string;
   vehicleSeats: number;
-  status: string;
-  isOnline: boolean;
+  status?: string;
+  verified?: boolean;
+  isOnline?: boolean;
 }
 
 interface TripFormData {
@@ -59,7 +60,7 @@ const SENEGAL_CITIES = [
 
 export default function PublishTripPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [driver, setDriver] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,18 +83,22 @@ export default function PublishTripPage() {
   });
 
   useEffect(() => {
-    loadDriverData();
-  }, [user]);
+    if (!authLoading) {
+      loadDriverData();
+    }
+  }, [user, authLoading]);
 
   const loadDriverData = async () => {
     if (!user) {
+      console.log('[PUBLISH TRIP] No user, redirecting to login');
       navigate('/voyage/chauffeur/login');
       return;
     }
 
     try {
-      console.log('[PUBLISH TRIP] Loading driver data for UID:', user.uid);
-      const driverRef = doc(firestore, 'drivers', user.uid);
+      const userId = user.id;
+      console.log('[PUBLISH TRIP] Loading driver data for UID:', userId);
+      const driverRef = doc(firestore, 'drivers', userId);
       const snapshot = await getDoc(driverRef);
 
       if (snapshot.exists()) {
@@ -101,7 +106,7 @@ export default function PublishTripPage() {
         console.log('[PUBLISH TRIP] Driver data loaded:', driverData);
 
         if (driverData.status !== 'verified' && driverData.verified !== true) {
-          console.log('[PUBLISH TRIP] Driver not verified, status:', driverData.status);
+          console.log('[PUBLISH TRIP] Driver not verified, status:', driverData.status, 'verified:', driverData.verified);
           setModal({
             isOpen: true,
             type: 'error',
@@ -116,7 +121,7 @@ export default function PublishTripPage() {
         setFormData({ ...formData, availableSeats: driverData.vehicleSeats.toString() });
         console.log('[PUBLISH TRIP] Driver data loaded successfully');
       } else {
-        console.error('[PUBLISH TRIP] Driver document not found');
+        console.error('[PUBLISH TRIP] Driver document not found for UID:', userId);
         navigate('/voyage/chauffeur/signup');
       }
     } catch (error) {
@@ -181,11 +186,12 @@ export default function PublishTripPage() {
     setSubmitting(true);
 
     try {
-      console.log('[PUBLISH TRIP] Creating trip...');
+      const userId = user.id;
+      console.log('[PUBLISH TRIP] Creating trip for driver:', userId);
       const tripsRef = collection(firestore, 'trips');
 
       const tripData = {
-        driverId: user.uid,
+        driverId: userId,
         driverName: `${driver.firstName} ${driver.lastName}`,
         departure: formData.departure,
         destination: formData.destination,
