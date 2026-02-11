@@ -64,8 +64,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       let organizerData = null;
       let adminData = null;
       let driverData = null;
+      let organizerFirestoreData = null;
 
-      // VÉRIFIER D'ABORD SI C'EST UN CHAUFFEUR (Firestore)
+      // VÉRIFIER D'ABORD SI C'EST UN CHAUFFEUR OU ORGANISATEUR (Firestore)
       if (firestore) {
         try {
           const driverRef = doc(firestore, 'drivers', firebaseUser.uid);
@@ -83,6 +84,24 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           }
         } catch (error: any) {
           console.warn('[FIREBASE AUTH] Could not load driver data:', error);
+        }
+
+        try {
+          const organizerRef = doc(firestore, 'organizers', firebaseUser.uid);
+          const organizerSnapshot = await getDoc(organizerRef);
+          if (organizerSnapshot.exists()) {
+            organizerFirestoreData = organizerSnapshot.data();
+            console.log('[FIREBASE AUTH] 🎪 Organizer data loaded from Firestore:', {
+              exists: true,
+              status: organizerFirestoreData.verification_status || organizerFirestoreData.status,
+              orgName: organizerFirestoreData.organization_name,
+              email: organizerFirestoreData.email || organizerFirestoreData.contact_email
+            });
+          } else {
+            console.log('[FIREBASE AUTH] 🎪 No organizer document found in Firestore for UID:', firebaseUser.uid);
+          }
+        } catch (error: any) {
+          console.warn('[FIREBASE AUTH] Could not load organizer data from Firestore:', error);
         }
       }
 
@@ -139,14 +158,13 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       console.log('[FIREBASE AUTH] Role determination checks:', {
         isAdmin,
+        hasAdminData: !!adminData,
         hasDriverData: !!driverData,
+        hasOrganizerFirestoreData: !!organizerFirestoreData,
+        hasOrganizerRealtimeData: !!organizerData,
         driverStatus: driverData?.status,
-        driverVerified: driverData?.verified,
-        hasOrganizerData: !!organizerData,
-        organizerIsActive: organizerData?.is_active,
-        organizerIsActiveType: typeof organizerData?.is_active,
-        organizerStatus: organizerData?.verification_status,
-        organizerStatusType: typeof organizerData?.verification_status
+        organizerFirestoreStatus: organizerFirestoreData?.verification_status || organizerFirestoreData?.status,
+        organizerRealtimeStatus: organizerData?.verification_status
       });
 
       if (isAdmin) {
@@ -154,26 +172,16 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         console.log('[FIREBASE AUTH] ✅ Role set to SUPER ADMIN (Master UID)');
       } else if (adminData && adminData.is_active) {
         role = 'admin';
-        console.log('[FIREBASE AUTH] ✅ Role set to admin (adminData exists)');
-      } else if (driverData && (driverData.status === 'verified' || driverData.verified === true)) {
+        console.log('[FIREBASE AUTH] ✅ Role set to ADMIN (adminData exists)');
+      } else if (driverData) {
         role = 'driver';
-        console.log('[FIREBASE AUTH] 🚗 ✅ Role set to DRIVER (verified)');
-      } else if (driverData && (driverData.status === 'pending' || driverData.status === 'pending_verification')) {
-        console.log('[FIREBASE AUTH] 🚗 ⏳ Driver account pending verification');
-      } else if (organizerData) {
-        if (organizerData.is_active === true && organizerData.verification_status === 'verified') {
-          role = 'organizer';
-          console.log('[FIREBASE AUTH] ✅ Role set to organizer (verified)');
-        } else if (organizerData.verification_status === 'pending') {
-          console.log('[FIREBASE AUTH] ⏳ Organizer pending verification');
-        } else {
-          console.log('[FIREBASE AUTH] Organizer data exists but conditions not met:', {
-            is_active: organizerData.is_active,
-            is_active_equals_true: organizerData.is_active === true,
-            verification_status: organizerData.verification_status,
-            verification_status_equals_verified: organizerData.verification_status === 'verified'
-          });
-        }
+        console.log('[FIREBASE AUTH] 🚗 ✅ Role set to DRIVER (driver document exists)');
+      } else if (organizerFirestoreData || organizerData) {
+        role = 'organizer';
+        console.log('[FIREBASE AUTH] 🎪 ✅ Role set to ORGANIZER (organizer document exists in Firestore or Realtime DB)');
+      } else {
+        role = 'customer';
+        console.log('[FIREBASE AUTH] 👤 Role set to CUSTOMER (no special role found)');
       }
 
       console.log('[FIREBASE AUTH] 🎯 Final determined role:', role);
@@ -189,17 +197,17 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         created_at: userData?.created_at || new Date().toISOString(),
         updated_at: userData?.updated_at || new Date().toISOString(),
         role,
-        organizer: organizerData ? {
+        organizer: (organizerFirestoreData || organizerData) ? {
           id: firebaseUser.uid,
           user_id: firebaseUser.uid,
-          organization_name: organizerData.organization_name,
-          organization_type: organizerData.organization_type || 'company',
-          verification_status: organizerData.verification_status || 'pending',
-          contact_email: organizerData.contact_email || firebaseUser.email,
-          contact_phone: organizerData.contact_phone || userData?.phone,
-          is_active: organizerData.is_active || false,
-          created_at: organizerData.created_at || new Date().toISOString(),
-          updated_at: organizerData.updated_at || new Date().toISOString(),
+          organization_name: organizerFirestoreData?.organization_name || organizerData?.organization_name,
+          organization_type: organizerFirestoreData?.organization_type || organizerData?.organization_type || 'company',
+          verification_status: organizerFirestoreData?.verification_status || organizerFirestoreData?.status || organizerData?.verification_status || 'verified',
+          contact_email: organizerFirestoreData?.contact_email || organizerFirestoreData?.email || organizerData?.contact_email || firebaseUser.email,
+          contact_phone: organizerFirestoreData?.contact_phone || organizerFirestoreData?.phone || organizerData?.contact_phone || userData?.phone,
+          is_active: organizerFirestoreData?.is_active ?? organizerData?.is_active ?? true,
+          created_at: organizerFirestoreData?.created_at || organizerData?.created_at || new Date().toISOString(),
+          updated_at: organizerFirestoreData?.updated_at || organizerData?.updated_at || new Date().toISOString(),
         } : undefined,
         admin: adminData ? {
           id: firebaseUser.uid,
