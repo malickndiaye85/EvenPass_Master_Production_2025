@@ -705,6 +705,86 @@ const AdminTransversalDashboard: React.FC = () => {
                     </button>
                   </div>
 
+                  <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-2 border-blue-500/30">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <Navigation2 className="w-7 h-7 text-blue-400" />
+                        <h4 className="text-xl font-bold text-white">Configuration DEM-DEM Express</h4>
+                      </div>
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-bold">
+                        Tarification Navettes
+                      </span>
+                    </div>
+
+                    <div className="bg-blue-900/20 rounded-xl p-5 mb-4 border border-blue-500/20">
+                      <div className="flex items-start gap-3 mb-4">
+                        <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-blue-400 mb-1">
+                            Prix des Abonnements Navettes
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Configurez les tarifs pour les différentes formules d'abonnement aux navettes express. Ces prix s'appliquent aux lignes fixes programmées.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-bold text-white/70">Abonnement Journalier</span>
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-bold">1 jour</span>
+                        </div>
+                        <input
+                          type="number"
+                          placeholder="2000"
+                          defaultValue="2000"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-lg font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 mb-2"
+                        />
+                        <p className="text-xs text-gray-400">Prix en FCFA</p>
+                      </div>
+
+                      <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-bold text-white/70">Abonnement Hebdomadaire</span>
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-bold">7 jours</span>
+                        </div>
+                        <input
+                          type="number"
+                          placeholder="12000"
+                          defaultValue="12000"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-lg font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 mb-2"
+                        />
+                        <p className="text-xs text-gray-400">Prix en FCFA</p>
+                      </div>
+
+                      <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-bold text-white/70">Abonnement Mensuel</span>
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-bold">30 jours</span>
+                        </div>
+                        <input
+                          type="number"
+                          placeholder="40000"
+                          defaultValue="40000"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-lg font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 mb-2"
+                        />
+                        <p className="text-xs text-gray-400">Prix en FCFA</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex gap-3">
+                      <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Enregistrer les tarifs
+                      </button>
+                      <button className="bg-white/10 hover:bg-white/20 text-white py-3 px-4 rounded-xl font-bold transition-all">
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="mt-6 p-6 rounded-xl bg-white/5 border border-white/10">
                     <h4 className="text-lg font-bold text-white mb-4">Statistiques Globales</h4>
                     <div className="grid md:grid-cols-3 gap-4">

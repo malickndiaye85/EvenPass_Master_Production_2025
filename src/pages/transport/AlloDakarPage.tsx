@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, MapPin, Search, Clock, Users, AlertCircle, Navigation, DollarSign, User, ArrowRight, X } from 'lucide-react';
+import { Car, MapPin, Search, Clock, Users, AlertCircle, Navigation, DollarSign, User, ArrowRight, X, Phone, CreditCard } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
-import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, Timestamp, addDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase';
 
 type DayFilter = 'today' | 'tomorrow' | 'day2';
@@ -22,9 +22,10 @@ interface Trip {
   createdAt: any;
 }
 
-interface TripModalData {
+interface BookingModalData {
   isOpen: boolean;
   trip: Trip | null;
+  step: 'details' | 'booking';
 }
 
 export default function AlloDakarPage() {
@@ -37,10 +38,15 @@ export default function AlloDakarPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [filteredTrips, setFilteredTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tripModal, setTripModal] = useState<TripModalData>({
+  const [bookingModal, setBookingModal] = useState<BookingModalData>({
     isOpen: false,
-    trip: null
+    trip: null,
+    step: 'details'
   });
+
+  const [bookingSeats, setBookingSeats] = useState(1);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -161,17 +167,72 @@ export default function AlloDakarPage() {
   };
 
   const handleTripClick = (trip: Trip) => {
-    setTripModal({
+    setBookingModal({
       isOpen: true,
-      trip: trip
+      trip: trip,
+      step: 'booking'
     });
+    setBookingSeats(1);
+    setPhoneNumber('');
   };
 
-  const closeTripModal = () => {
-    setTripModal({
+  const closeBookingModal = () => {
+    setBookingModal({
       isOpen: false,
-      trip: null
+      trip: null,
+      step: 'details'
     });
+    setBookingSeats(1);
+    setPhoneNumber('');
+    setIsProcessing(false);
+  };
+
+  const handleBookingSubmit = async () => {
+    if (!bookingModal.trip || !phoneNumber.trim()) {
+      alert('Veuillez saisir votre numéro de téléphone');
+      return;
+    }
+
+    if (bookingSeats > bookingModal.trip.availableSeats) {
+      alert('Nombre de places non disponible');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const totalAmount = bookingModal.trip.price * bookingSeats;
+
+      const bookingData = {
+        tripId: bookingModal.trip.id,
+        driverId: bookingModal.trip.driverId,
+        driverName: bookingModal.trip.driverName,
+        departure: bookingModal.trip.departure,
+        destination: bookingModal.trip.destination,
+        date: bookingModal.trip.date,
+        time: bookingModal.trip.time,
+        seats: bookingSeats,
+        phoneNumber: phoneNumber,
+        totalAmount: totalAmount,
+        status: 'pending',
+        paymentStatus: 'pending',
+        createdAt: Timestamp.now()
+      };
+
+      const bookingRef = await addDoc(collection(firestore, 'bookings'), bookingData);
+      console.log('[ALLO DAKAR] Booking created:', bookingRef.id);
+
+      console.log('[ALLO DAKAR] Simulating successful payment...');
+
+      setTimeout(() => {
+        navigate(`/voyage/allo-dakar/confirmation?booking=${bookingRef.id}`);
+      }, 1000);
+
+    } catch (error) {
+      console.error('[ALLO DAKAR] Error creating booking:', error);
+      alert('Erreur lors de la création de la réservation. Veuillez réessayer.');
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -308,43 +369,48 @@ export default function AlloDakarPage() {
                 <button
                   key={trip.id}
                   onClick={() => handleTripClick(trip)}
-                  className="w-full bg-gradient-to-br from-[#1A2332] to-[#0F1419] rounded-2xl p-5 border-2 border-gray-800 hover:border-[#10B981]/50 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl"
+                  className="w-full bg-gradient-to-br from-[#1A2332] to-[#0F1419] rounded-2xl p-4 md:p-5 border-2 border-gray-800 hover:border-[#10B981]/50 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div className="text-left">
-                        <div className="text-5xl font-black text-white mb-1">
-                          {trip.time}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 md:gap-6 flex-1 min-w-0">
+                        <div className="text-left flex-shrink-0">
+                          <div className="text-3xl md:text-5xl font-black text-white mb-1">
+                            {trip.time}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400">
+                            <User className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                            <span className="truncate">{trip.driverName}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <User className="w-4 h-4" />
-                          <span>{trip.driverName}</span>
-                        </div>
-                      </div>
 
-                      <div className="text-left">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MapPin className="w-5 h-5 text-[#10B981]" />
-                          <span className="text-lg font-bold text-white">{trip.departure}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Navigation className="w-5 h-5 text-cyan-400" />
-                          <span className="text-lg font-bold text-white">{trip.destination}</span>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin className="w-4 h-4 md:w-5 md:h-5 text-[#10B981] flex-shrink-0" />
+                            <span className="text-base md:text-lg font-bold text-white truncate">{trip.departure}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Navigation className="w-4 h-4 md:w-5 md:h-5 text-cyan-400 flex-shrink-0" />
+                            <span className="text-base md:text-lg font-bold text-white truncate">{trip.destination}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <div className="flex items-center gap-2 text-gray-400 mb-1">
-                          <Users className="w-5 h-5" />
-                          <span className="text-sm font-semibold">{trip.availableSeats} places</span>
-                        </div>
-                        <div className="text-4xl font-black text-[#10B981]">
+                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
+                        <span className="text-sm md:text-base font-semibold text-gray-400">{trip.availableSeats} places</span>
+                      </div>
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="text-2xl md:text-4xl font-black text-[#10B981]">
                           {trip.price.toLocaleString()} F
                         </div>
+                        <div className="bg-[#10B981] text-white px-3 md:px-4 py-2 rounded-xl font-bold text-sm md:text-base flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" />
+                          <span className="hidden md:inline">Acheter</span>
+                        </div>
                       </div>
-                      <ArrowRight className="w-8 h-8 text-white/50" />
                     </div>
                   </div>
                 </button>
@@ -366,102 +432,137 @@ export default function AlloDakarPage() {
         </div>
       </div>
 
-      {tripModal.isOpen && tripModal.trip && (
+      {bookingModal.isOpen && bookingModal.trip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-[#1A2332] to-[#0F1419] rounded-3xl max-w-lg w-full p-8 border-2 border-[#10B981]/30 shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div className="bg-gradient-to-br from-[#1A2332] to-[#0F1419] rounded-3xl max-w-lg w-full p-6 md:p-8 border-2 border-[#10B981]/30 shadow-2xl animate-in fade-in zoom-in duration-300 max-h-[95vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black text-white">Détails du trajet</h2>
+              <h2 className="text-xl md:text-2xl font-black text-white">Réserver votre trajet</h2>
               <button
-                onClick={closeTripModal}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                onClick={closeBookingModal}
+                disabled={isProcessing}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all disabled:opacity-50"
               >
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-[#10B981]/10 rounded-2xl p-5 border border-[#10B981]/30">
-                <div className="flex items-center gap-3 mb-4">
-                  <User className="w-6 h-6 text-[#10B981]" />
-                  <div>
-                    <p className="text-sm text-gray-400">Chauffeur</p>
-                    <p className="text-lg font-bold text-white">{tripModal.trip.driverName}</p>
+            <div className="space-y-5">
+              <div className="bg-gradient-to-r from-[#10B981]/10 to-[#059669]/10 rounded-2xl p-4 border border-[#10B981]/30">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-[#10B981]" />
+                    <span className="text-lg font-bold text-white">{bookingModal.trip.departure}</span>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400" />
+                  <div className="flex items-center gap-2">
+                    <Navigation className="w-5 h-5 text-cyan-400" />
+                    <span className="text-lg font-bold text-white">{bookingModal.trip.destination}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Clock className="w-4 h-4" />
+                    <span>{bookingModal.trip.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <User className="w-4 h-4" />
+                    <span>{bookingModal.trip.driverName}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-6 h-6 text-[#10B981] mt-1" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-400 mb-1">Départ</p>
-                    <p className="text-xl font-bold text-white">{tripModal.trip.departure}</p>
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
+                <label className="block text-sm font-bold text-white mb-3">
+                  Nombre de places
+                </label>
+                <div className="flex items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setBookingSeats(Math.max(1, bookingSeats - 1))}
+                    disabled={bookingSeats <= 1 || isProcessing}
+                    className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 border-2 border-white/20 flex items-center justify-center text-white text-2xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    -
+                  </button>
+                  <div className="flex-1 text-center">
+                    <div className="text-4xl font-black text-[#10B981]">{bookingSeats}</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      sur {bookingModal.trip.availableSeats} disponibles
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-center justify-center">
-                  <ArrowRight className="w-6 h-6 text-gray-500" />
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Navigation className="w-6 h-6 text-cyan-400 mt-1" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-400 mb-1">Destination</p>
-                    <p className="text-xl font-bold text-white">{tripModal.trip.destination}</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBookingSeats(Math.min(bookingModal.trip.availableSeats, bookingSeats + 1))}
+                    disabled={bookingSeats >= bookingModal.trip.availableSeats || isProcessing}
+                    className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 border-2 border-white/20 flex items-center justify-center text-white text-2xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="w-5 h-5 text-gray-400" />
-                    <p className="text-sm text-gray-400">Heure</p>
-                  </div>
-                  <p className="text-2xl font-black text-white">{tripModal.trip.time}</p>
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
+                <label className="block text-sm font-bold text-white mb-3">
+                  Numéro de téléphone
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="77 123 45 67"
+                    autoFocus
+                    disabled={isProcessing}
+                    className="w-full pl-12 pr-4 py-4 bg-white/10 border-2 border-white/20 rounded-xl text-white text-lg font-semibold placeholder-gray-500 focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/50 transition-all disabled:opacity-50"
+                  />
                 </div>
-
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="w-5 h-5 text-gray-400" />
-                    <p className="text-sm text-gray-400">Places</p>
-                  </div>
-                  <p className="text-2xl font-black text-white">{tripModal.trip.availableSeats}</p>
-                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Votre numéro pour recevoir votre billet
+                </p>
               </div>
 
               <div className="bg-gradient-to-r from-[#10B981]/20 to-[#059669]/20 rounded-2xl p-5 border border-[#10B981]/50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300 mb-1">Prix par personne</p>
+                    <p className="text-sm text-gray-300 mb-1">Montant total</p>
                     <p className="text-4xl font-black text-[#10B981]">
-                      {tripModal.trip.price.toLocaleString()} F
+                      {(bookingModal.trip.price * bookingSeats).toLocaleString()} F
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {bookingSeats} × {bookingModal.trip.price.toLocaleString()} F
                     </p>
                   </div>
-                  <DollarSign className="w-12 h-12 text-[#10B981]/30" />
-                </div>
-              </div>
-
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-blue-400 mb-1">
-                      Réservation disponible prochainement
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      La fonctionnalité de réservation sera activée très bientôt. Vous pourrez réserver et payer directement depuis l'application.
-                    </p>
-                  </div>
+                  <CreditCard className="w-12 h-12 text-[#10B981]/30" />
                 </div>
               </div>
 
               <button
-                onClick={closeTripModal}
-                className="w-full bg-gradient-to-r from-[#10B981] to-[#059669] text-white py-4 rounded-2xl font-bold text-lg hover:shadow-2xl hover:scale-[1.02] transition-all"
+                onClick={handleBookingSubmit}
+                disabled={isProcessing || !phoneNumber.trim()}
+                className="w-full bg-gradient-to-r from-[#10B981] to-[#059669] text-white py-5 rounded-2xl font-black text-lg hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3"
               >
-                Fermer
+                {isProcessing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Traitement...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-6 h-6" />
+                    Acheter maintenant
+                  </>
+                )}
               </button>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-gray-400">
+                    Paiement sécurisé via PayDunya. Vous recevrez votre QR Code Sama Pass immédiatement après le paiement.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -89,6 +89,7 @@ import OpsMaritimeManagementPage from './pages/OpsMaritimeManagementPage';
 import DemDemExpressPage from './pages/transport/DemDemExpressPage';
 
 import AlloDakarPage from './pages/transport/AlloDakarPage';
+import BookingConfirmationPage from './pages/transport/BookingConfirmationPage';
 
 import TransportHubPage from './pages/transport/TransportHubPage';
 
@@ -245,6 +246,16 @@ function AppRoutes() {
         <ThemeWrapper mode="transport">
 
           <AlloDakarPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/voyage/allo-dakar/confirmation" element={
+
+        <ThemeWrapper mode="transport">
+
+          <BookingConfirmationPage />
 
         </ThemeWrapper>
 
