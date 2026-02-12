@@ -105,6 +105,8 @@ import { DriverLoginPage } from './pages/transport/DriverLoginPage';
 
 import DriverDashboard from './pages/transport/DriverDashboard';
 
+import DriverActiveTripPage from './pages/transport/DriverActiveTripPage';
+
 import PublishTripPage from './pages/transport/PublishTripPage';
 
 
@@ -360,6 +362,20 @@ function AppRoutes() {
           <ProtectedRoute>
 
             <DriverDashboard />
+
+          </ProtectedRoute>
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/voyage/conducteur/trajet" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ProtectedRoute>
+
+            <DriverActiveTripPage />
 
           </ProtectedRoute>
 
