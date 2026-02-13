@@ -6,9 +6,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Bus, Ship, CreditCard, User, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/FirebaseAuthContext';
 
 export const VoyageLandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleChauffeurBiiClick = () => {
+    if (!user) {
+      navigate('/voyage/chauffeur/login');
+    } else {
+      navigate('/voyage/conducteur/dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
@@ -32,7 +42,7 @@ export const VoyageLandingPage: React.FC = () => {
             </button>
             <button
               className="px-3 md:px-5 py-2 md:py-2.5 bg-emerald-500 text-white rounded-lg font-semibold text-xs md:text-sm hover:bg-emerald-600 transition-all flex items-center gap-1.5 md:gap-2 whitespace-nowrap"
-              onClick={() => navigate('/voyage/conducteur/dashboard')}
+              onClick={handleChauffeurBiiClick}
             >
               <User size={16} className="md:w-[18px] md:h-[18px]" />
               Chauffeur Bii
