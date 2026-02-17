@@ -20,11 +20,17 @@ import {
   ChevronRight,
   Zap,
   Star,
-  Calendar
+  Calendar,
+  Wallet,
+  Send,
+  History,
+  Eye,
+  XCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { collection, doc, getDoc, updateDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { firestore } from '../../firebase';
+import { DriverWalletManager, WalletBalance, WalletTransaction, WithdrawalRequest } from '../../lib/driverWalletManager';
 
 interface DriverProfile {
   uid: string;
@@ -75,7 +81,13 @@ export default function DriverDashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [switchLoading, setSwitchLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'trips' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'trips' | 'wallet' | 'profile'>('home');
+  const [walletBalance, setWalletBalance] = useState<WalletBalance>({ pending: 0, available: 0, withdrawn: 0, total: 0 });
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState('');
+  const [wavePhone, setWavePhone] = useState('');
 
   useEffect(() => {
     console.log('[DRIVER DASHBOARD] 🔒 Accès Dashboard Chauffeur - Rôle actuel:', user?.role);
@@ -142,6 +154,18 @@ export default function DriverDashboard() {
 
       console.log('[DRIVER DASHBOARD] 🚗 Trajets trouvés dans Firestore:', tripsList.length);
       setTrips(tripsList);
+
+      const balance = await DriverWalletManager.getWalletBalance(user.id);
+      setWalletBalance(balance);
+      console.log('[DRIVER DASHBOARD] 💰 Solde wallet chargé:', balance);
+
+      const allTransactions = await DriverWalletManager.getTransactions(user.id);
+      setTransactions(allTransactions);
+      console.log('[DRIVER DASHBOARD] 📋 Transactions chargées:', allTransactions.length);
+
+      const withdrawals = await DriverWalletManager.getWithdrawalRequests(user.id);
+      setWithdrawalRequests(withdrawals);
+      console.log('[DRIVER DASHBOARD] 📤 Demandes de retrait chargées:', withdrawals.length);
     } catch (error) {
       console.error('[DRIVER DASHBOARD] Error loading data:', error);
     } finally {
@@ -188,6 +212,50 @@ export default function DriverDashboard() {
 
   const handlePublishTrip = () => {
     navigate('/voyage/chauffeur/publier-trajet');
+  };
+
+  const handleWithdrawalRequest = async () => {
+    if (!user || !driver) return;
+
+    const amount = parseFloat(withdrawalAmount);
+
+    if (isNaN(amount) || amount <= 0) {
+      alert('Veuillez entrer un montant valide');
+      return;
+    }
+
+    if (amount > walletBalance.available) {
+      alert(`Solde disponible insuffisant. Vous avez ${walletBalance.available.toLocaleString()} FCFA disponibles.`);
+      return;
+    }
+
+    if (!wavePhone || wavePhone.length < 9) {
+      alert('Veuillez entrer un numéro Wave valide');
+      return;
+    }
+
+    try {
+      const driverName = driver.full_name || `${driver.firstName || ''} ${driver.lastName || ''}`.trim();
+
+      await DriverWalletManager.requestWithdrawal({
+        driverId: user.id,
+        driverName,
+        driverPhone: driver.phone,
+        amount,
+        wavePhoneNumber: wavePhone,
+      });
+
+      alert(`Demande de retrait de ${amount.toLocaleString()} FCFA envoyée avec succès!\n\nUn administrateur traitera votre demande sous 24-48h.`);
+
+      setShowWithdrawalModal(false);
+      setWithdrawalAmount('');
+      setWavePhone('');
+
+      loadDriverData();
+    } catch (error) {
+      console.error('[WITHDRAWAL] Error:', error);
+      alert('Erreur lors de la demande de retrait. Veuillez réessayer.');
+    }
   };
 
   if (loading) {
@@ -571,6 +639,172 @@ export default function DriverDashboard() {
           </div>
         )}
 
+        {activeTab === 'wallet' && (
+          <div className="space-y-4">
+            {/* Solde principal */}
+            <div className="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-3xl p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <p className="text-white/80 text-sm font-medium mb-1">Solde total</p>
+                  <p className="text-4xl font-bold text-white">{walletBalance.total.toLocaleString()} F</p>
+                </div>
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Wallet className="w-8 h-8 text-white" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <p className="text-white/70 text-xs font-medium mb-1">En attente</p>
+                  <p className="text-xl font-bold text-white">{walletBalance.pending.toLocaleString()} F</p>
+                  <p className="text-xs text-white/60 mt-1">Trajet en cours</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <p className="text-white/70 text-xs font-medium mb-1">Disponible</p>
+                  <p className="text-xl font-bold text-white">{walletBalance.available.toLocaleString()} F</p>
+                  <p className="text-xs text-white/60 mt-1">Prêt à retirer</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bouton retrait */}
+            <button
+              onClick={() => setShowWithdrawalModal(true)}
+              disabled={walletBalance.available === 0}
+              className={`w-full bg-gradient-to-r from-[#FFC700] to-[#FF8800] rounded-2xl p-5 shadow-xl transition-all ${
+                walletBalance.available === 0
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-[#0F1419] rounded-2xl flex items-center justify-center">
+                    <Send className="w-7 h-7 text-[#FFC700]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-xl text-[#0F1419]">Retirer mes gains</p>
+                    <p className="text-sm text-[#0F1419]/70 font-medium">Via Wave</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-7 h-7 text-[#0F1419]" />
+              </div>
+            </button>
+
+            {/* Historique des retraits */}
+            {withdrawalRequests.length > 0 && (
+              <div className="bg-[#1A2332] rounded-2xl border border-gray-800 overflow-hidden">
+                <div className="p-4 border-b border-gray-800">
+                  <h2 className="font-bold text-lg text-white flex items-center gap-2">
+                    <History className="w-5 h-5 text-[#FFC700]" />
+                    Demandes de retrait
+                  </h2>
+                </div>
+
+                <div className="divide-y divide-gray-800">
+                  {withdrawalRequests.map((request) => (
+                    <div key={request.id} className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-bold text-white text-lg">{request.amount.toLocaleString()} FCFA</p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {request.createdAt?.toDate ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'Date inconnue'}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">Wave: {request.wavePhoneNumber}</p>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          request.status === 'completed'
+                            ? 'bg-[#10B981]/20 text-[#10B981]'
+                            : request.status === 'processing'
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : request.status === 'rejected'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-[#FFC700]/20 text-[#FFC700]'
+                        }`}>
+                          {request.status === 'completed' ? 'PAYÉ' :
+                           request.status === 'processing' ? 'EN COURS' :
+                           request.status === 'rejected' ? 'REJETÉ' :
+                           'EN ATTENTE'}
+                        </div>
+                      </div>
+
+                      {request.status === 'rejected' && request.rejectionReason && (
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mt-2">
+                          <p className="text-xs text-red-400">{request.rejectionReason}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Historique des transactions */}
+            <div className="bg-[#1A2332] rounded-2xl border border-gray-800 overflow-hidden">
+              <div className="p-4 border-b border-gray-800">
+                <h2 className="font-bold text-lg text-white flex items-center gap-2">
+                  <History className="w-5 h-5 text-[#FFC700]" />
+                  Historique des courses
+                </h2>
+              </div>
+
+              {transactions.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Wallet className="w-12 h-12 text-gray-700 mx-auto mb-3" />
+                  <p className="text-gray-400 font-medium">Aucune transaction</p>
+                  <p className="text-sm text-gray-500 mt-1">Vos gains apparaîtront ici</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-800">
+                  {transactions.slice(0, 10).map((transaction) => (
+                    <div key={transaction.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-4 h-4 text-[#FFC700]" />
+                            <p className="font-bold text-white text-sm">{transaction.tripOrigin}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Navigation className="w-4 h-4 text-gray-500" />
+                            <p className="text-xs text-gray-400">{transaction.tripDestination}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-[#10B981]">+{transaction.netAmount.toLocaleString()} F</p>
+                          <p className={`text-xs font-medium mt-1 ${
+                            transaction.status === 'available' ? 'text-[#10B981]' :
+                            transaction.status === 'pending' ? 'text-[#FFC700]' :
+                            transaction.status === 'withdrawn' ? 'text-gray-500' :
+                            'text-red-400'
+                          }`}>
+                            {transaction.status === 'available' ? 'Disponible' :
+                             transaction.status === 'pending' ? 'En attente' :
+                             transaction.status === 'withdrawn' ? 'Retiré' :
+                             'Annulé'}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {transaction.createdAt?.toDate ? new Date(transaction.createdAt.toDate()).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Date inconnue'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'profile' && (
           <div className="space-y-4">
             {/* Informations personnelles */}
@@ -712,7 +946,7 @@ export default function DriverDashboard() {
 
       {/* Navigation Bottom - Fixed */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#1A2332] border-t border-gray-800 shadow-2xl z-50">
-        <div className="grid grid-cols-3 p-2">
+        <div className="grid grid-cols-4 p-2">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex flex-col items-center gap-1 py-4 rounded-xl transition-all ${
@@ -738,6 +972,18 @@ export default function DriverDashboard() {
           </button>
 
           <button
+            onClick={() => setActiveTab('wallet')}
+            className={`flex flex-col items-center gap-1 py-4 rounded-xl transition-all ${
+              activeTab === 'wallet'
+                ? 'bg-gradient-to-r from-[#FFC700] to-[#FF8800] text-[#0F1419]'
+                : 'text-gray-500 hover:bg-[#0F1419]'
+            }`}
+          >
+            <Wallet className="w-6 h-6" />
+            <span className="text-xs font-bold">Wallet</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('profile')}
             className={`flex flex-col items-center gap-1 py-4 rounded-xl transition-all ${
               activeTab === 'profile'
@@ -750,6 +996,94 @@ export default function DriverDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Modal Retrait Wave */}
+      {showWithdrawalModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1A2332] rounded-3xl shadow-2xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white">Retirer mes gains</h3>
+                <button
+                  onClick={() => setShowWithdrawalModal(false)}
+                  className="p-2 hover:bg-[#0F1419] rounded-lg transition-colors"
+                >
+                  <XCircle className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Solde disponible */}
+              <div className="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-2xl p-5">
+                <p className="text-white/80 text-sm font-medium mb-1">Solde disponible</p>
+                <p className="text-3xl font-bold text-white">{walletBalance.available.toLocaleString()} F</p>
+              </div>
+
+              {/* Montant à retirer */}
+              <div>
+                <label className="text-sm font-medium text-gray-400 mb-2 block">
+                  Montant à retirer (FCFA)
+                </label>
+                <input
+                  type="number"
+                  value={withdrawalAmount}
+                  onChange={(e) => setWithdrawalAmount(e.target.value)}
+                  placeholder="Ex: 50000"
+                  className="w-full bg-[#0F1419] border border-gray-800 text-white rounded-xl px-4 py-4 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#FFC700] transition-all"
+                />
+                <button
+                  onClick={() => setWithdrawalAmount(walletBalance.available.toString())}
+                  className="text-sm text-[#FFC700] font-semibold mt-2 hover:text-[#FF8800] transition-colors"
+                >
+                  Retirer tout
+                </button>
+              </div>
+
+              {/* Numéro Wave */}
+              <div>
+                <label className="text-sm font-medium text-gray-400 mb-2 block">
+                  Numéro Wave
+                </label>
+                <input
+                  type="tel"
+                  value={wavePhone}
+                  onChange={(e) => setWavePhone(e.target.value)}
+                  placeholder="Ex: 771234567"
+                  className="w-full bg-[#0F1419] border border-gray-800 text-white rounded-xl px-4 py-4 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[#FFC700] transition-all"
+                />
+              </div>
+
+              {/* Information */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <Eye className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-blue-300">
+                    Votre demande sera traitée par l'administration dans les 24-48h. Vous recevrez une confirmation par SMS.
+                  </p>
+                </div>
+              </div>
+
+              {/* Boutons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowWithdrawalModal(false)}
+                  className="flex-1 py-4 bg-gray-700 text-white rounded-xl font-bold hover:bg-gray-600 transition-all"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleWithdrawalRequest}
+                  className="flex-1 py-4 bg-gradient-to-r from-[#FFC700] to-[#FF8800] text-[#0F1419] rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <Send className="w-5 h-5" />
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
