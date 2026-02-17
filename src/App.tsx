@@ -54,8 +54,6 @@ import EPscanLoginPage from './pages/EPscanLoginPage';
 
 import PassLandingPage from './pages/pass/PassLandingPage';
 
-import PassServicesPage from './pages/pass/PassServicesPage';
-
 import LMDGBookingPage from './pages/pass/LMDGBookingPage';
 
 import COSAMABookingPage from './pages/pass/COSAMABookingPage';
@@ -490,18 +488,6 @@ function AppRoutes() {
 
 
       <Route path="/scan/login" element={<EPscanLoginPage />} />
-
-
-
-      <Route path="/pass/services" element={
-
-        <ThemeWrapper mode="transport">
-
-          <PassServicesPage />
-
-        </ThemeWrapper>
-
-      } />
 
       <Route path="/pass/lmdg" element={
 

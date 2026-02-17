@@ -24,7 +24,7 @@ const PassLandingPage: React.FC = () => {
   };
 
   const handlePassClick = () => {
-    navigate('/pass/services');
+    navigate('/pass/lmdg');
   };
 
   return (

@@ -30,7 +30,7 @@ export default function TransportHubPage() {
       description: 'Liaisons maritimes LMDG, COSAMA, Interrégionales',
       icon: Ship,
       color: 'from-teal-500 to-blue-600',
-      path: '/pass/services',
+      path: '/pass/lmdg',
       features: ['Dakar-Gorée', 'Abonnements', 'Réservation'],
     },
   ];
