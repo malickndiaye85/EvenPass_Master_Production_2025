@@ -1,324 +1,273 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Wallet, WifiOff, Check, X } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import DynamicLogo from '../components/DynamicLogo';
-import QRCode from 'react-qr-code';
-import {
-  getSubscriptionByNumber,
-  getLocalSubscriptionByNumber,
-  isSubscriptionValid,
-  saveSubscriptionToLocalStorage,
-  type Subscription
-} from '../lib/subscriptionFirebase';
+import { ArrowLeft, Zap, AlertCircle, Loader, Delete } from 'lucide-react';
+import { passPhoneService, PassSubscription } from '../lib/passPhoneService';
+import { AbonnementCard } from '../components/AbonnementCard';
 
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isDark } = useTheme();
-
-  const [inputNumber, setInputNumber] = useState('');
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [subscription, setSubscription] = useState<PassSubscription | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isOffline, setIsOffline] = useState(false);
+  const [showCard, setShowCard] = useState(false);
 
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    setIsOffline(!navigator.onLine);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    const cachedPhone = localStorage.getItem('demdem_last_phone');
+    if (cachedPhone) {
+      setPhoneNumber(cachedPhone);
+      loadCachedSubscription(cachedPhone);
+    }
   }, []);
 
-  const handleNumberClick = (num: string) => {
-    if (inputNumber.length < 13) {
-      setInputNumber(inputNumber + num);
+  const loadCachedSubscription = (phone: string) => {
+    const cached = passPhoneService.loadFromCache(phone);
+    if (cached) {
+      console.log('[WALLET] 💾 Abonnement chargé depuis le cache');
+      setSubscription(cached);
+      setShowCard(true);
+    }
+  };
+
+  const handleNumberInput = (digit: string) => {
+    if (phoneNumber.length < 9) {
+      const newPhone = phoneNumber + digit;
+      setPhoneNumber(newPhone);
+      setError('');
+
+      if (newPhone.length === 9) {
+        handleAutoSubmit(newPhone);
+      }
     }
   };
 
   const handleDelete = () => {
-    setInputNumber(inputNumber.slice(0, -1));
-  };
-
-  const handleClear = () => {
-    setInputNumber('');
-    setSubscription(null);
+    setPhoneNumber(phoneNumber.slice(0, -1));
     setError('');
   };
 
-  const handleSearch = async () => {
-    if (inputNumber.length < 10) {
-      setError('Le numéro doit contenir au moins 10 caractères');
-      return;
-    }
-
+  const handleAutoSubmit = async (phone: string) => {
+    console.log('[WALLET] 🔄 Auto-submit déclenché pour:', phone);
     setLoading(true);
     setError('');
 
     try {
-      let foundSubscription: Subscription | null = null;
-
-      if (isOffline) {
-        foundSubscription = getLocalSubscriptionByNumber(inputNumber);
-      } else {
-        foundSubscription = await getSubscriptionByNumber(inputNumber);
-
-        if (foundSubscription) {
-          saveSubscriptionToLocalStorage(foundSubscription);
-        }
+      const cached = passPhoneService.loadFromCache(phone);
+      if (cached) {
+        console.log('[WALLET] 💾 Abonnement trouvé en cache');
+        setSubscription(cached);
+        localStorage.setItem('demdem_last_phone', phone);
+        setShowCard(true);
+        setLoading(false);
+        return;
       }
 
-      if (foundSubscription) {
-        if (!isSubscriptionValid(foundSubscription)) {
-          setError('Cet abonnement a expiré');
-          setSubscription(null);
-        } else {
-          setSubscription(foundSubscription);
-        }
+      const sub = await passPhoneService.findSubscriptionByPhone(phone);
+
+      if (sub) {
+        console.log('[WALLET] ✅ Abonnement trouvé');
+        setSubscription(sub);
+        passPhoneService.saveToCache(phone, sub);
+        localStorage.setItem('demdem_last_phone', phone);
+        setShowCard(true);
       } else {
-        setError('Aucun abonnement trouvé avec ce numéro');
-        setSubscription(null);
+        console.log('[WALLET] ❌ Aucun abonnement trouvé');
+        setError('Numéro non reconnu. Veuillez utiliser le numéro utilisé lors de l\'achat.');
       }
     } catch (err) {
-      setError('Erreur lors de la recherche');
-      setSubscription(null);
+      console.error('[WALLET] ❌ Erreur:', err);
+      setError('Erreur de connexion. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
-  const keypadButtons = [
-    '1', '2', '3',
-    '4', '5', '6',
-    '7', '8', '9',
-    'C', '0', '←'
-  ];
+  const handleDisconnect = () => {
+    setPhoneNumber('');
+    setSubscription(null);
+    setError('');
+    setShowCard(false);
+    localStorage.removeItem('demdem_last_phone');
+  };
 
-  return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => navigate('/pass/services')} className="flex items-center gap-2 group">
-              <ArrowLeft className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'} group-hover:translate-x-[-4px] transition-transform`} />
-              <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                Services PASS
-              </span>
+  const formatPhoneDisplay = (value: string) => {
+    if (value.length <= 2) return value;
+    if (value.length <= 5) return `${value.slice(0, 2)} ${value.slice(2)}`;
+    if (value.length <= 7) return `${value.slice(0, 2)} ${value.slice(2, 5)} ${value.slice(5)}`;
+    return `${value.slice(0, 2)} ${value.slice(2, 5)} ${value.slice(5, 7)} ${value.slice(7)}`;
+  };
+
+  const KeypadButton: React.FC<{ value: string; onClick: () => void; disabled?: boolean }> = ({ value, onClick, disabled }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="aspect-square flex items-center justify-center bg-[#1A2332] border border-gray-800 rounded-xl text-white text-2xl font-bold hover:bg-[#2A3342] active:bg-[#FFC700] active:text-[#0F1419] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+    >
+      {value}
+    </button>
+  );
+
+  if (showCard && subscription) {
+    return (
+      <div className="h-screen bg-[#0F1419] overflow-hidden">
+        <div className="h-full flex flex-col">
+          <div className="flex-shrink-0 px-4 pt-4 pb-2">
+            <button
+              onClick={() => navigate('/voyage')}
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium text-sm">Retour</span>
             </button>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <DynamicLogo />
-            </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <div className="animate-fadeIn">
+              <AbonnementCard subscription={subscription} />
 
-            {isOffline && (
-              <div className="flex items-center gap-2 bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                <WifiOff className="w-4 h-4" />
-                Mode Hors ligne
+              <div className="mt-4 bg-[#1A2332] rounded-xl p-4 border border-gray-800">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-gray-300 text-xs leading-relaxed">
+                    <p className="font-bold text-white mb-1">Accès hors ligne activé</p>
+                    <p className="text-gray-400 text-xs">
+                      Numéro: {formatPhoneDisplay(phoneNumber)}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+
+              <button
+                onClick={handleDisconnect}
+                className="w-full mt-4 py-3 bg-gray-700/50 text-gray-400 rounded-xl font-medium text-sm hover:bg-gray-700 hover:text-white transition-all"
+              >
+                Déconnecter ce Pass
+              </button>
+            </div>
           </div>
         </div>
-      </nav>
+      </div>
+    );
+  }
 
-      <div className="pt-24 pb-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          {!subscription ? (
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className={`rounded-3xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-                <div className="text-center mb-8">
-                  <Wallet className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`} />
-                  <h2 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Mon Pass
-                  </h2>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Entrez votre numéro d'abonnement
-                  </p>
-                </div>
+  return (
+    <div className="h-screen bg-[#0F1419] overflow-hidden">
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 px-4 pt-4 pb-2">
+          <button
+            onClick={() => navigate('/voyage')}
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium text-sm">Retour</span>
+          </button>
+        </div>
 
-                <div className={`mb-6 p-6 rounded-2xl text-center font-mono text-3xl font-bold min-h-[80px] flex items-center justify-center ${
-                  isDark ? 'bg-gray-700' : 'bg-gray-50'
-                }`}>
-                  <span className={isDark ? 'text-white' : 'text-gray-900'}>
-                    {inputNumber || '___________'}
-                  </span>
-                </div>
-
-                {error && (
-                  <div className="mb-4 p-4 rounded-xl bg-red-500/20 border-2 border-red-500 text-red-500 text-center font-semibold">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleSearch}
-                  disabled={loading || inputNumber.length < 10}
-                  className={`w-full mb-6 py-4 rounded-xl font-bold text-white transition-all ${
-                    loading || inputNumber.length < 10
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : isDark
-                        ? 'bg-gradient-to-r from-cyan-500 to-[#0A7EA3] hover:from-cyan-600 hover:to-[#006B8C]'
-                        : 'bg-gradient-to-r from-[#0A7EA3] to-[#005975] hover:from-[#006B8C] hover:to-[#00475E]'
-                  }`}
-                >
-                  {loading ? 'Recherche...' : 'Rechercher mon Pass'}
-                </button>
+        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
+          <div className="flex-shrink-0 text-center mb-4">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#FFC700] to-[#FF8800] rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-[#0F1419]" />
               </div>
-
-              <div className={`rounded-3xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-                <div className="text-center mb-6">
-                  <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Clavier
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  {keypadButtons.map((btn) => (
-                    <button
-                      key={btn}
-                      onClick={() => {
-                        if (btn === 'C') handleClear();
-                        else if (btn === '←') handleDelete();
-                        else handleNumberClick(btn);
-                      }}
-                      className={`h-24 rounded-2xl font-bold text-3xl transition-all ${
-                        btn === 'C' || btn === '←'
-                          ? isDark
-                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                            : 'bg-red-100 text-red-600 hover:bg-red-200'
-                          : isDark
-                            ? 'bg-gray-700 text-white hover:bg-gray-600'
-                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                      }`}
-                    >
-                      {btn}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <h1 className="text-2xl font-black text-white tracking-tight">MON PASS</h1>
             </div>
-          ) : (
-            <div className={`max-w-2xl mx-auto rounded-3xl p-8 ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Mon Pass Gënaa Gaaw
-                </h2>
-                <button
-                  onClick={handleClear}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all ${
-                    isDark
-                      ? 'bg-gray-700 text-white hover:bg-gray-600'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  }`}
-                >
-                  Fermer
-                </button>
-              </div>
+            <p className="text-gray-400 text-xs font-medium">
+              Carte d'abonnement DEM-DEM Express
+            </p>
+          </div>
 
-              <div className={`mb-6 p-6 rounded-2xl ${
-                isSubscriptionValid(subscription)
-                  ? isDark ? 'bg-green-900/30 border-2 border-green-700' : 'bg-green-50 border-2 border-green-300'
-                  : isDark ? 'bg-red-900/30 border-2 border-red-700' : 'bg-red-50 border-2 border-red-300'
-              }`}>
-                <div className="flex items-center gap-3">
-                  {isSubscriptionValid(subscription) ? (
-                    <Check className={`w-8 h-8 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                  ) : (
-                    <X className={`w-8 h-8 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
-                  )}
-                  <div>
-                    <div className={`font-bold text-xl ${
-                      isSubscriptionValid(subscription)
-                        ? isDark ? 'text-green-400' : 'text-green-800'
-                        : isDark ? 'text-red-400' : 'text-red-800'
-                    }`}>
-                      {isSubscriptionValid(subscription) ? 'Abonnement Valide' : 'Abonnement Expiré'}
-                    </div>
-                    <div className={`text-sm ${
-                      isSubscriptionValid(subscription)
-                        ? isDark ? 'text-green-300' : 'text-green-700'
-                        : isDark ? 'text-red-300' : 'text-red-700'
-                    }`}>
-                      Valable jusqu'au {new Date(subscription.end_date).toLocaleDateString('fr-FR')}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="flex-shrink-0 bg-[#1A2332] rounded-2xl p-4 border border-gray-800 mb-3">
+            <h2 className="text-lg font-bold text-white text-center mb-1">
+              Gënaa Gaaw
+            </h2>
+            <p className="text-gray-400 text-center text-xs mb-3 leading-relaxed">
+              Entrez votre numéro de téléphone
+            </p>
 
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div>
-                  <div className="mb-6">
-                    <img
-                      src={subscription.photo_url}
-                      alt="Photo d'identité"
-                      className="w-full h-80 object-cover rounded-2xl border-4 border-cyan-500"
-                    />
-                  </div>
-
-                  <div className={`p-4 rounded-xl mb-3 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Titulaire
-                    </div>
-                    <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {subscription.holder_name}
-                    </div>
-                  </div>
-
-                  <div className={`p-4 rounded-xl mb-3 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      CNI
-                    </div>
-                    <div className={`text-lg font-mono ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {subscription.holder_cni}
-                    </div>
-                  </div>
-
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Trajet
-                    </div>
-                    <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {subscription.route.replace('_', ' → ').toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center justify-center">
-                  <div className={`p-6 rounded-2xl mb-4 ${isDark ? 'bg-white' : 'bg-white'}`}>
-                    <QRCode value={subscription.qr_code} size={280} />
-                  </div>
-
-                  <div className={`text-center p-4 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Numéro d'abonnement
-                    </div>
-                    <div className={`text-2xl font-mono font-bold ${isDark ? 'text-cyan-400' : 'text-[#0A7EA3]'}`}>
-                      {subscription.subscription_number}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {isOffline && (
-                <div className={`p-4 rounded-xl text-center ${isDark ? 'bg-amber-900/30 border-2 border-amber-700' : 'bg-amber-50 border-2 border-amber-300'}`}>
+            <div className="relative mb-3">
+              <div className="bg-[#0F1419] border-2 border-gray-800 rounded-xl p-4 text-center min-h-[60px] flex items-center justify-center">
+                {loading ? (
+                  <Loader className="w-6 h-6 text-[#FFC700] animate-spin" />
+                ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <WifiOff className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <span className={`font-semibold ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
-                      Pass chargé en Mode Hors ligne
+                    <span className="text-gray-500 font-medium text-lg">+221</span>
+                    <span className="text-white text-2xl font-bold tracking-wider min-w-[140px]">
+                      {formatPhoneDisplay(phoneNumber) || '_ _ _  _ _ _  _ _  _ _'}
                     </span>
                   </div>
+                )}
+              </div>
+              {phoneNumber.length > 0 && !loading && (
+                <div className="absolute top-2 right-2">
+                  <span className="text-xs text-gray-500 bg-[#1A2332] px-2 py-1 rounded">
+                    {phoneNumber.length}/9
+                  </span>
                 </div>
               )}
             </div>
-          )}
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mb-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-400 leading-tight">
+                    {error}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-1 mb-2">
+              <Zap className="w-3 h-3 text-[#FFC700]" />
+              <p className="text-xs text-gray-500">
+                Auto-recherche à 9 chiffres
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="grid grid-cols-3 gap-2">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+                <KeypadButton
+                  key={digit}
+                  value={digit}
+                  onClick={() => handleNumberInput(digit)}
+                  disabled={loading || phoneNumber.length >= 9}
+                />
+              ))}
+              <div></div>
+              <KeypadButton
+                value="0"
+                onClick={() => handleNumberInput('0')}
+                disabled={loading || phoneNumber.length >= 9}
+              />
+              <button
+                onClick={handleDelete}
+                disabled={loading || phoneNumber.length === 0}
+                className="aspect-square flex items-center justify-center bg-[#1A2332] border border-gray-800 rounded-xl text-white hover:bg-red-500/20 hover:border-red-500/30 active:bg-red-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Delete className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
