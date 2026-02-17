@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Edit2, Shield, Eye, EyeOff } from 'lucide-react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { Users, Plus, Trash2, Edit2, Shield, AlertCircle } from 'lucide-react';
 import { ref, set, get, remove, onValue } from 'firebase/database';
-import { auth, db } from '../firebase';
+import { db } from '../firebase';
 
 type StaffRole = 'Sub_Admin' | 'Ops_Manager' | 'ops_transport' | 'ops_event' | 'admin_finance_voyage' | 'admin_finance_event' | 'admin_maritime' | 'sub_admin' | 'ops_manager';
 
@@ -27,11 +26,9 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     role: 'ops_event' as StaffRole,
     silo: 'Événement' as 'Voyage' | 'Événement'
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -79,64 +76,89 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
     setCreating(true);
 
     try {
-      if (!auth || !db) {
+      if (!db) {
         throw new Error('Firebase non configuré');
       }
 
-      if (formData.password.length < 6) {
-        throw new Error('Le mot de passe doit contenir au moins 6 caractères');
-      }
-
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      const newStaffId = userCredential.user.uid;
-
+      const emailNormalized = formData.email.toLowerCase().trim();
+      const tempStaffId = `staff_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const silo_id = formData.silo.toLowerCase();
 
-      const staffData: StaffMember = {
-        id: newStaffId,
-        email: formData.email,
-        role: formData.role,
-        silo: formData.silo,
-        silo_id: silo_id,
-        created_at: new Date().toISOString(),
-        created_by: superAdminId
-      };
+      const usersRef = ref(db, 'users');
+      const usersSnapshot = await get(usersRef);
 
-      await set(ref(db, `staff/${newStaffId}`), staffData);
+      let existingUserId: string | null = null;
 
-      await set(ref(db, `users/${newStaffId}`), {
-        email: formData.email,
-        role: formData.role,
-        silo: silo_id,
-        silo_id: silo_id,
-        created_at: new Date().toISOString()
-      });
+      if (usersSnapshot.exists()) {
+        const usersData = usersSnapshot.val();
+        Object.entries(usersData).forEach(([uid, userData]: [string, any]) => {
+          if (userData.email && userData.email.toLowerCase() === emailNormalized) {
+            existingUserId = uid;
+          }
+        });
+      }
 
-      setSuccess(`Compte créé avec succès pour ${formData.email}`);
+      if (existingUserId) {
+        const staffData: StaffMember = {
+          id: existingUserId,
+          email: formData.email,
+          role: formData.role,
+          silo: formData.silo,
+          silo_id: silo_id,
+          created_at: new Date().toISOString(),
+          created_by: superAdminId
+        };
+
+        await set(ref(db, `staff/${existingUserId}`), staffData);
+
+        await set(ref(db, `users/${existingUserId}`), {
+          email: formData.email,
+          role: formData.role,
+          silo: silo_id,
+          silo_id: silo_id,
+          created_at: new Date().toISOString()
+        });
+
+        setSuccess(`Rôle mis à jour avec succès pour ${formData.email}`);
+      } else {
+        const staffData: StaffMember = {
+          id: tempStaffId,
+          email: formData.email,
+          role: formData.role,
+          silo: formData.silo,
+          silo_id: silo_id,
+          created_at: new Date().toISOString(),
+          created_by: superAdminId
+        };
+
+        await set(ref(db, `staff/${tempStaffId}`), staffData);
+
+        await set(ref(db, `users/${tempStaffId}`), {
+          email: formData.email,
+          role: formData.role,
+          silo: silo_id,
+          silo_id: silo_id,
+          created_at: new Date().toISOString(),
+          pending_activation: true
+        });
+
+        setSuccess(`Compte préparé pour ${formData.email}. L'utilisateur doit s'inscrire avec cet email pour activer son compte.`);
+      }
+
       setFormData({
         email: '',
-        password: '',
         role: 'ops_event',
         silo: 'Événement'
       });
       setShowCreateModal(false);
 
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error: any) {
       console.error('Erreur lors de la création:', error);
       let errorMessage = 'Erreur lors de la création du compte';
 
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Cet email est déjà utilisé';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Email invalide';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Mot de passe trop faible';
+      if (error.message) {
+        errorMessage = error.message;
       }
 
       setError(errorMessage);
@@ -324,29 +346,6 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2 text-white/80">
-                  Mot de passe *
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#10B981]/50 focus:bg-white/10 transition-all pr-12"
-                    placeholder="Minimum 6 caractères"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
 
               <div>
                 <label className="block text-sm font-semibold mb-2 text-white/80">
@@ -395,10 +394,18 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                 </p>
               </div>
 
-              <div className="rounded-xl p-4 bg-yellow-500/10 border border-yellow-500/20">
-                <p className="text-sm text-yellow-400">
-                  <strong>Important :</strong> Ces comptes ne peuvent pas s'auto-créer. Seul le Super Admin peut les créer.
-                </p>
+              <div className="rounded-xl p-4 bg-blue-500/10 border border-blue-500/20">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-400">
+                    <p className="font-bold mb-1">Fonctionnement :</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>Si l'email existe déjà, son rôle sera mis à jour</li>
+                      <li>Si l'email est nouveau, le compte sera préparé</li>
+                      <li>L'utilisateur devra s'inscrire avec cet email pour activer son compte</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">

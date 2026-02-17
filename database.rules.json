@@ -85,6 +85,13 @@
       ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
     },
 
+    "staff": {
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      "$staffId": {
+        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
+      }
+    },
+
     "evenpass": {
       "global_config": {
         "home_ads": {
