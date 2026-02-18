@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock, Loader2 } from 'lucide-react';
+import { Shield, Lock, Loader2, LogOut } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { getDefaultRedirectForRole, UserRole } from '../lib/rolePermissions';
 
@@ -10,13 +10,20 @@ const UnifiedAdminLoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, signOut, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     console.log('[UNIFIED LOGIN] Auth state:', { user: user?.email, role: user?.role, authLoading });
 
     if (!authLoading && user && user.role) {
+      const isSuperAdmin = user.uid === import.meta.env.VITE_SUPER_ADMIN_UID;
+
+      if (isSuperAdmin) {
+        console.log('[UNIFIED LOGIN] Super Admin detected - allowing access to login page for testing');
+        return;
+      }
+
       console.log('[UNIFIED LOGIN] User already authenticated with role:', user.role);
       console.log('[UNIFIED LOGIN] Bypassing login page, redirecting to dashboard...');
       const redirectPath = getDefaultRedirectForRole(user.role as UserRole);
@@ -33,6 +40,12 @@ const UnifiedAdminLoginPage: React.FC = () => {
     console.log('[UNIFIED LOGIN] Login attempt for:', email);
 
     try {
+      if (user) {
+        console.log('[UNIFIED LOGIN] User already logged in, signing out first...');
+        await signOut();
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       const { error: signInError } = await signIn(email, password);
 
       if (signInError) {
@@ -57,12 +70,35 @@ const UnifiedAdminLoginPage: React.FC = () => {
     }
   };
 
+  const isSuperAdmin = user?.uid === import.meta.env.VITE_SUPER_ADMIN_UID;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#3B82F6]/5 rounded-full blur-3xl"></div>
       </div>
+
+      {isSuperAdmin && (
+        <div className="absolute top-4 right-4 z-50">
+          <div className="bg-[#1A1A1B]/90 backdrop-blur-xl border border-[#10B981]/30 rounded-xl px-4 py-2 flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#10B981] rounded-full animate-pulse"></div>
+              <span className="text-[#10B981] text-sm font-medium">Super Admin: {user?.email}</span>
+            </div>
+            <button
+              onClick={async () => {
+                await signOut();
+                navigate('/');
+              }}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="Se déconnecter"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {verifying ? (
         <div className="relative bg-[#1A1A1B]/80 backdrop-blur-xl p-12 rounded-2xl border border-[#2A2A2B] shadow-2xl max-w-md w-full text-center">
