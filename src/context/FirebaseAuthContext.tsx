@@ -4,6 +4,7 @@ import { ref, get } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db, firestore } from '../firebase';
 import type { AuthUser } from '../types';
+import { securityLogger } from '../lib/securityLogger';
 
 const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
 
@@ -262,12 +263,32 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     }
     try {
       console.log('[FIREBASE AUTH] Calling signInWithEmailAndPassword...');
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       console.log('[FIREBASE AUTH] ✅ signInWithEmailAndPassword successful');
       console.log('[FIREBASE AUTH] onAuthStateChanged should trigger now...');
+
+      if (result.user) {
+        const tempRole = result.user.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' ? 'super_admin' : 'customer';
+        await securityLogger.logLogin(
+          result.user.email || email,
+          result.user.uid,
+          tempRole,
+          true
+        );
+      }
+
       return { error: null };
     } catch (error) {
       console.error('[FIREBASE AUTH] ❌ Sign in error:', error);
+
+      await securityLogger.logLogin(
+        email,
+        'unknown',
+        'unknown',
+        false,
+        (error as Error).message
+      );
+
       return { error: error as Error };
     }
   };
@@ -277,6 +298,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       console.warn('[FIREBASE AUTH] Cannot sign out - auth not configured');
       return;
     }
+
+    if (user?.email && user?.id && user?.role) {
+      await securityLogger.logLogout(user.email, user.id, user.role);
+    }
+
     await firebaseSignOut(auth);
     setUser(null);
     setFirebaseUser(null);

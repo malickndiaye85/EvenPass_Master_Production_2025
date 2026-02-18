@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Edit2, Shield, AlertCircle } from 'lucide-react';
 import { ref, set, get, remove, onValue } from 'firebase/database';
 import { db } from '../firebase';
+import { securityLogger } from '../lib/securityLogger';
+import { useAuth } from '../context/FirebaseAuthContext';
 
 type StaffRole = 'Sub_Admin' | 'Ops_Manager' | 'ops_transport' | 'ops_event' | 'admin_finance_voyage' | 'admin_finance_event' | 'admin_maritime' | 'sub_admin' | 'ops_manager';
 
@@ -21,6 +23,7 @@ interface Props {
 }
 
 const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
+  const { user: currentUser } = useAuth();
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -99,6 +102,9 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
       }
 
       if (existingUserId) {
+        const existingUser = usersSnapshot.val()[existingUserId];
+        const oldRole = existingUser?.role || 'customer';
+
         const staffData: StaffMember = {
           id: existingUserId,
           email: formData.email,
@@ -118,6 +124,17 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
           silo_id: silo_id,
           created_at: new Date().toISOString()
         });
+
+        if (currentUser?.email && currentUser?.id) {
+          await securityLogger.logRoleUpdate(
+            currentUser.email,
+            currentUser.id,
+            formData.email,
+            oldRole,
+            formData.role,
+            true
+          );
+        }
 
         setSuccess(`Rôle mis à jour avec succès pour ${formData.email}`);
       } else {
@@ -141,6 +158,16 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
           created_at: new Date().toISOString(),
           pending_activation: true
         });
+
+        if (currentUser?.email && currentUser?.id) {
+          await securityLogger.logStaffCreation(
+            currentUser.email,
+            currentUser.id,
+            formData.email,
+            formData.role,
+            true
+          );
+        }
 
         setSuccess(`Compte préparé pour ${formData.email}. L'utilisateur doit s'inscrire avec cet email pour activer son compte.`);
       }
@@ -168,7 +195,9 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   };
 
   const handleDeleteStaff = async (staffId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce membre du staff ?')) {
+    const staffMember = staffMembers.find(m => m.id === staffId);
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${staffMember?.email || 'ce membre'} du staff ?`)) {
       return;
     }
 
@@ -177,6 +206,15 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
 
       await remove(ref(db, `staff/${staffId}`));
       await remove(ref(db, `users/${staffId}`));
+
+      if (currentUser?.email && currentUser?.id && staffMember?.email) {
+        await securityLogger.logStaffDeletion(
+          currentUser.email,
+          currentUser.id,
+          staffMember.email,
+          true
+        );
+      }
 
       setSuccess('Membre supprimé avec succès');
       setTimeout(() => setSuccess(''), 3000);
