@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Edit2, Shield, AlertCircle } from 'lucide-react';
 import { ref, set, get, remove, onValue } from 'firebase/database';
-import { db } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '../firebase';
 import { securityLogger } from '../lib/securityLogger';
 import { useAuth } from '../context/FirebaseAuthContext';
 
@@ -29,6 +30,7 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     role: 'ops_event' as StaffRole,
     silo: 'Événement' as 'Voyage' | 'Événement'
   });
@@ -79,12 +81,15 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
     setCreating(true);
 
     try {
-      if (!db) {
+      if (!db || !auth) {
         throw new Error('Firebase non configuré');
       }
 
+      if (formData.password.length < 6) {
+        throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+      }
+
       const emailNormalized = formData.email.toLowerCase().trim();
-      const tempStaffId = `staff_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const silo_id = formData.silo.toLowerCase();
 
       const usersRef = ref(db, 'users');
@@ -138,8 +143,18 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
 
         setSuccess(`Rôle mis à jour avec succès pour ${formData.email}`);
       } else {
+        console.log('[STAFF MANAGEMENT] Creating new Firebase Auth user...');
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+
+        const newUserId = userCredential.user.uid;
+        console.log('[STAFF MANAGEMENT] Firebase Auth user created with UID:', newUserId);
+
         const staffData: StaffMember = {
-          id: tempStaffId,
+          id: newUserId,
           email: formData.email,
           role: formData.role,
           silo: formData.silo,
@@ -148,16 +163,19 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
           created_by: superAdminId
         };
 
-        await set(ref(db, `staff/${tempStaffId}`), staffData);
+        await set(ref(db, `staff/${newUserId}`), staffData);
+        console.log('[STAFF MANAGEMENT] Staff data saved to /staff/${uid}');
 
-        await set(ref(db, `users/${tempStaffId}`), {
+        await set(ref(db, `users/${newUserId}`), {
           email: formData.email,
           role: formData.role,
           silo: silo_id,
           silo_id: silo_id,
+          full_name: formData.email.split('@')[0],
           created_at: new Date().toISOString(),
-          pending_activation: true
+          updated_at: new Date().toISOString()
         });
+        console.log('[STAFF MANAGEMENT] User profile saved to /users/${uid}');
 
         if (currentUser?.email && currentUser?.id) {
           await securityLogger.logStaffCreation(
@@ -169,11 +187,12 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
           );
         }
 
-        setSuccess(`Compte préparé pour ${formData.email}. L'utilisateur doit s'inscrire avec cet email pour activer son compte.`);
+        setSuccess(`Compte créé avec succès pour ${formData.email}. L'utilisateur peut maintenant se connecter.`);
       }
 
       setFormData({
         email: '',
+        password: '',
         role: 'ops_event',
         silo: 'Événement'
       });
@@ -181,10 +200,16 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
 
       setTimeout(() => setSuccess(''), 5000);
     } catch (error: any) {
-      console.error('Erreur lors de la création:', error);
+      console.error('[STAFF MANAGEMENT] Error creating staff:', error);
       let errorMessage = 'Erreur lors de la création du compte';
 
-      if (error.message) {
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Cet email est déjà utilisé. Utilisez un autre email.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Adresse email invalide';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Le mot de passe est trop faible';
+      } else if (error.message) {
         errorMessage = error.message;
       }
 
@@ -384,6 +409,23 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Mot de passe *
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full p-3 rounded-xl border bg-white/5 border-white/10 text-white focus:outline-none focus:border-[#10B981]/50 focus:bg-white/10 transition-all"
+                  placeholder="Minimum 6 caractères"
+                  minLength={6}
+                  required
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  Le mot de passe doit contenir au moins 6 caractères
+                </p>
+              </div>
 
               <div>
                 <label className="block text-sm font-semibold mb-2 text-white/80">
@@ -438,9 +480,9 @@ const StaffManagementTab: React.FC<Props> = ({ isDark, superAdminId }) => {
                   <div className="text-sm text-blue-400">
                     <p className="font-bold mb-1">Fonctionnement :</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>Si l'email existe déjà, son rôle sera mis à jour</li>
-                      <li>Si l'email est nouveau, le compte sera préparé</li>
-                      <li>L'utilisateur devra s'inscrire avec cet email pour activer son compte</li>
+                      <li>Si l'email existe déjà dans Firebase Auth, son rôle sera mis à jour</li>
+                      <li>Si l'email est nouveau, un compte Firebase Auth sera créé avec le mot de passe fourni</li>
+                      <li>L'utilisateur pourra se connecter immédiatement avec l'email et le mot de passe</li>
                     </ul>
                   </div>
                 </div>
