@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User as FirebaseUser, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import { ref, get } from 'firebase/database';
+import { User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
+import { ref, get, set } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db, firestore } from '../firebase';
 import type { AuthUser } from '../types';
@@ -13,6 +13,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -283,8 +284,76 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[FIREBASE AUTH] ❌ Sign in error:', error);
+
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        console.log('[FIREBASE AUTH] Checking if this is a pre-registered staff account...');
+        try {
+          if (db) {
+            const usersRef = ref(db, 'users');
+            const usersSnapshot = await get(usersRef);
+
+            if (usersSnapshot.exists()) {
+              const usersData = usersSnapshot.val();
+              const preRegisteredAccount = Object.entries(usersData).find(([uid, userData]: [string, any]) => {
+                return userData.email?.toLowerCase() === email.toLowerCase() &&
+                       userData.pending_activation === true &&
+                       userData.password === password;
+              });
+
+              if (preRegisteredAccount) {
+                const [tempId, accountData]: [string, any] = preRegisteredAccount;
+                console.log('[FIREBASE AUTH] ✅ Pre-registered account found! Activating...', tempId);
+
+                console.log('[FIREBASE AUTH] Creating Firebase Auth account...');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const realUid = userCredential.user.uid;
+                console.log('[FIREBASE AUTH] ✅ Firebase Auth account created with UID:', realUid);
+
+                const newUserData = {
+                  email: accountData.email,
+                  role: accountData.role,
+                  silo: accountData.silo,
+                  silo_id: accountData.silo_id,
+                  full_name: accountData.full_name || email.split('@')[0],
+                  created_at: accountData.created_at,
+                  updated_at: new Date().toISOString(),
+                  activated_at: new Date().toISOString(),
+                  pending_activation: false
+                };
+
+                await set(ref(db, `users/${realUid}`), newUserData);
+                console.log('[FIREBASE AUTH] ✅ User profile migrated to real UID');
+
+                const staffRef = ref(db, `staff/${tempId}`);
+                const staffSnapshot = await get(staffRef);
+                if (staffSnapshot.exists()) {
+                  const staffData = staffSnapshot.val();
+                  await set(ref(db, `staff/${realUid}`), {
+                    ...staffData,
+                    id: realUid,
+                    activated_at: new Date().toISOString()
+                  });
+                  console.log('[FIREBASE AUTH] ✅ Staff data migrated to real UID');
+                }
+
+                await securityLogger.logLogin(
+                  email,
+                  realUid,
+                  accountData.role,
+                  true
+                );
+
+                console.log('[FIREBASE AUTH] ✅ Staff account activated successfully!');
+                return { error: null };
+              }
+            }
+          }
+        } catch (activationError) {
+          console.error('[FIREBASE AUTH] ❌ Error during account activation:', activationError);
+        }
+      }
 
       await securityLogger.logLogin(
         email,
@@ -294,6 +363,79 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         (error as Error).message
       );
 
+      return { error: error as Error };
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    console.log('[FIREBASE AUTH] 📝 signUp called for:', email);
+    if (!auth) {
+      console.error('[FIREBASE AUTH] ❌ Auth not configured!');
+      return { error: new Error('Firebase auth not configured') };
+    }
+    try {
+      console.log('[FIREBASE AUTH] Checking if this is a pre-registered staff account...');
+      if (db) {
+        const usersRef = ref(db, 'users');
+        const usersSnapshot = await get(usersRef);
+
+        if (usersSnapshot.exists()) {
+          const usersData = usersSnapshot.val();
+          const preRegisteredAccount = Object.entries(usersData).find(([uid, userData]: [string, any]) => {
+            return userData.email?.toLowerCase() === email.toLowerCase() &&
+                   userData.pending_activation === true &&
+                   userData.password === password;
+          });
+
+          if (preRegisteredAccount) {
+            const [tempId, accountData]: [string, any] = preRegisteredAccount;
+            console.log('[FIREBASE AUTH] ✅ Pre-registered account found! Activating...', tempId);
+
+            console.log('[FIREBASE AUTH] Creating Firebase Auth account...');
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const realUid = userCredential.user.uid;
+            console.log('[FIREBASE AUTH] ✅ Firebase Auth account created with UID:', realUid);
+
+            const newUserData = {
+              email: accountData.email,
+              role: accountData.role,
+              silo: accountData.silo,
+              silo_id: accountData.silo_id,
+              full_name: accountData.full_name || email.split('@')[0],
+              created_at: accountData.created_at,
+              updated_at: new Date().toISOString(),
+              activated_at: new Date().toISOString(),
+              pending_activation: false
+            };
+
+            await set(ref(db, `users/${realUid}`), newUserData);
+            console.log('[FIREBASE AUTH] ✅ User profile migrated to real UID');
+
+            const staffRef = ref(db, `staff/${tempId}`);
+            const staffSnapshot = await get(staffRef);
+            if (staffSnapshot.exists()) {
+              const staffData = staffSnapshot.val();
+              await set(ref(db, `staff/${realUid}`), {
+                ...staffData,
+                id: realUid,
+                activated_at: new Date().toISOString()
+              });
+              console.log('[FIREBASE AUTH] ✅ Staff data migrated to real UID');
+            }
+
+            console.log('[FIREBASE AUTH] ✅ Staff account activated successfully!');
+            return { error: null };
+          }
+        }
+      }
+
+      console.log('[FIREBASE AUTH] Creating new Firebase Auth account...');
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('[FIREBASE AUTH] ✅ Account created successfully');
+
+      return { error: null };
+    } catch (error) {
+      console.error('[FIREBASE AUTH] ❌ Sign up error:', error);
       return { error: error as Error };
     }
   };
@@ -314,7 +456,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signOut, logout: signOut }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signUp, signOut, logout: signOut }}>
       {children}
     </AuthContext.Provider>
   );
