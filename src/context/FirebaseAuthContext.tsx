@@ -123,16 +123,41 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       if (db) {
+        console.log(`[AUTH-SYNC] Email connecté: ${firebaseUser.email}`);
+
         try {
           const userRef = ref(db, `users/${firebaseUser.uid}`);
           const userSnapshot = await get(userRef);
           userData = userSnapshot.val();
-          console.log('[FIREBASE AUTH] User data loaded:', !!userData);
+          console.log('[FIREBASE AUTH] User data loaded by UID:', !!userData);
         } catch (error: any) {
           if (error?.code === 'PERMISSION_DENIED') {
             console.error('[FIREBASE AUTH] ❌ 403 PERMISSION DENIED: Vérifiez les Firebase Security Rules pour users/');
           }
-          console.warn('[FIREBASE AUTH] Could not load user data:', error);
+          console.warn('[FIREBASE AUTH] Could not load user data by UID:', error);
+        }
+
+        if (!userData || !userData.role) {
+          console.log('[AUTH-SYNC] Rôle non trouvé par UID, recherche par email dans /users/...');
+          try {
+            const usersRef = ref(db, 'users');
+            const usersSnapshot = await get(usersRef);
+            if (usersSnapshot.exists()) {
+              const allUsers = usersSnapshot.val();
+              const matchingUser = Object.entries(allUsers).find(
+                ([_, user]: [string, any]) => user.email === firebaseUser.email
+              );
+              if (matchingUser) {
+                const [foundUid, foundUserData] = matchingUser as [string, any];
+                userData = foundUserData;
+                console.log(`[AUTH-SYNC] ✅ Utilisateur trouvé par email dans /users/${foundUid}:`, { role: userData.role });
+              } else {
+                console.log('[AUTH-SYNC] ❌ Aucun utilisateur trouvé avec cet email dans /users/');
+              }
+            }
+          } catch (error: any) {
+            console.warn('[AUTH-SYNC] Erreur lors de la recherche par email:', error);
+          }
         }
 
         try {
@@ -157,7 +182,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           const adminRef = ref(db, `admins/${firebaseUser.uid}`);
           const adminSnapshot = await get(adminRef);
           adminData = adminSnapshot.val();
-          console.log('[FIREBASE AUTH] Admin data loaded:', {
+          console.log('[FIREBASE AUTH] Admin data loaded by UID:', {
             exists: !!adminData,
             isActive: adminData?.is_active
           });
@@ -165,7 +190,30 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           if (error?.code === 'PERMISSION_DENIED') {
             console.error('[FIREBASE AUTH] ❌ 403 PERMISSION DENIED sur admins/: Vérifiez que cet UID a les privilèges admin dans Firebase Security Rules');
           }
-          console.warn('[FIREBASE AUTH] Could not load admin data:', error);
+          console.warn('[FIREBASE AUTH] Could not load admin data by UID:', error);
+        }
+
+        if (!adminData || !adminData.role) {
+          console.log('[AUTH-SYNC] Admin non trouvé par UID, recherche par email dans /admins/...');
+          try {
+            const adminsRef = ref(db, 'admins');
+            const adminsSnapshot = await get(adminsRef);
+            if (adminsSnapshot.exists()) {
+              const allAdmins = adminsSnapshot.val();
+              const matchingAdmin = Object.entries(allAdmins).find(
+                ([_, admin]: [string, any]) => admin.email === firebaseUser.email
+              );
+              if (matchingAdmin) {
+                const [foundUid, foundAdminData] = matchingAdmin as [string, any];
+                adminData = foundAdminData;
+                console.log(`[AUTH-SYNC] ✅ Admin trouvé par email dans /admins/${foundUid}:`, { role: adminData.role, silo: adminData.silo });
+              } else {
+                console.log('[AUTH-SYNC] ❌ Aucun admin trouvé avec cet email dans /admins/');
+              }
+            }
+          } catch (error: any) {
+            console.warn('[AUTH-SYNC] Erreur lors de la recherche admin par email:', error);
+          }
         }
       } else {
         console.warn('[FIREBASE AUTH] Firebase database not configured');
@@ -189,12 +237,19 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       if (isAdmin) {
         role = 'super_admin';
         console.log('[FIREBASE AUTH] ✅ Role set to SUPER ADMIN (Master UID)');
+        console.log(`[AUTH-SYNC] Rôle récupéré via Email: ${role}`);
+      } else if (adminData && adminData.role) {
+        role = adminData.role;
+        console.log('[FIREBASE AUTH] ✅ Role detected from admins table:', role);
+        console.log(`[AUTH-SYNC] Rôle récupéré via Email: ${role}`);
       } else if (userData && userData.role) {
         role = userData.role;
         console.log('[FIREBASE AUTH] ✅ Role detected from users table:', role);
+        console.log(`[AUTH-SYNC] Rôle récupéré via Email: ${role}`);
       } else if (adminData && adminData.is_active) {
         role = 'admin';
-        console.log('[FIREBASE AUTH] ✅ Role set to ADMIN (adminData exists)');
+        console.log('[FIREBASE AUTH] ✅ Role set to ADMIN (adminData exists but no specific role)');
+        console.log(`[AUTH-SYNC] Rôle récupéré via Email: ${role}`);
       } else if (driverData) {
         role = 'driver';
         console.log('[FIREBASE AUTH] 🚗 ✅ Role set to DRIVER (driver document exists)');
@@ -204,6 +259,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       } else {
         role = 'customer';
         console.log('[FIREBASE AUTH] 👤 Role set to CUSTOMER (no special role found)');
+        console.log(`[AUTH-SYNC] ❌ Aucun rôle admin trouvé pour l'email: ${firebaseUser.email}. Redirigera vers /voyage`);
       }
 
       console.log('[FIREBASE AUTH] 🎯 Final determined role:', role);
