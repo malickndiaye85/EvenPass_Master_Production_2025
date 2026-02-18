@@ -92,6 +92,11 @@
       }
     },
 
+    "admin_logs": {
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".write": "auth != null"
+    },
+
     "evenpass": {
       "global_config": {
         "home_ads": {

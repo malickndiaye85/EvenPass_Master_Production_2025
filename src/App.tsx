@@ -10,6 +10,8 @@ import ThemeWrapper from './components/ThemeWrapper';
 
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
+import RoleBasedRoute from './components/RoleBasedRoute';
+
 import DemDemLandingPage from './pages/DemDemLandingPage';
 
 import { RootLandingPage } from './pages/RootLandingPage';
@@ -435,11 +437,11 @@ function AppRoutes() {
 
         element={
 
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['super_admin', 'admin_finance_event', 'admin_finance_voyage']}>
 
             <AdminFinancePage />
 
-          </ProtectedRoute>
+          </RoleBasedRoute>
 
         }
 
@@ -455,11 +457,11 @@ function AppRoutes() {
 
         element={
 
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['super_admin', 'sub_admin', 'ops_manager', 'ops_event', 'ops_transport']}>
 
             <OpsManagerPage />
 
-          </ProtectedRoute>
+          </RoleBasedRoute>
 
         }
 
@@ -471,11 +473,11 @@ function AppRoutes() {
 
         element={
 
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['super_admin', 'sub_admin', 'ops_manager', 'admin_maritime']}>
 
             <OpsMaritimeManagementPage />
 
-          </ProtectedRoute>
+          </RoleBasedRoute>
 
         }
 
@@ -483,7 +485,21 @@ function AppRoutes() {
 
 
 
-      <Route path="/admin/transport/setup" element={<AdminTransportSetupPage />} />
+      <Route
+
+        path="/admin/transport/setup"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'sub_admin', 'ops_transport']}>
+
+            <AdminTransportSetupPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
 
 
 
@@ -561,7 +577,21 @@ function AppRoutes() {
 
 
 
-      <Route path="/admin/transversal" element={<AdminTransversalDashboard />} />
+      <Route
+
+        path="/admin/transversal"
+
+        element={
+
+          <RoleBasedRoute requireSuperAdmin={true}>
+
+            <AdminTransversalDashboard />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
 
       <Route path="/admin/manifest" element={<SecurityManifestPage />} />
 
