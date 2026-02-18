@@ -24,6 +24,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const [user, setUser] = useState<AuthUser | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isActivatingAccount, setIsActivatingAccount] = useState(false);
 
   useEffect(() => {
     if (!auth) {
@@ -37,8 +38,15 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       console.log('[FIREBASE AUTH] Auth state changed:', {
         authenticated: !!firebaseUser,
         email: firebaseUser?.email,
-        uid: firebaseUser?.uid
+        uid: firebaseUser?.uid,
+        isActivatingAccount
       });
+
+      if (isActivatingAccount) {
+        console.log('[FIREBASE AUTH] ⏸️ Account activation in progress, skipping profile load');
+        return;
+      }
+
       setFirebaseUser(firebaseUser);
       if (firebaseUser) {
         await loadUserProfile(firebaseUser);
@@ -49,7 +57,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isActivatingAccount]);
 
   const loadUserProfile = async (firebaseUser: FirebaseUser) => {
     console.log('[FIREBASE AUTH] ⏳ Starting loadUserProfile for:', firebaseUser.uid);
@@ -306,6 +314,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
                 const [tempId, accountData]: [string, any] = preRegisteredAccount;
                 console.log('[FIREBASE AUTH] ✅ Pre-registered account found! Activating...', tempId);
 
+                setIsActivatingAccount(true);
+
                 console.log('[FIREBASE AUTH] Creating Firebase Auth account...');
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const realUid = userCredential.user.uid;
@@ -345,7 +355,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
                   true
                 );
 
-                console.log('[FIREBASE AUTH] ✅ Staff account activated successfully!');
+                setIsActivatingAccount(false);
+
+                console.log('[FIREBASE AUTH] ✅ Staff account activated successfully! Now loading profile...');
+                await loadUserProfile(userCredential.user);
+
                 return { error: null };
               }
             }
