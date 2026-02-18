@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
@@ -10,31 +10,48 @@ const UnifiedAdminLoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('[UNIFIED LOGIN] Auth state:', { user: user?.email, role: user?.role, authLoading });
+
+    if (!authLoading && user && user.role) {
+      console.log('[UNIFIED LOGIN] User already authenticated with role:', user.role);
+      console.log('[UNIFIED LOGIN] Bypassing login page, redirecting to dashboard...');
+      const redirectPath = getDefaultRedirectForRole(user.role as UserRole);
+      console.log('[UNIFIED LOGIN] Redirect path:', redirectPath);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    console.log('[UNIFIED LOGIN] Login attempt for:', email);
+
     try {
       const { error: signInError } = await signIn(email, password);
 
       if (signInError) {
+        console.log('[UNIFIED LOGIN] Sign in error:', signInError.message);
         setError('Email ou mot de passe incorrect');
         setLoading(false);
         return;
       }
 
+      console.log('[UNIFIED LOGIN] Sign in successful, showing verification screen');
       setLoading(false);
       setVerifying(true);
 
       setTimeout(() => {
+        console.log('[UNIFIED LOGIN] Verification timeout complete, reloading page');
         window.location.reload();
-      }, 1500);
+      }, 2000);
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('[UNIFIED LOGIN] Login error:', err);
       setError('Une erreur est survenue lors de la connexion');
       setLoading(false);
     }

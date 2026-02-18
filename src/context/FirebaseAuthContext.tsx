@@ -155,7 +155,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         console.warn('[FIREBASE AUTH] Firebase database not configured');
       }
 
-      let role: 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff' | 'driver' = 'customer';
+      let role: any = 'customer';
 
       console.log('[FIREBASE AUTH] Role determination checks:', {
         isAdmin,
@@ -163,6 +163,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         hasDriverData: !!driverData,
         hasOrganizerFirestoreData: !!organizerFirestoreData,
         hasOrganizerRealtimeData: !!organizerData,
+        hasUserData: !!userData,
+        userDataRole: userData?.role,
         driverStatus: driverData?.status,
         organizerFirestoreStatus: organizerFirestoreData?.verification_status || organizerFirestoreData?.status,
         organizerRealtimeStatus: organizerData?.verification_status
@@ -171,6 +173,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       if (isAdmin) {
         role = 'super_admin';
         console.log('[FIREBASE AUTH] ✅ Role set to SUPER ADMIN (Master UID)');
+      } else if (userData && userData.role) {
+        role = userData.role;
+        console.log('[FIREBASE AUTH] ✅ Role detected from users table:', role);
       } else if (adminData && adminData.is_active) {
         role = 'admin';
         console.log('[FIREBASE AUTH] ✅ Role set to ADMIN (adminData exists)');
