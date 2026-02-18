@@ -109,6 +109,16 @@ import DriverActiveTripPage from './pages/transport/DriverActiveTripPage';
 
 import PublishTripPage from './pages/transport/PublishTripPage';
 
+import UnifiedAdminLoginPage from './pages/UnifiedAdminLoginPage';
+
+import AdminFinanceEventPage from './pages/admin/AdminFinanceEventPage';
+
+import AdminFinanceVoyagePage from './pages/admin/AdminFinanceVoyagePage';
+
+import AdminOpsEventPage from './pages/admin/AdminOpsEventPage';
+
+import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
+
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -429,6 +439,8 @@ function AppRoutes() {
 
 
 
+      <Route path="/admin/login" element={<UnifiedAdminLoginPage />} />
+
       <Route path="/admin/finance/login" element={<AdminFinanceLoginPage />} />
 
       <Route
@@ -440,6 +452,38 @@ function AppRoutes() {
           <RoleBasedRoute allowedRoles={['super_admin', 'admin_finance_event', 'admin_finance_voyage']}>
 
             <AdminFinancePage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/finance/event"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'admin_finance_event']}>
+
+            <AdminFinanceEventPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/finance/voyage"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'admin_finance_voyage']}>
+
+            <AdminFinanceVoyagePage />
 
           </RoleBasedRoute>
 
@@ -460,6 +504,38 @@ function AppRoutes() {
           <RoleBasedRoute allowedRoles={['super_admin', 'sub_admin', 'ops_manager', 'ops_event', 'ops_transport']}>
 
             <OpsManagerPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/ops/event"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'ops_event']}>
+
+            <AdminOpsEventPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/ops/transport"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'ops_transport']}>
+
+            <AdminOpsTransportPage />
 
           </RoleBasedRoute>
 

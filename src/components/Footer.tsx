@@ -80,22 +80,10 @@ const Footer: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => window.location.href = '/admin/transversal'}
+                onClick={() => window.location.href = '/admin/login'}
                 className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-all hover:scale-125 shadow-lg hover:shadow-green-500/50"
-                aria-label="Dashboard Transversal"
-                title="Dashboard Transversal"
-              />
-              <button
-                onClick={() => window.location.href = '/admin/manifest'}
-                className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-all hover:scale-125 shadow-lg hover:shadow-yellow-500/50"
-                aria-label="Manifeste de Sécurité"
-                title="Manifeste de Sécurité"
-              />
-              <button
-                onClick={() => window.location.href = '/scan/login'}
-                className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-all hover:scale-125 shadow-lg hover:shadow-red-500/50"
-                aria-label="EPscan"
-                title="EPscan"
+                aria-label="Portail Admin"
+                title="Portail Admin"
               />
             </div>
           </div>

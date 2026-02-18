@@ -55,8 +55,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermission> = {
   ops_event: {
     role: 'ops_event',
     silo: 'événement',
-    allowedRoutes: ['/admin/ops', '/organizer/dashboard'],
-    defaultRedirect: '/admin/ops',
+    allowedRoutes: ['/admin/ops/event', '/organizer/dashboard'],
+    defaultRedirect: '/admin/ops/event',
     canAccessTransversal: false,
     canAccessFinance: false,
     canManageStaff: false
@@ -64,8 +64,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermission> = {
   ops_transport: {
     role: 'ops_transport',
     silo: 'voyage',
-    allowedRoutes: ['/admin/ops', '/admin/transport/setup', '/voyage/chauffeur/dashboard', '/voyage/conducteur/dashboard'],
-    defaultRedirect: '/admin/ops',
+    allowedRoutes: ['/admin/ops/transport', '/admin/transport/setup', '/voyage/chauffeur/dashboard', '/voyage/conducteur/dashboard'],
+    defaultRedirect: '/admin/ops/transport',
     canAccessTransversal: false,
     canAccessFinance: false,
     canManageStaff: false
@@ -73,8 +73,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermission> = {
   admin_finance_event: {
     role: 'admin_finance_event',
     silo: 'événement',
-    allowedRoutes: ['/admin/finance'],
-    defaultRedirect: '/admin/finance',
+    allowedRoutes: ['/admin/finance/event'],
+    defaultRedirect: '/admin/finance/event',
     canAccessTransversal: false,
     canAccessFinance: true,
     canManageStaff: false
@@ -82,8 +82,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermission> = {
   admin_finance_voyage: {
     role: 'admin_finance_voyage',
     silo: 'voyage',
-    allowedRoutes: ['/admin/finance'],
-    defaultRedirect: '/admin/finance',
+    allowedRoutes: ['/admin/finance/voyage'],
+    defaultRedirect: '/admin/finance/voyage',
     canAccessTransversal: false,
     canAccessFinance: true,
     canManageStaff: false
