@@ -6,7 +6,14 @@ import { auth, db, firestore } from '../firebase';
 import type { AuthUser } from '../types';
 import { securityLogger } from '../lib/securityLogger';
 
-const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
+const getAdminUID = () => {
+  if (typeof window !== 'undefined' && (window as any).ENV?.ADMIN_UID) {
+    return (window as any).ENV.ADMIN_UID;
+  }
+  return import.meta.env.VITE_ADMIN_UID || 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+};
+
+const ADMIN_UID = getAdminUID();
 
 interface AuthContextType {
   user: AuthUser | null;

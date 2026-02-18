@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Loader2, LogOut } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { getDefaultRedirectForRole, UserRole } from '../lib/rolePermissions';
+import { ref, get, update, set, remove } from 'firebase/database';
+import { db } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+
+const getAdminUID = () => {
+  if (typeof window !== 'undefined' && (window as any).ENV?.ADMIN_UID) {
+    return (window as any).ENV.ADMIN_UID;
+  }
+  return import.meta.env.VITE_ADMIN_UID || 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+};
 
 const UnifiedAdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +28,7 @@ const UnifiedAdminLoginPage: React.FC = () => {
     console.log('[UNIFIED LOGIN] Auth state:', { user: user?.email, role: user?.role, authLoading });
 
     if (!authLoading && user && user.role) {
-      const isSuperAdmin = user.uid === import.meta.env.VITE_ADMIN_UID;
+      const isSuperAdmin = user.uid === getAdminUID();
 
       if (isSuperAdmin) {
         console.log('[UNIFIED LOGIN] Super Admin detected - allowing access to login page for testing');
@@ -46,9 +57,81 @@ const UnifiedAdminLoginPage: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      const { error: signInError } = await signIn(email, password);
+      let signInError = null;
+      let accountCreated = false;
 
-      if (signInError) {
+      const signInResult = await signIn(email, password);
+      signInError = signInResult.error;
+
+      if (signInError && db && auth) {
+        console.log('[UNIFIED LOGIN] Sign in failed, checking for pre-registered staff account...');
+
+        try {
+          const staffRef = ref(db, 'staff');
+          const staffSnapshot = await get(staffRef);
+
+          if (staffSnapshot.exists()) {
+            const staffData = staffSnapshot.val();
+            const staffEntry = Object.entries(staffData).find(
+              ([_, data]: [string, any]) => data.email === email && data.pending_activation !== false
+            );
+
+            if (staffEntry) {
+              const [tempStaffId, staffInfo] = staffEntry as [string, any];
+              console.log('[UNIFIED LOGIN] Found pre-registered staff, checking password match...');
+
+              const userRef = ref(db, `users/${tempStaffId}`);
+              const userSnapshot = await get(userRef);
+              const userData = userSnapshot.val();
+
+              if (userData && userData.password === password) {
+                console.log('[UNIFIED LOGIN] Password matches! Creating Firebase Auth account...');
+
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUID = userCredential.user.uid;
+                console.log('[UNIFIED LOGIN] Firebase Auth account created with UID:', newUID);
+
+                await set(ref(db, `staff/${newUID}`), {
+                  ...staffInfo,
+                  id: newUID
+                });
+
+                await set(ref(db, `users/${newUID}`), {
+                  ...userData,
+                  password: undefined,
+                  pending_activation: false,
+                  updated_at: new Date().toISOString()
+                });
+
+                await set(ref(db, `admins/${newUID}`), {
+                  email: staffInfo.email,
+                  role: staffInfo.role,
+                  silo: staffInfo.silo,
+                  silo_id: staffInfo.silo_id,
+                  is_active: true,
+                  pending_activation: false,
+                  activated_at: new Date().toISOString(),
+                  created_at: staffInfo.created_at,
+                  created_by: staffInfo.created_by
+                });
+
+                await remove(ref(db, `staff/${tempStaffId}`));
+                await remove(ref(db, `users/${tempStaffId}`));
+
+                console.log('[UNIFIED LOGIN] Account migration completed successfully');
+                accountCreated = true;
+                signInError = null;
+              } else {
+                console.log('[UNIFIED LOGIN] Password does not match pre-registered account');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[UNIFIED LOGIN] Error during account creation:', error);
+        }
+      }
+
+      if (signInError && !accountCreated) {
         console.log('[UNIFIED LOGIN] Sign in error:', signInError.message);
         setError('Email ou mot de passe incorrect');
         setLoading(false);

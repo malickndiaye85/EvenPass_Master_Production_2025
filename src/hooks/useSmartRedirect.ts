@@ -3,6 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { getDefaultRedirectForRole, UserRole, canAccessRoute } from '../lib/rolePermissions';
 
+const getAdminUID = () => {
+  if (typeof window !== 'undefined' && (window as any).ENV?.ADMIN_UID) {
+    return (window as any).ENV.ADMIN_UID;
+  }
+  return import.meta.env.VITE_ADMIN_UID || 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+};
+
 export function useSmartRedirect() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -26,7 +33,7 @@ export function useSmartRedirect() {
     const currentPath = location.pathname;
 
     if (currentPath === '/admin/login' || currentPath === '/admin/unified-login') {
-      const isSuperAdmin = user.uid === import.meta.env.VITE_ADMIN_UID;
+      const isSuperAdmin = user.uid === getAdminUID();
 
       if (isSuperAdmin) {
         console.log('[SmartRedirect] Super Admin on login page - allowing access for account activation');
