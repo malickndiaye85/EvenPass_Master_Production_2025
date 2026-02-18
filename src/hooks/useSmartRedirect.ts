@@ -26,7 +26,7 @@ export function useSmartRedirect() {
     const currentPath = location.pathname;
 
     if (currentPath === '/admin/login' || currentPath === '/admin/unified-login') {
-      const isSuperAdmin = user.uid === import.meta.env.VITE_SUPER_ADMIN_UID;
+      const isSuperAdmin = user.uid === import.meta.env.VITE_ADMIN_UID;
 
       if (isSuperAdmin) {
         console.log('[SmartRedirect] Super Admin on login page - allowing access for account activation');
