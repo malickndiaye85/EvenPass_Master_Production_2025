@@ -73,18 +73,69 @@ const UnifiedAdminLoginPage: React.FC = () => {
           if (staffSnapshot.exists()) {
             const staffData = staffSnapshot.val();
             const staffEntry = Object.entries(staffData).find(
-              ([_, data]: [string, any]) => data.email === email && data.pending_activation !== false
+              ([_, data]: [string, any]) => data.email === email
             );
 
             if (staffEntry) {
               const [tempStaffId, staffInfo] = staffEntry as [string, any];
-              console.log('[UNIFIED LOGIN] Found pre-registered staff, checking password match...');
+              console.log('[UNIFIED LOGIN] Found pre-registered staff account');
 
               const userRef = ref(db, `users/${tempStaffId}`);
               const userSnapshot = await get(userRef);
               const userData = userSnapshot.val();
 
-              if (userData && userData.password === password) {
+              if (!userData || !userData.password) {
+                console.log('[UNIFIED LOGIN] Staff account found but no password set - first login detected');
+
+                if (password.length < 6) {
+                  setError('Bienvenue dans l\'équipe DEM-DEM ! Votre mot de passe doit contenir au moins 6 caractères.');
+                  setLoading(false);
+                  return;
+                }
+
+                console.log('[UNIFIED LOGIN] Creating Firebase Auth account with provided password...');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUID = userCredential.user.uid;
+                console.log('[UNIFIED LOGIN] Firebase Auth account created with UID:', newUID);
+
+                await set(ref(db, `staff/${newUID}`), {
+                  ...staffInfo,
+                  id: newUID
+                });
+
+                await set(ref(db, `users/${newUID}`), {
+                  ...(userData || {}),
+                  email: staffInfo.email,
+                  role: staffInfo.role,
+                  silo: staffInfo.silo,
+                  silo_id: staffInfo.silo_id,
+                  password: undefined,
+                  pending_activation: false,
+                  first_login_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                });
+
+                await set(ref(db, `admins/${newUID}`), {
+                  email: staffInfo.email,
+                  role: staffInfo.role,
+                  silo: staffInfo.silo,
+                  silo_id: staffInfo.silo_id,
+                  is_active: true,
+                  pending_activation: false,
+                  activated_at: new Date().toISOString(),
+                  created_at: staffInfo.created_at,
+                  created_by: staffInfo.created_by
+                });
+
+                await remove(ref(db, `staff/${tempStaffId}`));
+                if (userData) {
+                  await remove(ref(db, `users/${tempStaffId}`));
+                }
+
+                console.log('[UNIFIED LOGIN] First login setup completed successfully');
+                accountCreated = true;
+                signInError = null;
+              } else if (userData.password === password) {
                 console.log('[UNIFIED LOGIN] Password matches! Creating Firebase Auth account...');
 
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -123,11 +174,17 @@ const UnifiedAdminLoginPage: React.FC = () => {
                 signInError = null;
               } else {
                 console.log('[UNIFIED LOGIN] Password does not match pre-registered account');
+                setError('Mot de passe incorrect pour ce compte staff');
+                setLoading(false);
+                return;
               }
             }
           }
         } catch (error) {
           console.error('[UNIFIED LOGIN] Error during account creation:', error);
+          if ((error as any).code === 'auth/email-already-in-use') {
+            setError('Un compte existe déjà avec cet email. Contactez l\'administrateur.');
+          }
         }
       }
 

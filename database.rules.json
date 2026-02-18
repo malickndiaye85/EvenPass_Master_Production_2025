@@ -86,7 +86,7 @@
     },
 
     "staff": {
-      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth != null",
       "$staffId": {
         ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'"
       }
@@ -94,7 +94,10 @@
 
     "admin_logs": {
       ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
-      ".write": "auth != null"
+      "$logId": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['timestamp', 'action', 'email']) && newData.child('timestamp').isNumber()"
+      }
     },
 
     "evenpass": {
