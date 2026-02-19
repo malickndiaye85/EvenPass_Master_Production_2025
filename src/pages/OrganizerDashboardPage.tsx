@@ -17,7 +17,8 @@ import {
   FileText,
   LayoutDashboard,
   Moon,
-  Sun
+  Sun,
+  Facebook
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/FirebaseAuthContext';
@@ -1148,16 +1149,18 @@ export default function OrganizerDashboardPage() {
       {/* Footer avec accès discret Finance */}
       <footer className="bg-[#0A0A0B]/95 border-t border-white/10 py-6 mt-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-start">
-            <button
-              onClick={() => navigate('/admin/finance/voyage')}
-              className="w-2 h-2 bg-red-600 rounded-full hover:bg-red-400 hover:w-3 hover:h-3 transition-all duration-200 mr-4 flex-shrink-0"
-              title="Admin Finance"
-              aria-label="Accès Finance"
-            />
+          <div className="flex items-center justify-between">
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
               © 2026 DemDem. Tous droits réservés.
             </p>
+            <button
+              onClick={() => navigate('/admin/finance/voyage')}
+              className="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+              title="Admin Finance"
+              aria-label="Accès Finance"
+            >
+              <Facebook size={20} />
+            </button>
           </div>
         </div>
       </footer>
