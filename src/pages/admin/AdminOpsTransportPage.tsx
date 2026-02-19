@@ -26,15 +26,17 @@ const AdminOpsTransportPage: React.FC = () => {
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
+  const [lineAnalytics, setLineAnalytics] = useState<LineAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     if (!db) return;
 
     const vehiclesRef = ref(db, 'fleet_vehicles');
     const subscribersRef = ref(db, 'pass_subscribers');
     const scansRef = ref(db, 'scan_events');
+    const linesRef = ref(db, 'transport_lines');
 
     const unsubVehicles = onValue(vehiclesRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -76,11 +78,36 @@ const AdminOpsTransportPage: React.FC = () => {
       }
     });
 
+    const unsubLines = onValue(linesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const linesArray = Object.keys(data).map(key => ({
+          route_id: key,
+          route_name: data[key].name || data[key].route_name,
+          trips_today: data[key].trips_today || 0,
+          average_occupancy_rate: data[key].average_occupancy_rate || 0,
+          total_revenue: data[key].total_revenue || 0,
+          peak_hours: data[key].peak_hours || [],
+          active_vehicles: data[key].active_vehicles || 0,
+          required_vehicles: data[key].required_vehicles || 0
+        }));
+        setLineAnalytics(linesArray);
+      } else {
+        setLineAnalytics([]);
+      }
+    });
+
     return () => {
       unsubVehicles();
       unsubSubscribers();
       unsubScans();
+      unsubLines();
     };
+  };
+
+  useEffect(() => {
+    const cleanup = loadData();
+    return cleanup;
   }, []);
 
   const activeSubscribers = subscribers.filter(s => s.subscription_status === 'active').length;
@@ -99,36 +126,10 @@ const AdminOpsTransportPage: React.FC = () => {
     ? vehicles.reduce((sum, v) => sum + (v.average_occupancy_rate || 0), 0) / vehicles.length
     : 0;
 
-  const lineAnalytics: LineAnalytics[] = [
-    {
-      route_id: 'ligne_a',
-      route_name: 'Ligne A - Dakar → Pikine',
-      trips_today: 45,
-      average_occupancy_rate: 78,
-      total_revenue: 337500,
-      peak_hours: [
-        { hour: 7, trips: 12, demand: 180 },
-        { hour: 8, trips: 15, demand: 225 },
-        { hour: 17, trips: 10, demand: 150 }
-      ],
-      active_vehicles: 8,
-      required_vehicles: 10
-    },
-    {
-      route_id: 'ligne_b',
-      route_name: 'Ligne B - Dakar → Guédiawaye',
-      trips_today: 38,
-      average_occupancy_rate: 65,
-      total_revenue: 285000,
-      peak_hours: [
-        { hour: 7, trips: 9, demand: 135 },
-        { hour: 12, trips: 8, demand: 120 },
-        { hour: 18, trips: 11, demand: 165 }
-      ],
-      active_vehicles: 6,
-      required_vehicles: 8
-    }
-  ];
+  const handleRefresh = () => {
+    setLoading(true);
+    loadData();
+  };
 
   const handleEnrollVehicle = async (vehicleData: Partial<FleetVehicle>) => {
     if (!db) return;
@@ -160,8 +161,11 @@ const AdminOpsTransportPage: React.FC = () => {
             <p className="text-gray-400 text-sm">DEM-DEM Express • Ops Transport • Temps Réel</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center space-x-2 transition-colors border border-gray-700">
-              <RefreshCw size={16} />
+            <button
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center space-x-2 transition-colors border border-gray-700"
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               <span className="text-sm font-medium">Actualiser</span>
             </button>
             <button
@@ -312,7 +316,14 @@ const AdminOpsTransportPage: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4 max-h-[500px] overflow-y-auto">
-              {lineAnalytics.map((line) => (
+              {lineAnalytics.length === 0 ? (
+                <div className="text-center py-12">
+                  <BarChart3 className="inline-block text-gray-600 mb-3" size={48} />
+                  <p className="text-gray-500 mb-2">Aucune ligne configurée</p>
+                  <p className="text-gray-600 text-sm">Les lignes apparaîtront ici une fois créées dans la configuration</p>
+                </div>
+              ) : (
+                lineAnalytics.map((line) => (
                 <div key={line.route_id} className="bg-[#2A2A2A] rounded-xl p-5 border border-gray-800">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -362,7 +373,8 @@ const AdminOpsTransportPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
 
