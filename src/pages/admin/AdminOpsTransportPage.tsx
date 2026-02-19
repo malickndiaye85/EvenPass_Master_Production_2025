@@ -509,8 +509,8 @@ const AdminOpsTransportPage: React.FC = () => {
                     </div>
 
                     <div className="bg-black/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs mb-1 uppercase">Revenus</div>
-                      <div className="text-2xl font-black text-[#10B981]">{(line.total_revenue / 1000).toFixed(0)}k</div>
+                      <div className="text-gray-400 text-xs mb-1 uppercase">Passagers/Heure</div>
+                      <div className="text-2xl font-black text-[#10B981]">{Math.round(line.trips_today * line.average_occupancy_rate / 10)}</div>
                     </div>
                   </div>
 
@@ -627,8 +627,8 @@ const AdminOpsTransportPage: React.FC = () => {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Capacité</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Trajets/Jour</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Occupation</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Revenus</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dernier Scan</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
@@ -696,7 +696,6 @@ const AdminOpsTransportPage: React.FC = () => {
                           <span className="text-white text-sm font-medium">{vehicle.average_occupancy_rate || 0}%</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-[#10B981] font-bold">{(vehicle.total_revenue_today || 0).toLocaleString()} F</td>
                       <td className="px-6 py-4">
                         {vehicle.last_scan_location ? (
                           <div>
@@ -708,6 +707,39 @@ const AdminOpsTransportPage: React.FC = () => {
                         ) : (
                           <span className="text-gray-600 text-sm">Aucun scan</span>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="relative group">
+                          <button className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700 flex items-center space-x-1">
+                            <Settings size={14} />
+                            <span>Actions</span>
+                          </button>
+                          <div className="absolute right-0 top-full mt-2 w-56 bg-[#2A2A2A] border border-gray-700 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                            <div className="py-2">
+                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
+                                <Settings size={14} className="text-red-400" />
+                                <span>Mettre en Maintenance</span>
+                              </button>
+                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
+                                <Bus size={14} className="text-blue-400" />
+                                <span>Affecter une Ligne</span>
+                              </button>
+                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
+                                <Users size={14} className="text-[#10B981]" />
+                                <span>Changer Chauffeur</span>
+                              </button>
+                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
+                                <MapPin size={14} className="text-yellow-400" />
+                                <span>Localiser</span>
+                              </button>
+                              <div className="border-t border-gray-700 my-1"></div>
+                              <button className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center space-x-2 text-sm">
+                                <XCircle size={14} />
+                                <span>Supprimer</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}

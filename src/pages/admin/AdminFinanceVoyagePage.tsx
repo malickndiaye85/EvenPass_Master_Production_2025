@@ -50,14 +50,31 @@ const AdminFinanceVoyagePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [verificationAttempts, setVerificationAttempts] = useState(0);
 
   useEffect(() => {
     const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
-    if (!user || user.uid !== SUPER_ADMIN_UID) {
+    if (!user) {
       navigate('/');
       return;
     }
+
+    if (user.uid !== SUPER_ADMIN_UID) {
+      if (verificationAttempts >= 3) {
+        navigate('/');
+        return;
+      }
+      const confirmed = window.confirm('Accès restreint au Super Admin uniquement. Confirmer votre identité ?');
+      setVerificationAttempts(prev => prev + 1);
+      if (!confirmed || user.uid !== SUPER_ADMIN_UID) {
+        navigate('/');
+        return;
+      }
+    }
+
+    setAccessGranted(true);
 
     if (!db) return;
 
@@ -157,6 +174,18 @@ const AdminFinanceVoyagePage: React.FC = () => {
       console.error('Erreur déconnexion:', error);
     }
   };
+
+  if (!accessGranted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center">
+        <div className="text-center">
+          <Lock className="inline-block text-red-500 mb-4" size={64} />
+          <h1 className="text-2xl font-bold text-white mb-2">Vérification en cours...</h1>
+          <p className="text-gray-400">Accès sécurisé Super Admin</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] p-4">
