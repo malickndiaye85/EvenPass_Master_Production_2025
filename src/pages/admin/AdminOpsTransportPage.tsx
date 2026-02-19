@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import {
   Bus, Calendar, Users, Shield, AlertTriangle, MapPin, Clock,
   TrendingUp, Activity, Radio, Plus, Settings, BarChart3,
-  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause
+  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause, LogOut, X
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
+import { useNavigate } from 'react-router-dom';
 import { ref, onValue, push, set } from 'firebase/database';
 import { db } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
+
+interface Toast {
+  id: number;
+  type: 'success' | 'error' | 'loading';
+  message: string;
+}
 
 interface Subscriber {
   id: string;
@@ -22,13 +29,16 @@ interface Subscriber {
 }
 
 const AdminOpsTransportPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
   const [lineAnalytics, setLineAnalytics] = useState<LineAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toastIdCounter, setToastIdCounter] = useState(0);
 
   const loadData = () => {
     if (!db) return;
@@ -126,27 +136,85 @@ const AdminOpsTransportPage: React.FC = () => {
     ? vehicles.reduce((sum, v) => sum + (v.average_occupancy_rate || 0), 0) / vehicles.length
     : 0;
 
+  const showToast = (type: 'success' | 'error' | 'loading', message: string, duration: number = 3000) => {
+    const id = toastIdCounter;
+    setToastIdCounter(prev => prev + 1);
+
+    const newToast: Toast = { id, type, message };
+    setToasts(prev => [...prev, newToast]);
+
+    if (type !== 'loading') {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, duration);
+    }
+
+    return id;
+  };
+
+  const hideToast = (id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
   const handleRefresh = () => {
     setLoading(true);
     loadData();
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/admin/ops/login');
+    } catch (error) {
+      console.error('Erreur déconnexion:', error);
+    }
+  };
+
   const handleEnrollVehicle = async (vehicleData: Partial<FleetVehicle>) => {
-    if (!db) return;
+    console.log('🚀 handleEnrollVehicle appelé avec:', vehicleData);
 
-    const vehiclesRef = ref(db, 'fleet_vehicles');
-    const newVehicleRef = push(vehiclesRef);
+    if (!db) {
+      console.error('❌ Firebase DB non initialisé');
+      showToast('error', '❌ Erreur: Base de données non disponible');
+      return;
+    }
 
-    await set(newVehicleRef, {
-      ...vehicleData,
-      status: 'en_pause',
-      current_trips_today: 0,
-      total_revenue_today: 0,
-      average_occupancy_rate: 0,
-      created_at: new Date().toISOString()
-    });
+    const loadingToastId = showToast('loading', '⏳ Enrôlement en cours...');
 
-    setShowEnrollModal(false);
+    try {
+      const vehiclesRef = ref(db, 'fleet_vehicles');
+      const newVehicleRef = push(vehiclesRef);
+
+      const vehiclePayload = {
+        vehicle_number: vehicleData.vehicle_number || 'N/A',
+        type: vehicleData.type || 'ndiaga_ndiaye',
+        capacity: vehicleData.capacity || 25,
+        route: vehicleData.route || 'N/A',
+        license_plate: vehicleData.license_plate || 'N/A',
+        driver_name: vehicleData.driver_name || 'N/A',
+        driver_phone: vehicleData.driver_phone || 'N/A',
+        insurance_expiry: vehicleData.insurance_expiry || 'N/A',
+        technical_control_expiry: vehicleData.technical_control_expiry || 'N/A',
+        status: 'en_pause',
+        current_trips_today: 0,
+        total_revenue_today: 0,
+        average_occupancy_rate: 0,
+        created_at: new Date().toISOString()
+      };
+
+      console.log('💾 Enregistrement du véhicule:', vehiclePayload);
+
+      await set(newVehicleRef, vehiclePayload);
+
+      console.log('✅ Véhicule enregistré avec succès!');
+      hideToast(loadingToastId);
+      showToast('success', '✅ Véhicule enrôlé avec succès!');
+      setShowEnrollModal(false);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'enrôlement:', error);
+      hideToast(loadingToastId);
+      showToast('error', `❌ Échec: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    }
   };
 
   return (
@@ -174,6 +242,14 @@ const AdminOpsTransportPage: React.FC = () => {
             >
               <Plus size={16} />
               <span className="text-sm font-medium">Enrôler Véhicule</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center space-x-2 transition-colors"
+              title="Déconnexion"
+            >
+              <LogOut size={16} />
+              <span className="text-sm font-medium">Logout</span>
             </button>
           </div>
         </div>
@@ -551,6 +627,34 @@ const AdminOpsTransportPage: React.FC = () => {
           onSubmit={handleEnrollVehicle}
         />
       )}
+
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl border backdrop-blur-sm animate-slide-in-right ${
+              toast.type === 'success'
+                ? 'bg-green-500/90 border-green-400 text-white'
+                : toast.type === 'error'
+                ? 'bg-red-500/90 border-red-400 text-white'
+                : 'bg-blue-500/90 border-blue-400 text-white'
+            }`}
+          >
+            {toast.type === 'loading' && (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            )}
+            <span className="font-medium">{toast.message}</span>
+            {toast.type !== 'loading' && (
+              <button
+                onClick={() => hideToast(toast.id)}
+                className="ml-2 hover:opacity-70 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -575,8 +679,34 @@ const EnrollVehicleModal: React.FC<EnrollVehicleModalProps> = ({ onClose, onSubm
 
   const [submitting, setSubmitting] = useState(false);
 
+  const isFormValid = () => {
+    return formData.vehicle_number.trim() !== '' &&
+           formData.license_plate.trim() !== '' &&
+           formData.route.trim() !== '';
+  };
+
+  const getValidationMessage = () => {
+    if (!formData.vehicle_number.trim()) {
+      return 'Veuillez remplir le numéro de véhicule';
+    }
+    if (!formData.license_plate.trim()) {
+      return 'Veuillez remplir l\'immatriculation';
+    }
+    if (!formData.route.trim()) {
+      return 'Veuillez renseigner la ligne affectée';
+    }
+    return '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isFormValid()) {
+      console.log('❌ Formulaire invalide:', getValidationMessage());
+      return;
+    }
+
+    console.log('✅ Formulaire valide, soumission...');
     setSubmitting(true);
 
     try {
@@ -719,13 +849,22 @@ const EnrollVehicleModal: React.FC<EnrollVehicleModalProps> = ({ onClose, onSubm
             >
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Enrôlement...' : 'Enrôler le Véhicule'}
-            </button>
+            <div className="flex-1 relative group">
+              <button
+                type="submit"
+                disabled={submitting || !isFormValid()}
+                className="w-full px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={!isFormValid() ? getValidationMessage() : ''}
+              >
+                {submitting ? 'Enrôlement...' : 'Enrôler le Véhicule'}
+              </button>
+              {!isFormValid() && (
+                <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap border border-gray-700 shadow-xl">
+                  {getValidationMessage()}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                </div>
+              )}
+            </div>
           </div>
         </form>
       </div>
