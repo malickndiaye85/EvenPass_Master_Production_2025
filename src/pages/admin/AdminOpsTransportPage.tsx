@@ -179,6 +179,30 @@ const AdminOpsTransportPage: React.FC = () => {
       return;
     }
 
+    // 🔍 DIAGNOSTIC : Vérifier l'authentification et le rôle
+    console.log('🔍 DIAGNOSTIC DE PERMISSION:');
+    console.log('  ✓ User Auth UID:', user?.uid);
+    console.log('  ✓ User Email:', user?.email);
+    console.log('  ✓ User Role:', user?.role);
+    console.log('  ✓ Chemin Firebase attendu:', `users/${user?.uid}/role`);
+    console.log('  ✓ Rôle dans Firebase doit être:', 'ops_transport ou super_admin');
+
+    if (!user) {
+      console.error('❌ Utilisateur non authentifié');
+      showToast('error', '❌ Vous devez être connecté');
+      return;
+    }
+
+    // Vérifier le rôle côté client (information, pas sécurité)
+    if (user.role !== 'ops_transport' && user.role !== 'super_admin' && user.uid !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
+      console.error('❌ Rôle insuffisant:', user.role);
+      console.error('⚠️ SOLUTION: Configurez le rôle dans Firebase Realtime Database');
+      console.error(`   Chemin: users/${user.uid}/role`);
+      console.error('   Valeur: "ops_transport" ou "super_admin"');
+      showToast('error', `❌ Accès refusé: Rôle "${user.role}" non autorisé. Contactez l'administrateur.`, 5000);
+      return;
+    }
+
     const loadingToastId = showToast('loading', '⏳ Enrôlement en cours...');
 
     try {
@@ -199,10 +223,12 @@ const AdminOpsTransportPage: React.FC = () => {
         current_trips_today: 0,
         total_revenue_today: 0,
         average_occupancy_rate: 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        created_by: user.uid
       };
 
       console.log('💾 Enregistrement du véhicule:', vehiclePayload);
+      console.log('📍 Chemin Firebase:', newVehicleRef.toString());
 
       await set(newVehicleRef, vehiclePayload);
 
@@ -210,10 +236,44 @@ const AdminOpsTransportPage: React.FC = () => {
       hideToast(loadingToastId);
       showToast('success', '✅ Véhicule enrôlé avec succès!');
       setShowEnrollModal(false);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'enrôlement:', error);
+    } catch (error: any) {
+      console.error('❌ ERREUR DÉTAILLÉE:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+
+      if (error.code === 'PERMISSION_DENIED') {
+        console.error('');
+        console.error('🔥 PERMISSION_DENIED - SOLUTIONS:');
+        console.error('');
+        console.error('1️⃣ Vérifier le rôle dans Firebase Realtime Database:');
+        console.error(`   - Allez sur: https://console.firebase.google.com`);
+        console.error('   - Realtime Database → Données');
+        console.error(`   - Créez/modifiez: users/${user?.uid}/role`);
+        console.error('   - Valeur: "ops_transport"');
+        console.error('');
+        console.error('2️⃣ Vérifier les règles Firebase:');
+        console.error('   - Realtime Database → Règles');
+        console.error('   - Vérifiez que "fleet_vehicles" autorise "ops_transport"');
+        console.error('');
+        console.error('3️⃣ Structure attendue dans la base:');
+        console.error('   {');
+        console.error('     "users": {');
+        console.error(`       "${user?.uid}": {`);
+        console.error('         "role": "ops_transport",');
+        console.error(`         "email": "${user?.email}"`);
+        console.error('       }');
+        console.error('     }');
+        console.error('   }');
+        console.error('');
+
+        showToast('error', `❌ Permission refusée: Votre rôle "${user?.role}" n'est pas configuré dans Firebase. Consultez la console.`, 8000);
+      } else {
+        showToast('error', `❌ Échec: ${error.message || 'Erreur inconnue'}`, 5000);
+      }
+
       hideToast(loadingToastId);
-      showToast('error', `❌ Échec: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
