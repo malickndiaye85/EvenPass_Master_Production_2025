@@ -180,3 +180,58 @@ export function isComfortAvailable(): boolean {
 
   return !(hour >= 10 && hour < 16);
 }
+
+export interface FleetVehicle {
+  id: string;
+  vehicle_number: string;
+  type: 'ndiaga_ndiaye' | 'bus' | 'minibus';
+  capacity: number;
+  route: string;
+  status: 'en_service' | 'en_pause' | 'en_maintenance' | 'inactif';
+  driver_name?: string;
+  driver_phone?: string;
+  license_plate: string;
+  insurance_expiry?: string;
+  technical_control_expiry?: string;
+  current_trips_today: number;
+  total_revenue_today: number;
+  average_occupancy_rate: number;
+  last_scan_location?: string;
+  last_scan_time?: string;
+  created_at: string;
+}
+
+export interface LineAnalytics {
+  route_id: string;
+  route_name: string;
+  trips_today: number;
+  average_occupancy_rate: number;
+  total_revenue: number;
+  peak_hours: Array<{
+    hour: number;
+    trips: number;
+    demand: number;
+  }>;
+  active_vehicles: number;
+  required_vehicles: number;
+}
+
+export interface ScanEvent {
+  id: string;
+  scan_time: string;
+  controller_name: string;
+  location: string;
+  route: string;
+  passenger_count: number;
+  vehicle_id: string;
+  subscription_type: string;
+}
+
+export interface AvailabilityMetrics {
+  active_subscribers: number;
+  estimated_passengers_today: number;
+  required_ndiaga_ndiaye: number;
+  required_buses: number;
+  current_fleet_capacity: number;
+  capacity_gap: number;
+}
