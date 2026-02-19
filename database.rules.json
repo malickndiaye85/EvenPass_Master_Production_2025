@@ -131,6 +131,35 @@
           ".write": "auth != null"
         }
       }
+    },
+
+    "fleet_vehicles": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+      "$vehicleId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+        ".validate": "newData.hasChildren(['vehicle_number', 'type', 'capacity', 'status'])"
+      }
+    },
+
+    "transport_lines": {
+      ".read": "auth != null",
+      "$lineId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+      }
+    },
+
+    "scan_events": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+      "$scanId": {
+        ".write": "auth != null"
+      }
+    },
+
+    "pass_subscribers": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+      "$subscriberId": {
+        ".write": "auth != null"
+      }
     }
   }
 }
