@@ -39,6 +39,7 @@ const AdminOpsTransportPage: React.FC = () => {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
+  const [newVehicleIds, setNewVehicleIds] = useState<Set<string>>(new Set());
 
   const loadData = () => {
     if (!db) return;
@@ -55,7 +56,26 @@ const AdminOpsTransportPage: React.FC = () => {
           id: key,
           ...data[key]
         }));
-        setVehicles(vehiclesArray);
+
+        setVehicles(prevVehicles => {
+          const prevIds = new Set(prevVehicles.map(v => v.id));
+          const newIds = vehiclesArray
+            .filter(v => !prevIds.has(v.id))
+            .map(v => v.id);
+
+          if (newIds.length > 0) {
+            setNewVehicleIds(prev => new Set([...prev, ...newIds]));
+            setTimeout(() => {
+              setNewVehicleIds(prev => {
+                const updated = new Set(prev);
+                newIds.forEach(id => updated.delete(id));
+                return updated;
+              });
+            }, 3000);
+          }
+
+          return vehiclesArray;
+        });
       } else {
         setVehicles([]);
       }
@@ -403,11 +423,11 @@ const AdminOpsTransportPage: React.FC = () => {
 
               <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-800">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-xs uppercase">Revenus Aujourd'hui</span>
-                  <TrendingUp className="text-[#10B981]" size={16} />
+                  <span className="text-gray-400 text-xs uppercase">Rotations Aujourd'hui</span>
+                  <RefreshCw className="text-[#10B981]" size={16} />
                 </div>
-                <div className="text-3xl font-black text-white">{(totalRevenueToday / 1000).toFixed(0)}k</div>
-                <div className="text-gray-500 text-xs mt-1">FCFA</div>
+                <div className="text-3xl font-black text-white">{vehicles.reduce((sum, v) => sum + (v.current_trips_today || 0), 0)}</div>
+                <div className="text-gray-500 text-xs mt-1">Total des trajets complétés</div>
               </div>
 
               <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-800">
@@ -587,7 +607,8 @@ const AdminOpsTransportPage: React.FC = () => {
             ) : vehicles.length === 0 ? (
               <div className="p-12 text-center">
                 <Bus className="inline-block text-gray-600 mb-3" size={48} />
-                <p className="text-gray-500 mb-4">Aucun véhicule enrôlé</p>
+                <p className="text-gray-500 mb-2 font-medium">Aucun véhicule détecté dans fleet_vehicles</p>
+                <p className="text-gray-600 text-sm mb-4">La flotte est vide pour le moment</p>
                 <button
                   onClick={() => setShowEnrollModal(true)}
                   className="px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium transition-colors"
@@ -612,10 +633,26 @@ const AdminOpsTransportPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {vehicles.map((vehicle) => (
-                    <tr key={vehicle.id} className="hover:bg-[#2A2A2A] transition-colors">
+                    <tr
+                      key={vehicle.id}
+                      className={`hover:bg-[#2A2A2A] transition-all duration-500 ${
+                        newVehicleIds.has(vehicle.id)
+                          ? 'bg-[#10B981]/20 animate-pulse border-l-4 border-[#10B981]'
+                          : ''
+                      }`}
+                    >
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white">{vehicle.vehicle_number}</div>
-                        <div className="text-gray-500 text-xs">{vehicle.license_plate}</div>
+                        <div className="flex items-center space-x-2">
+                          <div>
+                            <div className="font-bold text-white">{vehicle.vehicle_number}</div>
+                            <div className="text-gray-500 text-xs">{vehicle.license_plate}</div>
+                          </div>
+                          {newVehicleIds.has(vehicle.id) && (
+                            <span className="px-2 py-1 bg-[#10B981] text-white text-xs font-bold rounded-full animate-bounce">
+                              NOUVEAU
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-gray-300 text-sm capitalize">

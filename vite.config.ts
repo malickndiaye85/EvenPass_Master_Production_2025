@@ -74,7 +74,7 @@ const swVersionPlugin = (): Plugin => {
         writeFileSync(swPath, content, 'utf-8');
         console.log(`✓ Service Worker versioned with timestamp: ${buildTimestamp}`);
       } catch (error) {
-        console.error('Failed to version Service Worker:', error);
+        console.warn('⚠️ Service Worker not found, skipping versioning');
       }
     }
   };

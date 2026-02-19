@@ -1,53 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Wallet, CheckCircle, XCircle, Clock, Users } from 'lucide-react';
+import {
+  DollarSign, TrendingUp, Lock, CheckCircle, Clock, AlertTriangle,
+  RefreshCw, LogOut, X, CreditCard, Bus, Calendar
+} from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
+import { useNavigate } from 'react-router-dom';
 import { ref, onValue, update } from 'firebase/database';
 import { db } from '../../firebase';
-import { securityLogger } from '../../lib/securityLogger';
 
 interface Trip {
   id: string;
+  vehicle_number: string;
   driver_name: string;
-  driver_email: string;
-  departure: string;
-  destination: string;
+  driver_phone: string;
+  route: string;
+  departure_date: string;
+  arrival_date?: string;
+  status: 'EN_ROUTE' | 'ARRIVÉE_CONFIRMÉE' | 'VERSÉ';
   total_revenue: number;
-  commission_demdem: number;
-  driver_share: number;
-  status: string;
-  created_at: string;
+  driver_amount: number;
+  commission_amount: number;
+  paid_at?: string;
+  license_plate: string;
 }
 
-interface WithdrawalRequest {
+interface SubscriptionTransaction {
   id: string;
-  driver_name: string;
-  driver_email: string;
-  driver_phone: string;
+  user_name: string;
+  phone: string;
+  subscription_type: string;
   amount: number;
-  payment_method: 'wave' | 'orange_money';
-  status: 'pending' | 'approved' | 'rejected';
-  requested_at: string;
+  payment_reference: string;
+  payment_method: string;
+  created_at: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
+interface Toast {
+  id: number;
+  type: 'success' | 'error' | 'loading';
+  message: string;
 }
 
 const AdminFinanceVoyagePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
+  const [subscriptionTransactions, setSubscriptionTransactions] = useState<SubscriptionTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toastIdCounter, setToastIdCounter] = useState(0);
 
   useEffect(() => {
+    const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+
+    if (!user || user.uid !== SUPER_ADMIN_UID) {
+      navigate('/');
+      return;
+    }
+
     if (!db) return;
 
-    const tripsRef = ref(db, 'trips');
-    const withdrawalsRef = ref(db, 'withdrawal_requests');
+    const tripsRef = ref(db, 'transport_trips');
+    const subscriptionsRef = ref(db, 'subscription_payments');
 
     const unsubTrips = onValue(tripsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const tripsArray = Object.keys(data).map(key => ({
           id: key,
-          ...data[key]
+          ...data[key],
+          driver_amount: data[key].total_revenue * 0.95,
+          commission_amount: data[key].total_revenue * 0.05
         }));
         setTrips(tripsArray);
       } else {
@@ -56,271 +80,366 @@ const AdminFinanceVoyagePage: React.FC = () => {
       setLoading(false);
     });
 
-    const unsubWithdrawals = onValue(withdrawalsRef, (snapshot) => {
+    const unsubSubscriptions = onValue(subscriptionsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        const withdrawalsArray = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        setWithdrawalRequests(withdrawalsArray);
+        const subscriptionsArray = Object.keys(data)
+          .map(key => ({ id: key, ...data[key] }))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 20);
+        setSubscriptionTransactions(subscriptionsArray);
       } else {
-        setWithdrawalRequests([]);
+        setSubscriptionTransactions([]);
       }
     });
 
     return () => {
       unsubTrips();
-      unsubWithdrawals();
+      unsubSubscriptions();
     };
-  }, []);
+  }, [user, navigate]);
 
-  const handleApproveWithdrawal = async (requestId: string, driverEmail: string, amount: number) => {
-    if (!db || !user) return;
+  const totalRevenue = trips.reduce((sum, trip) => sum + (trip.total_revenue || 0), 0);
+  const totalCommission = totalRevenue * 0.05;
+  const encoursSéquestre = trips
+    .filter(trip => trip.status !== 'VERSÉ')
+    .reduce((sum, trip) => sum + (trip.driver_amount || 0), 0);
+
+  const showToast = (type: 'success' | 'error' | 'loading', message: string, duration: number = 3000) => {
+    const id = toastIdCounter;
+    setToastIdCounter(prev => prev + 1);
+
+    const newToast: Toast = { id, type, message };
+    setToasts(prev => [...prev, newToast]);
+
+    if (type !== 'loading') {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, duration);
+    }
+
+    return id;
+  };
+
+  const hideToast = (id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleAuthorizePayout = async (tripId: string, trip: Trip) => {
+    if (trip.status !== 'ARRIVÉE_CONFIRMÉE') {
+      showToast('error', '❌ Le trajet doit avoir le statut "ARRIVÉE CONFIRMÉE"');
+      return;
+    }
+
+    const loadingToastId = showToast('loading', '⏳ Autorisation du versement en cours...');
 
     try {
-      await update(ref(db, `withdrawal_requests/${requestId}`), {
-        status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: user.email
+      const tripRef = ref(db, `transport_trips/${tripId}`);
+      await update(tripRef, {
+        status: 'VERSÉ',
+        paid_at: new Date().toISOString()
       });
 
-      if (user.email && user.id && user.role) {
-        await securityLogger.log({
-          event_type: 'finance_access',
-          user_email: user.email,
-          user_id: user.id,
-          user_role: user.role,
-          action: `Withdrawal approved for ${driverEmail}: ${amount} F`,
-          success: true,
-          metadata: { request_id: requestId, driver_email: driverEmail, amount }
-        });
-      }
-
-      alert('Retrait approuvé avec succès');
-    } catch (error) {
-      console.error('Error approving withdrawal:', error);
-      alert('Erreur lors de l\'approbation');
+      hideToast(loadingToastId);
+      showToast('success', `✅ Versement autorisé pour ${trip.driver_name}`);
+    } catch (error: any) {
+      hideToast(loadingToastId);
+      showToast('error', `❌ Erreur: ${error.message}`);
+      console.error('Erreur autorisation payout:', error);
     }
   };
 
-  const handleRejectWithdrawal = async (requestId: string, driverEmail: string) => {
-    const reason = prompt('Raison du rejet:');
-    if (!reason || !db || !user) return;
-
+  const handleLogout = async () => {
     try {
-      await update(ref(db, `withdrawal_requests/${requestId}`), {
-        status: 'rejected',
-        rejected_at: new Date().toISOString(),
-        rejected_by: user.email,
-        rejection_reason: reason
-      });
-
-      if (user.email && user.id && user.role) {
-        await securityLogger.log({
-          event_type: 'finance_access',
-          user_email: user.email,
-          user_id: user.id,
-          user_role: user.role,
-          action: `Withdrawal rejected for ${driverEmail}`,
-          success: true,
-          metadata: { request_id: requestId, driver_email: driverEmail, reason }
-        });
-      }
-
-      alert('Retrait rejeté');
+      await signOut();
+      navigate('/admin/ops/login');
     } catch (error) {
-      console.error('Error rejecting withdrawal:', error);
-      alert('Erreur lors du rejet');
+      console.error('Erreur déconnexion:', error);
     }
   };
-
-  const totalRevenue = trips.reduce((sum, t) => sum + (t.total_revenue || 0), 0);
-  const totalCommission = trips.reduce((sum, t) => sum + (t.commission_demdem || 0), 0);
-  const escrowAmount = trips.reduce((sum, t) => sum + (t.driver_share || 0), 0);
-  const pendingWithdrawals = withdrawalRequests.filter(r => r.status === 'pending').length;
-
-  const filteredWithdrawals = withdrawalRequests.filter(r => r.status === filter);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#3B82F6] to-[#FBBF24] p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Finance Voyage</h1>
-          <p className="text-blue-100">Flux financiers et validation des retraits</p>
-          <div className="mt-2 inline-block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
-            <span className="text-blue-100 text-sm">Silo: <span className="font-bold text-white">VOYAGE</span></span>
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] p-4">
+      <div className="max-w-[1800px] mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <div className="flex items-center space-x-3 mb-2">
+              <Lock className="text-red-500" size={32} />
+              <h1 className="text-3xl font-black text-white uppercase tracking-tight">Finance Voyage</h1>
+              <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full border border-red-500/30">
+                SUPER ADMIN ONLY
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm">DEM-DEM Express • Module Financier Sécurisé</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center space-x-2 transition-colors border border-gray-700"
+            >
+              <RefreshCw size={16} />
+              <span className="text-sm font-medium">Actualiser</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center space-x-2 transition-colors"
+            >
+              <LogOut size={16} />
+              <span className="text-sm font-medium">Logout</span>
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="text-green-300" size={24} />
-              <span className="text-2xl font-bold text-white">{totalRevenue.toLocaleString()} F</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-2xl p-6 border border-[#10B981]/30 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="text-white" size={24} />
+                <span className="text-white/80 text-sm font-medium uppercase">CA Total Brut</span>
+              </div>
             </div>
-            <p className="text-blue-100 text-sm">CA Total Trajets</p>
+            <div className="text-4xl font-black text-white mb-2">
+              {(totalRevenue / 1000).toFixed(1)}k FCFA
+            </div>
+            <div className="text-green-100 text-sm">Chiffre d'affaires global</div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="text-yellow-300" size={24} />
-              <span className="text-2xl font-bold text-white">{totalCommission.toLocaleString()} F</span>
+          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 border border-blue-500/30 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="text-white" size={24} />
+                <span className="text-white/80 text-sm font-medium uppercase">Commission DEM-DEM</span>
+              </div>
             </div>
-            <p className="text-blue-100 text-sm">Commission (5%)</p>
+            <div className="text-4xl font-black text-white mb-2">
+              {(totalCommission / 1000).toFixed(1)}k FCFA
+            </div>
+            <div className="text-blue-100 text-sm">5% du chiffre d'affaires</div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-2">
-              <Wallet className="text-blue-300" size={24} />
-              <span className="text-2xl font-bold text-white">{escrowAmount.toLocaleString()} F</span>
+          <div className="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-2xl p-6 border border-yellow-500/30 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="text-white" size={24} />
+                <span className="text-white/80 text-sm font-medium uppercase">Encours Séquestre</span>
+              </div>
             </div>
-            <p className="text-blue-100 text-sm">Montant en séquestre</p>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="text-orange-300" size={24} />
-              <span className="text-2xl font-bold text-white">{pendingWithdrawals}</span>
+            <div className="text-4xl font-black text-white mb-2">
+              {(encoursSéquestre / 1000).toFixed(1)}k FCFA
             </div>
-            <p className="text-blue-100 text-sm">Retraits en attente</p>
+            <div className="text-yellow-100 text-sm">95% en attente de versement</div>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
-          <div className="p-6 border-b border-white/20">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white flex items-center">
-                <Wallet className="mr-3" size={28} />
-                Retraits Wave
-              </h2>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setFilter('pending')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    filter === 'pending'
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  En attente
-                </button>
-                <button
-                  onClick={() => setFilter('approved')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    filter === 'approved'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  Approuvés
-                </button>
-                <button
-                  onClick={() => setFilter('rejected')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    filter === 'rejected'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  Rejetés
-                </button>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="bg-[#1E1E1E] rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="text-[#10B981]" size={24} />
+                <h2 className="text-xl font-black text-white uppercase">Versements Chauffeurs</h2>
               </div>
+              <p className="text-gray-400 text-sm mt-1">Gestion des payouts (95% du CA)</p>
             </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="p-12 text-center">
-                <div className="inline-block w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-              </div>
-            ) : filteredWithdrawals.length === 0 ? (
-              <div className="p-12 text-center text-blue-200">
-                Aucune demande de retrait à afficher
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Chauffeur</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Téléphone</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Montant</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Méthode</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Date demande</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Statut</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-blue-100">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {filteredWithdrawals.map((request) => (
-                    <tr key={request.id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="text-white font-medium">{request.driver_name}</div>
-                        <div className="text-blue-200 text-sm">{request.driver_email}</div>
-                      </td>
-                      <td className="px-6 py-4 text-white">{request.driver_phone}</td>
-                      <td className="px-6 py-4 text-yellow-300 font-bold text-lg">{request.amount.toLocaleString()} F</td>
-                      <td className="px-6 py-4">
-                        {request.payment_method === 'wave' ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                            Wave
+            <div className="p-6 space-y-3 max-h-[600px] overflow-y-auto">
+              {loading ? (
+                <div className="p-12 text-center">
+                  <div className="inline-block w-12 h-12 border-4 border-gray-700 border-t-[#10B981] rounded-full animate-spin"></div>
+                </div>
+              ) : trips.length === 0 ? (
+                <div className="text-center py-12">
+                  <DollarSign className="inline-block text-gray-600 mb-3" size={48} />
+                  <p className="text-gray-500">Aucun trajet enregistré</p>
+                </div>
+              ) : (
+                trips.map((trip) => (
+                  <div key={trip.id} className="bg-[#2A2A2A] rounded-xl p-5 border border-gray-800">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="text-white font-bold text-lg">{trip.vehicle_number}</div>
+                        <div className="text-gray-400 text-sm">{trip.license_plate}</div>
+                        <div className="text-gray-500 text-sm mt-1">{trip.driver_name} • {trip.driver_phone}</div>
+                      </div>
+                      <div className="text-right">
+                        {trip.status === 'VERSÉ' ? (
+                          <span className="px-3 py-1 bg-[#10B981]/20 text-[#10B981] rounded-full text-xs font-bold border border-[#10B981]/30 flex items-center space-x-1">
+                            <CheckCircle size={12} />
+                            <span>VERSÉ</span>
+                          </span>
+                        ) : trip.status === 'ARRIVÉE_CONFIRMÉE' ? (
+                          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold border border-blue-500/30">
+                            ARRIVÉE CONFIRMÉE
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-500/20 text-orange-300 border border-orange-500/30">
-                            Orange Money
+                          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold border border-yellow-500/30 flex items-center space-x-1">
+                            <Clock size={12} />
+                            <span>EN ROUTE</span>
                           </span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-blue-200 text-sm">
-                        {new Date(request.requested_at).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="px-6 py-4">
-                        {request.status === 'pending' && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                            <Clock size={14} className="mr-1" />
-                            En attente
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-400 text-sm">Trajet:</span>
+                        <span className="text-white font-medium">{trip.route}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Date départ:</span>
+                        <span className="text-white font-medium">
+                          {new Date(trip.departure_date).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-black/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1 uppercase">Montant Chauffeur (95%)</div>
+                        <div className="text-2xl font-black text-[#10B981]">
+                          {trip.driver_amount.toLocaleString()} F
+                        </div>
+                      </div>
+
+                      <div className="bg-black/30 rounded-lg p-3">
+                        <div className="text-gray-400 text-xs mb-1 uppercase">Commission (5%)</div>
+                        <div className="text-2xl font-black text-blue-400">
+                          {trip.commission_amount.toLocaleString()} F
+                        </div>
+                      </div>
+                    </div>
+
+                    {trip.status === 'VERSÉ' && trip.paid_at && (
+                      <div className="bg-[#10B981]/10 rounded-lg p-3 mb-4 border border-[#10B981]/20">
+                        <div className="flex items-center space-x-2 text-[#10B981] text-sm">
+                          <CheckCircle size={14} />
+                          <span>Versé le {new Date(trip.paid_at).toLocaleDateString('fr-FR')} à {new Date(trip.paid_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => handleAuthorizePayout(trip.id, trip)}
+                      disabled={trip.status !== 'ARRIVÉE_CONFIRMÉE'}
+                      className={`w-full py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center space-x-2 ${
+                        trip.status === 'ARRIVÉE_CONFIRMÉE'
+                          ? 'bg-[#10B981] hover:bg-[#059669] text-white cursor-pointer'
+                          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      }`}
+                      title={trip.status !== 'ARRIVÉE_CONFIRMÉE' ? 'Le trajet doit avoir le statut "ARRIVÉE CONFIRMÉE"' : 'Autoriser le versement'}
+                    >
+                      {trip.status === 'VERSÉ' ? (
+                        <>
+                          <CheckCircle size={16} />
+                          <span>Paiement Effectué</span>
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign size={16} />
+                          <span>Autoriser le Paiement</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-[#1E1E1E] rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="text-[#10B981]" size={24} />
+                <h2 className="text-xl font-black text-white uppercase">Flux Abonnements Express</h2>
+              </div>
+              <p className="text-gray-400 text-sm mt-1">Transactions récentes</p>
+            </div>
+
+            <div className="p-6 space-y-3 max-h-[600px] overflow-y-auto">
+              {subscriptionTransactions.length === 0 ? (
+                <div className="text-center py-12">
+                  <CreditCard className="inline-block text-gray-600 mb-3" size={48} />
+                  <p className="text-gray-500">Aucune transaction</p>
+                </div>
+              ) : (
+                subscriptionTransactions.map((transaction) => (
+                  <div key={transaction.id} className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-800">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="text-white font-bold">{transaction.user_name}</div>
+                        <div className="text-gray-400 text-sm">{transaction.phone}</div>
+                      </div>
+                      <div className="text-right">
+                        {transaction.status === 'completed' ? (
+                          <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded text-xs font-bold border border-[#10B981]/30">
+                            ✓ PAYÉ
+                          </span>
+                        ) : transaction.status === 'pending' ? (
+                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs font-bold border border-yellow-500/30">
+                            EN COURS
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-bold border border-red-500/30">
+                            ÉCHEC
                           </span>
                         )}
-                        {request.status === 'approved' && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-300 border border-green-500/30">
-                            <CheckCircle size={14} className="mr-1" />
-                            Approuvé
-                          </span>
-                        )}
-                        {request.status === 'rejected' && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                            <XCircle size={14} className="mr-1" />
-                            Rejeté
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {request.status === 'pending' && (
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleApproveWithdrawal(request.id, request.driver_email, request.amount)}
-                              className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                              title="Approuver"
-                            >
-                              <CheckCircle size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleRejectWithdrawal(request.id, request.driver_email)}
-                              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                              title="Rejeter"
-                            >
-                              <XCircle size={18} />
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 rounded-lg p-3 mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-400 text-xs">Type:</span>
+                        <span className="text-white text-sm font-medium">{transaction.subscription_type}</span>
+                      </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-400 text-xs">Montant:</span>
+                        <span className="text-[#10B981] text-sm font-bold">{transaction.amount.toLocaleString()} F</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-xs">Paiement:</span>
+                        <span className="text-white text-sm">{transaction.payment_method}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-800">
+                      <span className="text-gray-500 text-xs">Réf: {transaction.payment_reference}</span>
+                      <span className="text-gray-500 text-xs">
+                        {new Date(transaction.created_at).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl border backdrop-blur-sm animate-slide-in-right ${
+              toast.type === 'success'
+                ? 'bg-green-500/90 border-green-400 text-white'
+                : toast.type === 'error'
+                ? 'bg-red-500/90 border-red-400 text-white'
+                : 'bg-blue-500/90 border-blue-400 text-white'
+            }`}
+          >
+            {toast.type === 'loading' && (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            )}
+            <span className="font-medium">{toast.message}</span>
+            {toast.type !== 'loading' && (
+              <button
+                onClick={() => hideToast(toast.id)}
+                className="ml-2 hover:opacity-70 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
