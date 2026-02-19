@@ -1146,19 +1146,18 @@ export default function OrganizerDashboardPage() {
       )}
 
       {/* Footer avec accès discret Finance */}
-      <footer className="bg-[#0A0A0B]/95 border-t border-white/10 py-4 mt-8">
+      <footer className="bg-[#0A0A0B]/95 border-t border-white/10 py-6 mt-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/admin/finance/voyage')}
-                className="w-3 h-3 bg-red-600 rounded-full hover:bg-red-500 transition-colors"
-                title="Admin Finance"
-              />
-              <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                © 2026 DemDem. Tous droits réservés.
-              </p>
-            </div>
+          <div className="flex items-center justify-start">
+            <button
+              onClick={() => navigate('/admin/finance/voyage')}
+              className="w-2 h-2 bg-red-600 rounded-full hover:bg-red-400 hover:w-3 hover:h-3 transition-all duration-200 mr-4 flex-shrink-0"
+              title="Admin Finance"
+              aria-label="Accès Finance"
+            />
+            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+              © 2026 DemDem. Tous droits réservés.
+            </p>
           </div>
         </div>
       </footer>
