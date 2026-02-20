@@ -8,7 +8,7 @@ const Footer: React.FC = () => {
 
   const handleTwitterClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/admin/finance/voyage');
+    navigate('/admin/login?redirectTo=/admin/finance/voyage');
   };
 
   return (

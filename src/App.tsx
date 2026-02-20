@@ -476,19 +476,8 @@ function AppRoutes() {
       />
 
       <Route
-
         path="/admin/finance/voyage"
-
-        element={
-
-          <RoleBasedRoute allowedRoles={['super_admin', 'admin_finance_voyage']}>
-
-            <AdminFinanceVoyagePage />
-
-          </RoleBasedRoute>
-
-        }
-
+        element={<AdminFinanceVoyagePage />}
       />
 
 
