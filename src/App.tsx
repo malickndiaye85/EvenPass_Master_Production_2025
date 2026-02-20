@@ -119,6 +119,12 @@ import AdminOpsEventPage from './pages/admin/AdminOpsEventPage';
 
 import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
 
+import EPscanVPage from './pages/transport/EPscanVPage';
+
+import ControllerLoginPage from './pages/transport/ControllerLoginPage';
+
+import PassQRGenerator from './pages/transport/PassQRGenerator';
+
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -388,6 +394,46 @@ function AppRoutes() {
             <DriverActiveTripPage />
 
           </ProtectedRoute>
+
+        </ThemeWrapper>
+
+      } />
+
+
+
+      <Route path="/controller/login" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ControllerLoginPage />
+
+        </ThemeWrapper>
+
+      } />
+
+
+
+      <Route path="/controller-epscanv" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ProtectedRoute>
+
+            <EPscanVPage />
+
+          </ProtectedRoute>
+
+        </ThemeWrapper>
+
+      } />
+
+
+
+      <Route path="/test/qr-generator" element={
+
+        <ThemeWrapper mode="transport">
+
+          <PassQRGenerator />
 
         </ThemeWrapper>
 
