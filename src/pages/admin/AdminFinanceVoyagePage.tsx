@@ -48,6 +48,7 @@ const AdminFinanceVoyagePage: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [subscriptionTransactions, setSubscriptionTransactions] = useState<SubscriptionTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
   const [accessGranted, setAccessGranted] = useState(false);
@@ -56,17 +57,36 @@ const AdminFinanceVoyagePage: React.FC = () => {
   useEffect(() => {
     const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
+    const timer = setTimeout(() => {
+      setAuthLoading(false);
+    }, 1500);
+
+    if (user === undefined) {
+      return;
+    }
+
+    console.log("Current UID:", user?.uid);
+    console.log("Expected UID:", SUPER_ADMIN_UID);
+    console.log("Match:", user?.uid === SUPER_ADMIN_UID);
+
     if (!user) {
-      navigate('/admin/login');
+      if (!authLoading) {
+        navigate('/admin/login');
+      }
       return;
     }
 
     if (user.uid !== SUPER_ADMIN_UID) {
-      navigate('/');
+      if (!authLoading) {
+        console.log("Access denied - redirecting to home");
+        navigate('/');
+      }
       return;
     }
 
+    console.log("Access granted to Super Admin");
     setAccessGranted(true);
+    setAuthLoading(false);
 
     if (!db) return;
 
@@ -167,13 +187,19 @@ const AdminFinanceVoyagePage: React.FC = () => {
     }
   };
 
-  if (!accessGranted) {
+  if (authLoading || !accessGranted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center">
         <div className="text-center">
-          <Lock className="inline-block text-red-500 mb-4" size={64} />
+          <div className="relative mb-6">
+            <Lock className="inline-block text-red-500 animate-pulse" size={64} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-20 h-20 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+            </div>
+          </div>
           <h1 className="text-2xl font-bold text-white mb-2">Vérification en cours...</h1>
           <p className="text-gray-400">Accès sécurisé Super Admin</p>
+          <p className="text-gray-600 text-xs mt-2">Authentification Firebase</p>
         </div>
       </div>
     );
