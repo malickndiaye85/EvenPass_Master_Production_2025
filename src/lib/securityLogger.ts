@@ -50,12 +50,26 @@ class SecurityLogger {
         return;
       }
 
-      const logEntry: SecurityLogEntry = {
+      const sanitizedEntry = {
         ...entry,
+        user_id: entry.user_id || 'unknown',
+        user_email: entry.user_email || 'unknown',
+        user_role: entry.user_role || 'unknown'
+      };
+
+      const logEntry: SecurityLogEntry = {
+        ...sanitizedEntry,
         timestamp: new Date().toISOString(),
         ip_address: await this.getClientIP(),
         user_agent: navigator.userAgent
       };
+
+      console.log('[SecurityLogger] 📝 Creating log entry:', {
+        event_type: logEntry.event_type,
+        user_id: logEntry.user_id,
+        user_email: logEntry.user_email,
+        action: logEntry.action
+      });
 
       const logsRef = ref(db, 'admin_logs');
       const newLogRef = push(logsRef);
@@ -74,11 +88,18 @@ class SecurityLogger {
     success: boolean,
     errorMessage?: string
   ): Promise<void> {
+    console.log('[SecurityLogger] 🔐 logLogin called with:', { userEmail, userId, userRole, success });
+
+    if (!userId) {
+      console.warn('[SecurityLogger] ⚠️ logLogin called with undefined userId, skipping log');
+      return;
+    }
+
     await this.log({
       event_type: success ? 'login_success' : 'login_failed',
-      user_email: userEmail,
+      user_email: userEmail || 'unknown',
       user_id: userId,
-      user_role: userRole,
+      user_role: userRole || 'unknown',
       action: `User login ${success ? 'successful' : 'failed'}`,
       success,
       error_message: errorMessage

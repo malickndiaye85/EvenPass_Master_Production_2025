@@ -48,6 +48,7 @@ export interface CheckoutForm {
 export type UserRole = 'customer' | 'organizer' | 'admin' | 'super_admin' | 'staff';
 
 export interface AuthUser extends User {
+  uid?: string;
   role: UserRole;
   organizer?: Organizer;
   admin?: AdminUser;

@@ -312,29 +312,39 @@ const AdminOpsTransportPage: React.FC = () => {
   };
 
   const handleEnrollVehicle = async (vehicleData: Partial<FleetVehicle>) => {
-    console.log('🚀 handleEnrollVehicle appelé avec:', vehicleData);
+    console.log('🚀 [ENROLL] handleEnrollVehicle appelé avec:', vehicleData);
 
     if (!db) {
-      console.error('❌ Firebase DB non initialisé');
+      console.error('❌ [ENROLL] Firebase DB non initialisé');
       showToast('error', '❌ Erreur: Base de données non disponible');
       return;
     }
 
-    console.log('🔍 DIAGNOSTIC DE PERMISSION:');
-    console.log('  ✓ User Auth UID:', user?.uid);
-    console.log('  ✓ User Email:', user?.email);
-    console.log('  ✓ User Role:', user?.role);
-    console.log('  ✓ Chemin Firebase attendu:', `users/${user?.uid}/role`);
-    console.log('  ✓ Rôle dans Firebase doit être:', 'ops_transport ou super_admin');
+    console.log('🔍 [ENROLL] DIAGNOSTIC AUTHENTIFICATION:');
+    console.log('  📋 User object complet:', user);
+    console.log('  🆔 User Auth UID:', user?.uid || '⚠️ UNDEFINED');
+    console.log('  📧 User Email:', user?.email || '⚠️ UNDEFINED');
+    console.log('  👤 User Role:', user?.role || '⚠️ UNDEFINED');
+    console.log('  🔑 UID Type:', typeof user?.uid);
+    console.log('  📍 Chemin Firebase attendu:', user?.uid ? `users/${user.uid}/role` : '⚠️ IMPOSSIBLE - UID MANQUANT');
 
     if (!user) {
-      console.error('❌ Utilisateur non authentifié');
-      showToast('error', '❌ Vous devez être connecté');
+      console.error('❌ [ENROLL] ERREUR CRITIQUE: Utilisateur non authentifié (user = null/undefined)');
+      showToast('error', '❌ Session expirée - Reconnectez-vous');
       return;
     }
 
+    if (!user.uid) {
+      console.error('❌ [ENROLL] ERREUR CRITIQUE: user.uid est undefined!');
+      console.error('   🔍 Objet user reçu:', JSON.stringify(user, null, 2));
+      showToast('error', '❌ UID manquant - Reconnectez-vous', 5000);
+      return;
+    }
+
+    console.log('✅ [ENROLL] UID validé:', user.uid);
+
     if (user.role !== 'ops_transport' && user.role !== 'super_admin' && user.uid !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
-      console.error('❌ Rôle insuffisant:', user.role);
+      console.error('❌ [ENROLL] Rôle insuffisant:', user.role);
       console.error('⚠️ SOLUTION: Configurez le rôle dans Firebase Realtime Database');
       console.error(`   Chemin: users/${user.uid}/role`);
       console.error('   Valeur: "ops_transport" ou "super_admin"');
