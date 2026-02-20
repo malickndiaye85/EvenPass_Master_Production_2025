@@ -266,6 +266,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       const userProfile: AuthUser = {
         id: firebaseUser.uid,
+        uid: firebaseUser.uid,
         email: firebaseUser.email || '',
         full_name: userData?.full_name || firebaseUser.displayName || 'Utilisateur',
         phone: userData?.phone || null,
@@ -313,6 +314,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       const isAdmin = firebaseUser.uid === ADMIN_UID;
       setUser({
         id: firebaseUser.uid,
+        uid: firebaseUser.uid,
         email: firebaseUser.email || '',
         full_name: firebaseUser.displayName || 'Super Admin',
         phone: null,
