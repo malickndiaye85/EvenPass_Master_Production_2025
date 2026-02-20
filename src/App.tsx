@@ -119,6 +119,8 @@ import AdminOpsEventPage from './pages/admin/AdminOpsEventPage';
 
 import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
 
+import AdminPINCodesPage from './pages/admin/AdminPINCodesPage';
+
 import EPscanVPage from './pages/transport/EPscanVPage';
 
 import ControllerLoginPage from './pages/transport/ControllerLoginPage';
@@ -571,6 +573,22 @@ function AppRoutes() {
           <RoleBasedRoute allowedRoles={['super_admin', 'ops_transport']}>
 
             <AdminOpsTransportPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/pin-codes"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'ops_transport']}>
+
+            <AdminPINCodesPage />
 
           </RoleBasedRoute>
 
