@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Bus, Calendar, Users, Shield, AlertTriangle, MapPin, Clock,
   TrendingUp, Activity, Radio, Plus, Settings, BarChart3,
-  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause, LogOut, X
+  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause, LogOut, X, UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ref, onValue, push, set } from 'firebase/database';
+import { ref, onValue, push, set, update } from 'firebase/database';
 import { db } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
 
@@ -28,6 +28,23 @@ interface Subscriber {
   last_trip_date: string;
 }
 
+interface VehicleLocation {
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+  speed?: number;
+}
+
+interface Driver {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  license_number?: string;
+  status: 'available' | 'on_trip' | 'off_duty';
+  current_vehicle_id?: string;
+}
+
 const AdminOpsTransportPage: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -35,8 +52,13 @@ const AdminOpsTransportPage: React.FC = () => {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
   const [lineAnalytics, setLineAnalytics] = useState<LineAnalytics[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showChangeDriverModal, setShowChangeDriverModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<FleetVehicle | null>(null);
+  const [vehicleLocation, setVehicleLocation] = useState<VehicleLocation | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
   const [newVehicleIds, setNewVehicleIds] = useState<Set<string>>(new Set());
@@ -48,6 +70,7 @@ const AdminOpsTransportPage: React.FC = () => {
     const subscribersRef = ref(db, 'pass_subscribers');
     const scansRef = ref(db, 'scan_events');
     const linesRef = ref(db, 'transport_lines');
+    const driversRef = ref(db, 'drivers');
 
     const unsubVehicles = onValue(vehiclesRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -127,11 +150,25 @@ const AdminOpsTransportPage: React.FC = () => {
       }
     });
 
+    const unsubDrivers = onValue(driversRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const driversArray = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        setDrivers(driversArray);
+      } else {
+        setDrivers([]);
+      }
+    });
+
     return () => {
       unsubVehicles();
       unsubSubscribers();
       unsubScans();
       unsubLines();
+      unsubDrivers();
     };
   };
 
@@ -156,6 +193,8 @@ const AdminOpsTransportPage: React.FC = () => {
     ? vehicles.reduce((sum, v) => sum + (v.average_occupancy_rate || 0), 0) / vehicles.length
     : 0;
 
+  const availableDrivers = drivers.filter(d => d.status === 'available' || d.status === 'off_duty');
+
   const showToast = (type: 'success' | 'error' | 'loading', message: string, duration: number = 3000) => {
     const id = toastIdCounter;
     setToastIdCounter(prev => prev + 1);
@@ -174,6 +213,87 @@ const AdminOpsTransportPage: React.FC = () => {
 
   const hideToast = (id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleSetMaintenance = async (vehicle: FleetVehicle) => {
+    if (!db) return;
+
+    const loadingToastId = showToast('loading', `Mise à jour du véhicule ${vehicle.vehicle_number}...`);
+
+    try {
+      const vehicleRef = ref(db, `fleet_vehicles/${vehicle.id}`);
+      const newStatus = vehicle.status === 'en_maintenance' ? 'en_service' : 'en_maintenance';
+
+      await update(vehicleRef, {
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      });
+
+      hideToast(loadingToastId);
+
+      if (newStatus === 'en_maintenance') {
+        showToast('success', `✅ Véhicule ${vehicle.vehicle_number} mis en maintenance`);
+      } else {
+        showToast('success', `✅ Véhicule ${vehicle.vehicle_number} remis en service`);
+      }
+    } catch (error: any) {
+      hideToast(loadingToastId);
+      showToast('error', `❌ Erreur: ${error.message}`);
+      console.error('Erreur mise en maintenance:', error);
+    }
+  };
+
+  const handleLocateVehicle = async (vehicle: FleetVehicle) => {
+    if (!db) return;
+
+    setSelectedVehicle(vehicle);
+    setShowLocationModal(true);
+    setVehicleLocation(null);
+
+    const locationRef = ref(db, `live/positions/${vehicle.id}`);
+
+    onValue(locationRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setVehicleLocation(snapshot.val());
+      } else {
+        setVehicleLocation(null);
+      }
+    }, { onlyOnce: true });
+  };
+
+  const handleChangeDriver = (vehicle: FleetVehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowChangeDriverModal(true);
+  };
+
+  const handleAssignDriver = async (driverId: string) => {
+    if (!db || !selectedVehicle) return;
+
+    const loadingToastId = showToast('loading', 'Changement de chauffeur en cours...');
+
+    try {
+      const vehicleRef = ref(db, `fleet_vehicles/${selectedVehicle.id}`);
+      const driverRef = ref(db, `drivers/${driverId}`);
+
+      await update(vehicleRef, {
+        assigned_driver_id: driverId,
+        updated_at: new Date().toISOString()
+      });
+
+      await update(driverRef, {
+        current_vehicle_id: selectedVehicle.id,
+        status: 'on_trip'
+      });
+
+      hideToast(loadingToastId);
+      showToast('success', `✅ Chauffeur assigné au véhicule ${selectedVehicle.vehicle_number}`);
+      setShowChangeDriverModal(false);
+      setSelectedVehicle(null);
+    } catch (error: any) {
+      hideToast(loadingToastId);
+      showToast('error', `❌ Erreur: ${error.message}`);
+      console.error('Erreur assignation chauffeur:', error);
+    }
   };
 
   const handleRefresh = () => {
@@ -199,7 +319,6 @@ const AdminOpsTransportPage: React.FC = () => {
       return;
     }
 
-    // 🔍 DIAGNOSTIC : Vérifier l'authentification et le rôle
     console.log('🔍 DIAGNOSTIC DE PERMISSION:');
     console.log('  ✓ User Auth UID:', user?.uid);
     console.log('  ✓ User Email:', user?.email);
@@ -213,7 +332,6 @@ const AdminOpsTransportPage: React.FC = () => {
       return;
     }
 
-    // Vérifier le rôle côté client (information, pas sécurité)
     if (user.role !== 'ops_transport' && user.role !== 'super_admin' && user.uid !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
       console.error('❌ Rôle insuffisant:', user.role);
       console.error('⚠️ SOLUTION: Configurez le rôle dans Firebase Realtime Database');
@@ -514,20 +632,22 @@ const AdminOpsTransportPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <div className="text-gray-400 text-xs mb-2 uppercase">Heures de Pointe</div>
-                    <div className="flex items-end space-x-2 h-20">
-                      {line.peak_hours.map((hour) => (
-                        <div key={hour.hour} className="flex-1 flex flex-col items-center">
-                          <div
-                            className="w-full bg-[#10B981] rounded-t transition-all"
-                            style={{ height: `${(hour.demand / 225) * 100}%` }}
-                          ></div>
-                          <span className="text-gray-500 text-xs mt-1">{hour.hour}h</span>
-                        </div>
-                      ))}
+                  {line.peak_hours && line.peak_hours.length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-gray-400 text-xs mb-2 uppercase">Heures de Pointe</div>
+                      <div className="flex items-end space-x-2 h-20">
+                        {line.peak_hours.map((hour: any) => (
+                          <div key={hour.hour} className="flex-1 flex flex-col items-center">
+                            <div
+                              className="w-full bg-[#10B981] rounded-t transition-all"
+                              style={{ height: `${(hour.demand / 225) * 100}%` }}
+                            ></div>
+                            <span className="text-gray-500 text-xs mt-1">{hour.hour}h</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))
               )}
@@ -638,6 +758,8 @@ const AdminOpsTransportPage: React.FC = () => {
                       className={`hover:bg-[#2A2A2A] transition-all duration-500 ${
                         newVehicleIds.has(vehicle.id)
                           ? 'bg-[#10B981]/20 animate-pulse border-l-4 border-[#10B981]'
+                          : vehicle.status === 'en_maintenance'
+                          ? 'opacity-50 bg-red-500/5'
                           : ''
                       }`}
                     >
@@ -716,26 +838,26 @@ const AdminOpsTransportPage: React.FC = () => {
                           </button>
                           <div className="absolute right-0 top-full mt-2 w-56 bg-[#2A2A2A] border border-gray-700 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                             <div className="py-2">
-                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
-                                <Settings size={14} className="text-red-400" />
-                                <span>Mettre en Maintenance</span>
+                              <button
+                                onClick={() => handleSetMaintenance(vehicle)}
+                                className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm"
+                              >
+                                <Settings size={14} className={vehicle.status === 'en_maintenance' ? 'text-green-400' : 'text-red-400'} />
+                                <span>{vehicle.status === 'en_maintenance' ? 'Remettre en Service' : 'Mettre en Maintenance'}</span>
                               </button>
-                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
-                                <Bus size={14} className="text-blue-400" />
-                                <span>Affecter une Ligne</span>
-                              </button>
-                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
-                                <Users size={14} className="text-[#10B981]" />
+                              <button
+                                onClick={() => handleChangeDriver(vehicle)}
+                                className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm"
+                              >
+                                <UserCheck size={14} className="text-[#10B981]" />
                                 <span>Changer Chauffeur</span>
                               </button>
-                              <button className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm">
+                              <button
+                                onClick={() => handleLocateVehicle(vehicle)}
+                                className="w-full px-4 py-2 text-left text-white hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm"
+                              >
                                 <MapPin size={14} className="text-yellow-400" />
                                 <span>Localiser</span>
-                              </button>
-                              <div className="border-t border-gray-700 my-1"></div>
-                              <button className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center space-x-2 text-sm">
-                                <XCircle size={14} />
-                                <span>Supprimer</span>
                               </button>
                             </div>
                           </div>
@@ -754,6 +876,30 @@ const AdminOpsTransportPage: React.FC = () => {
         <EnrollVehicleModal
           onClose={() => setShowEnrollModal(false)}
           onSubmit={handleEnrollVehicle}
+        />
+      )}
+
+      {showLocationModal && selectedVehicle && (
+        <LocationModal
+          vehicle={selectedVehicle}
+          location={vehicleLocation}
+          onClose={() => {
+            setShowLocationModal(false);
+            setSelectedVehicle(null);
+            setVehicleLocation(null);
+          }}
+        />
+      )}
+
+      {showChangeDriverModal && selectedVehicle && (
+        <ChangeDriverModal
+          vehicle={selectedVehicle}
+          availableDrivers={availableDrivers}
+          onClose={() => {
+            setShowChangeDriverModal(false);
+            setSelectedVehicle(null);
+          }}
+          onAssign={handleAssignDriver}
         />
       )}
 
@@ -994,6 +1140,178 @@ const EnrollVehicleModal: React.FC<EnrollVehicleModalProps> = ({ onClose, onSubm
                 </div>
               )}
             </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+interface LocationModalProps {
+  vehicle: FleetVehicle;
+  location: VehicleLocation | null;
+  onClose: () => void;
+}
+
+const LocationModal: React.FC<LocationModalProps> = ({ vehicle, location, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-[#1A1A1B] rounded-2xl border border-yellow-500/30 max-w-2xl w-full p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <MapPin className="text-yellow-400" size={24} />
+            <h3 className="text-2xl font-black text-white">Localisation • {vehicle.vehicle_number}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {location ? (
+          <div className="space-y-4">
+            <div className="bg-[#2A2A2A] rounded-xl p-6 border border-gray-700">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-gray-500 text-xs mb-1">Latitude</p>
+                  <p className="text-white font-bold text-lg">{location.latitude.toFixed(6)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-1">Longitude</p>
+                  <p className="text-white font-bold text-lg">{location.longitude.toFixed(6)}</p>
+                </div>
+              </div>
+
+              {location.speed !== undefined && (
+                <div className="mb-4">
+                  <p className="text-gray-500 text-xs mb-1">Vitesse</p>
+                  <p className="text-[#10B981] font-bold text-lg">{location.speed} km/h</p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Dernière mise à jour</p>
+                <p className="text-gray-300 text-sm">{new Date(location.timestamp).toLocaleString('fr-FR')}</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 rounded-xl p-8 border border-gray-700 text-center">
+              <MapPin className="inline-block text-yellow-400 mb-3" size={48} />
+              <p className="text-gray-400 text-sm mb-2">Carte interactive</p>
+              <p className="text-gray-500 text-xs">
+                Intégration Mapbox/Leaflet à venir
+              </p>
+              <a
+                href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Ouvrir dans Google Maps
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-8 text-center">
+            <AlertTriangle className="inline-block text-yellow-400 mb-3" size={48} />
+            <p className="text-yellow-400 font-bold mb-2">Dernière position inconnue</p>
+            <p className="text-gray-400 text-sm">
+              Aucune donnée GPS disponible pour ce véhicule dans /live/positions/{vehicle.id}
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          className="w-full mt-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  );
+};
+
+interface ChangeDriverModalProps {
+  vehicle: FleetVehicle;
+  availableDrivers: Driver[];
+  onClose: () => void;
+  onAssign: (driverId: string) => void;
+}
+
+const ChangeDriverModal: React.FC<ChangeDriverModalProps> = ({ vehicle, availableDrivers, onClose, onAssign }) => {
+  const [selectedDriverId, setSelectedDriverId] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedDriverId) {
+      onAssign(selectedDriverId);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-[#1A1A1B] rounded-2xl border border-[#10B981]/30 max-w-md w-full p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <UserCheck className="text-[#10B981]" size={24} />
+            <h3 className="text-xl font-black text-white">Changer le Chauffeur</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="bg-[#2A2A2A] rounded-lg p-4 border border-gray-700 mb-6">
+          <p className="text-gray-500 text-xs mb-1">Véhicule</p>
+          <p className="text-white font-bold">{vehicle.vehicle_number}</p>
+          <p className="text-gray-400 text-sm">{vehicle.license_plate}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Chauffeur Disponible</label>
+            {availableDrivers.length === 0 ? (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">
+                <p className="text-yellow-400 text-sm">Aucun chauffeur disponible</p>
+              </div>
+            ) : (
+              <select
+                value={selectedDriverId}
+                onChange={(e) => setSelectedDriverId(e.target.value)}
+                className="w-full px-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg text-white focus:border-[#10B981] focus:outline-none"
+                required
+              >
+                <option value="">Sélectionner un chauffeur</option>
+                {availableDrivers.map((driver) => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.name} • {driver.phone} • {driver.status === 'available' ? 'Disponible' : 'Hors service'}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="submit"
+              disabled={!selectedDriverId}
+              className="flex-1 py-3 bg-[#10B981] hover:bg-[#059669] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors"
+            >
+              Assigner le Chauffeur
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors"
+            >
+              Annuler
+            </button>
           </div>
         </form>
       </div>
