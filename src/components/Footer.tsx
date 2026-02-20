@@ -1,8 +1,16 @@
 import React from 'react';
 import { Facebook, Instagram, Twitter, Phone, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import DynamicLogo from './DynamicLogo';
 
 const Footer: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleTwitterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/admin/finance/voyage');
+  };
+
   return (
     <footer className="bg-gray-900 dark:bg-black text-white py-16 px-8 transition-colors">
       <div className="max-w-7xl mx-auto">
@@ -50,9 +58,13 @@ const Footer: React.FC = () => {
               <a href="#" className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors">
+              <button
+                onClick={handleTwitterClick}
+                className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors"
+                aria-label="Twitter"
+              >
                 <Twitter size={20} />
-              </a>
+              </button>
             </div>
           </div>
         </div>

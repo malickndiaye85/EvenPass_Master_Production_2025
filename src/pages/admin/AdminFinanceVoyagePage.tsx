@@ -57,21 +57,13 @@ const AdminFinanceVoyagePage: React.FC = () => {
     const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
     if (!user) {
-      navigate('/');
+      navigate('/admin/login');
       return;
     }
 
     if (user.uid !== SUPER_ADMIN_UID) {
-      if (verificationAttempts >= 3) {
-        navigate('/');
-        return;
-      }
-      const confirmed = window.confirm('Accès restreint au Super Admin uniquement. Confirmer votre identité ?');
-      setVerificationAttempts(prev => prev + 1);
-      if (!confirmed || user.uid !== SUPER_ADMIN_UID) {
-        navigate('/');
-        return;
-      }
+      navigate('/');
+      return;
     }
 
     setAccessGranted(true);
