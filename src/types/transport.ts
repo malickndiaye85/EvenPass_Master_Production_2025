@@ -199,6 +199,7 @@ export interface FleetVehicle {
   last_scan_location?: string;
   last_scan_time?: string;
   created_at: string;
+  access_code?: string;
 }
 
 export interface LineAnalytics {

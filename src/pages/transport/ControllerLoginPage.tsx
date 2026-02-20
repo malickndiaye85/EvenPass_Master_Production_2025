@@ -71,7 +71,7 @@ const ControllerLoginPage: React.FC = () => {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw-epscanv.js', { scope: '/' })
+      navigator.serviceWorker.register('/sw-controller.js', { scope: '/controller/' })
         .then(reg => console.log('[EPscanV] Service Worker registered:', reg))
         .catch(err => console.error('[EPscanV] Service Worker registration failed:', err));
     }

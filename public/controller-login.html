@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion Contrôleur - EvenPass</title>
+    <title>EPscanV - Contrôleur Transport</title>
+    <link rel="manifest" href="/manifest-epscanv.json">
+    <meta name="theme-color" content="#10B981">
+    <link rel="icon" href="/assets/EPscanV_icon.jpg">
     <script src="/env-config.js"></script>
     <style>
         * {
@@ -175,9 +178,9 @@
         <div class="login-card">
             <div class="header">
                 <div class="logo">
-                    <img src="/epscan-512.png" alt="EPscan" style="width: 100%; height: 100%; object-fit: contain; border-radius: 20px;">
+                    <img src="/assets/EPscanV_icon.jpg" alt="EPscanV" style="width: 100%; height: 100%; object-fit: contain; border-radius: 20px;">
                 </div>
-                <h1>Connexion Contrôleur</h1>
+                <h1>EPscanV Contrôle</h1>
                 <p class="subtitle">Entrez votre code d'accès à 6 chiffres</p>
             </div>
 
@@ -272,7 +275,25 @@
             submitBtn.textContent = 'VÉRIFICATION...';
 
             try {
-                // Vérifier dans agent_access_codes (EVEN)
+                const accessCodesRef = collection(db, 'access_codes');
+                const accessQuery = query(accessCodesRef,
+                    where('code', '==', rawCode),
+                    where('isActive', '==', true)
+                );
+                const accessSnapshot = await getDocs(accessQuery);
+
+                if (!accessSnapshot.empty) {
+                    const codeData = accessSnapshot.docs[0].data();
+                    sessionStorage.setItem('controller_code', rawCode);
+                    sessionStorage.setItem('controller_type', codeData.type);
+                    sessionStorage.setItem('vehicle_id', codeData.vehicleId || '');
+                    sessionStorage.setItem('vehicle_plate', codeData.vehiclePlate || '');
+                    sessionStorage.setItem('staff_name', codeData.staffName || '');
+                    sessionStorage.setItem('staff_role', codeData.staffRole || '');
+                    window.location.href = '/controller-epscanv';
+                    return;
+                }
+
                 const evenCodesRef = collection(db, 'agent_access_codes');
                 const evenQuery = query(evenCodesRef,
                     where('access_code', '==', rawCode),
@@ -291,7 +312,6 @@
                     return;
                 }
 
-                // Vérifier dans maritime_access_codes (PASS)
                 const passCodesRef = collection(db, 'maritime_access_codes');
                 const passQuery = query(passCodesRef,
                     where('access_code', '==', rawCode),
@@ -322,6 +342,13 @@
 
         // Focus automatique
         codeInput.focus();
+
+        // Enregistrer le Service Worker dédié
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-controller.js', { scope: '/controller/' })
+                .then(reg => console.log('[EPscanV] Service Worker registered:', reg))
+                .catch(err => console.error('[EPscanV] Service Worker registration failed:', err));
+        }
     </script>
 </body>
 </html>

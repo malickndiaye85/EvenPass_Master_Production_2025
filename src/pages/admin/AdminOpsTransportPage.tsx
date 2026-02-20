@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, onValue, push, set, update } from 'firebase/database';
 import { db } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
+import { createVehicleAccessCode } from '../../lib/accessCodesFirebase';
 
 interface Toast {
   id: number;
@@ -346,6 +347,12 @@ const AdminOpsTransportPage: React.FC = () => {
     try {
       const vehiclesRef = ref(db, 'fleet_vehicles');
       const newVehicleRef = push(vehiclesRef);
+      const vehicleId = newVehicleRef.key;
+
+      const accessCode = await createVehicleAccessCode(
+        vehicleId!,
+        vehicleData.license_plate || 'N/A'
+      );
 
       const vehiclePayload = {
         vehicle_number: vehicleData.vehicle_number || 'N/A',
@@ -361,18 +368,20 @@ const AdminOpsTransportPage: React.FC = () => {
         current_trips_today: 0,
         total_revenue_today: 0,
         average_occupancy_rate: 0,
+        access_code: accessCode,
         created_at: new Date().toISOString(),
         created_by: user.uid
       };
 
       console.log('💾 Enregistrement du véhicule:', vehiclePayload);
+      console.log('🔐 Code d\'accès généré:', accessCode);
       console.log('📍 Chemin Firebase:', newVehicleRef.toString());
 
       await set(newVehicleRef, vehiclePayload);
 
       console.log('✅ Véhicule enregistré avec succès!');
       hideToast(loadingToastId);
-      showToast('success', '✅ Véhicule enrôlé avec succès!');
+      showToast('success', `✅ Véhicule enrôlé avec succès! Code: ${accessCode}`);
       setShowEnrollModal(false);
     } catch (error: any) {
       console.error('❌ ERREUR DÉTAILLÉE:', {
@@ -768,6 +777,11 @@ const AdminOpsTransportPage: React.FC = () => {
                           <div>
                             <div className="font-bold text-white">{vehicle.vehicle_number}</div>
                             <div className="text-gray-500 text-xs">{vehicle.license_plate}</div>
+                            {vehicle.access_code && (
+                              <div className="text-[#10B981] text-xs font-mono font-bold mt-1">
+                                Code: {vehicle.access_code}
+                              </div>
+                            )}
                           </div>
                           {newVehicleIds.has(vehicle.id) && (
                             <span className="px-2 py-1 bg-[#10B981] text-white text-xs font-bold rounded-full animate-bounce">
