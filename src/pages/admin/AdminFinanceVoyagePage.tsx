@@ -43,29 +43,52 @@ interface Toast {
 }
 
 const AdminFinanceVoyagePage: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [subscriptionTransactions, setSubscriptionTransactions] = useState<SubscriptionTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
   useEffect(() => {
-    const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+    console.log('[FINANCE PAGE] Auth state:', {
+      authLoading,
+      hasUser: !!user,
+      userUID: user?.id,
+      expectedUID: SUPER_ADMIN_UID
+    });
+
+    if (authLoading) {
+      console.log('[FINANCE PAGE] Still loading auth state...');
+      return;
+    }
 
     if (!user) {
-      console.log('[FINANCE PAGE] No user - should be handled by RoleBasedRoute');
+      console.log('[FINANCE PAGE] No authenticated user');
+      setAccessDenied(true);
+      setLoading(false);
       return;
     }
 
     console.log('[FINANCE PAGE] Current UID:', user.id);
     console.log('[FINANCE PAGE] Expected UID:', SUPER_ADMIN_UID);
-    console.log('[FINANCE PAGE] Match:', user.id === SUPER_ADMIN_UID);
+
+    if (user.id !== SUPER_ADMIN_UID) {
+      console.log('[FINANCE PAGE] ❌ Access denied - UID mismatch');
+      setAccessDenied(true);
+      setLoading(false);
+      return;
+    }
+
     console.log('[FINANCE PAGE] ✅ Access granted - loading financial data');
 
     if (!db) {
       console.error('[FINANCE PAGE] Firebase database not initialized');
+      setLoading(false);
       return;
     }
 
@@ -105,7 +128,7 @@ const AdminFinanceVoyagePage: React.FC = () => {
       unsubTrips();
       unsubSubscriptions();
     };
-  }, [user, navigate]);
+  }, [user, authLoading]);
 
   const totalRevenue = trips.reduce((sum, trip) => sum + (trip.total_revenue || 0), 0);
   const totalCommission = totalRevenue * 0.05;
@@ -166,20 +189,109 @@ const AdminFinanceVoyagePage: React.FC = () => {
     }
   };
 
-  if (!user) {
-    console.log('[FINANCE PAGE] No user in render - showing loader');
+  if (authLoading) {
+    console.log('[FINANCE PAGE] Auth loading...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center">
         <div className="text-center">
           <div className="relative mb-6">
-            <Lock className="inline-block text-red-500 animate-pulse" size={64} />
+            <Lock className="inline-block text-blue-500 animate-pulse" size={64} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+              <div className="w-20 h-20 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Vérification en cours...</h1>
-          <p className="text-gray-400">Accès sécurisé Super Admin</p>
-          <p className="text-gray-600 text-xs mt-2">Authentification Firebase</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Vérification de vos accès...</h1>
+          <p className="text-gray-400">Module Finance DEM-DEM</p>
+          <p className="text-gray-600 text-xs mt-2">Authentification en cours</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    console.log('[FINANCE PAGE] No user - showing login prompt');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#1A1A1B]/80 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+              <Lock className="text-red-500" size={32} />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Accès Financier Sécurisé</h1>
+            <p className="text-gray-400 text-sm">Module Finance • DEM-DEM Express</p>
+          </div>
+
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
+            <p className="text-yellow-400 text-sm text-center">
+              🔒 Connexion requise pour accéder aux données financières
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/admin/login?redirectTo=/admin/finance/voyage')}
+            className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg"
+          >
+            Se connecter pour accéder aux finances
+          </button>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              ← Retour à l'accueil
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessDenied || user.id !== SUPER_ADMIN_UID) {
+    console.log('[FINANCE PAGE] Access denied - showing error');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#1A1A1B]/80 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+              <AlertTriangle className="text-red-500" size={32} />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Accès Refusé</h1>
+            <p className="text-gray-400 text-sm">Module Finance • DEM-DEM Express</p>
+          </div>
+
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-6">
+            <p className="text-red-400 font-medium text-center mb-3">
+              ⛔ Accès non autorisé
+            </p>
+            <p className="text-gray-400 text-sm text-center mb-4">
+              Ce module est réservé exclusivement au Super Administrateur.
+            </p>
+            <div className="bg-black/40 rounded-lg p-3 mb-3">
+              <p className="text-xs text-gray-500 mb-1">Votre UID :</p>
+              <p className="text-gray-300 text-sm font-mono break-all">{user.id}</p>
+            </div>
+            <div className="bg-black/40 rounded-lg p-3">
+              <p className="text-xs text-gray-500 mb-1">UID requis :</p>
+              <p className="text-green-400 text-sm font-mono break-all">{SUPER_ADMIN_UID}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={handleLogout}
+              className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <LogOut size={18} />
+              <span>Se déconnecter</span>
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full py-3 bg-transparent hover:bg-white/5 text-gray-400 hover:text-white font-medium rounded-lg transition-colors border border-gray-700"
+            >
+              Retour à l'accueil
+            </button>
+          </div>
         </div>
       </div>
     );

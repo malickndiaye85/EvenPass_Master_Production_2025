@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, Lock, Loader2, LogOut } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
 import { getDefaultRedirectForRole, UserRole } from '../lib/rolePermissions';
@@ -23,12 +23,47 @@ const UnifiedAdminLoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const { signIn, signOut, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
 
   useEffect(() => {
-    console.log('[UNIFIED LOGIN] Auth state:', { user: user?.email, role: user?.role, authLoading });
+    console.log('[UNIFIED LOGIN] Auth state:', {
+      user: user?.email,
+      role: user?.role,
+      uid: user?.id,
+      authLoading,
+      redirectTo
+    });
 
     if (!authLoading && user && user.role) {
-      const isSuperAdmin = user.uid === getAdminUID();
+      const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+      const isSuperAdmin = user.id === SUPER_ADMIN_UID;
+
+      console.log('[UNIFIED LOGIN] User authenticated:', {
+        isSuperAdmin,
+        currentUID: user.id,
+        expectedUID: SUPER_ADMIN_UID,
+        redirectTo
+      });
+
+      if (redirectTo) {
+        console.log('[UNIFIED LOGIN] Redirect requested to:', redirectTo);
+
+        if (redirectTo === '/admin/finance/voyage') {
+          if (isSuperAdmin) {
+            console.log('[UNIFIED LOGIN] ✅ Super Admin UID verified - redirecting to Finance');
+            navigate(redirectTo, { replace: true });
+          } else {
+            console.log('[UNIFIED LOGIN] ❌ Access denied to Finance - UID mismatch');
+            setError('Accès refusé : seul le Super Admin peut accéder aux finances');
+            return;
+          }
+        } else {
+          console.log('[UNIFIED LOGIN] Redirecting to:', redirectTo);
+          navigate(redirectTo, { replace: true });
+        }
+        return;
+      }
 
       if (isSuperAdmin) {
         console.log('[UNIFIED LOGIN] Super Admin detected - allowing access to login page for testing');
@@ -41,7 +76,7 @@ const UnifiedAdminLoginPage: React.FC = () => {
       console.log('[UNIFIED LOGIN] Redirect path:', redirectPath);
       navigate(redirectPath, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
