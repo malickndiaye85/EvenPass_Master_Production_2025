@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Scan, QrCode, CheckCircle, XCircle, Activity, WifiOff, Wifi,
-  MapPin, Battery, Sun, Moon, AlertTriangle, Clock, User, Bus
+  MapPin, Battery, Sun, Moon, AlertTriangle, Clock, User, Bus, LogOut
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { ref, update, push, onValue, get } from 'firebase/database';
 import { db } from '../../firebase';
-import { useAuth } from '../../context/FirebaseAuthContext';
+import { useNavigate } from 'react-router-dom';
+import { getControllerSession, clearControllerSession, type ControllerSession } from '../../lib/pinAuthService';
 
 interface ScanStats {
   validated: number;
@@ -40,14 +41,14 @@ interface ControllerInfo {
 }
 
 const EPscanVPage: React.FC = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [session, setSession] = useState<ControllerSession | null>(null);
   const [stats, setStats] = useState<ScanStats>({ validated: 0, rejected: 0, total: 0 });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingScans, setPendingScans] = useState<PendingScan[]>([]);
   const [lastScanResult, setLastScanResult] = useState<{ type: 'validated' | 'rejected'; message: string } | null>(null);
   const [isScannerActive, setIsScannerActive] = useState(false);
   const [brightness, setBrightness] = useState<'high' | 'low'>('high');
-  const [controllerInfo, setControllerInfo] = useState<ControllerInfo | null>(null);
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -56,6 +57,13 @@ const EPscanVPage: React.FC = () => {
   const dbRef = useRef<any>(null);
 
   useEffect(() => {
+    const currentSession = getControllerSession();
+    if (!currentSession) {
+      navigate('/controller/login');
+      return;
+    }
+    setSession(currentSession);
+
     initializeIndexedDB();
     loadPendingScans();
     requestWakeLock();
@@ -87,17 +95,6 @@ const EPscanVPage: React.FC = () => {
       stopScanner();
     };
   }, []);
-
-  useEffect(() => {
-    if (user && db) {
-      const controllerRef = ref(db, `controllers/${user.uid}`);
-      onValue(controllerRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setControllerInfo(snapshot.val());
-        }
-      });
-    }
-  }, [user]);
 
   const initializeIndexedDB = () => {
     const request = indexedDB.open('EPscanVDB', 1);
@@ -191,8 +188,11 @@ const EPscanVPage: React.FC = () => {
       return { valid: false, reason: 'Pass expiré' };
     }
 
-    if (controllerInfo && passData.line !== controllerInfo.line) {
-      return { valid: false, reason: `Pass valide pour ${passData.line}, pas ${controllerInfo.line}` };
+    if (session?.vehiclePlate && passData.line) {
+      const vehicleLine = session.vehiclePlate.split('-')[0];
+      if (passData.line !== vehicleLine) {
+        return { valid: false, reason: `Pass valide pour ${passData.line}, pas ${vehicleLine}` };
+      }
     }
 
     const isPassback = await checkPassback(passData.userId);
@@ -448,11 +448,27 @@ const EPscanVPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Bus className="text-white" size={20} />
             <div>
-              <div className="text-white font-black text-lg">{controllerInfo?.line || 'Chargement...'}</div>
-              <div className="text-green-100 text-xs">{controllerInfo?.name || 'Contrôleur'}</div>
+              <div className="text-white font-black text-lg">
+                {session?.type === 'fixe' ? session.vehiclePlate : 'Contrôleur Volant'}
+              </div>
+              <div className="text-green-100 text-xs">
+                {session?.type === 'fixe' ? `Véhicule ${session.vehicleId}` : session?.name || 'Mobile'}
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                if (confirm('Voulez-vous vous déconnecter ?')) {
+                  clearControllerSession();
+                  navigate('/controller/login');
+                }
+              }}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
+              title="Déconnexion"
+            >
+              <LogOut size={16} className="text-white" />
+            </button>
             {isOnline ? (
               <div className="flex items-center space-x-1 bg-white/20 px-2 py-1 rounded-full">
                 <Wifi size={14} className="text-white" />
