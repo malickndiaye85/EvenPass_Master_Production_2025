@@ -988,20 +988,31 @@ const EnrollVehicleModal: React.FC<EnrollVehicleModalProps> = ({ onClose, onSubm
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🚀 [ENROLL MODAL] Tentative de soumission...');
     e.preventDefault();
 
+    console.log('📋 [ENROLL MODAL] Données du formulaire:', formData);
+    console.log('✔️ [ENROLL MODAL] Validation:', {
+      vehicle_number: formData.vehicle_number.trim() !== '',
+      license_plate: formData.license_plate.trim() !== '',
+      route: formData.route.trim() !== '',
+      isValid: isFormValid()
+    });
+
     if (!isFormValid()) {
-      console.log('❌ Formulaire invalide:', getValidationMessage());
+      console.log('❌ [ENROLL MODAL] Formulaire invalide:', getValidationMessage());
+      alert(getValidationMessage());
       return;
     }
 
-    console.log('✅ Formulaire valide, soumission...');
+    console.log('✅ [ENROLL MODAL] Formulaire valide, soumission à handleEnrollVehicle...');
     setSubmitting(true);
 
     try {
       await onSubmit(formData);
+      console.log('✅ [ENROLL MODAL] Soumission réussie');
     } catch (error) {
-      console.error('Error enrolling vehicle:', error);
+      console.error('❌ [ENROLL MODAL] Erreur lors de l\'enrôlement:', error);
     } finally {
       setSubmitting(false);
     }
@@ -1138,22 +1149,21 @@ const EnrollVehicleModal: React.FC<EnrollVehicleModalProps> = ({ onClose, onSubm
             >
               Annuler
             </button>
-            <div className="flex-1 relative group">
-              <button
-                type="submit"
-                disabled={submitting || !isFormValid()}
-                className="w-full px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title={!isFormValid() ? getValidationMessage() : ''}
-              >
-                {submitting ? 'Enrôlement...' : 'Enrôler le Véhicule'}
-              </button>
-              {!isFormValid() && (
-                <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap border border-gray-700 shadow-xl">
-                  {getValidationMessage()}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-                </div>
-              )}
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={(e) => {
+                console.log('🖱️ [ENROLL MODAL] Bouton cliqué!');
+                console.log('📊 [ENROLL MODAL] État actuel:', {
+                  submitting,
+                  isFormValid: isFormValid(),
+                  formData
+                });
+              }}
+            >
+              {submitting ? '⏳ Enrôlement...' : '✅ Enrôler le Véhicule'}
+            </button>
           </div>
         </form>
       </div>
