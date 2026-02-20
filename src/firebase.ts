@@ -38,9 +38,13 @@ if (isFirebaseConfigured) {
 
   console.log('[FIREBASE] ✅ Firebase initialized successfully');
 
-  setPersistence(auth, browserLocalPersistence).catch((error) => {
-    console.error('[FIREBASE] Error setting persistence:', error);
-  });
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      console.log('[FIREBASE] ✅ Auth persistence enabled (browserLocalPersistence)');
+    })
+    .catch((error) => {
+      console.error('[FIREBASE] ❌ Error setting persistence:', error);
+    });
 } else {
   console.warn('[FIREBASE] Configuration incomplete. Firebase services disabled. Please configure Firebase environment variables in .env file.');
 }

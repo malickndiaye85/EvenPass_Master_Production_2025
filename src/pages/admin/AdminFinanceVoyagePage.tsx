@@ -48,47 +48,26 @@ const AdminFinanceVoyagePage: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [subscriptionTransactions, setSubscriptionTransactions] = useState<SubscriptionTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
-  const [accessGranted, setAccessGranted] = useState(false);
-  const [verificationAttempts, setVerificationAttempts] = useState(0);
 
   useEffect(() => {
     const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
 
-    const timer = setTimeout(() => {
-      setAuthLoading(false);
-    }, 1500);
-
-    if (user === undefined) {
-      return;
-    }
-
-    console.log("Current UID:", user?.uid);
-    console.log("Expected UID:", SUPER_ADMIN_UID);
-    console.log("Match:", user?.uid === SUPER_ADMIN_UID);
-
     if (!user) {
-      if (!authLoading) {
-        navigate('/admin/login');
-      }
+      console.log('[FINANCE PAGE] No user - should be handled by RoleBasedRoute');
       return;
     }
 
-    if (user.uid !== SUPER_ADMIN_UID) {
-      if (!authLoading) {
-        console.log("Access denied - redirecting to home");
-        navigate('/');
-      }
+    console.log('[FINANCE PAGE] Current UID:', user.id);
+    console.log('[FINANCE PAGE] Expected UID:', SUPER_ADMIN_UID);
+    console.log('[FINANCE PAGE] Match:', user.id === SUPER_ADMIN_UID);
+    console.log('[FINANCE PAGE] ✅ Access granted - loading financial data');
+
+    if (!db) {
+      console.error('[FINANCE PAGE] Firebase database not initialized');
       return;
     }
-
-    console.log("Access granted to Super Admin");
-    setAccessGranted(true);
-    setAuthLoading(false);
-
-    if (!db) return;
 
     const tripsRef = ref(db, 'transport_trips');
     const subscriptionsRef = ref(db, 'subscription_payments');
@@ -187,7 +166,8 @@ const AdminFinanceVoyagePage: React.FC = () => {
     }
   };
 
-  if (authLoading || !accessGranted) {
+  if (!user) {
+    console.log('[FINANCE PAGE] No user in render - showing loader');
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1B] to-[#0A0A0B] flex items-center justify-center">
         <div className="text-center">

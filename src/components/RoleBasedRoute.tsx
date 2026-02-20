@@ -18,6 +18,15 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log('[ROLE BASED ROUTE] Initial state:', {
+    path: location.pathname,
+    loading,
+    hasUser: !!user,
+    userUID: user?.id,
+    userRole: user?.role,
+    requireSuperAdmin
+  });
+
   useEffect(() => {
     if (!loading && user) {
       console.log('[ROLE BASED ROUTE] User role detected:', user.role, 'on path:', location.pathname);
@@ -58,7 +67,7 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   }
 
   if (!user) {
-    console.log('[ROLE BASED ROUTE] No user, redirecting to /');
+    console.log('[ROLE BASED ROUTE] No user detected after loading complete, redirecting to /');
     return <Navigate to="/" replace />;
   }
 
@@ -83,9 +92,41 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
     );
   }
 
-  console.log('[ROLE BASED ROUTE] User authenticated:', user.email, 'Role:', user.role);
+  console.log('[ROLE BASED ROUTE] User authenticated:', user.email, 'Role:', user.role, 'UID:', user.id);
 
-  if (requireSuperAdmin && user.role !== 'super_admin' && user.id !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
+  const SUPER_ADMIN_UID = 'Tnq8Isi0fATmidMwEuVrw1SAJkI3';
+  const isSuperAdminByUID = user.id === SUPER_ADMIN_UID;
+  const isSuperAdminByRole = user.role === 'super_admin';
+
+  console.log('[ROLE BASED ROUTE] Super Admin checks:', {
+    uidMatch: isSuperAdminByUID,
+    roleMatch: isSuperAdminByRole,
+    requireSuperAdmin,
+    path: location.pathname
+  });
+
+  if (location.pathname === '/admin/finance/voyage') {
+    console.log('[ROLE BASED ROUTE] 🔒 FINANCE PAGE - Special UID check');
+    if (!isSuperAdminByUID) {
+      console.log('[ROLE BASED ROUTE] ❌ Access denied - UID does not match Super Admin');
+      if (user.email && user.id && user.role) {
+        securityLogger.logUnauthorizedAttempt(
+          user.email,
+          user.id,
+          user.role,
+          location.pathname,
+          'Finance page requires exact Super Admin UID'
+        );
+      }
+      const redirectPath = getDefaultRedirectForRole(user.role as UserRole);
+      console.log('[ROLE BASED ROUTE] Redirecting to:', redirectPath);
+      return <Navigate to={redirectPath} replace />;
+    }
+    console.log('[ROLE BASED ROUTE] ✅ Super Admin UID verified - granting access to Finance page');
+    return <>{children}</>;
+  }
+
+  if (requireSuperAdmin && !isSuperAdminByRole && !isSuperAdminByUID) {
     console.log('[ROLE BASED ROUTE] Super admin required but user is:', user.role);
     if (user.email && user.id && user.role) {
       securityLogger.logUnauthorizedAttempt(
