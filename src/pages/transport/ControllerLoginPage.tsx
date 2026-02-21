@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scan, AlertCircle, Bus, Check, Delete, MessageCircle } from 'lucide-react';
-import { authenticateWithPIN, vibrateDevice, openWhatsAppSupport } from '../../lib/pinAuthService';
+import { authenticateVehicleByPIN, vibrateDevice, openWhatsAppSupport } from '../../lib/vehicleAuthService';
 import PWAInstallBanner from '../../components/PWAInstallBanner';
 
 const ControllerLoginPage: React.FC = () => {
@@ -22,7 +22,7 @@ const ControllerLoginPage: React.FC = () => {
     setError('');
     setLoading(true);
 
-    const result = await authenticateWithPIN(pin);
+    const result = await authenticateVehicleByPIN(pin);
 
     if (result.success) {
       setSuccess(true);
