@@ -7,9 +7,9 @@ import {
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ref, onValue, push, set, update } from 'firebase/database';
-import { db } from '../../firebase';
+import { db, auth, firestore } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
-import { createVehicleAccessCode } from '../../lib/accessCodesFirebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface Toast {
   id: number;
@@ -312,71 +312,53 @@ const AdminOpsTransportPage: React.FC = () => {
   };
 
   const handleEnrollVehicle = async (vehicleData: Partial<FleetVehicle>) => {
-    console.log('🚀 [ENROLL] handleEnrollVehicle appelé avec:', vehicleData);
+    console.log('🚀 [ENROLL] Démarrage enrôlement véhicule');
 
-    if (!db) {
-      console.error('❌ [ENROLL] Firebase DB non initialisé');
-      showToast('error', '❌ Erreur: Base de données non disponible');
+    // 1. MAPPING DIRECT - Source de vérité absolue
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert('❌ ERREUR CRITIQUE: Aucun utilisateur connecté. Veuillez vous reconnecter.');
+      console.error('❌ [ENROLL] auth.currentUser est null');
+      showToast('error', '❌ Session expirée. Reconnectez-vous.', 5000);
       return;
     }
 
-    console.log('🔍 [ENROLL] DIAGNOSTIC AUTHENTIFICATION:');
-    console.log('  📋 User object complet:', user);
-    console.log('  🆔 User Auth UID:', user?.uid || '⚠️ UNDEFINED');
-    console.log('  📧 User Email:', user?.email || '⚠️ UNDEFINED');
-    console.log('  👤 User Role:', user?.role || '⚠️ UNDEFINED');
-    console.log('  🔑 UID Type:', typeof user?.uid);
-    console.log('  📍 Chemin Firebase attendu:', user?.uid ? `users/${user.uid}/role` : '⚠️ IMPOSSIBLE - UID MANQUANT');
+    const authUID = currentUser.uid;
+    const authEmail = currentUser.email || 'unknown';
 
-    if (!user) {
-      console.error('❌ [ENROLL] ERREUR CRITIQUE: Utilisateur non authentifié (user = null/undefined)');
-      showToast('error', '❌ Session expirée - Reconnectez-vous');
-      return;
-    }
+    console.log('🔐 [ENROLL] UID SOURCE DE VÉRITÉ:', authUID);
+    console.log('📧 [ENROLL] Email:', authEmail);
+    console.log('👤 [ENROLL] Rôle context:', user?.role);
 
-    if (!user.uid) {
-      console.error('❌ [ENROLL] ERREUR CRITIQUE: user.uid est undefined!');
-      console.error('   🔍 Objet user reçu:', JSON.stringify(user, null, 2));
-      showToast('error', '❌ UID manquant - Reconnectez-vous', 5000);
-      return;
-    }
-
-    console.log('✅ [ENROLL] UID validé:', user.uid);
-
-    if (user.role !== 'ops_transport' && user.role !== 'super_admin' && user.uid !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
-      console.error('❌ [ENROLL] Rôle insuffisant:', user.role);
-      console.error('⚠️ SOLUTION: Configurez le rôle dans Firebase Realtime Database');
-      console.error(`   Chemin: users/${user.uid}/role`);
-      console.error('   Valeur: "ops_transport" ou "super_admin"');
-      showToast('error', `❌ Accès refusé: Rôle "${user.role}" non autorisé. Contactez l'administrateur.`, 5000);
+    // Vérification rôle
+    if (user?.role !== 'ops_transport' && user?.role !== 'super_admin' && authUID !== 'Tnq8Isi0fATmidMwEuVrw1SAJkI3') {
+      alert(`❌ ACCÈS REFUSÉ\n\nRôle actuel: ${user?.role}\nUID: ${authUID}\n\nVotre rôle n'est pas autorisé à enrôler des véhicules.`);
+      showToast('error', `❌ Rôle "${user?.role}" non autorisé`, 5000);
       return;
     }
 
     const loadingToastId = showToast('loading', '⏳ Enrôlement en cours...');
 
     try {
-      console.log('🔧 [ENROLL] Étape 1: Création de la référence Firebase Realtime DB...');
+      // 2. GÉNÉRATION PIN CLIENT-SIDE
+      console.log('🎲 [ENROLL] Génération PIN côté client...');
+      const accessCode = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('✅ [ENROLL] PIN généré:', accessCode);
+
+      // 3. CRÉATION RÉFÉRENCE REALTIME DB
+      console.log('🔧 [ENROLL] Création référence Realtime DB...');
       const vehiclesRef = ref(db, 'fleet_vehicles');
       const newVehicleRef = push(vehiclesRef);
       const vehicleId = newVehicleRef.key;
-      console.log('✅ [ENROLL] VehicleId généré:', vehicleId);
 
-      console.log('🔧 [ENROLL] Étape 2: Génération du code d\'accès Firestore...');
-      let accessCode: string;
-      try {
-        accessCode = await createVehicleAccessCode(
-          vehicleId!,
-          vehicleData.license_plate || 'N/A'
-        );
-        console.log('✅ [ENROLL] Code d\'accès généré:', accessCode);
-      } catch (firestoreError: any) {
-        console.error('❌ [ENROLL] Erreur Firestore lors de la génération du code:', firestoreError);
-        console.error('   📝 Message:', firestoreError?.message);
-        console.error('   🔢 Code:', firestoreError?.code);
-        throw new Error(`Erreur Firestore: ${firestoreError?.message || 'Impossible de générer le code d\'accès'}`);
+      if (!vehicleId) {
+        throw new Error('Impossible de générer un ID véhicule');
       }
 
-      const vehiclePayload = {
+      console.log('✅ [ENROLL] Vehicle ID:', vehicleId);
+
+      // 4. NETTOYAGE PAYLOAD - Éliminer tous les undefined
+      const rawPayload = {
         vehicle_number: vehicleData.vehicle_number || 'N/A',
         type: vehicleData.type || 'ndiaga_ndiaye',
         capacity: vehicleData.capacity || 25,
@@ -392,58 +374,70 @@ const AdminOpsTransportPage: React.FC = () => {
         average_occupancy_rate: 0,
         access_code: accessCode,
         created_at: new Date().toISOString(),
-        created_by: user.uid
+        created_by: authUID
       };
 
-      console.log('💾 Enregistrement du véhicule:', vehiclePayload);
-      console.log('🔐 Code d\'accès généré:', accessCode);
-      console.log('📍 Chemin Firebase:', newVehicleRef.toString());
+      // Sérialisation pour éliminer undefined
+      const vehiclePayload = JSON.parse(JSON.stringify(rawPayload));
+      console.log('🧹 [ENROLL] Payload nettoyé:', vehiclePayload);
 
+      // 5. DIAGNOSTIC FLASH
+      console.log('🔍 [ENROLL] DIAGNOSTIC FLASH:');
+      console.log('   📍 Chemin Realtime DB:', `fleet_vehicles/${vehicleId}`);
+      console.log('   🆔 UID qui écrit:', authUID);
+      console.log('   📊 Payload keys:', Object.keys(vehiclePayload).length);
+
+      // 6. ÉCRITURE ATOMIQUE REALTIME DB
+      console.log('💾 [ENROLL] Écriture Realtime DB...');
       await set(newVehicleRef, vehiclePayload);
+      console.log('✅ [ENROLL] Véhicule écrit dans Realtime DB');
 
-      console.log('✅ Véhicule enregistré avec succès!');
+      // 7. ÉCRITURE ATOMIQUE FIRESTORE (Code d'accès)
+      console.log('🔐 [ENROLL] Écriture code Firestore...');
+      const codePayload = {
+        code: accessCode,
+        type: 'vehicle',
+        vehicleId: vehicleId,
+        vehiclePlate: vehicleData.license_plate || 'N/A',
+        isActive: true,
+        createdAt: new Date(),
+        createdBy: authUID,
+        usageCount: 0
+      };
+
+      const cleanCodePayload = JSON.parse(JSON.stringify(codePayload));
+      console.log('   📍 Chemin Firestore:', `access_codes/${accessCode}`);
+      console.log('   🆔 UID qui écrit:', authUID);
+
+      try {
+        await setDoc(doc(firestore, 'access_codes', accessCode), cleanCodePayload);
+        console.log('✅ [ENROLL] Code écrit dans Firestore');
+      } catch (firestoreError: any) {
+        console.error('❌ [ENROLL] Erreur Firestore:', firestoreError);
+        alert(`⚠️ FIRESTORE ERROR\n\nUID: ${authUID}\nChemin: access_codes/${accessCode}\nCode: ${firestoreError?.code}\nMessage: ${firestoreError?.message}`);
+        throw firestoreError;
+      }
+
+      console.log('🎉 [ENROLL] SUCCÈS TOTAL');
       hideToast(loadingToastId);
-      showToast('success', `✅ Véhicule enrôlé avec succès! Code: ${accessCode}`);
+      showToast('success', `✅ Véhicule enrôlé! Code: ${accessCode}`, 5000);
       setShowEnrollModal(false);
+
+      // Recharger les données
+      loadData();
+
     } catch (error: any) {
-      console.error('❌ [ENROLL] ERREUR DÉTAILLÉE:');
-      console.error('   💥 Error object:', error);
+      console.error('❌ [ENROLL] ÉCHEC CRITIQUE:');
+      console.error('   💥 Error:', error);
       console.error('   📝 Message:', error?.message);
       console.error('   🔢 Code:', error?.code);
       console.error('   📚 Stack:', error?.stack);
-      console.error('   🔍 Full error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
-      if (error.code === 'PERMISSION_DENIED') {
-        console.error('');
-        console.error('🔥 PERMISSION_DENIED - SOLUTIONS:');
-        console.error('');
-        console.error('1️⃣ Vérifier le rôle dans Firebase Realtime Database:');
-        console.error(`   - Allez sur: https://console.firebase.google.com`);
-        console.error('   - Realtime Database → Données');
-        console.error(`   - Créez/modifiez: users/${user?.uid}/role`);
-        console.error('   - Valeur: "ops_transport"');
-        console.error('');
-        console.error('2️⃣ Vérifier les règles Firebase:');
-        console.error('   - Realtime Database → Règles');
-        console.error('   - Vérifiez que "fleet_vehicles" autorise "ops_transport"');
-        console.error('');
-        console.error('3️⃣ Structure attendue dans la base:');
-        console.error('   {');
-        console.error('     "users": {');
-        console.error(`       "${user?.uid}": {`);
-        console.error('         "role": "ops_transport",');
-        console.error(`         "email": "${user?.email}"`);
-        console.error('       }');
-        console.error('     }');
-        console.error('   }');
-        console.error('');
-
-        showToast('error', `❌ Permission refusée: Votre rôle "${user?.role}" n'est pas configuré dans Firebase. Consultez la console.`, 8000);
-      } else {
-        showToast('error', `❌ Échec: ${error.message || 'Erreur inconnue'}`, 5000);
-      }
+      // DIAGNOSTIC FLASH EN CAS D'ERREUR
+      alert(`❌ ÉCHEC ENRÔLEMENT\n\nUID tentant d'écrire: ${authUID}\nEmail: ${authEmail}\nRôle: ${user?.role}\n\nErreur: ${error?.code || 'UNKNOWN'}\nMessage: ${error?.message || 'Erreur inconnue'}\n\nVérifiez la console pour plus de détails.`);
 
       hideToast(loadingToastId);
+      showToast('error', `❌ Échec: ${error?.message || error?.code || 'Erreur inconnue'}`, 8000);
     }
   };
 
