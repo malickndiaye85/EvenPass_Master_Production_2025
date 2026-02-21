@@ -1,5 +1,5 @@
 import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, increment, Timestamp } from 'firebase/firestore';
+import { ref, get, update } from 'firebase/database';
 import { signInAnonymously } from 'firebase/auth';
 
 export interface AccessCodeData {
@@ -43,38 +43,60 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       return { success: false, error: 'Le code doit contenir exactement 6 chiffres' };
     }
 
-    const accessCodesRef = collection(db, 'access_codes');
-    const q = query(
-      accessCodesRef,
-      where('code', '==', pinCode),
-      where('active', '==', true)
-    );
+    console.log('🔍 [PIN AUTH] Recherche du PIN dans Realtime DB:', pinCode);
 
-    const querySnapshot = await getDocs(q);
+    // Recherche dans l'index des codes
+    const pinIndexRef = ref(db, `fleet_indices/codes/${pinCode}`);
+    const pinSnapshot = await get(pinIndexRef);
 
-    if (querySnapshot.empty) {
+    if (!pinSnapshot.exists()) {
+      console.warn('❌ [PIN AUTH] Code non trouvé dans l\'index');
       logFailedAttempt(pinCode);
       return { success: false, error: 'Code incorrect' };
     }
 
-    const codeDoc = querySnapshot.docs[0];
-    const codeData = codeDoc.data() as AccessCodeData;
+    const pinData = pinSnapshot.val();
+    console.log('✅ [PIN AUTH] Code trouvé:', pinData);
 
+    if (!pinData.isActive) {
+      console.warn('⚠️ [PIN AUTH] Code inactif');
+      logFailedAttempt(pinCode);
+      return { success: false, error: 'Code désactivé' };
+    }
+
+    // Récupérer les données du véhicule
+    const vehicleRef = ref(db, `fleet_vehicles/${pinData.vehicleId}`);
+    const vehicleSnapshot = await get(vehicleRef);
+
+    if (!vehicleSnapshot.exists()) {
+      console.error('❌ [PIN AUTH] Véhicule non trouvé:', pinData.vehicleId);
+      return { success: false, error: 'Véhicule non trouvé' };
+    }
+
+    const vehicleData = vehicleSnapshot.val();
+    console.log('✅ [PIN AUTH] Véhicule trouvé:', vehicleData);
+
+    // Authentification anonyme
     await signInAnonymously(auth);
 
-    await updateDoc(doc(db, 'access_codes', codeDoc.id), {
-      lastUsedAt: Timestamp.now(),
-      usageCount: increment(1)
-    });
+    // Mise à jour du compteur d'utilisation
+    try {
+      await update(pinIndexRef, {
+        lastUsedAt: new Date().toISOString(),
+        usageCount: (pinData.usageCount || 0) + 1
+      });
+    } catch (updateError) {
+      console.warn('⚠️ [PIN AUTH] Impossible de mettre à jour le compteur:', updateError);
+    }
 
     const session: ControllerSession = {
-      code: codeData.code,
-      type: codeData.type,
-      role: codeData.role,
-      vehicleId: codeData.vehicleId,
-      vehiclePlate: codeData.vehiclePlate,
-      name: codeData.name,
-      phone: codeData.phone,
+      code: pinCode,
+      type: 'volant',
+      role: 'controller',
+      vehicleId: pinData.vehicleId,
+      vehiclePlate: pinData.vehiclePlate || vehicleData.license_plate,
+      name: vehicleData.driver_name,
+      phone: vehicleData.driver_phone,
       loginTimestamp: Date.now()
     };
 
@@ -83,9 +105,10 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
 
     logSuccessfulLogin(session);
 
+    console.log('🎉 [PIN AUTH] Authentification réussie');
     return { success: true, session };
   } catch (error) {
-    console.error('PIN authentication error:', error);
+    console.error('❌ [PIN AUTH] Erreur:', error);
     return { success: false, error: 'Erreur de connexion. Veuillez réessayer.' };
   }
 }

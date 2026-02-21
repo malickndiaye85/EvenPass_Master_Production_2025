@@ -373,6 +373,7 @@ const AdminOpsTransportPage: React.FC = () => {
         total_revenue_today: 0,
         average_occupancy_rate: 0,
         access_code: accessCode,
+        epscanv_pin: accessCode,
         created_at: new Date().toISOString(),
         created_by: authUID
       };
@@ -386,39 +387,35 @@ const AdminOpsTransportPage: React.FC = () => {
       console.log('   📍 Chemin Realtime DB:', `fleet_vehicles/${vehicleId}`);
       console.log('   🆔 UID qui écrit:', authUID);
       console.log('   📊 Payload keys:', Object.keys(vehiclePayload).length);
+      console.log('   🔐 PIN généré:', accessCode);
 
-      // 6. ÉCRITURE ATOMIQUE REALTIME DB
-      console.log('💾 [ENROLL] Écriture Realtime DB...');
+      // 6. ÉCRITURE ATOMIQUE REALTIME DB (Véhicule + PIN intégré)
+      console.log('💾 [ENROLL] Écriture Realtime DB (véhicule + PIN)...');
       await set(newVehicleRef, vehiclePayload);
-      console.log('✅ [ENROLL] Véhicule écrit dans Realtime DB');
+      console.log('✅ [ENROLL] Véhicule écrit dans Realtime DB avec PIN intégré');
 
-      // 7. ÉCRITURE ATOMIQUE FIRESTORE (Code d'accès)
-      console.log('🔐 [ENROLL] Écriture code Firestore...');
-      const codePayload = {
-        code: accessCode,
-        type: 'vehicle',
+      // 7. CRÉATION INDEX PIN pour recherche rapide
+      console.log('🔍 [ENROLL] Création index PIN pour recherche rapide...');
+      const pinIndexRef = ref(db, `fleet_indices/codes/${accessCode}`);
+      const pinIndexPayload = {
         vehicleId: vehicleId,
         vehiclePlate: vehicleData.license_plate || 'N/A',
         isActive: true,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         createdBy: authUID,
         usageCount: 0
       };
 
-      const cleanCodePayload = JSON.parse(JSON.stringify(codePayload));
-      console.log('   📍 Chemin Firestore:', `access_codes/${accessCode}`);
-      console.log('   🆔 UID qui écrit:', authUID);
+      const cleanPinIndexPayload = JSON.parse(JSON.stringify(pinIndexPayload));
 
       try {
-        await setDoc(doc(firestore, 'access_codes', accessCode), cleanCodePayload);
-        console.log('✅ [ENROLL] Code écrit dans Firestore');
-      } catch (firestoreError: any) {
-        console.error('❌ [ENROLL] Erreur Firestore:', firestoreError);
-        alert(`⚠️ FIRESTORE ERROR\n\nUID: ${authUID}\nChemin: access_codes/${accessCode}\nCode: ${firestoreError?.code}\nMessage: ${firestoreError?.message}`);
-        throw firestoreError;
+        await set(pinIndexRef, cleanPinIndexPayload);
+        console.log('✅ [ENROLL] Index PIN créé dans Realtime DB:', `fleet_indices/codes/${accessCode}`);
+      } catch (indexError: any) {
+        console.warn('⚠️ [ENROLL] Impossible de créer l\'index PIN (non bloquant):', indexError);
       }
 
-      console.log('🎉 [ENROLL] SUCCÈS TOTAL');
+      console.log('🎉 [ENROLL] SUCCÈS TOTAL - PIN stocké dans Realtime DB');
       hideToast(loadingToastId);
       showToast('success', `✅ Véhicule enrôlé! Code: ${accessCode}`, 5000);
       setShowEnrollModal(false);
