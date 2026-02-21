@@ -43,6 +43,7 @@ interface ControllerInfo {
 const EPscanVPage: React.FC = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<ControllerSession | null>(null);
+  const [controllerInfo, setControllerInfo] = useState<ControllerInfo | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [stats, setStats] = useState<ScanStats>({ validated: 0, rejected: 0, total: 0 });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -66,6 +67,14 @@ const EPscanVPage: React.FC = () => {
       }
       setSession(currentSession);
       console.log('[EPSCANV] Session chargée:', currentSession);
+
+      const info: ControllerInfo = {
+        name: currentSession.adminName || currentSession.name || 'Malick',
+        line: currentSession.line || currentSession.route || currentSession.vehiclePlate || 'N/A',
+        vehicleId: currentSession.vehicleId || 'unknown'
+      };
+      setControllerInfo(info);
+      console.log('[EPSCANV] ControllerInfo créé:', info);
 
       initializeIndexedDB();
       loadPendingScans();
@@ -255,15 +264,18 @@ const EPscanVPage: React.FC = () => {
   };
 
   const syncScanToFirebase = async (scan: PendingScan) => {
-    if (!db || !session) return;
+    if (!db || !session || !controllerInfo) {
+      console.warn('[EPSCANV] Sync impossible - données manquantes');
+      return;
+    }
 
     try {
       const tripsRef = ref(db, 'trips');
       await push(tripsRef, {
-        controller_id: session.vehicleId || 'unknown',
-        controller_name: session.name || 'Contrôleur',
-        vehicle_id: session.vehicleId || 'unknown',
-        line: session.vehiclePlate || 'N/A',
+        controller_id: controllerInfo.vehicleId,
+        controller_name: controllerInfo.name,
+        vehicle_id: controllerInfo.vehicleId,
+        line: controllerInfo.line,
         passenger_id: scan.passData.userId,
         subscription_type: scan.passData.subscriptionType,
         grade: scan.passData.grade,
@@ -276,7 +288,7 @@ const EPscanVPage: React.FC = () => {
         } : null
       });
 
-      const statsRef = ref(db, `controller_stats/${session.vehicleId || 'unknown'}/${new Date().toISOString().split('T')[0]}`);
+      const statsRef = ref(db, `controller_stats/${controllerInfo.vehicleId}/${new Date().toISOString().split('T')[0]}`);
       const statsSnapshot = await get(statsRef);
       const currentStats = statsSnapshot.exists() ? statsSnapshot.val() : { validated: 0, rejected: 0, total: 0 };
 
@@ -285,8 +297,10 @@ const EPscanVPage: React.FC = () => {
         rejected: currentStats.rejected + (scan.result === 'rejected' ? 1 : 0),
         total: currentStats.total + 1
       });
+
+      console.log('[EPSCANV] ✅ Scan synchronisé:', scan.id);
     } catch (error) {
-      console.error('Erreur sync Firebase:', error);
+      console.error('[EPSCANV] Erreur sync Firebase:', error);
       await savePendingScan(scan);
     }
   };
@@ -447,21 +461,32 @@ const EPscanVPage: React.FC = () => {
 
   if (initError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md border border-red-500/30 shadow-2xl">
-          <AlertTriangle className="text-red-400 mx-auto mb-4" size={64} />
+      <div className="min-h-screen bg-gradient-to-br from-yellow-900 to-yellow-950 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md border border-yellow-500/30 shadow-2xl">
+          <AlertTriangle className="text-yellow-400 mx-auto mb-4" size={64} />
           <h1 className="text-2xl font-black text-white text-center mb-4">
-            Erreur d'Initialisation
+            Données Manquantes
           </h1>
-          <p className="text-red-200 text-center mb-6">
+          <p className="text-yellow-200 text-center mb-6">
             {initError}
           </p>
-          <button
-            onClick={() => navigate('/controller/login')}
-            className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
-          >
-            Retour à la connexion
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setInitError(null);
+                window.location.reload();
+              }}
+              className="w-full py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-xl transition-colors"
+            >
+              🔄 Recharger les Données
+            </button>
+            <button
+              onClick={() => navigate('/controller/login')}
+              className="w-full py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl transition-colors"
+            >
+              Retour à la connexion
+            </button>
+          </div>
         </div>
       </div>
     );

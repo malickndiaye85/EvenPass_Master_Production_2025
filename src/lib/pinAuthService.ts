@@ -26,6 +26,11 @@ export interface ControllerSession {
   vehiclePlate?: string;
   name?: string;
   phone?: string;
+  line?: string;
+  route?: string;
+  vehicleData?: any;
+  adminName?: string;
+  adminPhone?: string;
   loginTimestamp: number;
 }
 
@@ -242,8 +247,8 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       console.warn('[LOGIN-DEBUG] ⚠️ Échec mise à jour compteur (non bloquant)');
     }
 
-    // Création de la session
-    console.log('[LOGIN-DEBUG] Étape 6: Création session');
+    // Création de la session enrichie
+    console.log('[LOGIN-DEBUG] Étape 6: Création session enrichie');
     const session: ControllerSession = {
       code: normalizedPin,
       type: 'volant',
@@ -252,13 +257,18 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       vehiclePlate: pinData.vehiclePlate || vehicleData.license_plate || 'N/A',
       name: vehicleData.driver_name || 'Chauffeur',
       phone: vehicleData.driver_phone || 'N/A',
+      line: vehicleData.route || vehicleData.line || 'N/A',
+      route: vehicleData.route || 'N/A',
+      vehicleData: vehicleData,
+      adminName: 'Malick',
+      adminPhone: '+221 77 123 45 67',
       loginTimestamp: Date.now()
     };
 
     console.log('[LOGIN-DEBUG] Session créée:', JSON.stringify(session, null, 2));
 
     localStorage.setItem(CONTROLLER_SESSION_KEY, JSON.stringify(session));
-    console.log('[LOGIN-DEBUG] ✅ Session sauvegardée dans localStorage');
+    console.log('[LOGIN-DEBUG] ✅ Session enrichie sauvegardée dans localStorage');
 
     clearFailedAttempts();
     logSuccessfulLogin(session);
