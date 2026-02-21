@@ -125,16 +125,21 @@ class SecurityLogger {
     granted: boolean,
     reason?: string
   ): Promise<void> {
-    await this.log({
+    const logData: any = {
       event_type: granted ? 'access_granted' : 'access_denied',
-      user_email: userEmail,
-      user_id: userId,
-      user_role: userRole,
+      user_email: userEmail || 'unknown',
+      user_id: userId || 'unknown',
+      user_role: userRole || 'unknown',
       route,
       action: `Route access ${granted ? 'granted' : 'denied'}: ${route}`,
-      success: granted,
-      error_message: reason
-    });
+      success: granted
+    };
+
+    if (reason) {
+      logData.error_message = reason;
+    }
+
+    await this.log(logData);
   }
 
   public async logUnauthorizedAttempt(

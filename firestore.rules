@@ -419,6 +419,23 @@ service cloud.firestore {
     }
 
     // ============================================
+    // ACCESS CODES COLLECTION (Vehicle & Staff Access Codes)
+    // ============================================
+    match /access_codes/{codeId} {
+      // Lecture pour tous les authentifiés
+      allow read: if isAuthenticated();
+
+      // Création par utilisateurs authentifiés (ops_transport, admin)
+      allow create: if isAuthenticated();
+
+      // Modification uniquement par admin
+      allow update: if isAdminFinance();
+
+      // Suppression uniquement par admin
+      allow delete: if isAdminFinance();
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut

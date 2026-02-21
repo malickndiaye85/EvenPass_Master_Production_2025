@@ -355,14 +355,26 @@ const AdminOpsTransportPage: React.FC = () => {
     const loadingToastId = showToast('loading', '⏳ Enrôlement en cours...');
 
     try {
+      console.log('🔧 [ENROLL] Étape 1: Création de la référence Firebase Realtime DB...');
       const vehiclesRef = ref(db, 'fleet_vehicles');
       const newVehicleRef = push(vehiclesRef);
       const vehicleId = newVehicleRef.key;
+      console.log('✅ [ENROLL] VehicleId généré:', vehicleId);
 
-      const accessCode = await createVehicleAccessCode(
-        vehicleId!,
-        vehicleData.license_plate || 'N/A'
-      );
+      console.log('🔧 [ENROLL] Étape 2: Génération du code d\'accès Firestore...');
+      let accessCode: string;
+      try {
+        accessCode = await createVehicleAccessCode(
+          vehicleId!,
+          vehicleData.license_plate || 'N/A'
+        );
+        console.log('✅ [ENROLL] Code d\'accès généré:', accessCode);
+      } catch (firestoreError: any) {
+        console.error('❌ [ENROLL] Erreur Firestore lors de la génération du code:', firestoreError);
+        console.error('   📝 Message:', firestoreError?.message);
+        console.error('   🔢 Code:', firestoreError?.code);
+        throw new Error(`Erreur Firestore: ${firestoreError?.message || 'Impossible de générer le code d\'accès'}`);
+      }
 
       const vehiclePayload = {
         vehicle_number: vehicleData.vehicle_number || 'N/A',
@@ -394,11 +406,12 @@ const AdminOpsTransportPage: React.FC = () => {
       showToast('success', `✅ Véhicule enrôlé avec succès! Code: ${accessCode}`);
       setShowEnrollModal(false);
     } catch (error: any) {
-      console.error('❌ ERREUR DÉTAILLÉE:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
+      console.error('❌ [ENROLL] ERREUR DÉTAILLÉE:');
+      console.error('   💥 Error object:', error);
+      console.error('   📝 Message:', error?.message);
+      console.error('   🔢 Code:', error?.code);
+      console.error('   📚 Stack:', error?.stack);
+      console.error('   🔍 Full error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
       if (error.code === 'PERMISSION_DENIED') {
         console.error('');
