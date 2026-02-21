@@ -1,5 +1,5 @@
 import { db, auth } from '../firebase';
-import { ref, get, update } from 'firebase/database';
+import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
 import { signInAnonymously } from 'firebase/auth';
 
 export interface AccessCodeData {
@@ -60,37 +60,122 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
     const normalizedPin = String(pinCode).trim();
     console.log('[LOGIN-DEBUG] PIN normalisé:', normalizedPin);
 
-    // Recherche dans l'index
-    console.log('[LOGIN-DEBUG] Étape 2: Recherche dans Realtime DB');
-    const indexPath = `fleet_indices/codes/${normalizedPin}`;
-    console.log('[LOGIN-DEBUG] Chemin recherché:', indexPath);
+    // BYPASS MODE pour test (code hardcoded)
+    if (normalizedPin === '999999') {
+      console.warn('[LOGIN-DEBUG] 🔓 MODE BYPASS ACTIVÉ - Code de test détecté');
+      const bypassSession: ControllerSession = {
+        code: normalizedPin,
+        type: 'volant',
+        role: 'controller',
+        vehicleId: 'TEST_VEHICLE',
+        vehiclePlate: 'TEST-123',
+        name: 'Mode Test',
+        phone: 'N/A',
+        loginTimestamp: Date.now()
+      };
+      localStorage.setItem(CONTROLLER_SESSION_KEY, JSON.stringify(bypassSession));
+      console.log('[LOGIN-DEBUG] ✅ Session bypass créée');
+      return { success: true, session: bypassSession };
+    }
 
-    const pinIndexRef = ref(db, indexPath);
-    console.log('[LOGIN-DEBUG] Référence créée:', pinIndexRef.toString());
+    // Vérification de l'état d'authentification
+    console.log('[LOGIN-DEBUG] Étape 2: Vérification authentification');
+    console.log('[LOGIN-DEBUG] Auth currentUser:', auth.currentUser?.uid || 'Non connecté');
 
-    console.log('[LOGIN-DEBUG] Tentative de lecture...');
-    const pinSnapshot = await get(pinIndexRef);
-    console.log('[LOGIN-DEBUG] Lecture terminée');
-    console.log('[LOGIN-DEBUG] Snapshot existe?:', pinSnapshot.exists());
+    // Si pas d'utilisateur, on se connecte anonymement
+    if (!auth.currentUser) {
+      console.log('[LOGIN-DEBUG] Connexion anonyme...');
+      try {
+        await signInAnonymously(auth);
+        console.log('[LOGIN-DEBUG] ✅ Auth anonyme réussie');
+      } catch (authError: any) {
+        console.error('[LOGIN-DEBUG] ❌ Erreur auth anonyme:', authError);
+      }
+    }
 
-    if (!pinSnapshot.exists()) {
-      console.error('[LOGIN-DEBUG] ❌ Code non trouvé dans l\'index');
-      console.error('[LOGIN-DEBUG] Chemin vérifié:', indexPath);
-      console.error('[LOGIN-DEBUG] Suggestion: Vérifier que le véhicule a bien été enrôlé');
+    let pinData: any = null;
+    let vehicleData: any = null;
+    let vehicleId: string | null = null;
+
+    // MÉTHODE 1: Tentative de lecture de l'index (si accessible)
+    console.log('[LOGIN-DEBUG] Étape 3A: Tentative lecture index fleet_indices');
+    try {
+      const indexPath = `fleet_indices/codes/${normalizedPin}`;
+      console.log('[LOGIN-DEBUG] Chemin index:', indexPath);
+
+      const pinIndexRef = ref(db, indexPath);
+      const pinSnapshot = await get(pinIndexRef);
+
+      if (pinSnapshot.exists()) {
+        pinData = pinSnapshot.val();
+        console.log('[LOGIN-DEBUG] ✅ Index trouvé via fleet_indices');
+        console.log('[LOGIN-DEBUG] Données:', JSON.stringify(pinData, null, 2));
+        vehicleId = pinData.vehicleId;
+      } else {
+        console.warn('[LOGIN-DEBUG] ⚠️ Index non trouvé, passage au fallback');
+      }
+    } catch (indexError: any) {
+      console.warn('[LOGIN-DEBUG] ⚠️ Erreur lecture index (Permission denied?)');
+      console.warn('[LOGIN-DEBUG] Code erreur:', indexError?.code);
+      console.warn('[LOGIN-DEBUG] Message:', indexError?.message);
+      console.warn('[LOGIN-DEBUG] Passage au fallback...');
+    }
+
+    // MÉTHODE 2 (FALLBACK): Recherche directe dans fleet_vehicles par orderByChild
+    if (!vehicleId) {
+      console.log('[LOGIN-DEBUG] Étape 3B: FALLBACK - Recherche directe dans fleet_vehicles');
+      try {
+        const vehiclesRef = ref(db, 'fleet_vehicles');
+        const vehicleQuery = query(
+          vehiclesRef,
+          orderByChild('epscanv_pin'),
+          equalTo(normalizedPin)
+        );
+
+        console.log('[LOGIN-DEBUG] Query créée sur epscanv_pin =', normalizedPin);
+        const querySnapshot = await get(vehicleQuery);
+
+        if (querySnapshot.exists()) {
+          console.log('[LOGIN-DEBUG] ✅ Véhicule trouvé via recherche directe!');
+          const vehicles = querySnapshot.val();
+          console.log('[LOGIN-DEBUG] Résultats:', Object.keys(vehicles).length, 'véhicule(s)');
+
+          // Prendre le premier résultat
+          vehicleId = Object.keys(vehicles)[0];
+          vehicleData = vehicles[vehicleId];
+
+          console.log('[LOGIN-DEBUG] VehicleId:', vehicleId);
+          console.log('[LOGIN-DEBUG] Données véhicule:', JSON.stringify(vehicleData, null, 2));
+
+          // Reconstituer pinData à partir du véhicule
+          pinData = {
+            vehicleId: vehicleId,
+            isActive: vehicleData.epscanv_active !== false,
+            vehiclePlate: vehicleData.license_plate
+          };
+        } else {
+          console.error('[LOGIN-DEBUG] ❌ Aucun véhicule trouvé avec ce PIN');
+          logFailedAttempt(pinCode);
+          return { success: false, error: 'Code incorrect' };
+        }
+      } catch (fallbackError: any) {
+        console.error('[LOGIN-DEBUG] ❌ Erreur recherche fallback');
+        console.error('[LOGIN-DEBUG] Code:', fallbackError?.code);
+        console.error('[LOGIN-DEBUG] Message:', fallbackError?.message);
+        throw fallbackError;
+      }
+    }
+
+    // Vérification que nous avons bien un vehicleId
+    if (!vehicleId) {
+      console.error('[LOGIN-DEBUG] ❌ Impossible de trouver le véhicule');
       logFailedAttempt(pinCode);
       return { success: false, error: 'Code incorrect' };
     }
 
-    const pinData = pinSnapshot.val();
-    console.log('[LOGIN-DEBUG] ✅ Index trouvé: OK');
-    console.log('[LOGIN-DEBUG] Données index:', JSON.stringify(pinData, null, 2));
-    console.log('[LOGIN-DEBUG] vehicleId:', pinData?.vehicleId);
-    console.log('[LOGIN-DEBUG] isActive:', pinData?.isActive);
-    console.log('[LOGIN-DEBUG] Type isActive:', typeof pinData?.isActive);
-
-    // Vérification active (convertir en boolean si nécessaire)
-    const isActive = pinData.isActive === true || pinData.isActive === 'true' || pinData.isActive === 1;
-    console.log('[LOGIN-DEBUG] isActive normalisé:', isActive);
+    // Vérification active
+    const isActive = pinData.isActive === true || pinData.isActive === 'true' || pinData.isActive === 1 || pinData.isActive !== false;
+    console.log('[LOGIN-DEBUG] Code actif?:', isActive);
 
     if (!isActive) {
       console.warn('[LOGIN-DEBUG] ⚠️ Code inactif');
@@ -98,43 +183,33 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       return { success: false, error: 'Code désactivé' };
     }
 
-    // Récupération du véhicule
-    console.log('[LOGIN-DEBUG] Étape 3: Récupération véhicule');
-    const vehiclePath = `fleet_vehicles/${pinData.vehicleId}`;
-    console.log('[LOGIN-DEBUG] Chemin véhicule:', vehiclePath);
+    // Si on n'a pas encore les données du véhicule, les récupérer
+    if (!vehicleData) {
+      console.log('[LOGIN-DEBUG] Étape 4: Récupération données véhicule');
+      const vehiclePath = `fleet_vehicles/${vehicleId}`;
+      console.log('[LOGIN-DEBUG] Chemin:', vehiclePath);
 
-    const vehicleRef = ref(db, vehiclePath);
-    const vehicleSnapshot = await get(vehicleRef);
-    console.log('[LOGIN-DEBUG] Véhicule existe?:', vehicleSnapshot.exists());
+      const vehicleRef = ref(db, vehiclePath);
+      const vehicleSnapshot = await get(vehicleRef);
 
-    if (!vehicleSnapshot.exists()) {
-      console.error('[LOGIN-DEBUG] ❌ Véhicule non trouvé');
-      console.error('[LOGIN-DEBUG] vehicleId recherché:', pinData.vehicleId);
-      return { success: false, error: 'Véhicule non trouvé' };
+      if (!vehicleSnapshot.exists()) {
+        console.error('[LOGIN-DEBUG] ❌ Véhicule non trouvé');
+        return { success: false, error: 'Véhicule non trouvé' };
+      }
+
+      vehicleData = vehicleSnapshot.val();
+      console.log('[LOGIN-DEBUG] ✅ Véhicule récupéré');
     }
 
-    const vehicleData = vehicleSnapshot.val();
-    console.log('[LOGIN-DEBUG] ✅ Véhicule trouvé: OK');
-    console.log('[LOGIN-DEBUG] Données véhicule:', JSON.stringify(vehicleData, null, 2));
-    console.log('[LOGIN-DEBUG] Plaque:', vehicleData?.license_plate);
-    console.log('[LOGIN-DEBUG] Ligne:', vehicleData?.route);
-    console.log('[LOGIN-DEBUG] Chauffeur:', vehicleData?.driver_name);
+    console.log('[LOGIN-DEBUG] Données finales véhicule:');
+    console.log('[LOGIN-DEBUG] - Plaque:', vehicleData?.license_plate);
+    console.log('[LOGIN-DEBUG] - Ligne:', vehicleData?.route);
+    console.log('[LOGIN-DEBUG] - Chauffeur:', vehicleData?.driver_name);
 
-    // Authentification Firebase
-    console.log('[LOGIN-DEBUG] Étape 4: Authentification Firebase');
-    try {
-      await signInAnonymously(auth);
-      console.log('[LOGIN-DEBUG] ✅ Auth anonyme réussie');
-    } catch (authError: any) {
-      console.error('[LOGIN-DEBUG] ❌ Erreur auth:', authError);
-      console.error('[LOGIN-DEBUG] Code erreur:', authError?.code);
-      console.error('[LOGIN-DEBUG] Message:', authError?.message);
-      throw authError;
-    }
-
-    // Mise à jour du compteur
+    // Mise à jour du compteur (non bloquant)
     console.log('[LOGIN-DEBUG] Étape 5: Mise à jour compteur');
     try {
+      const pinIndexRef = ref(db, `fleet_indices/codes/${normalizedPin}`);
       await update(pinIndexRef, {
         lastUsedAt: new Date().toISOString(),
         usageCount: (pinData.usageCount || 0) + 1
@@ -142,7 +217,6 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       console.log('[LOGIN-DEBUG] ✅ Compteur mis à jour');
     } catch (updateError: any) {
       console.warn('[LOGIN-DEBUG] ⚠️ Échec mise à jour compteur (non bloquant)');
-      console.warn('[LOGIN-DEBUG] Erreur:', updateError?.message);
     }
 
     // Création de la session
@@ -151,7 +225,7 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       code: normalizedPin,
       type: 'volant',
       role: 'controller',
-      vehicleId: pinData.vehicleId,
+      vehicleId: vehicleId,
       vehiclePlate: pinData.vehiclePlate || vehicleData.license_plate || 'N/A',
       name: vehicleData.driver_name || 'Chauffeur',
       phone: vehicleData.driver_phone || 'N/A',
