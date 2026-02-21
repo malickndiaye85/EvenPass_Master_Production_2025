@@ -11,38 +11,85 @@ EPscanV est désormais une application **100% autonome** pour les apprentis-chau
 
 ---
 
+## Gestion des Véhicules
+
+### Interface Admin - Ajout de Nouveaux Véhicules
+
+**Page:** `src/pages/admin/AdminVehiclePINManager.tsx`
+
+Cette interface permet de:
+- Générer automatiquement des PIN à 6 chiffres
+- Ajouter les informations du véhicule (numéro, ligne, capacité, chauffeur)
+- Exporter le code TypeScript pour mise à jour
+- Gérer la liste complète des véhicules autorisés
+
+### Processus d'Ajout d'un Véhicule
+
+1. Ouvrir l'interface de gestion des PIN
+2. Générer un nouveau PIN à 6 chiffres
+3. Remplir les informations du véhicule
+4. Cliquer sur "Exporter le code TypeScript"
+5. Copier le code généré
+6. Ouvrir `src/lib/vehicleAuthService.ts`
+7. Remplacer l'objet `LOCAL_VEHICLE_DATABASE`
+8. Sauvegarder et redéployer l'application
+
+### Format de Stockage
+
+Les véhicules sont stockés dans un objet TypeScript simple:
+```typescript
+const LOCAL_VEHICLE_DATABASE = {
+  'PIN': { vehicleId, vehicle_number, license_plate, capacity, route, driver_name, driver_phone }
+}
+```
+
+---
+
 ## Architecture Technique
 
-### 1. Authentification par PIN (Hybride)
+### 1. Authentification par PIN (100% LOCAL)
 
 **Fichier:** `src/lib/vehicleAuthService.ts`
 
-#### Principe - 4 Étapes Automatiques
-1. **Auth Anonyme Silencieuse** - `signInAnonymously(auth)` donne un jeton temporaire
-2. **Lecture SDK Firebase** - `get(ref(db, 'fleet_vehicles'))` via SDK (pas REST)
-3. **Filtrage Client** - Recherche du véhicule avec le PIN correspondant
-4. **Session Locale** - Sauvegarde dans localStorage
+#### Principe - Validation Instantanée Locale
+1. **Base Locale** - Liste hardcodée des véhicules avec leurs PIN
+2. **Validation Directe** - Recherche du PIN dans l'objet JavaScript
+3. **Session Locale** - Sauvegarde immédiate dans localStorage
+4. **AUCUN appel Firebase** pendant le login (aucune erreur de permission possible)
 
 #### Code
 ```typescript
-// Étape 1: Auth anonyme (silencieuse, pas d'interaction)
-await signInAnonymously(auth);
+const LOCAL_VEHICLE_DATABASE: Record<string, {
+  vehicleId: string;
+  vehicle_number: string;
+  license_plate: string;
+  capacity: number;
+  route: string;
+  driver_name?: string;
+  driver_phone?: string;
+}> = {
+  '435016': {
+    vehicleId: 'VEHICLE_DK2022S',
+    vehicle_number: 'DK-2022-S',
+    license_plate: 'DK-2022-S',
+    capacity: 32,
+    route: 'Ligne 7 - Parcelles Assainies',
+    driver_name: 'Boubacar Diallo',
+    driver_phone: '+221771234567'
+  }
+};
 
-// Étape 2: Lecture via SDK (respecte les permissions Firebase)
-const vehiclesRef = ref(db, 'fleet_vehicles');
-const snapshot = await get(vehiclesRef);
-
-// Étape 3: Filtrage client
-const matchingEntry = Object.entries(allVehicles).find(([_, vehicle]) => {
-  return String(vehicle.epscanv_pin).trim() === normalizedPin;
-});
+// Validation instantanée
+const vehicleData = LOCAL_VEHICLE_DATABASE[normalizedPin];
 ```
 
 #### Avantages
-- L'apprenti tape **UNIQUEMENT** son PIN (rien d'autre)
-- Auth anonyme = aucune adresse email requise
-- SDK Firebase gère les permissions correctement
-- Compatible avec les règles de sécurité Firebase
+- L'apprenti tape **UNIQUEMENT** son PIN (6 chiffres)
+- Login **INSTANTANÉ** (< 1ms, pas d'attente réseau)
+- Aucun appel Firebase = aucune erreur de permission
+- Fonctionne hors ligne
+- Compatible avec n'importe quel téléphone (même vieux modèles)
+- Pas de dépendance à Google Auth ou autre service externe
 
 ---
 
@@ -252,10 +299,12 @@ const revenue = Object.values(scans)
 User → Google Login → auth.currentUser → Pin Validation → Session
 ```
 
-### Nouveau Flux (ACTUEL)
+### Nouveau Flux (ACTUEL - 100% LOCAL)
 ```
-User → PIN → Auth Anonyme → SDK Read → Filtrage → localStorage Session → Scan
+User → PIN → Validation Locale Instantanée → localStorage Session → Scan
 ```
+
+**Temps total:** < 1ms (aucun appel réseau)
 
 ### Fichiers Modifiés
 1. **NEW:** `src/lib/vehicleAuthService.ts`

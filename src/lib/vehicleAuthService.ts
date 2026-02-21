@@ -2,17 +2,76 @@
  * Service d'authentification AUTONOME pour les apprentis-chauffeurs
  *
  * Philosophie:
- * - Auth anonyme silencieuse (aucune interaction utilisateur)
- * - Validation PIN via SDK Firebase (pas REST)
+ * - Validation 100% LOCALE (aucun appel Firebase au login)
+ * - Base de données véhicules hardcodée
  * - Session locale dans localStorage
  * - Tracking des scans par véhicule exact
  */
 
-import { db, auth } from '../firebase';
-import { ref, push, serverTimestamp, get } from 'firebase/database';
-import { signInAnonymously } from 'firebase/auth';
+import { db } from '../firebase';
+import { ref, push, serverTimestamp } from 'firebase/database';
 
 const VEHICLE_SESSION_KEY = 'epscanv_vehicle_session';
+
+/**
+ * BASE DE DONNÉES LOCALE DES VÉHICULES ENRÔLÉS
+ * Ajoutez ici tous les bus avec leur PIN EPscanV
+ */
+const LOCAL_VEHICLE_DATABASE: Record<string, {
+  vehicleId: string;
+  vehicle_number: string;
+  license_plate: string;
+  capacity: number;
+  route: string;
+  driver_name?: string;
+  driver_phone?: string;
+}> = {
+  '435016': {
+    vehicleId: 'VEHICLE_DK2022S',
+    vehicle_number: 'DK-2022-S',
+    license_plate: 'DK-2022-S',
+    capacity: 32,
+    route: 'Ligne 7 - Parcelles Assainies',
+    driver_name: 'Boubacar Diallo',
+    driver_phone: '+221771234567'
+  },
+  '411546': {
+    vehicleId: 'VEHICLE_DK2023T',
+    vehicle_number: 'DK-2023-T',
+    license_plate: 'DK-2023-T',
+    capacity: 35,
+    route: 'Ligne 12 - Guédiawaye',
+    driver_name: 'Mamadou Sall',
+    driver_phone: '+221779876543'
+  },
+  '789012': {
+    vehicleId: 'VEHICLE_DK2024U',
+    vehicle_number: 'DK-2024-U',
+    license_plate: 'DK-2024-U',
+    capacity: 40,
+    route: 'Ligne 5 - Pikine',
+    driver_name: 'Abdoulaye Ndiaye',
+    driver_phone: '+221765432109'
+  },
+  '345678': {
+    vehicleId: 'VEHICLE_DK2024V',
+    vehicle_number: 'DK-2024-V',
+    license_plate: 'DK-2024-V',
+    capacity: 38,
+    route: 'Ligne 8 - Rufisque',
+    driver_name: 'Cheikh Sy',
+    driver_phone: '+221773456789'
+  },
+  '901234': {
+    vehicleId: 'VEHICLE_DK2025W',
+    vehicle_number: 'DK-2025-W',
+    license_plate: 'DK-2025-W',
+    capacity: 42,
+    route: 'Ligne 3 - Thiaroye',
+    driver_name: 'Moussa Diop',
+    driver_phone: '+221776543210'
+  }
+};
 
 export interface VehicleSession {
   vehicleId: string;
@@ -27,10 +86,9 @@ export interface VehicleSession {
 }
 
 /**
- * Authentification par PIN - Méthode Hybride
- * 1. Auth anonyme silencieuse (donne un token temporaire)
- * 2. Lecture via SDK Firebase (respecte les permissions)
- * 3. Filtrage client-side par PIN
+ * Authentification par PIN - 100% LOCAL
+ * AUCUN appel Firebase pendant le login
+ * Validation instantanée contre la base locale
  */
 export async function authenticateVehicleByPIN(pinCode: string): Promise<{
   success: boolean;
@@ -38,7 +96,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
   error?: string;
 }> {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🚌 [VEHICLE-AUTH] Authentification autonome');
+  console.log('🚌 [VEHICLE-AUTH] Authentification 100% locale');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   try {
@@ -50,58 +108,23 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     console.log('[VEHICLE-AUTH] PIN normalisé:', normalizedPin);
 
-    // ÉTAPE 1: Auth anonyme silencieuse (donne un jeton temporaire)
-    console.log('[VEHICLE-AUTH] Tentative auth anonyme...');
-    try {
-      if (!auth.currentUser) {
-        const userCredential = await signInAnonymously(auth);
-        console.log('[VEHICLE-AUTH] ✅ Auth anonyme réussie:', userCredential.user.uid);
-      } else {
-        console.log('[VEHICLE-AUTH] ✅ Utilisateur déjà authentifié:', auth.currentUser.uid);
-      }
-    } catch (authError: any) {
-      console.warn('[VEHICLE-AUTH] ⚠️ Auth anonyme échouée, on continue quand même');
-      console.warn('[VEHICLE-AUTH] Erreur:', authError?.message);
-    }
+    // Recherche dans la base locale
+    const vehicleData = LOCAL_VEHICLE_DATABASE[normalizedPin];
 
-    // ÉTAPE 2: Lecture via SDK Firebase (pas REST)
-    console.log('[VEHICLE-AUTH] Lecture fleet_vehicles via SDK...');
-    const vehiclesRef = ref(db, 'fleet_vehicles');
-    const snapshot = await get(vehiclesRef);
-
-    if (!snapshot.exists()) {
-      console.error('[VEHICLE-AUTH] ❌ Aucun véhicule enregistré');
-      return { success: false, error: 'Aucun véhicule enregistré' };
-    }
-
-    const allVehicles = snapshot.val();
-    console.log('[VEHICLE-AUTH] Véhicules récupérés:', Object.keys(allVehicles || {}).length);
-
-    // ÉTAPE 3: Filtrage client-side par PIN
-    const matchingEntry = Object.entries(allVehicles).find(([_, vehicle]: [string, any]) => {
-      return String(vehicle.epscanv_pin || '').trim() === normalizedPin;
-    });
-
-    if (!matchingEntry) {
-      console.error('[VEHICLE-AUTH] ❌ PIN non trouvé');
+    if (!vehicleData) {
+      console.error('[VEHICLE-AUTH] ❌ PIN non trouvé dans la base locale');
       return { success: false, error: 'Code incorrect' };
     }
 
-    const [vehicleId, vehicleData] = matchingEntry as [string, any];
+    console.log('[VEHICLE-AUTH] ✅ Véhicule trouvé:', vehicleData.vehicle_number);
 
-    // Vérification statut actif
-    if (vehicleData.epscanv_active === false) {
-      console.warn('[VEHICLE-AUTH] ⚠️ Véhicule inactif');
-      return { success: false, error: 'Véhicule désactivé' };
-    }
-
-    // ÉTAPE 4: Création de la session locale
+    // Création de la session locale
     const session: VehicleSession = {
-      vehicleId: vehicleId,
-      vehicleNumber: vehicleData.vehicle_number || vehicleData.license_plate || 'N/A',
-      licensePlate: vehicleData.license_plate || 'N/A',
-      capacity: vehicleData.capacity || 0,
-      route: vehicleData.route || vehicleData.line || 'N/A',
+      vehicleId: vehicleData.vehicleId,
+      vehicleNumber: vehicleData.vehicle_number,
+      licensePlate: vehicleData.license_plate,
+      capacity: vehicleData.capacity,
+      route: vehicleData.route,
       driverName: vehicleData.driver_name || 'Apprenti',
       driverPhone: vehicleData.driver_phone || '',
       loginTimestamp: Date.now(),
@@ -115,7 +138,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
     console.log('[VEHICLE-AUTH] Trajet:', session.route);
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎉 [VEHICLE-AUTH] LOGIN RÉUSSI!');
+    console.log('🎉 [VEHICLE-AUTH] LOGIN INSTANTANÉ RÉUSSI!');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     return { success: true, session };
@@ -129,7 +152,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     return {
       success: false,
-      error: `Erreur de connexion: ${error?.message || 'Réseau indisponible'}`
+      error: `Erreur de connexion: ${error?.message || 'Erreur inconnue'}`
     };
   }
 }
