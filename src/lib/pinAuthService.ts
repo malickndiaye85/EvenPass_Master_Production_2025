@@ -1,6 +1,5 @@
 import { db, auth } from '../firebase';
 import { ref, get, update, query, orderByChild, equalTo } from 'firebase/database';
-import { signInAnonymously } from 'firebase/auth';
 
 export interface AccessCodeData {
   code: string;
@@ -86,17 +85,15 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
     // Vérification de l'état d'authentification
     console.log('[LOGIN-DEBUG] Étape 2: Vérification authentification');
     console.log('[LOGIN-DEBUG] Auth currentUser:', auth.currentUser?.uid || 'Non connecté');
+    console.log('[LOGIN-DEBUG] Email:', auth.currentUser?.email || 'N/A');
 
-    // Si pas d'utilisateur, on se connecte anonymement
+    // Utiliser la session existante (l'utilisateur est déjà connecté en tant qu'admin)
     if (!auth.currentUser) {
-      console.log('[LOGIN-DEBUG] Connexion anonyme...');
-      try {
-        await signInAnonymously(auth);
-        console.log('[LOGIN-DEBUG] ✅ Auth anonyme réussie');
-      } catch (authError: any) {
-        console.error('[LOGIN-DEBUG] ❌ Erreur auth anonyme:', authError);
-      }
+      console.error('[LOGIN-DEBUG] ❌ Aucun utilisateur connecté');
+      return { success: false, error: 'Vous devez être connecté pour accéder au scanner' };
     }
+
+    console.log('[LOGIN-DEBUG] ✅ Utilisation session existante:', auth.currentUser.email);
 
     let pinData: any = null;
     let vehicleData: any = null;
@@ -247,8 +244,12 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       console.warn('[LOGIN-DEBUG] ⚠️ Échec mise à jour compteur (non bloquant)');
     }
 
-    // Création de la session enrichie
+    // Création de la session enrichie avec infos admin
     console.log('[LOGIN-DEBUG] Étape 6: Création session enrichie');
+
+    const currentUserEmail = auth.currentUser?.email || 'N/A';
+    const currentUserName = currentUserEmail.split('@')[0] || 'Admin';
+
     const session: ControllerSession = {
       code: normalizedPin,
       type: 'volant',
@@ -260,10 +261,13 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       line: vehicleData.route || vehicleData.line || 'N/A',
       route: vehicleData.route || 'N/A',
       vehicleData: vehicleData,
-      adminName: 'Malick',
+      adminName: currentUserName === 'malick' ? 'Malick' : currentUserName,
       adminPhone: '+221 77 123 45 67',
       loginTimestamp: Date.now()
     };
+
+    console.log('[LOGIN-DEBUG] Admin connecté:', currentUserName);
+    console.log('[LOGIN-DEBUG] Email:', currentUserEmail);
 
     console.log('[LOGIN-DEBUG] Session créée:', JSON.stringify(session, null, 2));
 
