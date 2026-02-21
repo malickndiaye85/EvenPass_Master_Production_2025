@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Scan, QrCode, CheckCircle, XCircle, Activity, WifiOff, Wifi,
-  MapPin, Battery, Sun, Moon, AlertTriangle, Clock, User, Bus, LogOut
+  Battery, AlertTriangle, Clock, Bus, LogOut, TrendingUp
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { ref, update, push, onValue, get } from 'firebase/database';
-import { db } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
-import { getControllerSession, clearControllerSession, type ControllerSession } from '../../lib/pinAuthService';
+import {
+  getVehicleSession,
+  clearVehicleSession,
+  recordVehicleScan,
+  type VehicleSession
+} from '../../lib/vehicleAuthService';
 
 interface ScanStats {
   validated: number;
@@ -34,17 +37,9 @@ interface PassData {
   signature: string;
 }
 
-interface ControllerInfo {
-  name: string;
-  line: string;
-  vehicleId: string;
-}
-
 const EPscanVPage: React.FC = () => {
   const navigate = useNavigate();
-  const [session, setSession] = useState<ControllerSession | null>(null);
-  const [controllerInfo, setControllerInfo] = useState<ControllerInfo | null>(null);
-  const [initError, setInitError] = useState<string | null>(null);
+  const [session, setSession] = useState<VehicleSession | null>(null);
   const [stats, setStats] = useState<ScanStats>({ validated: 0, rejected: 0, total: 0 });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingScans, setPendingScans] = useState<PendingScan[]>([]);
@@ -59,32 +54,21 @@ const EPscanVPage: React.FC = () => {
   const dbRef = useRef<any>(null);
 
   useEffect(() => {
-    try {
-      const currentSession = getControllerSession();
-      if (!currentSession) {
-        navigate('/controller/login');
-        return;
-      }
-      setSession(currentSession);
-      console.log('[EPSCANV] Session chargée:', currentSession);
-
-      const info: ControllerInfo = {
-        name: currentSession.adminName || currentSession.name || 'Malick',
-        line: currentSession.line || currentSession.route || currentSession.vehiclePlate || 'N/A',
-        vehicleId: currentSession.vehicleId || 'unknown'
-      };
-      setControllerInfo(info);
-      console.log('[EPSCANV] ControllerInfo créé:', info);
-
-      initializeIndexedDB();
-      loadPendingScans();
-      requestWakeLock();
-      startLocationTracking();
-      monitorBattery();
-    } catch (error: any) {
-      console.error('[EPSCANV] Erreur initialisation:', error);
-      setInitError(error?.message || 'Erreur d\'initialisation');
+    const currentSession = getVehicleSession();
+    if (!currentSession) {
+      console.warn('[EPSCANV] Pas de session véhicule - redirection');
+      navigate('/controller/login');
+      return;
     }
+
+    setSession(currentSession);
+    console.log('[EPSCANV] Session véhicule chargée:', currentSession);
+
+    initializeIndexedDB();
+    loadPendingScans();
+    requestWakeLock();
+    startLocationTracking();
+    monitorBattery();
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -204,10 +188,9 @@ const EPscanVPage: React.FC = () => {
       return { valid: false, reason: 'Pass expiré' };
     }
 
-    if (session?.vehiclePlate && passData.line) {
-      const vehicleLine = session.vehiclePlate.split('-')[0];
-      if (passData.line !== vehicleLine) {
-        return { valid: false, reason: `Pass valide pour ${passData.line}, pas ${vehicleLine}` };
+    if (session?.route && passData.line) {
+      if (passData.line !== session.route) {
+        return { valid: false, reason: `Pass valide pour ${passData.line}, pas ${session.route}` };
       }
     }
 
@@ -248,10 +231,20 @@ const EPscanVPage: React.FC = () => {
         playErrorSound();
       }
 
-      if (isOnline && db) {
-        await syncScanToFirebase(scanResult);
+      if (isOnline) {
+        await recordVehicleScan({
+          passData,
+          result: scanResult.result,
+          reason: scanResult.reason,
+          location: scanResult.location ? {
+            latitude: scanResult.location.latitude,
+            longitude: scanResult.location.longitude
+          } : undefined
+        });
+        console.log('[EPSCANV] ✅ Scan synchronisé en temps réel');
       } else {
         await savePendingScan(scanResult);
+        console.log('[EPSCANV] 💾 Scan sauvegardé localement');
       }
 
       setTimeout(() => setLastScanResult(null), 3000);
@@ -263,48 +256,6 @@ const EPscanVPage: React.FC = () => {
     }
   };
 
-  const syncScanToFirebase = async (scan: PendingScan) => {
-    if (!db || !session || !controllerInfo) {
-      console.warn('[EPSCANV] Sync impossible - données manquantes');
-      return;
-    }
-
-    try {
-      const tripsRef = ref(db, 'trips');
-      await push(tripsRef, {
-        controller_id: controllerInfo.vehicleId,
-        controller_name: controllerInfo.name,
-        vehicle_id: controllerInfo.vehicleId,
-        line: controllerInfo.line,
-        passenger_id: scan.passData.userId,
-        subscription_type: scan.passData.subscriptionType,
-        grade: scan.passData.grade,
-        result: scan.result,
-        reason: scan.reason,
-        timestamp: scan.timestamp,
-        location: scan.location ? {
-          latitude: scan.location.latitude,
-          longitude: scan.location.longitude
-        } : null
-      });
-
-      const statsRef = ref(db, `controller_stats/${controllerInfo.vehicleId}/${new Date().toISOString().split('T')[0]}`);
-      const statsSnapshot = await get(statsRef);
-      const currentStats = statsSnapshot.exists() ? statsSnapshot.val() : { validated: 0, rejected: 0, total: 0 };
-
-      await update(statsRef, {
-        validated: currentStats.validated + (scan.result === 'validated' ? 1 : 0),
-        rejected: currentStats.rejected + (scan.result === 'rejected' ? 1 : 0),
-        total: currentStats.total + 1
-      });
-
-      console.log('[EPSCANV] ✅ Scan synchronisé:', scan.id);
-    } catch (error) {
-      console.error('[EPSCANV] Erreur sync Firebase:', error);
-      await savePendingScan(scan);
-    }
-  };
-
   const syncPendingScans = async () => {
     if (!isOnline || pendingScans.length === 0) return;
 
@@ -312,7 +263,15 @@ const EPscanVPage: React.FC = () => {
 
     for (const scan of pendingScans) {
       try {
-        await syncScanToFirebase(scan);
+        await recordVehicleScan({
+          passData: scan.passData,
+          result: scan.result,
+          reason: scan.reason,
+          location: scan.location ? {
+            latitude: scan.location.latitude,
+            longitude: scan.location.longitude
+          } : undefined
+        });
         await clearPendingScan(scan.id);
       } catch (error) {
         console.error('Erreur sync scan:', scan.id, error);
@@ -336,26 +295,15 @@ const EPscanVPage: React.FC = () => {
   };
 
   const startLocationTracking = () => {
-    if (!controllerInfo?.vehicleId) return;
+    if (!session?.vehicleId) return;
 
     locationIntervalRef.current = window.setInterval(async () => {
       const coords = await getCurrentLocation();
 
-      if (coords && db && controllerInfo) {
-        const locationRef = ref(db, `live/positions/${controllerInfo.vehicleId}`);
-        try {
-          await update(locationRef, {
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            timestamp: new Date().toISOString(),
-            speed: coords.speed || 0,
-            controller_id: user?.uid
-          });
-        } catch (error) {
-          console.error('Erreur envoi GPS:', error);
-        }
+      if (coords && isOnline) {
+        console.log('[EPSCANV] GPS:', coords.latitude, coords.longitude);
       }
-    }, 15000);
+    }, 30000);
   };
 
   const requestWakeLock = async () => {
@@ -459,39 +407,6 @@ const EPscanVPage: React.FC = () => {
     oscillator.stop(audioContext.currentTime + 0.3);
   };
 
-  if (initError) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-900 to-yellow-950 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md border border-yellow-500/30 shadow-2xl">
-          <AlertTriangle className="text-yellow-400 mx-auto mb-4" size={64} />
-          <h1 className="text-2xl font-black text-white text-center mb-4">
-            Données Manquantes
-          </h1>
-          <p className="text-yellow-200 text-center mb-6">
-            {initError}
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setInitError(null);
-                window.location.reload();
-              }}
-              className="w-full py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-xl transition-colors"
-            >
-              🔄 Recharger les Données
-            </button>
-            <button
-              onClick={() => navigate('/controller/login')}
-              className="w-full py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl transition-colors"
-            >
-              Retour à la connexion
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center p-4">
@@ -510,16 +425,19 @@ const EPscanVPage: React.FC = () => {
       className={`min-h-screen ${brightness === 'high' ? 'bg-[#0A0A0B]' : 'bg-[#050505]'} transition-colors duration-500`}
       style={{ maxWidth: '375px', margin: '0 auto' }}
     >
+      {/* Header avec informations du véhicule */}
       <div className="bg-gradient-to-r from-[#10B981] to-[#059669] p-4 shadow-2xl">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <Bus className="text-white" size={20} />
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/20 p-2 rounded-lg">
+              <Bus className="text-white" size={24} />
+            </div>
             <div>
               <div className="text-white font-black text-lg">
-                {session?.type === 'fixe' ? session.vehiclePlate : 'Contrôleur Volant'}
+                Navette {session.vehicleNumber}
               </div>
-              <div className="text-green-100 text-xs">
-                {session?.type === 'fixe' ? `Véhicule ${session.vehicleId}` : session?.name || 'Mobile'}
+              <div className="text-green-100 text-sm font-medium">
+                {session.route}
               </div>
             </div>
           </div>
@@ -527,7 +445,7 @@ const EPscanVPage: React.FC = () => {
             <button
               onClick={() => {
                 if (confirm('Voulez-vous vous déconnecter ?')) {
-                  clearControllerSession();
+                  clearVehicleSession();
                   navigate('/controller/login');
                 }
               }}
@@ -536,28 +454,33 @@ const EPscanVPage: React.FC = () => {
             >
               <LogOut size={16} className="text-white" />
             </button>
-            {isOnline ? (
-              <div className="flex items-center space-x-1 bg-white/20 px-2 py-1 rounded-full">
-                <Wifi size={14} className="text-white" />
-                <span className="text-white text-xs font-bold">ON</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-1 bg-red-500/30 px-2 py-1 rounded-full border border-red-500">
-                <WifiOff size={14} className="text-red-300" />
-                <span className="text-red-300 text-xs font-bold">OFF</span>
-              </div>
-            )}
-            {batteryLevel !== null && (
-              <div className="flex items-center space-x-1 bg-white/20 px-2 py-1 rounded-full">
-                <Battery size={14} className="text-white" />
-                <span className="text-white text-xs font-bold">{Math.round(batteryLevel)}%</span>
-              </div>
-            )}
           </div>
         </div>
 
+        <div className="flex items-center justify-between text-white text-xs bg-white/10 rounded-lg p-2">
+          <div className="flex items-center space-x-2">
+            {isOnline ? (
+              <>
+                <Wifi size={14} className="text-green-300" />
+                <span className="font-bold">En ligne</span>
+              </>
+            ) : (
+              <>
+                <WifiOff size={14} className="text-red-300" />
+                <span className="font-bold">Hors ligne</span>
+              </>
+            )}
+          </div>
+          {batteryLevel !== null && (
+            <div className="flex items-center space-x-1">
+              <Battery size={14} />
+              <span className="font-bold">{Math.round(batteryLevel)}%</span>
+            </div>
+          )}
+        </div>
+
         {pendingScans.length > 0 && (
-          <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 flex items-center space-x-2">
+          <div className="mt-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 flex items-center space-x-2">
             <Clock size={14} className="text-yellow-300" />
             <span className="text-yellow-300 text-xs font-medium">
               {pendingScans.length} scan(s) en attente de sync
@@ -621,19 +544,19 @@ const EPscanVPage: React.FC = () => {
           <div className="bg-green-500/10 border-2 border-green-500 rounded-2xl p-4 text-center">
             <CheckCircle className="mx-auto text-green-400 mb-2" size={20} />
             <div className="text-green-400 text-xs font-medium uppercase mb-1">Validé</div>
-            <div className="text-green-400 text-5xl font-black">{stats.validated}</div>
+            <div className="text-green-400 text-3xl font-black">{stats.validated}</div>
           </div>
 
           <div className="bg-red-500/10 border-2 border-red-500 rounded-2xl p-4 text-center">
             <XCircle className="mx-auto text-red-400 mb-2" size={20} />
             <div className="text-red-400 text-xs font-medium uppercase mb-1">Refusé</div>
-            <div className="text-red-400 text-5xl font-black">{stats.rejected}</div>
+            <div className="text-red-400 text-3xl font-black">{stats.rejected}</div>
           </div>
 
           <div className="bg-blue-500/10 border-2 border-blue-500 rounded-2xl p-4 text-center">
-            <Activity className="mx-auto text-blue-400 mb-2" size={20} />
+            <TrendingUp className="mx-auto text-blue-400 mb-2" size={20} />
             <div className="text-blue-400 text-xs font-medium uppercase mb-1">Total</div>
-            <div className="text-blue-400 text-5xl font-black">{stats.total}</div>
+            <div className="text-blue-400 text-3xl font-black">{stats.total}</div>
           </div>
         </div>
 
@@ -649,7 +572,7 @@ const EPscanVPage: React.FC = () => {
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-[#10B981]">•</span>
-              <span>La ligne doit correspondre ({controllerInfo?.line || 'N/A'})</span>
+              <span>La ligne doit correspondre ({session.route})</span>
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-[#10B981]">•</span>
@@ -657,20 +580,22 @@ const EPscanVPage: React.FC = () => {
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-[#10B981]">•</span>
-              <span>Signature JWT vérifiée localement</span>
+              <span>Tous les scans sont tracés pour {session.vehicleNumber}</span>
             </li>
           </ul>
         </div>
 
-        {brightness === 'low' && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center space-x-3">
-            <Moon className="text-yellow-400" size={24} />
+        <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-2xl p-4">
+          <div className="flex items-start space-x-3">
+            <Bus className="text-[#10B981] flex-shrink-0 mt-0.5" size={20} />
             <div>
-              <div className="text-yellow-400 font-bold text-sm">Mode Économie d'Énergie</div>
-              <div className="text-yellow-300 text-xs">Luminosité réduite après 2 min d'inactivité</div>
+              <div className="text-white font-bold text-sm mb-1">Mode Autonome</div>
+              <div className="text-gray-400 text-xs">
+                Vous travaillez en totale autonomie. Aucune connexion requise avec le système central. Tous vos scans sont enregistrés sous votre véhicule.
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
