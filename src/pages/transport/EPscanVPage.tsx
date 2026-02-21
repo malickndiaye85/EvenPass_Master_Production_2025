@@ -202,6 +202,39 @@ const EPscanVPage: React.FC = () => {
     return { valid: true };
   };
 
+  const vibrateDevice = (pattern: number | number[]) => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(pattern);
+    }
+  };
+
+  const flashScreen = (type: 'success' | 'error') => {
+    const flashDiv = document.createElement('div');
+    flashDiv.style.position = 'fixed';
+    flashDiv.style.top = '0';
+    flashDiv.style.left = '0';
+    flashDiv.style.width = '100vw';
+    flashDiv.style.height = '100vh';
+    flashDiv.style.pointerEvents = 'none';
+    flashDiv.style.zIndex = '9999';
+    flashDiv.style.transition = 'opacity 0.3s ease-out';
+
+    if (type === 'success') {
+      flashDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.4)';
+    } else {
+      flashDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.4)';
+    }
+
+    document.body.appendChild(flashDiv);
+
+    setTimeout(() => {
+      flashDiv.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(flashDiv);
+      }, 300);
+    }, 200);
+  };
+
   const handleScan = async (decodedText: string) => {
     setLastActivity(Date.now());
     if (brightness === 'low') setBrightness('high');
@@ -225,10 +258,14 @@ const EPscanVPage: React.FC = () => {
         setStats(prev => ({ validated: prev.validated + 1, rejected: prev.rejected, total: prev.total + 1 }));
         setLastScanResult({ type: 'validated', message: '✅ Pass Validé' });
         playSuccessSound();
+        flashScreen('success');
+        vibrateDevice(200);
       } else {
         setStats(prev => ({ validated: prev.validated, rejected: prev.rejected + 1, total: prev.total + 1 }));
         setLastScanResult({ type: 'rejected', message: `❌ ${validation.reason}` });
         playErrorSound();
+        flashScreen('error');
+        vibrateDevice([100, 50, 100]);
       }
 
       if (isOnline) {
@@ -252,6 +289,8 @@ const EPscanVPage: React.FC = () => {
       console.error('Erreur scan:', error);
       setLastScanResult({ type: 'rejected', message: '❌ QR Code invalide' });
       playErrorSound();
+      flashScreen('error');
+      vibrateDevice([100, 50, 100, 50, 100]);
       setTimeout(() => setLastScanResult(null), 3000);
     }
   };
@@ -344,7 +383,7 @@ const EPscanVPage: React.FC = () => {
         { facingMode: 'environment' },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 300, height: 300 },
           aspectRatio: 1.0
         },
         (decodedText) => {
@@ -492,46 +531,47 @@ const EPscanVPage: React.FC = () => {
       <div className="p-4 space-y-4">
         <div
           id="qr-reader"
-          className="w-full aspect-square bg-black rounded-2xl overflow-hidden border-4 border-[#10B981] shadow-2xl"
+          className="w-full bg-black rounded-3xl overflow-hidden border-4 border-[#10B981] scanner-glow"
+          style={{ height: '420px' }}
         ></div>
 
         {!isScannerActive && (
           <button
             onClick={startScanner}
-            className="w-full py-4 bg-[#10B981] hover:bg-[#059669] text-white font-black rounded-2xl flex items-center justify-center space-x-2 transition-colors shadow-lg"
+            className="w-full py-5 bg-gradient-to-r from-[#10B981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-black text-lg rounded-2xl flex items-center justify-center space-x-3 transition-all shadow-xl transform active:scale-95"
           >
-            <Scan size={24} />
-            <span>Démarrer le Scanner</span>
+            <Scan size={32} />
+            <span>DÉMARRER LE SCANNER</span>
           </button>
         )}
 
         {isScannerActive && (
           <button
             onClick={stopScanner}
-            className="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl flex items-center justify-center space-x-2 transition-colors shadow-lg"
+            className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-lg rounded-2xl flex items-center justify-center space-x-3 transition-all shadow-xl transform active:scale-95"
           >
-            <XCircle size={24} />
-            <span>Arrêter le Scanner</span>
+            <XCircle size={32} />
+            <span>ARRÊTER LE SCANNER</span>
           </button>
         )}
 
         {lastScanResult && (
           <div
-            className={`p-4 rounded-2xl border-2 ${
+            className={`p-5 rounded-2xl border-4 ${
               lastScanResult.type === 'validated'
-                ? 'bg-green-500/20 border-green-500'
-                : 'bg-red-500/20 border-red-500'
-            } animate-pulse`}
+                ? 'bg-green-500/30 border-green-400'
+                : 'bg-red-500/30 border-red-400'
+            } animate-pulse shadow-2xl`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-3">
               {lastScanResult.type === 'validated' ? (
-                <CheckCircle className="text-green-400" size={24} />
+                <CheckCircle className="text-green-300" size={36} />
               ) : (
-                <XCircle className="text-red-400" size={24} />
+                <XCircle className="text-red-300" size={36} />
               )}
               <span
-                className={`font-bold text-lg ${
-                  lastScanResult.type === 'validated' ? 'text-green-400' : 'text-red-400'
+                className={`font-black text-2xl ${
+                  lastScanResult.type === 'validated' ? 'text-green-100' : 'text-red-100'
                 }`}
               >
                 {lastScanResult.message}
@@ -540,60 +580,23 @@ const EPscanVPage: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-green-500/10 border-2 border-green-500 rounded-2xl p-4 text-center">
-            <CheckCircle className="mx-auto text-green-400 mb-2" size={20} />
-            <div className="text-green-400 text-xs font-medium uppercase mb-1">Validé</div>
-            <div className="text-green-400 text-3xl font-black">{stats.validated}</div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 border-4 border-green-400 rounded-2xl p-5 text-center stat-card-glow">
+            <CheckCircle className="mx-auto text-green-400 mb-3 drop-shadow-lg" size={32} />
+            <div className="text-green-300 text-xs font-black uppercase tracking-wider mb-2 text-shadow-strong">Validé</div>
+            <div className="text-green-100 text-5xl font-black text-shadow-strong">{stats.validated}</div>
           </div>
 
-          <div className="bg-red-500/10 border-2 border-red-500 rounded-2xl p-4 text-center">
-            <XCircle className="mx-auto text-red-400 mb-2" size={20} />
-            <div className="text-red-400 text-xs font-medium uppercase mb-1">Refusé</div>
-            <div className="text-red-400 text-3xl font-black">{stats.rejected}</div>
+          <div className="bg-gradient-to-br from-red-500/20 to-red-600/20 border-4 border-red-400 rounded-2xl p-5 text-center stat-card-glow">
+            <XCircle className="mx-auto text-red-400 mb-3 drop-shadow-lg" size={32} />
+            <div className="text-red-300 text-xs font-black uppercase tracking-wider mb-2 text-shadow-strong">Refusé</div>
+            <div className="text-red-100 text-5xl font-black text-shadow-strong">{stats.rejected}</div>
           </div>
 
-          <div className="bg-blue-500/10 border-2 border-blue-500 rounded-2xl p-4 text-center">
-            <TrendingUp className="mx-auto text-blue-400 mb-2" size={20} />
-            <div className="text-blue-400 text-xs font-medium uppercase mb-1">Total</div>
-            <div className="text-blue-400 text-3xl font-black">{stats.total}</div>
-          </div>
-        </div>
-
-        <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-gray-800">
-          <div className="flex items-center space-x-2 mb-3">
-            <AlertTriangle className="text-yellow-400" size={16} />
-            <h3 className="text-white font-bold text-sm">Règles de Validation</h3>
-          </div>
-          <ul className="space-y-2 text-gray-400 text-xs">
-            <li className="flex items-start space-x-2">
-              <span className="text-[#10B981]">•</span>
-              <span>Le pass ne doit pas être expiré</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-[#10B981]">•</span>
-              <span>La ligne doit correspondre ({session.route})</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-[#10B981]">•</span>
-              <span>Cooldown anti-passback: 2 heures</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-[#10B981]">•</span>
-              <span>Tous les scans sont tracés pour {session.vehicleNumber}</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-2xl p-4">
-          <div className="flex items-start space-x-3">
-            <Bus className="text-[#10B981] flex-shrink-0 mt-0.5" size={20} />
-            <div>
-              <div className="text-white font-bold text-sm mb-1">Mode Autonome</div>
-              <div className="text-gray-400 text-xs">
-                Vous travaillez en totale autonomie. Aucune connexion requise avec le système central. Tous vos scans sont enregistrés sous votre véhicule.
-              </div>
-            </div>
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-4 border-blue-400 rounded-2xl p-5 text-center stat-card-glow">
+            <TrendingUp className="mx-auto text-blue-400 mb-3 drop-shadow-lg" size={32} />
+            <div className="text-blue-300 text-xs font-black uppercase tracking-wider mb-2 text-shadow-strong">Total</div>
+            <div className="text-blue-100 text-5xl font-black text-shadow-strong">{stats.total}</div>
           </div>
         </div>
       </div>
