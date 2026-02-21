@@ -13,26 +13,36 @@ EPscanV est désormais une application **100% autonome** pour les apprentis-chau
 
 ## Architecture Technique
 
-### 1. Authentification par PIN (Indépendante)
+### 1. Authentification par PIN (Hybride)
 
 **Fichier:** `src/lib/vehicleAuthService.ts`
 
-#### Principe
-- **AUCUNE** dépendance à `auth.currentUser`
-- **Requête REST directe** sur la Realtime Database Firebase
-- Validation du PIN contre `/fleet_vehicles.json`
+#### Principe - 4 Étapes Automatiques
+1. **Auth Anonyme Silencieuse** - `signInAnonymously(auth)` donne un jeton temporaire
+2. **Lecture SDK Firebase** - `get(ref(db, 'fleet_vehicles'))` via SDK (pas REST)
+3. **Filtrage Client** - Recherche du véhicule avec le PIN correspondant
+4. **Session Locale** - Sauvegarde dans localStorage
 
 #### Code
 ```typescript
-const vehiclesUrl = `${FIREBASE_DB_URL}/fleet_vehicles.json`;
-const response = await fetch(vehiclesUrl);
-const allVehicles = await response.json();
+// Étape 1: Auth anonyme (silencieuse, pas d'interaction)
+await signInAnonymously(auth);
+
+// Étape 2: Lecture via SDK (respecte les permissions Firebase)
+const vehiclesRef = ref(db, 'fleet_vehicles');
+const snapshot = await get(vehiclesRef);
+
+// Étape 3: Filtrage client
+const matchingEntry = Object.entries(allVehicles).find(([_, vehicle]) => {
+  return String(vehicle.epscanv_pin).trim() === normalizedPin;
+});
 ```
 
 #### Avantages
-- Fonctionne **SANS** authentification Google
-- Pas de blocage lié aux permissions Firebase Auth
-- Récupération directe des données véhicule
+- L'apprenti tape **UNIQUEMENT** son PIN (rien d'autre)
+- Auth anonyme = aucune adresse email requise
+- SDK Firebase gère les permissions correctement
+- Compatible avec les règles de sécurité Firebase
 
 ---
 
@@ -244,7 +254,7 @@ User → Google Login → auth.currentUser → Pin Validation → Session
 
 ### Nouveau Flux (ACTUEL)
 ```
-User → PIN → REST Validation → localStorage Session → Scan
+User → PIN → Auth Anonyme → SDK Read → Filtrage → localStorage Session → Scan
 ```
 
 ### Fichiers Modifiés

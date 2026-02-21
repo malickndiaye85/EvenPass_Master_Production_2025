@@ -2,17 +2,17 @@
  * Service d'authentification AUTONOME pour les apprentis-chauffeurs
  *
  * Philosophie:
- * - Aucune dépendance à auth.currentUser
- * - Authentification REST uniquement via PIN
+ * - Auth anonyme silencieuse (aucune interaction utilisateur)
+ * - Validation PIN via SDK Firebase (pas REST)
  * - Session locale dans localStorage
  * - Tracking des scans par véhicule exact
  */
 
-import { db } from '../firebase';
-import { ref, push, serverTimestamp } from 'firebase/database';
+import { db, auth } from '../firebase';
+import { ref, push, serverTimestamp, get } from 'firebase/database';
+import { signInAnonymously } from 'firebase/auth';
 
 const VEHICLE_SESSION_KEY = 'epscanv_vehicle_session';
-const FIREBASE_DB_URL = 'https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app';
 
 export interface VehicleSession {
   vehicleId: string;
@@ -27,8 +27,10 @@ export interface VehicleSession {
 }
 
 /**
- * Authentification par PIN - Méthode REST directe
- * BYPASS TOTAL du SDK Firebase Auth
+ * Authentification par PIN - Méthode Hybride
+ * 1. Auth anonyme silencieuse (donne un token temporaire)
+ * 2. Lecture via SDK Firebase (respecte les permissions)
+ * 3. Filtrage client-side par PIN
  */
 export async function authenticateVehicleByPIN(pinCode: string): Promise<{
   success: boolean;
@@ -48,24 +50,34 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     console.log('[VEHICLE-AUTH] PIN normalisé:', normalizedPin);
 
-    // Requête REST directe sur la Realtime Database
-    const vehiclesUrl = `${FIREBASE_DB_URL}/fleet_vehicles.json`;
-    console.log('[VEHICLE-AUTH] Requête REST:', vehiclesUrl);
-
-    const response = await fetch(vehiclesUrl);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // ÉTAPE 1: Auth anonyme silencieuse (donne un jeton temporaire)
+    console.log('[VEHICLE-AUTH] Tentative auth anonyme...');
+    try {
+      if (!auth.currentUser) {
+        const userCredential = await signInAnonymously(auth);
+        console.log('[VEHICLE-AUTH] ✅ Auth anonyme réussie:', userCredential.user.uid);
+      } else {
+        console.log('[VEHICLE-AUTH] ✅ Utilisateur déjà authentifié:', auth.currentUser.uid);
+      }
+    } catch (authError: any) {
+      console.warn('[VEHICLE-AUTH] ⚠️ Auth anonyme échouée, on continue quand même');
+      console.warn('[VEHICLE-AUTH] Erreur:', authError?.message);
     }
 
-    const allVehicles = await response.json();
-    console.log('[VEHICLE-AUTH] Véhicules récupérés:', Object.keys(allVehicles || {}).length);
+    // ÉTAPE 2: Lecture via SDK Firebase (pas REST)
+    console.log('[VEHICLE-AUTH] Lecture fleet_vehicles via SDK...');
+    const vehiclesRef = ref(db, 'fleet_vehicles');
+    const snapshot = await get(vehiclesRef);
 
-    if (!allVehicles) {
+    if (!snapshot.exists()) {
+      console.error('[VEHICLE-AUTH] ❌ Aucun véhicule enregistré');
       return { success: false, error: 'Aucun véhicule enregistré' };
     }
 
-    // Recherche du véhicule correspondant au PIN
+    const allVehicles = snapshot.val();
+    console.log('[VEHICLE-AUTH] Véhicules récupérés:', Object.keys(allVehicles || {}).length);
+
+    // ÉTAPE 3: Filtrage client-side par PIN
     const matchingEntry = Object.entries(allVehicles).find(([_, vehicle]: [string, any]) => {
       return String(vehicle.epscanv_pin || '').trim() === normalizedPin;
     });
@@ -83,7 +95,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
       return { success: false, error: 'Véhicule désactivé' };
     }
 
-    // Création de la session locale
+    // ÉTAPE 4: Création de la session locale
     const session: VehicleSession = {
       vehicleId: vehicleId,
       vehicleNumber: vehicleData.vehicle_number || vehicleData.license_plate || 'N/A',
