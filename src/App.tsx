@@ -419,11 +419,7 @@ function AppRoutes() {
 
         <ThemeWrapper mode="transport">
 
-          <ProtectedRoute>
-
-            <EPscanVPage />
-
-          </ProtectedRoute>
+          <EPscanVPage />
 
         </ThemeWrapper>
 

@@ -121,43 +121,66 @@ export async function authenticateWithPIN(pinCode: string): Promise<{
       console.warn('[LOGIN-DEBUG] Passage au fallback...');
     }
 
-    // MÉTHODE 2 (FALLBACK): Recherche directe dans fleet_vehicles par orderByChild
+    // MÉTHODE 2 (FALLBACK): Lecture complète + filtrage côté client (BYPASS INDEX)
     if (!vehicleId) {
-      console.log('[LOGIN-DEBUG] Étape 3B: FALLBACK - Recherche directe dans fleet_vehicles');
+      console.log('[LOGIN-DEBUG] Étape 3B: FALLBACK - Lecture complète + filtrage client');
       try {
         const vehiclesRef = ref(db, 'fleet_vehicles');
-        const vehicleQuery = query(
-          vehiclesRef,
-          orderByChild('epscanv_pin'),
-          equalTo(normalizedPin)
-        );
+        console.log('[LOGIN-DEBUG] Lecture de tous les véhicules...');
 
-        console.log('[LOGIN-DEBUG] Query créée sur epscanv_pin =', normalizedPin);
-        const querySnapshot = await get(vehicleQuery);
+        const allVehiclesSnapshot = await get(vehiclesRef);
 
-        if (querySnapshot.exists()) {
-          console.log('[LOGIN-DEBUG] ✅ Véhicule trouvé via recherche directe!');
-          const vehicles = querySnapshot.val();
-          console.log('[LOGIN-DEBUG] Résultats:', Object.keys(vehicles).length, 'véhicule(s)');
+        if (!allVehiclesSnapshot.exists()) {
+          console.error('[LOGIN-DEBUG] ❌ Aucun véhicule dans la DB');
+          logFailedAttempt(pinCode);
+          return { success: false, error: 'Aucun véhicule enregistré' };
+        }
 
-          // Prendre le premier résultat
-          vehicleId = Object.keys(vehicles)[0];
-          vehicleData = vehicles[vehicleId];
+        const allVehicles = allVehiclesSnapshot.val();
+        console.log('[LOGIN-DEBUG] Véhicules trouvés:', Object.keys(allVehicles).length);
 
-          console.log('[LOGIN-DEBUG] VehicleId:', vehicleId);
-          console.log('[LOGIN-DEBUG] Données véhicule:', JSON.stringify(vehicleData, null, 2));
+        // Filtrage côté client (BYPASS de l'index DB)
+        const matchingVehicle = Object.entries(allVehicles).find(([id, vehicle]: [string, any]) => {
+          const vehiclePin = String(vehicle.epscanv_pin || '').trim();
+          const matches = vehiclePin === normalizedPin;
 
-          // Reconstituer pinData à partir du véhicule
-          pinData = {
-            vehicleId: vehicleId,
-            isActive: vehicleData.epscanv_active !== false,
-            vehiclePlate: vehicleData.license_plate
-          };
-        } else {
-          console.error('[LOGIN-DEBUG] ❌ Aucun véhicule trouvé avec ce PIN');
+          if (matches) {
+            console.log('[LOGIN-DEBUG] 🎯 Match trouvé! VehicleId:', id);
+            console.log('[LOGIN-DEBUG] PIN véhicule:', vehiclePin);
+            console.log('[LOGIN-DEBUG] Plaque:', vehicle.license_plate);
+          }
+
+          return matches;
+        });
+
+        if (!matchingVehicle) {
+          console.error('[LOGIN-DEBUG] ❌ Aucun véhicule avec ce PIN (filtrage client)');
+          console.error('[LOGIN-DEBUG] PINs disponibles dans la DB:',
+            Object.values(allVehicles)
+              .map((v: any) => v.epscanv_pin)
+              .filter(Boolean)
+              .slice(0, 5)
+          );
           logFailedAttempt(pinCode);
           return { success: false, error: 'Code incorrect' };
         }
+
+        const [foundVehicleId, foundVehicleData] = matchingVehicle;
+        vehicleId = foundVehicleId;
+        vehicleData = foundVehicleData;
+
+        console.log('[LOGIN-DEBUG] ✅ Véhicule trouvé via filtrage client!');
+        console.log('[LOGIN-DEBUG] VehicleId:', vehicleId);
+        console.log('[LOGIN-DEBUG] Données véhicule:', JSON.stringify(vehicleData, null, 2));
+
+        // Reconstituer pinData à partir du véhicule
+        pinData = {
+          vehicleId: vehicleId,
+          isActive: vehicleData.epscanv_active !== false,
+          vehiclePlate: vehicleData.license_plate,
+          usageCount: vehicleData.epscanv_usage_count || 0
+        };
+
       } catch (fallbackError: any) {
         console.error('[LOGIN-DEBUG] ❌ Erreur recherche fallback');
         console.error('[LOGIN-DEBUG] Code:', fallbackError?.code);

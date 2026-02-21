@@ -43,6 +43,7 @@ interface ControllerInfo {
 const EPscanVPage: React.FC = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<ControllerSession | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
   const [stats, setStats] = useState<ScanStats>({ validated: 0, rejected: 0, total: 0 });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingScans, setPendingScans] = useState<PendingScan[]>([]);
@@ -57,18 +58,24 @@ const EPscanVPage: React.FC = () => {
   const dbRef = useRef<any>(null);
 
   useEffect(() => {
-    const currentSession = getControllerSession();
-    if (!currentSession) {
-      navigate('/controller/login');
-      return;
-    }
-    setSession(currentSession);
+    try {
+      const currentSession = getControllerSession();
+      if (!currentSession) {
+        navigate('/controller/login');
+        return;
+      }
+      setSession(currentSession);
+      console.log('[EPSCANV] Session chargée:', currentSession);
 
-    initializeIndexedDB();
-    loadPendingScans();
-    requestWakeLock();
-    startLocationTracking();
-    monitorBattery();
+      initializeIndexedDB();
+      loadPendingScans();
+      requestWakeLock();
+      startLocationTracking();
+      monitorBattery();
+    } catch (error: any) {
+      console.error('[EPSCANV] Erreur initialisation:', error);
+      setInitError(error?.message || 'Erreur d\'initialisation');
+    }
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -248,15 +255,15 @@ const EPscanVPage: React.FC = () => {
   };
 
   const syncScanToFirebase = async (scan: PendingScan) => {
-    if (!db || !controllerInfo) return;
+    if (!db || !session) return;
 
     try {
       const tripsRef = ref(db, 'trips');
       await push(tripsRef, {
-        controller_id: user?.uid,
-        controller_name: controllerInfo.name,
-        vehicle_id: controllerInfo.vehicleId,
-        line: controllerInfo.line,
+        controller_id: session.vehicleId || 'unknown',
+        controller_name: session.name || 'Contrôleur',
+        vehicle_id: session.vehicleId || 'unknown',
+        line: session.vehiclePlate || 'N/A',
         passenger_id: scan.passData.userId,
         subscription_type: scan.passData.subscriptionType,
         grade: scan.passData.grade,
@@ -269,7 +276,7 @@ const EPscanVPage: React.FC = () => {
         } : null
       });
 
-      const statsRef = ref(db, `controller_stats/${user?.uid}/${new Date().toISOString().split('T')[0]}`);
+      const statsRef = ref(db, `controller_stats/${session.vehicleId || 'unknown'}/${new Date().toISOString().split('T')[0]}`);
       const statsSnapshot = await get(statsRef);
       const currentStats = statsSnapshot.exists() ? statsSnapshot.val() : { validated: 0, rejected: 0, total: 0 };
 
@@ -437,6 +444,41 @@ const EPscanVPage: React.FC = () => {
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
   };
+
+  if (initError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md border border-red-500/30 shadow-2xl">
+          <AlertTriangle className="text-red-400 mx-auto mb-4" size={64} />
+          <h1 className="text-2xl font-black text-white text-center mb-4">
+            Erreur d'Initialisation
+          </h1>
+          <p className="text-red-200 text-center mb-6">
+            {initError}
+          </p>
+          <button
+            onClick={() => navigate('/controller/login')}
+            className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
+          >
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md border border-white/20 shadow-2xl">
+          <Activity className="text-white mx-auto mb-4 animate-spin" size={48} />
+          <p className="text-white text-center font-medium">
+            Chargement de la session...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
