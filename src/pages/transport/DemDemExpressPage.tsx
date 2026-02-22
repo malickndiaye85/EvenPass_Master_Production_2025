@@ -233,18 +233,34 @@ export default function DemDemExpressPage() {
                     </div>
 
                     <div className="mt-4 flex items-center space-x-4">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/20">
-                        <span className="text-xs text-white/60">Eco</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/pass/subscriptions?line=${route.id}&tier=eco`);
+                        }}
+                        className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all"
+                      >
+                        <span className="text-xs text-blue-300 font-semibold">ECO</span>
                         <p className="text-xl font-bold text-white">
-                          {route.pricing.eco.toLocaleString()} FCFA
+                          {route.pricing.eco.toLocaleString()} FCFA/sem
                         </p>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/20">
-                        <span className="text-xs text-white/60">Comfort</span>
-                        <p className="text-xl font-bold text-white">
-                          {route.pricing.comfort.toLocaleString()} FCFA
-                        </p>
-                      </div>
+                      </button>
+                      {route.hasConfort && route.pricing.comfort && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/pass/subscriptions?line=${route.id}&tier=prestige`);
+                          }}
+                          className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all"
+                        >
+                          <span className="text-xs text-amber-300 font-semibold flex items-center gap-1">
+                            <span>★</span> PRESTIGE
+                          </span>
+                          <p className="text-xl font-bold text-white">
+                            {route.pricing.comfort.toLocaleString()} FCFA/sem
+                          </p>
+                        </button>
+                      )}
                     </div>
                   </div>
 

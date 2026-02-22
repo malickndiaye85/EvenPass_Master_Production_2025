@@ -8,6 +8,10 @@ export interface TransportLine {
   price_weekly: number;
   price_monthly: number;
   price_quarterly: number;
+  has_confort: boolean;
+  price_weekly_confort?: number;
+  price_monthly_confort?: number;
+  price_quarterly_confort?: number;
   is_active: boolean;
   created_at: string;
 }
@@ -20,9 +24,10 @@ export interface BusRouteDisplay {
   destination: string;
   distance: number;
   duration: number;
+  hasConfort: boolean;
   pricing: {
     eco: number;
-    comfort: number;
+    comfort?: number;
   };
   schedule: {
     eco: {
@@ -30,7 +35,7 @@ export interface BusRouteDisplay {
       lastDeparture: string;
       frequency: number;
     };
-    comfort: {
+    comfort?: {
       firstDeparture: string;
       lastDeparture: string;
       frequency: number;
@@ -72,7 +77,7 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
     const displayRoutes: BusRouteDisplay[] = activeLines.map((line, index) => {
       const [origin, destination] = line.route.split('⇄').map(s => s.trim());
 
-      return {
+      const route: BusRouteDisplay = {
         id: line.id,
         routeNumber: index + 1,
         name: line.name,
@@ -80,24 +85,30 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
         destination: destination || 'Destination',
         distance: 50,
         duration: 60,
+        hasConfort: line.has_confort || false,
         pricing: {
-          eco: line.price_weekly,
-          comfort: line.price_monthly
+          eco: line.price_weekly
         },
         schedule: {
           eco: {
             firstDeparture: '05:00',
             lastDeparture: '22:00',
             frequency: 30
-          },
-          comfort: {
-            firstDeparture: '05:00',
-            lastDeparture: '22:00',
-            frequency: 45
           }
         },
         isActive: line.is_active
       };
+
+      if (line.has_confort && line.price_weekly_confort) {
+        route.pricing.comfort = line.price_weekly_confort;
+        route.schedule.comfort = {
+          firstDeparture: '05:00',
+          lastDeparture: '22:00',
+          frequency: 45
+        };
+      }
+
+      return route;
     });
 
     console.log('[DEBUG-ROUTES] Transformed display routes:', displayRoutes);

@@ -28,6 +28,10 @@ interface TransportLine {
   price_weekly: number;
   price_monthly: number;
   price_quarterly: number;
+  has_confort: boolean;
+  price_weekly_confort?: number;
+  price_monthly_confort?: number;
+  price_quarterly_confort?: number;
   is_active: boolean;
   created_at: string;
 }
@@ -1028,6 +1032,10 @@ const CreateLineModal: React.FC<CreateLineModalProps> = ({ onClose, onCreate }) 
     price_weekly: 12000,
     price_monthly: 40000,
     price_quarterly: 100000,
+    has_confort: false,
+    price_weekly_confort: 18000,
+    price_monthly_confort: 60000,
+    price_quarterly_confort: 150000,
     is_active: true
   });
 
@@ -1128,6 +1136,67 @@ const CreateLineModal: React.FC<CreateLineModalProps> = ({ onClose, onCreate }) 
             <label htmlFor="is_active" className="text-gray-400 text-sm">
               Activer cette ligne immédiatement
             </label>
+          </div>
+
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-white font-bold flex items-center gap-2">
+                  <span className="text-amber-400">★</span>
+                  Gamme Confort (Prestige)
+                </h4>
+                <p className="text-xs text-gray-400 mt-1">Activez pour proposer une option premium avec véhicules climatisés</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.has_confort}
+                  onChange={(e) => setFormData({ ...formData, has_confort: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            {formData.has_confort && (
+              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-amber-500/20">
+                <div>
+                  <label className="block text-amber-300 text-sm font-medium mb-2">Prix Hebdo Prestige</label>
+                  <input
+                    type="number"
+                    value={formData.price_weekly_confort}
+                    onChange={(e) => setFormData({ ...formData, price_weekly_confort: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-amber-500/30 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    required={formData.has_confort}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">FCFA</p>
+                </div>
+
+                <div>
+                  <label className="block text-amber-300 text-sm font-medium mb-2">Prix Mensuel Prestige</label>
+                  <input
+                    type="number"
+                    value={formData.price_monthly_confort}
+                    onChange={(e) => setFormData({ ...formData, price_monthly_confort: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-amber-500/30 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    required={formData.has_confort}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">FCFA</p>
+                </div>
+
+                <div>
+                  <label className="block text-amber-300 text-sm font-medium mb-2">Prix Trimestriel Prestige</label>
+                  <input
+                    type="number"
+                    value={formData.price_quarterly_confort}
+                    onChange={(e) => setFormData({ ...formData, price_quarterly_confort: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-amber-500/30 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    required={formData.has_confort}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">FCFA</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-3 pt-4">

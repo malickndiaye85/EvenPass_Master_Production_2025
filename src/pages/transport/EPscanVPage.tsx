@@ -180,8 +180,40 @@ const EPscanVPage: React.FC = () => {
     store.put({ passId, lastScan: new Date().toISOString() });
   };
 
-  const validatePass = async (passData: PassData): Promise<{ valid: boolean; reason?: string }> => {
+  const validatePass = async (passData: any): Promise<{ valid: boolean; reason?: string }> => {
     const now = new Date();
+
+    if (passData.type === 'sama_pass') {
+      const expiresAt = new Date(passData.expires_at);
+
+      if (expiresAt < now) {
+        return { valid: false, reason: 'SAMA PASS expiré' };
+      }
+
+      if (!session) {
+        return { valid: false, reason: 'Session véhicule invalide' };
+      }
+
+      const passServiceType = passData.service_type;
+      const vehicleType = session.vehicleType;
+
+      if (passServiceType === 'eco' && vehicleType === 'coaster') {
+        return {
+          valid: false,
+          reason: '⚠️ PASS ECO NON VALIDE\nCe pass est uniquement pour les bus standards.\nVeuillez utiliser un bus Eco.'
+        };
+      }
+
+      if (passServiceType === 'prestige' && vehicleType === 'bus') {
+        return {
+          valid: false,
+          reason: '⚠️ PASS PRESTIGE NON VALIDE\nCe pass nécessite un bus climatisé premium (Coaster).'
+        };
+      }
+
+      return { valid: true };
+    }
+
     const expiresAt = new Date(passData.expiresAt);
 
     if (expiresAt < now) {

@@ -66,6 +66,10 @@ import PaymentSuccessPage from './pages/pass/PaymentSuccessPage';
 
 import PaymentErrorPage from './pages/pass/PaymentErrorPage';
 
+import SAMAPassPage from './pages/pass/SAMAPassPage';
+
+import SAMAPassCardPage from './pages/pass/SAMAPassCardPage';
+
 import SubscriptionPage from './pages/SubscriptionPage';
 
 import WalletPage from './pages/WalletPage';
@@ -664,7 +668,17 @@ function AppRoutes() {
 
         <ThemeWrapper mode="transport">
 
-          <SubscriptionPage />
+          <SAMAPassPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/pass/card" element={
+
+        <ThemeWrapper mode="transport">
+
+          <SAMAPassCardPage />
 
         </ThemeWrapper>
 
