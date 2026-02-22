@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bus, MapPin, Clock, AlertCircle, CreditCard, Loader } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
-import { getRoutes } from '../../lib/transportFirebase';
-import { BusRoute } from '../../types/transport';
+import { getActiveTransportLines, BusRouteDisplay } from '../../lib/transportLinesService';
 
 export default function DemDemExpressPage() {
   const navigate = useNavigate();
-  const [selectedRoute, setSelectedRoute] = useState<BusRoute | null>(null);
-  const [routes, setRoutes] = useState<BusRoute[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<BusRouteDisplay | null>(null);
+  const [routes, setRoutes] = useState<BusRouteDisplay[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,10 +17,12 @@ export default function DemDemExpressPage() {
   const loadRoutes = async () => {
     setLoading(true);
     try {
-      const fetchedRoutes = await getRoutes();
+      console.log('[DEBUG-ROUTES] Starting to load routes...');
+      const fetchedRoutes = await getActiveTransportLines();
+      console.log('[DEBUG-ROUTES] Routes loaded successfully:', fetchedRoutes);
       setRoutes(fetchedRoutes);
     } catch (error) {
-      console.error('Erreur chargement lignes:', error);
+      console.error('[DEBUG-ROUTES] Error loading routes:', error);
     } finally {
       setLoading(false);
     }
