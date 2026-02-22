@@ -1,107 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bus, MapPin, Clock, AlertCircle, CreditCard } from 'lucide-react';
+import { Bus, MapPin, Clock, AlertCircle, CreditCard, Loader } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
-
-interface BusRoute {
-  id: string;
-  routeNumber: string;
-  name: string;
-  distance: number;
-  duration: number;
-  schedule: {
-    eco: {
-      firstDeparture: string;
-      lastDeparture: string;
-      frequency: string;
-    };
-    comfort: {
-      firstDeparture: string;
-      lastDeparture: string;
-      frequency: string;
-    };
-  };
-  pricing: {
-    eco: number;
-    comfort: number;
-  };
-}
-
-const routes: BusRoute[] = [
-  {
-    id: '1',
-    routeNumber: '1',
-    name: 'Keur Massar ⇄ Dakar Centre',
-    distance: 25,
-    duration: 45,
-    schedule: {
-      eco: {
-        firstDeparture: '05h00',
-        lastDeparture: '23h00',
-        frequency: '20 min'
-      },
-      comfort: {
-        firstDeparture: '05h30',
-        lastDeparture: '22h00',
-        frequency: '30 min'
-      }
-    },
-    pricing: {
-      eco: 500,
-      comfort: 800
-    }
-  },
-  {
-    id: '2',
-    routeNumber: '2',
-    name: 'Pikine ⇄ Plateau',
-    distance: 18,
-    duration: 35,
-    schedule: {
-      eco: {
-        firstDeparture: '05h00',
-        lastDeparture: '23h00',
-        frequency: '15 min'
-      },
-      comfort: {
-        firstDeparture: '06h00',
-        lastDeparture: '21h00',
-        frequency: '25 min'
-      }
-    },
-    pricing: {
-      eco: 400,
-      comfort: 650
-    }
-  },
-  {
-    id: '3',
-    routeNumber: '3',
-    name: 'Rufisque ⇄ Dakar',
-    distance: 30,
-    duration: 50,
-    schedule: {
-      eco: {
-        firstDeparture: '05h30',
-        lastDeparture: '22h30',
-        frequency: '25 min'
-      },
-      comfort: {
-        firstDeparture: '06h00',
-        lastDeparture: '21h30',
-        frequency: '35 min'
-      }
-    },
-    pricing: {
-      eco: 600,
-      comfort: 900
-    }
-  }
-];
+import { getRoutes } from '../../lib/transportFirebase';
+import { BusRoute } from '../../types/transport';
 
 export default function DemDemExpressPage() {
   const navigate = useNavigate();
   const [selectedRoute, setSelectedRoute] = useState<BusRoute | null>(null);
+  const [routes, setRoutes] = useState<BusRoute[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadRoutes();
+  }, []);
+
+  const loadRoutes = async () => {
+    setLoading(true);
+    try {
+      const fetchedRoutes = await getRoutes();
+      setRoutes(fetchedRoutes);
+    } catch (error) {
+      console.error('Erreur chargement lignes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isComfortAvailable = () => {
     const now = new Date();
@@ -146,7 +70,7 @@ export default function DemDemExpressPage() {
                 <span className="bg-amber-400 text-blue-950 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
                   {selectedRoute.routeNumber}
                 </span>
-                {selectedRoute.name}
+                {selectedRoute.origin} ⇄ {selectedRoute.destination}
               </h1>
               <p className="text-white/70 text-lg">
                 Sélectionnez votre niveau de confort
@@ -226,7 +150,7 @@ export default function DemDemExpressPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Bus className="w-5 h-5 text-amber-400" />
-                  <span>Fréquence Eco: toutes les {selectedRoute.schedule.eco.frequency}</span>
+                  <span>Fréquence Eco: toutes les {selectedRoute.schedule.eco.frequency} minutes</span>
                 </div>
               </div>
             </div>
@@ -260,7 +184,26 @@ export default function DemDemExpressPage() {
               Choisissez votre ligne
             </h2>
 
-            {routes.map((route) => (
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader className="w-12 h-12 text-amber-400 animate-spin mb-4" />
+                <p className="text-white/70 text-lg">Chargement des lignes...</p>
+              </div>
+            )}
+
+            {!loading && routes.length === 0 && (
+              <div className="bg-white/5 border-2 border-white/10 rounded-3xl p-12 text-center">
+                <Bus className="w-16 h-16 text-white/30 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Aucune ligne Express disponible pour le moment
+                </h3>
+                <p className="text-white/60">
+                  Les lignes seront bientôt ajoutées par l'administration.
+                </p>
+              </div>
+            )}
+
+            {!loading && routes.map((route) => (
               <div
                 key={route.id}
                 onClick={() => handleRouteSelect(route)}
@@ -273,7 +216,7 @@ export default function DemDemExpressPage() {
                         {route.routeNumber}
                       </div>
                       <h3 className="text-2xl font-bold text-white">
-                        {route.name}
+                        {route.origin} ⇄ {route.destination}
                       </h3>
                     </div>
 
