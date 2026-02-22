@@ -16,6 +16,12 @@ export interface TransportLine {
   created_at: string;
 }
 
+export interface SubscriptionPricing {
+  weekly: number;
+  monthly: number;
+  quarterly: number;
+}
+
 export interface BusRouteDisplay {
   id: string;
   routeNumber: number;
@@ -26,20 +32,13 @@ export interface BusRouteDisplay {
   duration: number;
   hasConfort: boolean;
   pricing: {
-    eco: number;
-    comfort?: number;
+    eco: SubscriptionPricing;
+    prestige?: SubscriptionPricing;
   };
   schedule: {
-    eco: {
-      firstDeparture: string;
-      lastDeparture: string;
-      frequency: number;
-    };
-    comfort?: {
-      firstDeparture: string;
-      lastDeparture: string;
-      frequency: number;
-    };
+    firstDeparture: string;
+    lastDeparture: string;
+    frequency: number;
   };
   isActive: boolean;
 }
@@ -89,24 +88,25 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
           duration: 60,
           hasConfort: line.has_confort || false,
           pricing: {
-            eco: line.price_weekly || 0
+            eco: {
+              weekly: line.price_weekly || 0,
+              monthly: line.price_monthly || 0,
+              quarterly: line.price_quarterly || 0
+            }
           },
           schedule: {
-            eco: {
-              firstDeparture: '05:00',
-              lastDeparture: '22:00',
-              frequency: 30
-            }
+            firstDeparture: '05:00',
+            lastDeparture: '22:00',
+            frequency: 30
           },
           isActive: line.is_active
         };
 
         if (line.has_confort && line.price_weekly_confort && line.price_weekly_confort > 0) {
-          route.pricing.comfort = line.price_weekly_confort;
-          route.schedule.comfort = {
-            firstDeparture: '05:00',
-            lastDeparture: '22:00',
-            frequency: 45
+          route.pricing.prestige = {
+            weekly: line.price_weekly_confort || 0,
+            monthly: line.price_monthly_confort || 0,
+            quarterly: line.price_quarterly_confort || 0
           };
         }
 

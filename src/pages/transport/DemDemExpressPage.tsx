@@ -1,26 +1,36 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bus, MapPin, Clock, AlertCircle, CreditCard, Loader } from 'lucide-react';
+import { Bus, MapPin, Clock } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
+import DemDemPurchaseTunnel, { UserIdentity } from '../../components/DemDemPurchaseTunnel';
 import { getActiveTransportLines, BusRouteDisplay } from '../../lib/transportLinesService';
+
+type SubscriptionDuration = 'weekly' | 'monthly' | 'quarterly';
+type SubscriptionTier = 'eco' | 'prestige';
+
+interface PurchaseSelection {
+  route: BusRouteDisplay;
+  tier: SubscriptionTier;
+  duration: SubscriptionDuration;
+}
 
 export default function DemDemExpressPage() {
   const navigate = useNavigate();
-  const [selectedRoute, setSelectedRoute] = useState<BusRouteDisplay | null>(null);
   const [routes, setRoutes] = useState<BusRouteDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchaseSelection, setPurchaseSelection] = useState<PurchaseSelection | null>(null);
 
   useEffect(() => {
     loadRoutes();
   }, []);
 
   const loadRoutes = async () => {
+    console.log('[DEBUG-ROUTES] Starting to load routes...');
     setLoading(true);
     try {
-      console.log('[DEBUG-ROUTES] Starting to load routes...');
-      const fetchedRoutes = await getActiveTransportLines();
-      console.log('[DEBUG-ROUTES] Routes loaded successfully:', fetchedRoutes);
-      setRoutes(fetchedRoutes);
+      const data = await getActiveTransportLines();
+      console.log('[DEBUG-ROUTES] Routes loaded successfully:', data);
+      setRoutes(data);
     } catch (error) {
       console.error('[DEBUG-ROUTES] Error loading routes:', error);
     } finally {
@@ -28,144 +38,34 @@ export default function DemDemExpressPage() {
     }
   };
 
-  const isComfortAvailable = () => {
-    const now = new Date();
-    const hour = now.getHours();
-    return (hour >= 5 && hour < 10) || (hour >= 16 && hour < 22);
+  const handleSubscriptionClick = (route: BusRouteDisplay, tier: SubscriptionTier, duration: SubscriptionDuration) => {
+    setPurchaseSelection({ route, tier, duration });
   };
 
-  const comfortAvailable = isComfortAvailable();
+  const handlePurchaseConfirm = async (userData: UserIdentity) => {
+    if (!purchaseSelection) return;
 
-  const handleRouteSelect = (route: BusRouteDisplay) => {
-    setSelectedRoute(route);
+    console.log('Purchase confirmed:', {
+      ...purchaseSelection,
+      userData
+    });
+
+    navigate('/pass/payment-success', {
+      state: {
+        subscription: purchaseSelection,
+        userData
+      }
+    });
   };
 
-  const handleBooking = (tier: 'eco' | 'comfort') => {
-    if (tier === 'comfort' && !comfortAvailable) {
-      alert('Le service Comfort n\'est pas disponible actuellement (10h-16h).');
-      return;
-    }
-    alert(`Réservation ${tier === 'eco' ? 'Eco' : 'Comfort'}\nLigne: ${selectedRoute?.name}\nPrix: ${selectedRoute?.pricing[tier]} FCFA`);
+  const getDurationShort = (duration: SubscriptionDuration): string => {
+    const labels = {
+      weekly: '/sem',
+      monthly: '/mois',
+      quarterly: '/trim'
+    };
+    return labels[duration];
   };
-
-  if (selectedRoute) {
-    if (!selectedRoute.pricing?.eco) {
-      console.error('[DEBUG-ROUTES] Invalid route selected, returning to list');
-      setSelectedRoute(null);
-      return null;
-    }
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
-        <nav className="bg-blue-950/95 backdrop-blur-xl shadow-lg sticky top-0 z-50 border-b border-white/10">
-          <div className="container mx-auto px-4 py-4">
-            <DynamicLogo />
-          </div>
-        </nav>
-
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <button
-              onClick={() => setSelectedRoute(null)}
-              className="text-white/70 hover:text-white mb-6 font-semibold transition-colors"
-            >
-              ← Changer de ligne
-            </button>
-
-            <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
-                <span className="bg-amber-400 text-blue-950 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
-                  {selectedRoute.routeNumber}
-                </span>
-                {selectedRoute.origin} ⇄ {selectedRoute.destination}
-              </h1>
-              <p className="text-white/70 text-lg">
-                Sélectionnez votre niveau de confort
-              </p>
-            </div>
-
-            {!comfortAvailable && (
-              <div className="bg-orange-500/20 border-l-4 border-orange-400 p-6 mb-6 rounded-r-2xl backdrop-blur-sm">
-                <div className="flex items-start">
-                  <AlertCircle className="w-6 h-6 text-orange-400 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-bold text-white mb-1">Service Comfort en pause</h3>
-                    <p className="text-white/80 text-sm">
-                      Le service Comfort est disponible de 05h à 10h et de 16h à 22h. Le service Eco reste disponible toute la journée.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <button
-                onClick={() => handleBooking('eco')}
-                className="p-6 rounded-3xl border-3 bg-white/5 border-white/20 hover:border-[#10B981]/50 hover:bg-white/10 transition-all"
-              >
-                <div className="text-center">
-                  <p className="text-xl text-white font-bold mb-3">Eco</p>
-                  <p className="text-4xl text-white font-black mb-2">
-                    {selectedRoute.pricing.eco.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-white/60 mb-3">FCFA / place</p>
-                  <p className="text-xs text-[#10B981] font-semibold">
-                    ✓ Disponible 24h/24
-                  </p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleBooking('comfort')}
-                disabled={!comfortAvailable || !selectedRoute.pricing.comfort}
-                className={`p-6 rounded-3xl border-3 relative ${
-                  comfortAvailable && selectedRoute.pricing.comfort
-                    ? 'bg-white/5 border-white/20 hover:border-amber-400/50 hover:bg-white/10'
-                    : 'bg-white/5 border-white/10 opacity-50 cursor-not-allowed'
-                } transition-all`}
-              >
-                {(!comfortAvailable || !selectedRoute.pricing.comfort) && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-                    <span className="text-sm font-bold text-orange-400 rotate-[-15deg] text-center">
-                      {!selectedRoute.pricing.comfort ? 'NON DISPONIBLE' : 'NON DISPONIBLE\n10h - 16h'}
-                    </span>
-                  </div>
-                )}
-                <div className="text-center">
-                  <p className="text-xl text-white font-bold mb-3">Comfort</p>
-                  <p className="text-4xl text-white font-black mb-2">
-                    {selectedRoute.pricing.comfort ? selectedRoute.pricing.comfort.toLocaleString() : '---'}
-                  </p>
-                  <p className="text-sm text-white/60 mb-3">FCFA / place</p>
-                  <p className="text-xs text-amber-400 font-semibold">
-                    05h-10h & 16h-22h
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl shadow-2xl p-6 border-2 border-white/10">
-              <h3 className="text-lg font-bold text-white mb-4">Informations de la ligne</h3>
-              <div className="space-y-3 text-white/80">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-amber-400" />
-                  <span>{selectedRoute.distance} km • {selectedRoute.duration} minutes</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-amber-400" />
-                  <span>Premier départ Eco: {selectedRoute.schedule.eco.firstDeparture}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Bus className="w-5 h-5 text-amber-400" />
-                  <span>Fréquence Eco: toutes les {selectedRoute.schedule.eco.frequency} minutes</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
@@ -176,133 +76,163 @@ export default function DemDemExpressPage() {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight">
-              DEM-DEM EXPRESS
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-3">
+              DEM-DEM Express
             </h1>
-            <p className="text-white/70 text-lg">
-              Bus navettes confortables avec abonnements illimités
+            <p className="text-xl text-white/70">
+              Abonnements transport urbain
             </p>
           </div>
 
-          <div className="space-y-5">
-            <h2 className="text-2xl font-bold text-white">
-              Choisissez votre ligne
-            </h2>
-
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader className="w-12 h-12 text-amber-400 animate-spin mb-4" />
-                <p className="text-white/70 text-lg">Chargement des lignes...</p>
-              </div>
-            )}
-
-            {!loading && routes.length === 0 && (
-              <div className="bg-white/5 border-2 border-white/10 rounded-3xl p-12 text-center">
-                <Bus className="w-16 h-16 text-white/30 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Aucune ligne Express disponible pour le moment
-                </h3>
-                <p className="text-white/60">
-                  Les lignes seront bientôt ajoutées par l'administration.
-                </p>
-              </div>
-            )}
-
-            {!loading && routes.map((route) => {
-              if (!route.pricing?.eco) {
-                console.warn('[DEBUG-ROUTES] Skipping route with invalid pricing:', route);
-                return null;
-              }
-
-              return (
-                <div
-                  key={route.id}
-                  onClick={() => handleRouteSelect(route)}
-                  className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl shadow-2xl p-8 cursor-pointer hover:shadow-[0_0_40px_rgba(251,191,36,0.3)] transition-all hover:scale-[1.02] border-2 border-white/10 hover:border-amber-400/50"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="bg-amber-400 text-blue-950 rounded-full w-12 h-12 flex items-center justify-center font-bold shadow-lg shadow-amber-400/50">
-                          {route.routeNumber}
-                        </div>
-                        <h3 className="text-2xl font-bold text-white">
-                          {route.origin} ⇄ {route.destination}
-                        </h3>
-                      </div>
-
-                      <div className="space-y-2 text-white/70 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="w-5 h-5 text-amber-400" />
-                          <span>{route.distance} km • {route.duration} minutes</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-5 h-5 text-amber-400" />
-                          <span>Premier départ: {route.schedule.eco.firstDeparture}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center space-x-4">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/pass/subscriptions?line=${route.id}&tier=eco`);
-                          }}
-                          className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all"
-                        >
-                          <span className="text-xs text-blue-300 font-semibold">ECO</span>
-                          <p className="text-xl font-bold text-white">
-                            {route.pricing.eco.toLocaleString()} FCFA/sem
-                          </p>
-                        </button>
-                        {route.hasConfort && route.pricing.comfort && route.pricing.comfort > 0 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/pass/subscriptions?line=${route.id}&tier=prestige`);
-                            }}
-                            className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all"
-                          >
-                            <span className="text-xs text-amber-300 font-semibold flex items-center gap-1">
-                              <span>★</span> PRESTIGE
-                            </span>
-                            <p className="text-xl font-bold text-white">
-                              {route.pricing.comfort.toLocaleString()} FCFA/sem
-                            </p>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <Bus className="w-16 h-16 text-amber-400" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">
-            <div className="flex items-start">
-              <AlertCircle className="w-6 h-6 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
-              <div>
-                <h3 className="font-bold text-white mb-1">Abonnements SAMA PASS</h3>
-                <p className="text-white/80 text-sm">
-                  Économisez jusqu'à 40% avec les abonnements mensuels SAMA PASS pour trajets illimités.
-                </p>
-                <button
-                  onClick={() => navigate('/pass/subscriptions')}
-                  className="mt-3 text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-2 transition-colors"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Voir les offres SAMA PASS</span>
-                </button>
-              </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-400"></div>
             </div>
-          </div>
+          ) : routes.length === 0 ? (
+            <div className="bg-blue-900/30 rounded-3xl p-12 text-center border border-white/10">
+              <Bus className="w-16 h-16 text-white/30 mx-auto mb-4" />
+              <p className="text-white/70 text-lg">
+                Aucune ligne disponible pour le moment
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {routes.map((route) => {
+                if (!route.pricing?.eco) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={route.id}
+                    className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl shadow-2xl p-6 border-2 border-white/10"
+                  >
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="bg-amber-400 text-blue-950 rounded-full w-12 h-12 flex items-center justify-center font-bold shadow-lg shadow-amber-400/50 text-lg">
+                            {route.routeNumber}
+                          </div>
+                          <h3 className="text-2xl font-bold text-white">
+                            {route.origin} ⇄ {route.destination}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center space-x-6 text-white/70 mb-6">
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="w-5 h-5 text-amber-400" />
+                            <span>{route.distance} km • {route.duration} minutes</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-5 h-5 text-amber-400" />
+                            <span>Premier départ: {route.schedule.firstDeparture}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {route.pricing.eco.weekly > 0 && (
+                              <button
+                                onClick={() => handleSubscriptionClick(route, 'eco', 'weekly')}
+                                className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all text-left"
+                              >
+                                <span className="text-xs text-blue-300 font-semibold block mb-1">ECO</span>
+                                <p className="text-xl font-bold text-white">
+                                  {route.pricing.eco.weekly.toLocaleString()} FCFA{getDurationShort('weekly')}
+                                </p>
+                              </button>
+                            )}
+                            {route.pricing.eco.monthly > 0 && (
+                              <button
+                                onClick={() => handleSubscriptionClick(route, 'eco', 'monthly')}
+                                className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all text-left"
+                              >
+                                <span className="text-xs text-blue-300 font-semibold block mb-1">ECO</span>
+                                <p className="text-xl font-bold text-white">
+                                  {route.pricing.eco.monthly.toLocaleString()} FCFA{getDurationShort('monthly')}
+                                </p>
+                              </button>
+                            )}
+                            {route.pricing.eco.quarterly > 0 && (
+                              <button
+                                onClick={() => handleSubscriptionClick(route, 'eco', 'quarterly')}
+                                className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all text-left"
+                              >
+                                <span className="text-xs text-blue-300 font-semibold block mb-1">ECO</span>
+                                <p className="text-xl font-bold text-white">
+                                  {route.pricing.eco.quarterly.toLocaleString()} FCFA{getDurationShort('quarterly')}
+                                </p>
+                              </button>
+                            )}
+                          </div>
+
+                          {route.pricing.prestige && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {route.pricing.prestige.weekly > 0 && (
+                                <button
+                                  onClick={() => handleSubscriptionClick(route, 'prestige', 'weekly')}
+                                  className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all text-left"
+                                >
+                                  <span className="text-xs text-amber-300 font-semibold flex items-center gap-1 mb-1">
+                                    <span>★</span> PRESTIGE
+                                  </span>
+                                  <p className="text-xl font-bold text-white">
+                                    {route.pricing.prestige.weekly.toLocaleString()} FCFA{getDurationShort('weekly')}
+                                  </p>
+                                </button>
+                              )}
+                              {route.pricing.prestige.monthly > 0 && (
+                                <button
+                                  onClick={() => handleSubscriptionClick(route, 'prestige', 'monthly')}
+                                  className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all text-left"
+                                >
+                                  <span className="text-xs text-amber-300 font-semibold flex items-center gap-1 mb-1">
+                                    <span>★</span> PRESTIGE
+                                  </span>
+                                  <p className="text-xl font-bold text-white">
+                                    {route.pricing.prestige.monthly.toLocaleString()} FCFA{getDurationShort('monthly')}
+                                  </p>
+                                </button>
+                              )}
+                              {route.pricing.prestige.quarterly > 0 && (
+                                <button
+                                  onClick={() => handleSubscriptionClick(route, 'prestige', 'quarterly')}
+                                  className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-4 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all text-left"
+                                >
+                                  <span className="text-xs text-amber-300 font-semibold flex items-center gap-1 mb-1">
+                                    <span>★</span> PRESTIGE
+                                  </span>
+                                  <p className="text-xl font-bold text-white">
+                                    {route.pricing.prestige.quarterly.toLocaleString()} FCFA{getDurationShort('quarterly')}
+                                  </p>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <Bus className="w-16 h-16 text-amber-400 ml-4 flex-shrink-0" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
+
+      {purchaseSelection && (
+        <DemDemPurchaseTunnel
+          route={purchaseSelection.route}
+          tier={purchaseSelection.tier}
+          duration={purchaseSelection.duration}
+          onClose={() => setPurchaseSelection(null)}
+          onConfirm={handlePurchaseConfirm}
+        />
+      )}
     </div>
   );
 }
