@@ -36,7 +36,7 @@ export default function DemDemExpressPage() {
 
   const comfortAvailable = isComfortAvailable();
 
-  const handleRouteSelect = (route: BusRoute) => {
+  const handleRouteSelect = (route: BusRouteDisplay) => {
     setSelectedRoute(route);
   };
 
