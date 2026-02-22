@@ -49,6 +49,12 @@ export default function DemDemExpressPage() {
   };
 
   if (selectedRoute) {
+    if (!selectedRoute.pricing?.eco) {
+      console.error('[DEBUG-ROUTES] Invalid route selected, returning to list');
+      setSelectedRoute(null);
+      return null;
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
         <nav className="bg-blue-950/95 backdrop-blur-xl shadow-lg sticky top-0 z-50 border-b border-white/10">
@@ -111,24 +117,24 @@ export default function DemDemExpressPage() {
 
               <button
                 onClick={() => handleBooking('comfort')}
-                disabled={!comfortAvailable}
+                disabled={!comfortAvailable || !selectedRoute.pricing.comfort}
                 className={`p-6 rounded-3xl border-3 relative ${
-                  comfortAvailable
+                  comfortAvailable && selectedRoute.pricing.comfort
                     ? 'bg-white/5 border-white/20 hover:border-amber-400/50 hover:bg-white/10'
                     : 'bg-white/5 border-white/10 opacity-50 cursor-not-allowed'
                 } transition-all`}
               >
-                {!comfortAvailable && (
+                {(!comfortAvailable || !selectedRoute.pricing.comfort) && (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-3xl flex items-center justify-center">
                     <span className="text-sm font-bold text-orange-400 rotate-[-15deg] text-center">
-                      NON DISPONIBLE<br/>10h - 16h
+                      {!selectedRoute.pricing.comfort ? 'NON DISPONIBLE' : 'NON DISPONIBLE\n10h - 16h'}
                     </span>
                   </div>
                 )}
                 <div className="text-center">
                   <p className="text-xl text-white font-bold mb-3">Comfort</p>
                   <p className="text-4xl text-white font-black mb-2">
-                    {selectedRoute.pricing.comfort.toLocaleString()}
+                    {selectedRoute.pricing.comfort ? selectedRoute.pricing.comfort.toLocaleString() : '---'}
                   </p>
                   <p className="text-sm text-white/60 mb-3">FCFA / place</p>
                   <p className="text-xs text-amber-400 font-semibold">
@@ -204,70 +210,77 @@ export default function DemDemExpressPage() {
               </div>
             )}
 
-            {!loading && routes.map((route) => (
-              <div
-                key={route.id}
-                onClick={() => handleRouteSelect(route)}
-                className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl shadow-2xl p-8 cursor-pointer hover:shadow-[0_0_40px_rgba(251,191,36,0.3)] transition-all hover:scale-[1.02] border-2 border-white/10 hover:border-amber-400/50"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="bg-amber-400 text-blue-950 rounded-full w-12 h-12 flex items-center justify-center font-bold shadow-lg shadow-amber-400/50">
-                        {route.routeNumber}
-                      </div>
-                      <h3 className="text-2xl font-bold text-white">
-                        {route.origin} ⇄ {route.destination}
-                      </h3>
-                    </div>
+            {!loading && routes.map((route) => {
+              if (!route.pricing?.eco) {
+                console.warn('[DEBUG-ROUTES] Skipping route with invalid pricing:', route);
+                return null;
+              }
 
-                    <div className="space-y-2 text-white/70 mb-4">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-5 h-5 text-amber-400" />
-                        <span>{route.distance} km • {route.duration} minutes</span>
+              return (
+                <div
+                  key={route.id}
+                  onClick={() => handleRouteSelect(route)}
+                  className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl shadow-2xl p-8 cursor-pointer hover:shadow-[0_0_40px_rgba(251,191,36,0.3)] transition-all hover:scale-[1.02] border-2 border-white/10 hover:border-amber-400/50"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="bg-amber-400 text-blue-950 rounded-full w-12 h-12 flex items-center justify-center font-bold shadow-lg shadow-amber-400/50">
+                          {route.routeNumber}
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">
+                          {route.origin} ⇄ {route.destination}
+                        </h3>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-5 h-5 text-amber-400" />
-                        <span>Premier départ: {route.schedule.eco.firstDeparture}</span>
-                      </div>
-                    </div>
 
-                    <div className="mt-4 flex items-center space-x-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/pass/subscriptions?line=${route.id}&tier=eco`);
-                        }}
-                        className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all"
-                      >
-                        <span className="text-xs text-blue-300 font-semibold">ECO</span>
-                        <p className="text-xl font-bold text-white">
-                          {route.pricing.eco.toLocaleString()} FCFA/sem
-                        </p>
-                      </button>
-                      {route.hasConfort && route.pricing.comfort && (
+                      <div className="space-y-2 text-white/70 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-5 h-5 text-amber-400" />
+                          <span>{route.distance} km • {route.duration} minutes</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-5 h-5 text-amber-400" />
+                          <span>Premier départ: {route.schedule.eco.firstDeparture}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center space-x-4">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/pass/subscriptions?line=${route.id}&tier=prestige`);
+                            navigate(`/pass/subscriptions?line=${route.id}&tier=eco`);
                           }}
-                          className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all"
+                          className="bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-blue-400/50 hover:border-blue-400 transition-all"
                         >
-                          <span className="text-xs text-amber-300 font-semibold flex items-center gap-1">
-                            <span>★</span> PRESTIGE
-                          </span>
+                          <span className="text-xs text-blue-300 font-semibold">ECO</span>
                           <p className="text-xl font-bold text-white">
-                            {route.pricing.comfort.toLocaleString()} FCFA/sem
+                            {route.pricing.eco.toLocaleString()} FCFA/sem
                           </p>
                         </button>
-                      )}
+                        {route.hasConfort && route.pricing.comfort && route.pricing.comfort > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/pass/subscriptions?line=${route.id}&tier=prestige`);
+                            }}
+                            className="bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-sm rounded-2xl px-5 py-3 border-2 border-amber-400/50 hover:border-amber-400 transition-all"
+                          >
+                            <span className="text-xs text-amber-300 font-semibold flex items-center gap-1">
+                              <span>★</span> PRESTIGE
+                            </span>
+                            <p className="text-xl font-bold text-white">
+                              {route.pricing.comfort.toLocaleString()} FCFA/sem
+                            </p>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <Bus className="w-16 h-16 text-amber-400" />
+                    <Bus className="w-16 h-16 text-amber-400" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8 bg-blue-500/20 border-l-4 border-blue-400 p-6 rounded-r-2xl backdrop-blur-sm">

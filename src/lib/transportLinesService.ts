@@ -74,42 +74,44 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
     const activeLines = linesArray.filter(line => line.is_active);
     console.log('[DEBUG-ROUTES] Active lines:', activeLines);
 
-    const displayRoutes: BusRouteDisplay[] = activeLines.map((line, index) => {
-      const [origin, destination] = line.route.split('⇄').map(s => s.trim());
+    const displayRoutes: BusRouteDisplay[] = activeLines
+      .filter(line => line.price_weekly && line.price_weekly > 0)
+      .map((line, index) => {
+        const [origin, destination] = line.route.split('⇄').map(s => s.trim());
 
-      const route: BusRouteDisplay = {
-        id: line.id,
-        routeNumber: index + 1,
-        name: line.name,
-        origin: origin || 'Origine',
-        destination: destination || 'Destination',
-        distance: 50,
-        duration: 60,
-        hasConfort: line.has_confort || false,
-        pricing: {
-          eco: line.price_weekly
-        },
-        schedule: {
-          eco: {
+        const route: BusRouteDisplay = {
+          id: line.id,
+          routeNumber: index + 1,
+          name: line.name,
+          origin: origin || 'Origine',
+          destination: destination || 'Destination',
+          distance: 50,
+          duration: 60,
+          hasConfort: line.has_confort || false,
+          pricing: {
+            eco: line.price_weekly || 0
+          },
+          schedule: {
+            eco: {
+              firstDeparture: '05:00',
+              lastDeparture: '22:00',
+              frequency: 30
+            }
+          },
+          isActive: line.is_active
+        };
+
+        if (line.has_confort && line.price_weekly_confort && line.price_weekly_confort > 0) {
+          route.pricing.comfort = line.price_weekly_confort;
+          route.schedule.comfort = {
             firstDeparture: '05:00',
             lastDeparture: '22:00',
-            frequency: 30
-          }
-        },
-        isActive: line.is_active
-      };
+            frequency: 45
+          };
+        }
 
-      if (line.has_confort && line.price_weekly_confort) {
-        route.pricing.comfort = line.price_weekly_confort;
-        route.schedule.comfort = {
-          firstDeparture: '05:00',
-          lastDeparture: '22:00',
-          frequency: 45
-        };
-      }
-
-      return route;
-    });
+        return route;
+      });
 
     console.log('[DEBUG-ROUTES] Transformed display routes:', displayRoutes);
 
