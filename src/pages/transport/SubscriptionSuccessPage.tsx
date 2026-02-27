@@ -164,95 +164,95 @@ export default function SubscriptionSuccessPage() {
             </p>
           </div>
 
-          {/* SAMA Pass Card - Format Portrait */}
+          {/* SAMA Pass Card - Format Portrait Optimisé */}
           <div
             ref={cardRef}
             className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl max-w-lg w-full mx-auto border-2 border-amber-400/30 shadow-2xl overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-4">
+            <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-5 py-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-blue-950">SAMA PASS</h2>
-                <Bus className="w-8 h-8 text-blue-950" />
+                <h2 className="text-xl font-black text-blue-950">SAMA PASS</h2>
+                <Bus className="w-7 h-7 text-blue-950" />
               </div>
             </div>
 
-            <div className="p-8">
-              {/* User Info */}
-              <div className="flex items-center gap-4 mb-8">
+            <div className="p-5">
+              {/* User Info - Photo plus grande */}
+              <div className="flex items-center gap-4 mb-5">
                 <img
                   src={userData.photoUrl}
                   alt="Photo"
-                  className="w-20 h-20 rounded-full object-cover border-4 border-amber-400"
+                  className="w-28 h-28 rounded-full object-cover border-4 border-amber-400 shadow-lg"
                 />
                 <div>
-                  <h3 className="text-2xl font-bold text-white">
+                  <h3 className="text-xl font-bold text-white leading-tight">
                     {userData.firstName} {userData.lastName}
                   </h3>
-                  <p className="text-white/70 flex items-center gap-2">
+                  <p className="text-white/70 flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4" />
                     {userData.phone}
                   </p>
                 </div>
               </div>
 
-              {/* Subscription Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Bus className="w-5 h-5 text-amber-400" />
-                    <span className="text-sm text-white/70">Ligne</span>
+              {/* Subscription Details - Compact 2x2 */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-blue-900/30 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Bus className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-white/70">Ligne</span>
                   </div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-sm font-bold text-white leading-tight">
                     {route.origin} ⇄ {route.destination}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CreditCard className="w-5 h-5 text-amber-400" />
-                    <span className="text-sm text-white/70">Formule</span>
+                <div className="bg-blue-900/30 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-white/70">Formule</span>
                   </div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-sm font-bold text-white">
                     {tier === 'eco' ? 'ECO' : 'PRESTIGE ★'}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar className="w-5 h-5 text-amber-400" />
-                    <span className="text-sm text-white/70">Durée</span>
+                <div className="bg-blue-900/30 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-white/70">Durée</span>
                   </div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-sm font-bold text-white">
                     {durationLabels[duration]}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle className="w-5 h-5 text-amber-400" />
-                    <span className="text-sm text-white/70">Valable jusqu'au</span>
+                <div className="bg-blue-900/30 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-white/70">Valable jusqu'au</span>
                   </div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-xs font-bold text-white leading-tight">
                     {formatDate(expires_at)}
                   </p>
                 </div>
               </div>
 
-              {/* QR Code */}
-              <div className="bg-white rounded-2xl p-8 text-center mb-6">
-                <div className="flex justify-center mb-4">
-                  <QRCode value={qrData} size={200} />
+              {/* QR Code - Réduit */}
+              <div className="bg-white rounded-2xl p-5 text-center mb-4">
+                <div className="flex justify-center mb-3">
+                  <QRCode value={qrData} size={160} />
                 </div>
-                <p className="text-gray-600 font-semibold flex items-center justify-center gap-2">
-                  <QrCode className="w-5 h-5" />
-                  Présentez ce QR Code à l'embarquement
+                <p className="text-gray-600 text-sm font-semibold flex items-center justify-center gap-2">
+                  <QrCode className="w-4 h-4" />
+                  Présentez ce QR Code
                 </p>
               </div>
 
-              {/* Price */}
-              <div className="text-center bg-gradient-to-r from-amber-400/20 to-amber-500/20 rounded-2xl p-6 border border-amber-400/30">
-                <p className="text-white/70 text-sm mb-2">Montant payé</p>
-                <p className="text-4xl font-black text-amber-400">
+              {/* Price - Compact */}
+              <div className="text-center bg-gradient-to-r from-amber-400/20 to-amber-500/20 rounded-2xl p-4 border border-amber-400/30">
+                <p className="text-white/70 text-xs mb-1">Montant payé</p>
+                <p className="text-3xl font-black text-amber-400">
                   {price.toLocaleString()} FCFA
                 </p>
               </div>
