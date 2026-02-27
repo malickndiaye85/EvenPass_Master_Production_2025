@@ -46,17 +46,36 @@ export default function DemDemExpressPage() {
   const handlePurchaseConfirm = async (userData: UserIdentity) => {
     if (!purchaseSelection) return;
 
-    console.log('Purchase confirmed:', {
-      ...purchaseSelection,
-      userData
-    });
+    try {
+      // Simuler le paiement et créer l'abonnement
+      const { route, tier, duration } = purchaseSelection;
+      const price = route.pricing[tier][duration];
 
-    navigate('/pass/payment-success', {
-      state: {
-        subscription: purchaseSelection,
-        userData
-      }
-    });
+      // Calculer la date d'expiration
+      const daysMap = { weekly: 7, monthly: 30, quarterly: 90 };
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + daysMap[duration]);
+
+      // Créer les données d'abonnement
+      const subscriptionData = {
+        route,
+        tier,
+        duration,
+        price,
+        userData,
+        purchased_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+        status: 'active'
+      };
+
+      // Rediriger vers la page de confirmation avec les données
+      navigate('/transport/subscription-success', {
+        state: subscriptionData
+      });
+    } catch (error) {
+      console.error('Error confirming purchase:', error);
+      alert('Une erreur est survenue. Veuillez réessayer.');
+    }
   };
 
   const getDurationShort = (duration: SubscriptionDuration): string => {

@@ -93,6 +93,7 @@ import CommercialLoginPage from './pages/pass/CommercialLoginPage';
 import OpsMaritimeManagementPage from './pages/OpsMaritimeManagementPage';
 
 import DemDemExpressPage from './pages/transport/DemDemExpressPage';
+import SubscriptionSuccessPage from './pages/transport/SubscriptionSuccessPage';
 
 import AlloDakarPage from './pages/transport/AlloDakarPage';
 import BookingConfirmationPage from './pages/transport/BookingConfirmationPage';
@@ -250,6 +251,16 @@ function AppRoutes() {
         <ThemeWrapper mode="transport">
 
           <DemDemExpressPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/transport/subscription-success" element={
+
+        <ThemeWrapper mode="transport">
+
+          <SubscriptionSuccessPage />
 
         </ThemeWrapper>
 
