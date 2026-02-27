@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Zap, AlertCircle, Loader, Delete } from 'lucide-react';
 import { passPhoneService, PassSubscription } from '../lib/passPhoneService';
 import { AbonnementCard } from '../components/AbonnementCard';
+import DemDemPassCard from '../components/DemDemPassCard';
 
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [subscription, setSubscription] = useState<PassSubscription | null>(null);
+  const [demdemPasses, setDemdemPasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCard, setShowCard] = useState(false);
@@ -52,6 +54,24 @@ const WalletPage: React.FC = () => {
     setError('');
 
     try {
+      // Vérifier d'abord les passes DEM-DEM dans localStorage
+      const allPasses = JSON.parse(localStorage.getItem('demdem_passes') || '[]');
+      const formattedPhone = `+221${phone}`;
+
+      const userPasses = allPasses.filter((pass: any) =>
+        pass.userData && pass.userData.phone === formattedPhone
+      );
+
+      if (userPasses.length > 0) {
+        console.log('[WALLET] ✅ Passes DEM-DEM trouvés:', userPasses.length);
+        setDemdemPasses(userPasses);
+        localStorage.setItem('demdem_last_phone', phone);
+        setShowCard(true);
+        setLoading(false);
+        return;
+      }
+
+      // Sinon chercher dans les abonnements SAMA Pass
       const cached = passPhoneService.loadFromCache(phone);
       if (cached) {
         console.log('[WALLET] 💾 Abonnement trouvé en cache');
@@ -85,6 +105,7 @@ const WalletPage: React.FC = () => {
   const handleDisconnect = () => {
     setPhoneNumber('');
     setSubscription(null);
+    setDemdemPasses([]);
     setError('');
     setShowCard(false);
     localStorage.removeItem('demdem_last_phone');
@@ -107,11 +128,11 @@ const WalletPage: React.FC = () => {
     </button>
   );
 
-  if (showCard && subscription) {
+  if (showCard && (subscription || demdemPasses.length > 0)) {
     return (
-      <div className="h-screen bg-[#0F1419] overflow-hidden">
-        <div className="h-full flex flex-col">
-          <div className="flex-shrink-0 px-4 pt-4 pb-2">
+      <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628] overflow-y-auto">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex-shrink-0 mb-6">
             <button
               onClick={() => navigate('/voyage')}
               className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
@@ -121,29 +142,61 @@ const WalletPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
-            <div className="animate-fadeIn">
-              <AbonnementCard subscription={subscription} />
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-black text-white mb-2">Mon Wallet</h1>
+              <p className="text-white/70">Vos passes DEM-DEM</p>
+            </div>
 
-              <div className="mt-4 bg-[#1A2332] rounded-xl p-4 border border-gray-800">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-gray-300 text-xs leading-relaxed">
-                    <p className="font-bold text-white mb-1">Accès hors ligne activé</p>
-                    <p className="text-gray-400 text-xs">
-                      Numéro: {formatPhoneDisplay(phoneNumber)}
-                    </p>
+            {demdemPasses.length > 0 ? (
+              <>
+                {demdemPasses.map((pass, index) => (
+                  <div key={pass.id || index} className="animate-fadeIn">
+                    <DemDemPassCard pass={pass} />
+                  </div>
+                ))}
+
+                <div className="bg-blue-900/30 rounded-xl p-4 border border-white/10">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-white/80 text-sm">
+                      <p className="font-bold text-white mb-1">Accès hors ligne activé</p>
+                      <p className="text-white/60 text-xs">
+                        Numéro: +221 {formatPhoneDisplay(phoneNumber)}
+                      </p>
+                      <p className="text-white/60 text-xs mt-1">
+                        {demdemPasses.length} pass{demdemPasses.length > 1 ? 'es' : ''} trouvé{demdemPasses.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
+            ) : subscription ? (
+              <>
+                <div className="animate-fadeIn">
+                  <AbonnementCard subscription={subscription} />
+                </div>
 
-              <button
-                onClick={handleDisconnect}
-                className="w-full mt-4 py-3 bg-gray-700/50 text-gray-400 rounded-xl font-medium text-sm hover:bg-gray-700 hover:text-white transition-all"
-              >
-                Déconnecter ce Pass
-              </button>
-            </div>
+                <div className="bg-blue-900/30 rounded-xl p-4 border border-white/10">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-white/80 text-sm">
+                      <p className="font-bold text-white mb-1">Accès hors ligne activé</p>
+                      <p className="text-white/60 text-xs">
+                        Numéro: +221 {formatPhoneDisplay(phoneNumber)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
+
+            <button
+              onClick={handleDisconnect}
+              className="w-full py-4 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-all border border-white/20"
+            >
+              Déconnecter
+            </button>
           </div>
         </div>
       </div>
