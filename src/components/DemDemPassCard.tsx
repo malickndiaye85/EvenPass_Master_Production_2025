@@ -159,10 +159,10 @@ export default function DemDemPassCard({ pass }: DemDemPassCardProps) {
             </div>
           </div>
 
-          {/* QR Code - Réduit */}
+          {/* QR Code */}
           <div className="bg-white rounded-2xl p-5 text-center mb-4">
             <div className="flex justify-center mb-3">
-              <QRCode value={qrData} size={160} />
+              <QRCode value={qrData} size={200} />
             </div>
             <p className="text-gray-600 text-sm font-semibold flex items-center justify-center gap-2">
               <QrCode className="w-4 h-4" />
