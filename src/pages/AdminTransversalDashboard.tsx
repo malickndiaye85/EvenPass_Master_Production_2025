@@ -11,6 +11,7 @@ import AccessDenied from '../components/AccessDenied';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
 import DriversVerificationTab from '../components/DriversVerificationTab';
 import ExpressSubscribersManager from '../components/ExpressSubscribersManager';
+import EventsModerationManager from '../components/EventsModerationManager';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -43,7 +44,7 @@ const AdminTransversalDashboard: React.FC = () => {
   const { user, loading: authLoading, signOut } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'voyage' | 'staff' | 'settings'>('overview');
-  const [eventsSubTab, setEventsSubTab] = useState<'validation' | 'billetterie' | 'litiges' | 'finance'>('validation');
+  const [eventsSubTab, setEventsSubTab] = useState<'moderation' | 'validation' | 'billetterie' | 'litiges' | 'finance'>('moderation');
   const [voyageSubTab, setVoyageSubTab] = useState<'validation' | 'trajets' | 'flotte' | 'finance' | 'services'>('services');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'pending_docs' | 'verified'>('all');
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
@@ -53,6 +54,7 @@ const AdminTransversalDashboard: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [transportLines, setTransportLines] = useState<TransportLine[]>([]);
   const [showCreateLineModal, setShowCreateLineModal] = useState(false);
+  const [pendingEventsCount, setPendingEventsCount] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -271,7 +273,7 @@ const AdminTransversalDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('events')}
-              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap ${
+              className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all whitespace-nowrap relative ${
                 activeTab === 'events'
                   ? 'bg-[#10B981] text-black'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -279,6 +281,11 @@ const AdminTransversalDashboard: React.FC = () => {
             >
               <Ticket className="w-5 h-5 inline-block mr-2" />
               EVEN
+              {pendingEventsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {pendingEventsCount}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('voyage')}
@@ -516,6 +523,21 @@ const AdminTransversalDashboard: React.FC = () => {
 
               <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                 <button
+                  onClick={() => setEventsSubTab('moderation')}
+                  className={`px-4 py-2 rounded-xl font-bold transition-all whitespace-nowrap relative ${
+                    eventsSubTab === 'moderation'
+                      ? 'bg-[#10B981] text-black'
+                      : 'bg-white/10 text-white/60 hover:text-white hover:bg-white/20'
+                  }`}
+                >
+                  Modération Événements
+                  {pendingEventsCount > 0 && (
+                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {pendingEventsCount}
+                    </span>
+                  )}
+                </button>
+                <button
                   onClick={() => setEventsSubTab('validation')}
                   className={`px-4 py-2 rounded-xl font-bold transition-all whitespace-nowrap ${
                     eventsSubTab === 'validation'
@@ -556,6 +578,10 @@ const AdminTransversalDashboard: React.FC = () => {
                   Finance
                 </button>
               </div>
+
+              {eventsSubTab === 'moderation' && (
+                <EventsModerationManager onPendingCountChange={setPendingEventsCount} />
+              )}
 
               {eventsSubTab === 'validation' && (
                 <OrganizerVerificationTab />

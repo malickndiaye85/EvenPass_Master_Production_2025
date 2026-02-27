@@ -52,17 +52,17 @@ export default function EventDetailPage() {
       console.log('Slug recherché:', slug);
 
       const eventsRef = collection(firestore, 'events');
-      const q = query(eventsRef, where('slug', '==', slug), where('status', '==', 'published'));
+      const q = query(eventsRef, where('slug', '==', slug), where('status', '==', 'active'));
       const eventSnapshot = await getDocs(q);
 
       if (eventSnapshot.empty) {
-        console.log('❌ Aucun événement trouvé avec ce slug et status=published');
+        console.log('❌ Aucun événement trouvé avec ce slug et status=active');
         console.log('Recherche sans filtre status...');
         const qAll = query(eventsRef, where('slug', '==', slug));
         const allSnapshot = await getDocs(qAll);
         if (!allSnapshot.empty) {
           console.log('⚠️ Événement trouvé mais status:', allSnapshot.docs[0].data().status);
-          console.log('Pour voir l\'événement, changez le status en "published" dans Firebase');
+          console.log('Pour voir l\'événement, changez le status en "active" dans Firebase');
         }
         return;
       }

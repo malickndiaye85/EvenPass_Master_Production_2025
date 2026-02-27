@@ -40,7 +40,7 @@ export default function HomePageNew() {
       setCategories(loadedCategories);
 
       const eventsRef = collection(firestore, 'events');
-      let eventsQuery = query(eventsRef, where('status', '==', 'published'));
+      let eventsQuery = query(eventsRef, where('status', '==', 'active'));
       const eventsSnapshot = await getDocs(eventsQuery);
 
       let loadedEvents = await Promise.all(
