@@ -164,109 +164,97 @@ export default function SubscriptionSuccessPage() {
             </p>
           </div>
 
-          {/* SAMA Pass Card - Format Carte Bancaire */}
+          {/* SAMA Pass Card - Format Portrait */}
           <div
             ref={cardRef}
-            className="relative mx-auto max-w-md bg-gradient-to-br from-[#1a2942] via-[#0A1628] to-[#1a2942] rounded-3xl shadow-2xl overflow-hidden"
-            style={{
-              aspectRatio: '1.586',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0.3)'
-            }}
+            className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl max-w-lg w-full mx-auto border-2 border-amber-400/30 shadow-2xl overflow-hidden"
           >
-            {/* Hologramme effet */}
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-blue-400/5 pointer-events-none"></div>
-
-            {/* Header de la carte */}
-            <div className="relative p-5 pb-3 border-b border-amber-400/20">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-2xl font-black text-amber-400 tracking-wide">SAMA PASS</h2>
-                <Bus className="w-7 h-7 text-amber-400" />
+            <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-blue-950">SAMA PASS</h2>
+                <Bus className="w-8 h-8 text-blue-950" />
               </div>
-              <p className="text-xs text-white/60 font-semibold">DEM-DEM Express</p>
             </div>
 
-            {/* Corps de la carte */}
-            <div className="relative p-5 pt-4">
-              {/* Section Photo + QR - Layout optimal mobile */}
-              <div className="flex gap-4 mb-4">
-                {/* Photo utilisateur - Grande et centrée */}
-                <div className="flex-shrink-0">
-                  <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-4 border-amber-400 shadow-xl">
-                    <img
-                      src={userData.photoUrl}
-                      alt="Photo"
-                      className="w-full h-full object-cover"
-                    />
+            <div className="p-8">
+              {/* User Info */}
+              <div className="flex items-center gap-4 mb-8">
+                <img
+                  src={userData.photoUrl}
+                  alt="Photo"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-amber-400"
+                />
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    {userData.firstName} {userData.lastName}
+                  </h3>
+                  <p className="text-white/70 flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    {userData.phone}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subscription Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Bus className="w-5 h-5 text-amber-400" />
+                    <span className="text-sm text-white/70">Ligne</span>
                   </div>
-                </div>
-
-                {/* QR Code - 1/3 de la largeur minimum */}
-                <div className="flex-1 flex items-center justify-center bg-white rounded-2xl p-3 shadow-lg">
-                  <QRCode
-                    value={qrData}
-                    size={96}
-                    level="H"
-                    style={{ width: '100%', height: 'auto', maxWidth: '96px' }}
-                  />
-                </div>
-              </div>
-
-              {/* Infos utilisateur */}
-              <div className="mb-4 bg-blue-900/30 rounded-xl p-3 border border-white/10">
-                <h3 className="text-xl font-black text-white leading-tight mb-1">
-                  {userData.firstName} {userData.lastName}
-                </h3>
-                <p className="text-sm text-white/70 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5" />
-                  {userData.phone}
-                </p>
-              </div>
-
-              {/* Détails abonnement - Compact */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-blue-900/20 rounded-lg p-2.5 border border-white/5">
-                  <p className="text-xs text-white/50 mb-0.5">Ligne</p>
-                  <p className="text-sm font-bold text-white leading-tight">
+                  <p className="text-lg font-bold text-white">
                     {route.origin} ⇄ {route.destination}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/20 rounded-lg p-2.5 border border-white/5">
-                  <p className="text-xs text-white/50 mb-0.5">Formule</p>
-                  <p className="text-sm font-bold text-white">
+                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CreditCard className="w-5 h-5 text-amber-400" />
+                    <span className="text-sm text-white/70">Formule</span>
+                  </div>
+                  <p className="text-lg font-bold text-white">
                     {tier === 'eco' ? 'ECO' : 'PRESTIGE ★'}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/20 rounded-lg p-2.5 border border-white/5">
-                  <p className="text-xs text-white/50 mb-0.5">Durée</p>
-                  <p className="text-sm font-bold text-white">
+                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Calendar className="w-5 h-5 text-amber-400" />
+                    <span className="text-sm text-white/70">Durée</span>
+                  </div>
+                  <p className="text-lg font-bold text-white">
                     {durationLabels[duration]}
                   </p>
                 </div>
 
-                <div className="bg-blue-900/20 rounded-lg p-2.5 border border-white/5">
-                  <p className="text-xs text-white/50 mb-0.5">Expire le</p>
-                  <p className="text-xs font-bold text-white">
-                    {formatDate(expires_at).split(' ').slice(0, 2).join(' ')}
+                <div className="bg-blue-900/30 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle className="w-5 h-5 text-amber-400" />
+                    <span className="text-sm text-white/70">Valable jusqu'au</span>
+                  </div>
+                  <p className="text-lg font-bold text-white">
+                    {formatDate(expires_at)}
                   </p>
                 </div>
               </div>
 
-              {/* Prix - Mise en avant */}
-              <div className="bg-gradient-to-r from-amber-400 to-amber-500 rounded-xl p-3 text-center shadow-lg">
-                <p className="text-xs text-blue-950 font-bold mb-0.5">Montant payé</p>
-                <p className="text-2xl font-black text-blue-950">
-                  {price.toLocaleString()} FCFA
+              {/* QR Code */}
+              <div className="bg-white rounded-2xl p-8 text-center mb-6">
+                <div className="flex justify-center mb-4">
+                  <QRCode value={qrData} size={200} />
+                </div>
+                <p className="text-gray-600 font-semibold flex items-center justify-center gap-2">
+                  <QrCode className="w-5 h-5" />
+                  Présentez ce QR Code à l'embarquement
                 </p>
               </div>
-            </div>
 
-            {/* Footer de la carte */}
-            <div className="relative px-5 pb-4">
-              <div className="flex items-center justify-between text-xs text-white/40">
-                <span>Valide sur ligne</span>
-                <span className="font-mono">#{qrData.slice(0, 8).toUpperCase()}</span>
+              {/* Price */}
+              <div className="text-center bg-gradient-to-r from-amber-400/20 to-amber-500/20 rounded-2xl p-6 border border-amber-400/30">
+                <p className="text-white/70 text-sm mb-2">Montant payé</p>
+                <p className="text-4xl font-black text-amber-400">
+                  {price.toLocaleString()} FCFA
+                </p>
               </div>
             </div>
           </div>
