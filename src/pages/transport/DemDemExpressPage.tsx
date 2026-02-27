@@ -87,7 +87,7 @@ export default function DemDemExpressPage() {
             </p>
           </div>
 
-          {loading ? (
+{loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-400"></div>
             </div>
@@ -99,9 +99,15 @@ export default function DemDemExpressPage() {
                 <p className="text-white/70 text-lg mb-4">
                   Aucune ligne disponible pour le moment
                 </p>
-                <p className="text-white/50 text-sm">
+                <p className="text-white/50 text-sm mb-4">
                   Les lignes doivent être créées via l'interface Admin Transport
                 </p>
+                <button
+                  onClick={loadRoutes}
+                  className="bg-amber-400 hover:bg-amber-500 text-blue-950 px-6 py-3 rounded-xl font-bold transition-all"
+                >
+                  Recharger les lignes
+                </button>
               </div>
             </>
           ) : (

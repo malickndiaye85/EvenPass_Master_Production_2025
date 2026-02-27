@@ -73,21 +73,47 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
     }));
 
     console.log('[DEBUG-ROUTES] Parsed lines array:', linesArray);
+    console.log('[DEBUG-ROUTES] Total lines count:', linesArray.length);
+
+    linesArray.forEach(line => {
+      console.log(`[DEBUG-ROUTES] Line "${line.name}": is_active=${line.is_active}, price_weekly=${line.price_weekly}`);
+    });
 
     const activeLines = linesArray.filter(line => line.is_active);
-    console.log('[DEBUG-ROUTES] Active lines:', activeLines);
+    console.log('[DEBUG-ROUTES] Active lines after filter:', activeLines);
+    console.log('[DEBUG-ROUTES] Active lines count:', activeLines.length);
 
     const displayRoutes: BusRouteDisplay[] = activeLines
       .filter(line => line.price_weekly && line.price_weekly > 0)
       .map((line, index) => {
-        const [origin, destination] = line.route.split('⇄').map(s => s.trim());
+        let origin = 'Origine';
+        let destination = 'Destination';
+
+        if (line.route) {
+          const splitByArrow = line.route.split('⇄');
+          if (splitByArrow.length === 2) {
+            origin = splitByArrow[0].trim();
+            destination = splitByArrow[1].trim();
+          } else {
+            const splitByDash = line.route.split('→');
+            if (splitByDash.length === 2) {
+              origin = splitByDash[0].trim();
+              destination = splitByDash[1].trim();
+            } else {
+              origin = line.route;
+              destination = line.route;
+            }
+          }
+        }
+
+        console.log(`[DEBUG-ROUTES] Processing line ${line.name}: ${origin} → ${destination}`);
 
         const route: BusRouteDisplay = {
           id: line.id,
           routeNumber: index + 1,
           name: line.name,
-          origin: origin || 'Origine',
-          destination: destination || 'Destination',
+          origin,
+          destination,
           distance: 50,
           duration: 60,
           hasConfort: line.has_confort || false,
@@ -112,6 +138,7 @@ export async function getActiveTransportLines(): Promise<BusRouteDisplay[]> {
             monthly: line.price_monthly_confort || 0,
             quarterly: line.price_quarterly_confort || 0
           };
+          console.log(`[DEBUG-ROUTES] Line ${line.name} has prestige pricing`, route.pricing.prestige);
         }
 
         return route;
