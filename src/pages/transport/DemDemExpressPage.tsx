@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bus, MapPin, Clock } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
 import DemDemPurchaseTunnel, { UserIdentity } from '../../components/DemDemPurchaseTunnel';
+import FirebaseDiagnostic from '../../components/FirebaseDiagnostic';
 import { getActiveTransportLines, BusRouteDisplay } from '../../lib/transportLinesService';
 
 type SubscriptionDuration = 'weekly' | 'monthly' | 'quarterly';
@@ -91,12 +92,18 @@ export default function DemDemExpressPage() {
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-400"></div>
             </div>
           ) : routes.length === 0 ? (
-            <div className="bg-blue-900/30 rounded-3xl p-12 text-center border border-white/10">
-              <Bus className="w-16 h-16 text-white/30 mx-auto mb-4" />
-              <p className="text-white/70 text-lg">
-                Aucune ligne disponible pour le moment
-              </p>
-            </div>
+            <>
+              <FirebaseDiagnostic />
+              <div className="bg-blue-900/30 rounded-3xl p-12 text-center border border-white/10">
+                <Bus className="w-16 h-16 text-white/30 mx-auto mb-4" />
+                <p className="text-white/70 text-lg mb-4">
+                  Aucune ligne disponible pour le moment
+                </p>
+                <p className="text-white/50 text-sm">
+                  Les lignes doivent être créées via l'interface Admin Transport
+                </p>
+              </div>
+            </>
           ) : (
             <div className="space-y-6">
               {routes.map((route) => {
