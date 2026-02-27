@@ -142,7 +142,7 @@
     },
 
     "transport_lines": {
-      ".read": "auth != null",
+      ".read": true,
       "$lineId": {
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ops_transport' || root.child('users').child(auth.uid).child('role').val() === 'super_admin' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
       }
