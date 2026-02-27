@@ -10,6 +10,7 @@ import StaffManagementTab from '../components/StaffManagementTab';
 import AccessDenied from '../components/AccessDenied';
 import OrganizerVerificationTab from '../components/OrganizerVerificationTab';
 import DriversVerificationTab from '../components/DriversVerificationTab';
+import ExpressSubscribersManager from '../components/ExpressSubscribersManager';
 import {
   getFinancialSummary,
   getPartnerReports,
@@ -775,83 +776,7 @@ const AdminTransversalDashboard: React.FC = () => {
                   </div>
 
                   <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-2 border-blue-500/30">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <Navigation2 className="w-7 h-7 text-blue-400" />
-                        <h4 className="text-xl font-bold text-white">Configuration DEM-DEM Express</h4>
-                      </div>
-                      <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-bold">
-                        Tarification Navettes
-                      </span>
-                    </div>
-
-                    <div className="bg-[#1e3a5f] rounded-xl p-6 mb-6 border border-[#2563eb]/30">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-gray-300 mb-1">
-                            Prix des Abonnements Navettes
-                          </p>
-                          <p className="text-xs text-gray-400 leading-relaxed">
-                            Configurez les tarifs pour les différentes formules d'abonnement aux navettes express. Ces prix s'appliquent aux lignes fixes programmées.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-5 mb-6">
-                      <div className="bg-[#0f172a] rounded-xl p-6 border border-gray-700/50">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-base font-semibold text-gray-300">Abonnement Trimestriel</span>
-                          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold">90 jours</span>
-                        </div>
-                        <input
-                          type="number"
-                          placeholder="100000"
-                          defaultValue="100000"
-                          className="w-full px-4 py-4 bg-[#1e293b] border-2 border-gray-700/50 rounded-xl text-white text-2xl font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 transition-all mb-2"
-                        />
-                        <p className="text-xs text-gray-500 font-medium">Prix en FCFA</p>
-                      </div>
-
-                      <div className="bg-[#0f172a] rounded-xl p-6 border border-gray-700/50">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-base font-semibold text-gray-300">Abonnement Hebdomadaire</span>
-                          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold">7 jours</span>
-                        </div>
-                        <input
-                          type="number"
-                          placeholder="12000"
-                          defaultValue="12000"
-                          className="w-full px-4 py-4 bg-[#1e293b] border-2 border-gray-700/50 rounded-xl text-white text-2xl font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 transition-all mb-2"
-                        />
-                        <p className="text-xs text-gray-500 font-medium">Prix en FCFA</p>
-                      </div>
-
-                      <div className="bg-[#0f172a] rounded-xl p-6 border border-gray-700/50">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-base font-semibold text-gray-300">Abonnement Mensuel</span>
-                          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold">30 jours</span>
-                        </div>
-                        <input
-                          type="number"
-                          placeholder="40000"
-                          defaultValue="40000"
-                          className="w-full px-4 py-4 bg-[#1e293b] border-2 border-gray-700/50 rounded-xl text-white text-2xl font-bold placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 transition-all mb-2"
-                        />
-                        <p className="text-xs text-gray-500 font-medium">Prix en FCFA</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg">
-                        <Settings className="w-5 h-5" />
-                        Enregistrer les tarifs
-                      </button>
-                      <button className="bg-gray-700/50 hover:bg-gray-600/50 text-white py-4 px-6 rounded-xl font-bold transition-all">
-                        Annuler
-                      </button>
-                    </div>
+                    <ExpressSubscribersManager transportLines={transportLines} />
                   </div>
 
                   <div className="mt-6 p-6 rounded-xl bg-white/5 border border-white/10">
