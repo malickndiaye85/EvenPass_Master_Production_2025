@@ -37,7 +37,7 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
       className="rounded-3xl p-8 md:p-10 border-2 border-emerald-500/30 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:border-emerald-500/60 transition-all duration-300 cursor-pointer group mb-5 relative overflow-hidden"
       onClick={handleGoClick}
       style={{
-        backgroundImage: 'url(https://images.pexels.com/photos/2873486/pexels-photo-2873486.jpeg?auto=compress&cs=tinysrgb&w=1200)',
+        backgroundImage: 'url(/image.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
