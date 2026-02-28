@@ -811,27 +811,35 @@ export default function EventDetailPage() {
                 }`}>
                   Numéro de téléphone {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
                 </label>
-                <input
-                  type="tel"
-                  value={checkoutForm.customer_phone}
-                  onChange={(e) => {
-                    const phone = e.target.value;
-                    setCheckoutForm({
-                      ...checkoutForm,
-                      customer_phone: phone,
-                      customer_name: phone || 'Client'
-                    });
-                  }}
-                  className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white focus:outline-none"
-                  style={{
-                    color: '#000000 !important',
-                    backgroundColor: '#ffffff',
-                    borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
-                  }}
-                  placeholder=""
-                  disabled={processing}
-                  required
-                />
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold pointer-events-none z-10" style={{ color: '#000000' }}>
+                    +221
+                  </div>
+                  <input
+                    type="tel"
+                    value={checkoutForm.customer_phone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 9) {
+                        setCheckoutForm({
+                          ...checkoutForm,
+                          customer_phone: value,
+                          customer_name: value || 'Client'
+                        });
+                      }
+                    }}
+                    maxLength={9}
+                    className="w-full pl-16 pr-4 py-3 rounded-xl border-2 font-medium transition-colors focus:outline-none"
+                    style={{
+                      color: '#000000',
+                      backgroundColor: '#ffffff',
+                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
+                    }}
+                    placeholder="77 123 45 67"
+                    disabled={processing}
+                    required
+                  />
+                </div>
                 <p className={`text-xs mt-2 ${isDark ? 'text-amber-400/60' : 'text-slate-500'}`}>
                   Utilisez votre numéro {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
                 </p>
