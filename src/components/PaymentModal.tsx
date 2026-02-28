@@ -191,8 +191,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 }}
                 placeholder="77 123 45 67"
                 maxLength={9}
-                className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-semibold"
-                style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-semibold relative"
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                  WebkitTextFillColor: '#000000',
+                  caretColor: '#000000',
+                  zIndex: 2
+                }}
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

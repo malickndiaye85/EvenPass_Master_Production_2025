@@ -834,8 +834,10 @@ export default function EventDetailPage() {
                       color: '#000000',
                       backgroundColor: '#ffffff',
                       borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)',
-                      zIndex: 2
-                    }}
+                      zIndex: 2,
+                      WebkitTextFillColor: '#000000',
+                      caretColor: '#000000'
+                    } as React.CSSProperties}
                     placeholder="77 123 45 67"
                     disabled={processing}
                     required
@@ -861,8 +863,10 @@ export default function EventDetailPage() {
                     style={{
                       backgroundColor: '#ffffff',
                       color: '#000000',
-                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
-                    }}
+                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)',
+                      WebkitTextFillColor: '#000000',
+                      caretColor: '#000000'
+                    } as React.CSSProperties}
                     placeholder="email@exemple.com"
                     disabled={processing}
                   />
