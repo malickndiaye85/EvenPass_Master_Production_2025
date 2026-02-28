@@ -822,12 +822,12 @@ export default function EventDetailPage() {
                       customer_name: phone || 'Client'
                     });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors !text-black ${
-                    isDark
-                      ? 'bg-white border-amber-800/40 focus:border-amber-600'
-                      : 'bg-white border-slate-200 focus:border-orange-500'
-                  } focus:outline-none`}
-                  style={{ color: '#000000' }}
+                  className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors bg-white focus:outline-none"
+                  style={{
+                    color: '#000000 !important',
+                    backgroundColor: '#ffffff',
+                    borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
+                  }}
                   placeholder=""
                   disabled={processing}
                   required
