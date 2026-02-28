@@ -34,11 +34,18 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
 
   return (
     <div
-      className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl p-8 md:p-10 border-2 border-emerald-500/30 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:border-emerald-500/60 transition-all duration-300 cursor-pointer group mb-5 relative"
+      className="rounded-3xl p-8 md:p-10 border-2 border-emerald-500/30 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:border-emerald-500/60 transition-all duration-300 cursor-pointer group mb-5 relative overflow-hidden"
       onClick={handleGoClick}
+      style={{
+        backgroundImage: 'url(https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l-bus+10B981(-17.3829,14.7845)/-17.3829,14.7845,12,0/800x400@2x?access_token=pk.eyJ1IjoiZGVtZGVtIiwiYSI6ImNsdHBya3BtajBjdHMyam55NHpqaDRjb3QifQ.example)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/85 via-blue-900/90 to-blue-950/85 backdrop-blur-[2px]" />
+
       <div className="absolute top-4 left-8 z-10">
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/30 backdrop-blur-md rounded-full border border-emerald-400/40 shadow-lg">
           <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50" />
           <span className="text-emerald-300 font-bold text-xs tracking-wide uppercase">
             {hasSubscription ? 'Navigation Active' : 'Transport Express'}
@@ -46,9 +53,9 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8 relative">
-        <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-300 border border-white/20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8 relative z-10">
+        <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-emerald-500/30 transition-all duration-300 border border-white/30 relative overflow-hidden shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <Navigation size={40} className="text-emerald-400 relative z-10" strokeWidth={2} />
         </div>
 
@@ -86,7 +93,7 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
           )}
 
           <div className="grid md:grid-cols-2 gap-4 mb-6">
-            <div className="relative h-40 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden shadow-inner">
+            <div className="relative h-40 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-md rounded-2xl border border-white/30 overflow-hidden shadow-xl">
               <div className="absolute inset-0 flex items-center justify-center">
                 <svg width="100%" height="100%" viewBox="0 0 300 160" className="opacity-50">
                   <path
