@@ -13,7 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { firestore } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import type { Event, EventCategory } from '../types';
 
 export default function HomePageNew() {
@@ -25,11 +25,69 @@ export default function HomePageNew() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const eventsRef = collection(firestore, 'events');
+    const eventsQuery = query(eventsRef, where('status', '==', 'active'));
+
+    console.log('[EVENEMENT PAGE] Setting up real-time listener for active events...');
+
+    const unsubscribe = onSnapshot(eventsQuery, async (snapshot) => {
+      console.log(`[EVENEMENT PAGE] 📊 Found ${snapshot.docs.length} active events in database`);
+
+      setLoading(true);
+      try {
+        let loadedEvents = await Promise.all(
+          snapshot.docs.map(async (eventDoc) => {
+            const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
+            console.log('[EVENEMENT PAGE] Event:', eventData.title, 'Status:', eventData.status);
+
+            const ticketTypesRef = collection(firestore, 'ticket_types');
+            const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
+            const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
+            eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            return eventData;
+          })
+        );
+
+        loadedEvents = loadedEvents
+          .filter(event => {
+            const isFuture = new Date(event.start_date) >= new Date();
+            if (!isFuture) {
+              console.log('[EVENEMENT PAGE] ⏭️ Skipping past event:', event.title);
+            }
+            return isFuture;
+          })
+          .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+
+        if (selectedCategory) {
+          const beforeFilter = loadedEvents.length;
+          loadedEvents = loadedEvents.filter(event => event.category_id === selectedCategory);
+          console.log(`[EVENEMENT PAGE] 🏷️ Category filter: ${beforeFilter} → ${loadedEvents.length} events`);
+        }
+
+        console.log(`[EVENEMENT PAGE] ✅ Displaying ${loadedEvents.length} events`);
+        setEvents(loadedEvents);
+      } catch (error) {
+        console.error('[EVENEMENT PAGE] ❌ Error loading events:', error);
+      } finally {
+        setLoading(false);
+      }
+    }, (error) => {
+      console.error('[EVENEMENT PAGE] ❌ Listener error:', error);
+      setLoading(false);
+    });
+
+    return () => {
+      console.log('[EVENEMENT PAGE] Cleaning up real-time listener');
+      unsubscribe();
+    };
   }, [selectedCategory]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadCategories = async () => {
     try {
       const categoriesRef = collection(firestore, 'event_categories');
       const categoriesSnapshot = await getDocs(categoriesRef);
@@ -37,36 +95,10 @@ export default function HomePageNew() {
         id: doc.id,
         ...doc.data()
       })) as EventCategory[];
+      console.log(`[EVENEMENT PAGE] 📂 Loaded ${loadedCategories.length} categories`);
       setCategories(loadedCategories);
-
-      const eventsRef = collection(firestore, 'events');
-      let eventsQuery = query(eventsRef, where('status', '==', 'active'));
-      const eventsSnapshot = await getDocs(eventsQuery);
-
-      let loadedEvents = await Promise.all(
-        eventsSnapshot.docs.map(async (eventDoc) => {
-          const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
-          const ticketTypesRef = collection(firestore, 'ticket_types');
-          const ticketTypesQuery = query(ticketTypesRef, where('event_id', '==', eventData.id));
-          const ticketTypesSnapshot = await getDocs(ticketTypesQuery);
-          eventData.ticket_types = ticketTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          return eventData;
-        })
-      );
-
-      loadedEvents = loadedEvents
-        .filter(event => new Date(event.start_date) >= new Date())
-        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
-
-      if (selectedCategory) {
-        loadedEvents = loadedEvents.filter(event => event.category_id === selectedCategory);
-      }
-
-      setEvents(loadedEvents);
     } catch (error) {
-      console.error('Error loading data from Firebase:', error);
-    } finally {
-      setLoading(false);
+      console.error('[EVENEMENT PAGE] ❌ Error loading categories:', error);
     }
   };
 
