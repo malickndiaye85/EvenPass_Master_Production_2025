@@ -189,7 +189,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     setPhoneNumber(value);
                   }
                 }}
-                placeholder="77 123 45 67"
+                placeholder=""
                 maxLength={9}
                 className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-semibold relative"
                 style={{
