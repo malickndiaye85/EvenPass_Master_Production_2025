@@ -3,14 +3,47 @@
  * Univers DEM VOYAGE avec 3 modules principaux
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Bus, Ship, CreditCard, User, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/FirebaseAuthContext';
+import { NavigationCard } from '../components/NavigationCard';
+import { getDatabase, ref, get } from 'firebase/database';
 
 export const VoyageLandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [hasSubscription, setHasSubscription] = useState(false);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!user) {
+        setHasSubscription(false);
+        return;
+      }
+
+      try {
+        const db = getDatabase();
+        const subscriptionsRef = ref(db, `subscriptions/${user.uid}`);
+        const snapshot = await get(subscriptionsRef);
+
+        if (snapshot.exists()) {
+          const subscriptions = snapshot.val();
+          const activeSubscription = Object.values(subscriptions).find(
+            (sub: any) => sub.status === 'active' && new Date(sub.endDate) > new Date()
+          );
+          setHasSubscription(!!activeSubscription);
+        } else {
+          setHasSubscription(false);
+        }
+      } catch (error) {
+        console.error('Erreur vérification abonnement:', error);
+        setHasSubscription(false);
+      }
+    };
+
+    checkSubscription();
+  }, [user]);
 
   const handleChauffeurBiiClick = () => {
     if (!user) {
@@ -62,6 +95,8 @@ export const VoyageLandingPage: React.FC = () => {
         </div>
 
         <div className="space-y-5">
+          <NavigationCard hasSubscription={hasSubscription} />
+
           <div
             className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 rounded-3xl p-8 md:p-10 border-2 border-white/10 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.3)] hover:border-[#10B981]/50 transition-all duration-300 cursor-pointer group"
             onClick={() => navigate('/voyage/allo-dakar')}
