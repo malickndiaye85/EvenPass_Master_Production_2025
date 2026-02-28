@@ -176,14 +176,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </label>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <div className="absolute left-12 top-1/2 -translate-y-1/2 text-black font-bold pointer-events-none z-10" style={{ color: '#000000' }}>
+                +221
+              </div>
               <input
                 type="tel"
                 required
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder=""
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:border-orange-500 font-semibold !text-black"
-                style={{ color: '#000000 !important' }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 9) {
+                    setPhoneNumber(value);
+                  }
+                }}
+                placeholder="77 123 45 67"
+                maxLength={9}
+                className="w-full pl-20 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-semibold"
+                style={{ backgroundColor: '#ffffff', color: '#000000' }}
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
