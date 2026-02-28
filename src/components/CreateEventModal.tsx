@@ -4,6 +4,7 @@ import { Timestamp, addDoc, collection } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { VIP_THRESHOLD, isEligibleForVIPFastTrack, formatCurrency } from '../lib/financialModel';
+import EventSubmissionConfirmModal from './EventSubmissionConfirmModal';
 
 interface CreateEventModalProps {
   isDark: boolean;
@@ -29,6 +30,7 @@ export default function CreateEventModal({
   const [processing, setProcessing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showCGUModal, setShowCGUModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [exclusivityAgreement, setExclusivityAgreement] = useState(false);
   const [cguAccepted, setCguAccepted] = useState(false);
 
@@ -131,6 +133,10 @@ export default function CreateEventModal({
       return;
     }
 
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSubmission = async () => {
     setProcessing(true);
     try {
       const slug = formData.title
@@ -164,7 +170,7 @@ export default function CreateEventModal({
         venue_city: formData.venue_city || '',
         organizer_id: organizerData.id,
         slug,
-        status: 'draft',
+        status: 'pending',
         is_featured: false,
         is_free: false,
         event_image_url: event_image_url,
@@ -217,13 +223,15 @@ export default function CreateEventModal({
       }
 
       console.log(`[CREATE EVENT] ✅ ${ticketCount} billets créés pour l'événement ${eventRef.id}`);
-      alert(`Événement créé avec succès!\n\n✅ ${ticketCount} types de billets créés\n\n⚠️ N'oubliez pas de changer le status en "published" pour rendre l'événement visible.`);
+      console.log('[CREATE EVENT] Événement soumis avec status=pending pour modération');
+      setShowConfirmModal(false);
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error('[CREATE EVENT] Error creating event:', error);
       const errorMessage = error?.message || 'Erreur inconnue';
       alert(`Erreur lors de la création de l'événement:\n${errorMessage}\n\nVérifiez votre connexion et réessayez.`);
+      setShowConfirmModal(false);
     } finally {
       setProcessing(false);
     }
@@ -705,6 +713,14 @@ export default function CreateEventModal({
             </div>
           </div>
         </div>
+      )}
+
+      {showConfirmModal && (
+        <EventSubmissionConfirmModal
+          onConfirm={handleConfirmSubmission}
+          onCancel={() => setShowConfirmModal(false)}
+          processing={processing}
+        />
       )}
     </div>
   );
