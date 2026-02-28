@@ -37,12 +37,12 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
       className="rounded-3xl p-8 md:p-10 border-2 border-emerald-500/30 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:border-emerald-500/60 transition-all duration-300 cursor-pointer group mb-5 relative overflow-hidden"
       onClick={handleGoClick}
       style={{
-        backgroundImage: 'url(https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l-bus+10B981(-17.3829,14.7845)/-17.3829,14.7845,12,0/800x400@2x?access_token=pk.eyJ1IjoiZGVtZGVtIiwiYSI6ImNsdHBya3BtajBjdHMyam55NHpqaDRjb3QifQ.example)',
+        backgroundImage: 'url(https://images.pexels.com/photos/2873486/pexels-photo-2873486.jpeg?auto=compress&cs=tinysrgb&w=1200)',
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/85 via-blue-900/90 to-blue-950/85 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/90 via-blue-900/92 to-blue-950/90 backdrop-blur-sm" />
 
       <div className="absolute top-4 left-8 z-10">
         <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/30 backdrop-blur-md rounded-full border border-emerald-400/40 shadow-lg">
