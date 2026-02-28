@@ -812,7 +812,7 @@ export default function EventDetailPage() {
                   Numéro de téléphone {checkoutForm.payment_method === 'wave' ? 'Wave' : 'Orange Money'}
                 </label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold pointer-events-none z-10" style={{ color: '#000000' }}>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold pointer-events-none" style={{ color: '#000000', zIndex: 1 }}>
                     +221
                   </div>
                   <input
@@ -829,11 +829,12 @@ export default function EventDetailPage() {
                       }
                     }}
                     maxLength={9}
-                    className="w-full pl-16 pr-4 py-3 rounded-xl border-2 font-medium transition-colors focus:outline-none"
+                    className="w-full pl-16 pr-4 py-3 rounded-xl border-2 font-medium transition-colors focus:outline-none relative"
                     style={{
                       color: '#000000',
                       backgroundColor: '#ffffff',
-                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
+                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)',
+                      zIndex: 2
                     }}
                     placeholder="77 123 45 67"
                     disabled={processing}
@@ -856,11 +857,12 @@ export default function EventDetailPage() {
                     type="email"
                     value={checkoutForm.customer_email}
                     onChange={(e) => setCheckoutForm({ ...checkoutForm, customer_email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
-                      isDark
-                        ? 'bg-amber-950/40 border-amber-800/40 text-white focus:border-amber-600'
-                        : 'bg-white border-slate-200 text-slate-900 focus:border-orange-500'
-                    } focus:outline-none`}
+                    className="w-full px-4 py-3 rounded-xl border-2 font-medium transition-colors focus:outline-none"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      color: '#000000',
+                      borderColor: isDark ? 'rgb(146 64 14 / 0.4)' : 'rgb(226 232 240)'
+                    }}
                     placeholder="email@exemple.com"
                     disabled={processing}
                   />
