@@ -42,7 +42,7 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({ hasSubscription 
         backgroundPosition: 'center'
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/90 via-blue-900/92 to-blue-950/90 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/35 via-blue-900/30 to-blue-950/35" />
 
       <div className="absolute top-4 left-8 z-10">
         <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/30 backdrop-blur-md rounded-full border border-emerald-400/40 shadow-lg">
