@@ -160,6 +160,14 @@
       "$subscriberId": {
         ".write": "auth != null"
       }
+    },
+
+    "landing_backgrounds": {
+      ".read": true,
+      "$pageId": {
+        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+        ".validate": "newData.hasChildren(['url', 'updatedAt']) && newData.child('url').isString() && newData.child('updatedAt').isNumber()"
+      }
     }
   }
 }
