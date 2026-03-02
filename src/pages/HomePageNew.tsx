@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Ticket,
-  UserCircle,
-  Zap,
-  Shield,
-  Users,
-  Sparkles,
-  ArrowRight
-} from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, CircleUser as UserCircle, Zap, Shield, Users, Sparkles, ArrowRight } from 'lucide-react';
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import type { Event, EventCategory } from '../types';
