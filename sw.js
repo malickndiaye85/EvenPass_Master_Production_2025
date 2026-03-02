@@ -6,7 +6,7 @@ const DYNAMIC_CACHE = `demdem-dynamic-v${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/assets/demdem_icon_pwa.jpg',
+  '/assets/demdem_pwa_v3.svg',
   '/assets/logo-demdem.png'
 ];
 

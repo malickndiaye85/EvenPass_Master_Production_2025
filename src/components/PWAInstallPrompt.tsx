@@ -85,7 +85,7 @@ const PWAInstallPrompt = () => {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
                 <img
-                  src="/assets/demdem_icon_pwa.jpg"
+                  src="/assets/demdem_pwa_v3.svg"
                   alt="DemDem"
                   className="w-8 h-8 rounded-lg"
                   onError={(e) => {
@@ -126,7 +126,7 @@ const PWAInstallPrompt = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-xl flex items-center justify-center">
                     <img
-                      src="/assets/demdem_icon_pwa.jpg"
+                      src="/assets/demdem_pwa_v3.svg"
                       alt="DemDem"
                       className="w-10 h-10 rounded-lg"
                       onError={(e) => {
