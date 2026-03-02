@@ -3,10 +3,10 @@ const CRITICAL_CACHE = `${CACHE_VERSION}-critical`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
 const CRITICAL_RESOURCES = [
-  '/controller/login',
+  '/controller-login.html',
   '/controller-epscanv',
   '/manifest-epscanv.json',
-  '/assets/EPscanV_icon.jpg',
+  '/assets/logo_EPscanV_pwa.svg',
 ];
 
 self.addEventListener('install', (event) => {
