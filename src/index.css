@@ -69,9 +69,9 @@
     color: #9CA3AF;
   }
 
-  .dark input,
-  .dark textarea,
-  .dark select {
+  .dark input:not(.force-black-text),
+  .dark textarea:not(.force-black-text),
+  .dark select:not(.force-black-text) {
     color: #FFFFFF !important;
   }
 

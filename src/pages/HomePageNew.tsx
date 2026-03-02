@@ -126,8 +126,8 @@ export default function HomePageNew() {
                 placeholder="Rechercher un événement, artiste ou lieu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 py-4 rounded-2xl border border-gray-200 shadow-lg text-base focus:outline-none focus:ring-2 focus:ring-orange-300 bg-white"
-                style={{ color: '#000000', backgroundColor: '#ffffff' }}
+                className="w-full px-6 py-4 rounded-2xl border border-gray-200 shadow-lg text-base focus:outline-none focus:ring-2 focus:ring-orange-300 bg-white force-black-text"
+                style={{ color: '#000000 !important', backgroundColor: '#ffffff' }}
               />
             </div>
           </div>
