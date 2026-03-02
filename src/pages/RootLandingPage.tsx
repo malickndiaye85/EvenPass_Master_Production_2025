@@ -17,18 +17,18 @@ export const RootLandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-1">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-0.5">
         <div className="max-w-7xl mx-auto flex items-center justify-center">
           <img
             src="/assets/logo-demdemv2.svg"
             alt="DemDem"
-            className="h-16 md:h-20 w-auto"
-            style={{ imageRendering: 'crisp-edges' }}
+            className="w-auto"
+            style={{ height: '70px', imageRendering: 'crisp-edges' }}
           />
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col md:flex-row mt-20 md:mt-0">
+      <div className="flex-1 flex flex-col md:flex-row mt-[78px] md:mt-0">
         <div
           className="relative flex-1 min-h-[50vh] md:min-h-screen flex items-center justify-center cursor-pointer group overflow-hidden"
           style={{
