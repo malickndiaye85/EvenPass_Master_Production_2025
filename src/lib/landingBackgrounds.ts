@@ -73,10 +73,11 @@ export async function updateLandingBackground(
     const backgroundRef = ref(db, `landing_backgrounds/${section}`);
     await set(backgroundRef, {
       section,
+      url: imageUrl,
       imageUrl,
       isActive: true,
       uploadedBy,
-      updatedAt: new Date().toISOString()
+      updatedAt: Date.now()
     });
 
     return { success: true };

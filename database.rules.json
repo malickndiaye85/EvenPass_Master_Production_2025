@@ -94,10 +94,7 @@
 
     "admin_logs": {
       ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
-      "$logId": {
-        ".write": true,
-        ".validate": "newData.hasChildren(['timestamp', 'action', 'email']) && newData.child('timestamp').isNumber()"
-      }
+      ".write": "auth != null"
     },
 
     "evenpass": {
