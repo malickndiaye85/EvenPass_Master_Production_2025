@@ -19,9 +19,11 @@ export const RootLandingPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <header className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-center">
-          <h1 className="text-2xl font-display font-bold text-gray-900 tracking-tight">
-            DEM⇄DEM
-          </h1>
+          <img
+            src="/assets/logo-demdemv2.svg"
+            alt="DemDem"
+            className="h-10 w-auto"
+          />
         </div>
         <p className="text-center text-gray-600 text-sm mt-1 font-display">
           Gënaa Wóor • Gënaa Gaaw • Gënaa Yomb
