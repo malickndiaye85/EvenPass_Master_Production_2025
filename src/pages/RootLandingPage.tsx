@@ -22,7 +22,7 @@ export const RootLandingPage: React.FC = () => {
           <img
             src="/assets/logo-demdemv2.svg"
             alt="DemDem"
-            className="h-10 w-auto"
+            className="h-16 md:h-20 w-auto"
           />
         </div>
         <p className="text-center text-gray-600 text-sm mt-1 font-display">
