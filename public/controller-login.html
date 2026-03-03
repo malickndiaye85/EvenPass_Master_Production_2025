@@ -205,19 +205,29 @@
         import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
         import { getDatabase, ref as dbRef, query as rtdbQuery, orderByChild, equalTo, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
 
+        if (!window.__FIREBASE_CONFIG__) {
+            console.error('[EPscanV Events] ❌ Firebase config not loaded');
+            showError('Configuration manquante. Rechargez la page.');
+            submitBtn.disabled = true;
+        }
+
         const firebaseConfig = {
-            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDR_yRI2ZLCSfyf3DQ_BXEie_2PzE8F0sk",
-            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpass-2b39c.firebaseapp.com",
-            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpass-2b39c-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpass-2b39c",
-            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpass-2b39c.firebasestorage.app",
-            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "964478366450",
-            appId: window.__FIREBASE_CONFIG__?.appId || "1:964478366450:web:2aa533bc2fe41dcd78005a"
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
         };
+
+        console.log('[EPscanV Events] Firebase config:', firebaseConfig.projectId);
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const rtdb = getDatabase(app);
+
+        console.log('[EPscanV Events] Firebase initialized');
 
         const codeInput = document.getElementById('codeInput');
         const submitBtn = document.getElementById('submitBtn');
@@ -249,10 +259,14 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'VÉRIFICATION...';
 
+            console.log('[EPscanV Events] Checking code:', rawCode);
+
             try {
+                console.log('[EPscanV Events] Step 1: Checking OPS Events...');
                 const opsEventsRef = dbRef(rtdb, 'opsEvents/controllers');
                 const opsQuery = rtdbQuery(opsEventsRef, orderByChild('code'), equalTo(rawCode));
                 const opsSnapshot = await rtdbGet(opsQuery);
+                console.log('[EPscanV Events] OPS Events result:', opsSnapshot.exists());
 
                 if (opsSnapshot.exists()) {
                     const controllers = opsSnapshot.val();
@@ -288,12 +302,14 @@
                     return;
                 }
 
+                console.log('[EPscanV Events] Step 2: Checking EvenPass...');
                 const evenCodesRef = collection(db, 'agent_access_codes');
                 const evenQuery = query(evenCodesRef,
                     where('access_code', '==', rawCode),
                     where('is_active', '==', true)
                 );
                 const evenSnapshot = await getDocs(evenQuery);
+                console.log('[EPscanV Events] EvenPass result:', !evenSnapshot.empty);
 
                 if (!evenSnapshot.empty) {
                     const codeData = evenSnapshot.docs[0].data();
@@ -312,10 +328,12 @@
                     return;
                 }
 
+                console.log('[EPscanV Events] ❌ Code not found in any database');
                 showError('Code invalide ou inactif. Vérifiez votre code Events.');
             } catch (error) {
                 console.error('[EPscanV Events] ❌ Error:', error);
-                showError('Erreur de connexion. Vérifiez votre connexion internet.');
+                console.error('[EPscanV Events] Error details:', error.message, error.code);
+                showError(`Erreur: ${error.message || 'Connexion impossible'}`);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'VÉRIFIER';
