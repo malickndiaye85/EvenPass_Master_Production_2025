@@ -275,14 +275,19 @@ export async function getAllEventsFromFirestore(): Promise<Event[]> {
         createdAt: data.created_at?.toMillis ? data.created_at.toMillis() : Date.now()
       };
 
-      // Vérifier si l'événement a des données OPS
-      const opsEventRef = ref(database, `opsEvents/events/${docSnap.id}`);
-      const opsSnapshot = await get(opsEventRef);
+      // Vérifier si l'événement a des données OPS (optionnel, ne bloque pas si permission denied)
+      try {
+        const opsEventRef = ref(database, `opsEvents/events/${docSnap.id}`);
+        const opsSnapshot = await get(opsEventRef);
 
-      if (opsSnapshot.exists()) {
-        const opsData = opsSnapshot.val();
-        event.scannedTickets = opsData.scannedTickets || 0;
-        event.activeControllers = opsData.activeControllers || 0;
+        if (opsSnapshot.exists()) {
+          const opsData = opsSnapshot.val();
+          event.scannedTickets = opsData.scannedTickets || 0;
+          event.activeControllers = opsData.activeControllers || 0;
+          console.log('📊 [OPS EVENTS] Données OPS chargées pour:', eventName);
+        }
+      } catch (dbError) {
+        console.warn('⚠️ [OPS EVENTS] Impossible de charger les données OPS Realtime Database (permission denied), continuons avec Firestore uniquement:', eventName);
       }
 
       events.push(event);
