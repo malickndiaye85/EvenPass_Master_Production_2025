@@ -205,6 +205,19 @@
         import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
         import { getDatabase, ref as dbRef, query as rtdbQuery, orderByChild, equalTo, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
 
+        const codeInput = document.getElementById('codeInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
         if (!window.__FIREBASE_CONFIG__) {
             console.error('[EPscanV Events] ❌ Firebase config not loaded');
             showError('Configuration manquante. Rechargez la page.');
@@ -228,19 +241,6 @@
         const rtdb = getDatabase(app);
 
         console.log('[EPscanV Events] Firebase initialized');
-
-        const codeInput = document.getElementById('codeInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const loginForm = document.getElementById('loginForm');
-        const errorMessage = document.getElementById('errorMessage');
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 5000);
-        }
 
         codeInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '');
