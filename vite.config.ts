@@ -1,9 +1,38 @@
 import { defineConfig, Plugin, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, copyFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const buildTimestamp = Date.now();
+
+const copyPublicHtmlPlugin = (): Plugin => {
+  return {
+    name: 'copy-public-html-plugin',
+    apply: 'build',
+    closeBundle() {
+      const publicPath = join(__dirname, 'public');
+      const distPath = join(__dirname, 'dist');
+
+      const htmlFilesToCopy = [
+        'controller-login.html',
+        'epscanv-events.html',
+        'epscanv-maritime.html'
+      ];
+
+      let copiedCount = 0;
+      htmlFilesToCopy.forEach(file => {
+        const srcPath = join(publicPath, file);
+        const destPath = join(distPath, file);
+        if (existsSync(srcPath)) {
+          copyFileSync(srcPath, destPath);
+          copiedCount++;
+        }
+      });
+
+      console.log(`✓ Copied ${copiedCount} HTML files from public/ to dist/`);
+    }
+  };
+};
 
 const inlineEnvPlugin = (): Plugin => {
   return {
@@ -94,7 +123,7 @@ const swVersionPlugin = (): Plugin => {
 
 export default defineConfig({
   base: '/',
-  plugins: [react(), inlineEnvPlugin(), swVersionPlugin()],
+  plugins: [react(), copyPublicHtmlPlugin(), inlineEnvPlugin(), swVersionPlugin()],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
