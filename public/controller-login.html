@@ -445,7 +445,11 @@
                     sessionStorage.setItem('vehicle_plate', codeData.vehiclePlate || '');
                     sessionStorage.setItem('staff_name', codeData.staffName || '');
                     sessionStorage.setItem('staff_role', codeData.staffRole || '');
-                    window.location.href = '/controller-epscanv';
+
+                    console.log('[EPscanV] ✅ Transport controller authenticated:', codeData.staffName);
+                    console.log('[EPscanV] Vehicle:', codeData.vehiclePlate);
+
+                    window.location.href = '/scanner.html';
                     return;
                 }
 
