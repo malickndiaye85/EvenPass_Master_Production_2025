@@ -303,15 +303,62 @@ Rôle: ops_event
 
 ---
 
+## Synchronisation Automatique des Comptes Staff
+
+### Problème Résolu : Décalage UID
+
+**Situation :** Lorsqu'un compte staff est créé AVANT que l'utilisateur ne se connecte pour la première fois :
+
+1. Admin Transversal crée le compte dans `staff/{tempId}` avec un ID temporaire
+2. L'utilisateur se connecte et Firebase Auth génère un nouvel UID réel
+3. Les données dans `users/{tempId}` ne correspondent pas à `users/{realUID}`
+
+**Solution Automatique :**
+
+La page de login `/admin/ops-login` effectue une **synchronisation automatique** :
+
+```typescript
+1. Connexion Firebase Auth → Obtention du UID réel
+2. Vérification dans users/{realUID}/role
+3. Si vide/absent :
+   a. Recherche dans staff/ par email
+   b. Si trouvé → Copie des données dans users/{realUID}
+   c. Copie également dans admins/{realUID}
+   d. Synchronisation terminée
+4. Si toujours vide :
+   a. Recherche dans admins/ par email
+   b. Si trouvé → Copie dans users/{realUID}
+5. Validation du rôle ops_event
+6. Accès accordé
+```
+
+**Résultat :** Peu importe quand le compte a été créé, la première connexion synchronise automatiquement toutes les données.
+
+### Logs de Diagnostic
+
+Lors de la connexion, consultez la console du navigateur :
+
+```
+[OPS Login] Firebase Auth réussie. UID: VewGhHTtxmePhDUAnVY2fiU5WF02
+[OPS Login] Données users/{uid}: { exists: false, role: undefined }
+[OPS Login] Recherche dans staff...
+[OPS Login] ✅ Compte trouvé dans staff: staff_123456
+[OPS Login] ✅ Données synchronisées dans users/{uid}
+[OPS Login] ✅ Données synchronisées dans admins/{uid}
+[OPS Login] ✅ Authentification réussie: ops_event
+```
+
 ## Support
 
 En cas de problème d'accès :
 
 1. Vérifier que le compte existe dans Firebase Auth
-2. Vérifier que `users/{uid}/role` = "ops_event"
-3. Vérifier que `users/{uid}/isActive` = true
-4. Consulter les logs de sécurité dans Firebase
-5. Contacter l'administrateur système
+2. Vérifier que l'email existe dans `staff/` avec role = "ops_event"
+3. Se connecter une première fois pour déclencher la synchronisation automatique
+4. Vérifier les logs dans la console navigateur (F12 > Console)
+5. Après synchronisation, vérifier `users/{uid}/role` = "ops_event"
+6. Consulter les logs de sécurité dans Firebase
+7. Contacter l'administrateur système si le problème persiste
 
 ---
 

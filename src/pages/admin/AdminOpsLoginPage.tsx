@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, AlertCircle, Eye, EyeOff, Activity } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, database } from '../../firebase';
-import { ref, get } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import DynamicLogo from '../../components/DynamicLogo';
 
 export default function AdminOpsLoginPage() {
@@ -23,18 +23,99 @@ export default function AdminOpsLoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      console.log('[OPS Login] Firebase Auth réussie. UID:', user.uid, 'Email:', user.email);
+
       const userRef = ref(database, `users/${user.uid}`);
       const snapshot = await get(userRef);
 
-      if (!snapshot.exists()) {
+      let userData = snapshot.exists() ? snapshot.val() : null;
+      let userRole = userData?.role || '';
+
+      console.log('[OPS Login] Données users/{uid}:', { exists: snapshot.exists(), role: userRole });
+
+      if (!userData || !userRole) {
+        console.log('[OPS Login] Pas de données dans users/{uid}, recherche dans staff...');
+
+        const staffRef = ref(database, 'staff');
+        const staffSnapshot = await get(staffRef);
+
+        if (staffSnapshot.exists()) {
+          const allStaff = staffSnapshot.val();
+          const staffEntry = Object.entries(allStaff).find(
+            ([_, staff]: [string, any]) => staff.email?.toLowerCase() === user.email?.toLowerCase()
+          );
+
+          if (staffEntry) {
+            const [staffId, staffData]: [string, any] = staffEntry;
+            console.log('[OPS Login] ✅ Compte trouvé dans staff:', staffId, staffData);
+
+            const syncedData = {
+              email: user.email,
+              role: staffData.role,
+              silo: staffData.silo_id || staffData.silo?.toLowerCase(),
+              silo_id: staffData.silo_id || staffData.silo?.toLowerCase(),
+              created_at: staffData.created_at || new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              synced_from_staff: true
+            };
+
+            await set(userRef, syncedData);
+            console.log('[OPS Login] ✅ Données synchronisées dans users/{uid}');
+
+            const adminRef = ref(database, `admins/${user.uid}`);
+            await set(adminRef, {
+              ...syncedData,
+              is_active: true,
+              created_by: staffData.created_by
+            });
+            console.log('[OPS Login] ✅ Données synchronisées dans admins/{uid}');
+
+            userData = syncedData;
+            userRole = staffData.role;
+          }
+        }
+      }
+
+      if (!userData || !userRole) {
+        const adminsRef = ref(database, 'admins');
+        const adminsSnapshot = await get(adminsRef);
+
+        if (adminsSnapshot.exists()) {
+          const allAdmins = adminsSnapshot.val();
+          const adminEntry = Object.entries(allAdmins).find(
+            ([_, admin]: [string, any]) => admin.email?.toLowerCase() === user.email?.toLowerCase()
+          );
+
+          if (adminEntry) {
+            const [adminId, adminData]: [string, any] = adminEntry;
+            console.log('[OPS Login] ✅ Compte trouvé dans admins:', adminId, adminData);
+
+            const syncedData = {
+              email: user.email,
+              role: adminData.role,
+              silo: adminData.silo_id || adminData.silo,
+              silo_id: adminData.silo_id || adminData.silo,
+              created_at: adminData.created_at || new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              synced_from_admins: true,
+              is_active: true
+            };
+
+            await set(userRef, syncedData);
+            console.log('[OPS Login] ✅ Données synchronisées dans users/{uid} depuis admins');
+
+            userData = syncedData;
+            userRole = adminData.role;
+          }
+        }
+      }
+
+      if (!userData || !userRole) {
         setError('Compte non trouvé dans la base de données');
         await auth.signOut();
         setLoading(false);
         return;
       }
-
-      const userData = snapshot.val();
-      const userRole = userData.role || '';
 
       if (userRole !== 'ops_event' && userRole !== 'super_admin') {
         setError('Accès refusé. Rôle OPS Events requis.');
