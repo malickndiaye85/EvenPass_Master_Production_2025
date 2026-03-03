@@ -1,6 +1,12 @@
 /assets/* /assets/:splat 200
 /admin-login.html /admin-login.html 200
 /admin-finance.html /admin-finance.html 200
+/controller-login.html /controller-login.html 200
+/controller/login.html /controller/login.html 200
+/maritime/login.html /maritime/login.html 200
+/epscanv-events.html /epscanv-events.html 200
+/epscanv-transport.html /epscanv-transport.html 200
+/epscanv-maritime.html /epscanv-maritime.html 200
 /dashboard-scans-controleurs.html /dashboard-scans-controleurs.html 200
 /history.html /history.html 200
 /ops-manager.html /ops-manager.html 200

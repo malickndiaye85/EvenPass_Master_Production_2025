@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMA Pass - Connexion Contrôleur Maritime</title>
+    <script src="/env-config.js"></script>
+    <link rel="icon" type="image/png" href="/evenpass-icon-512.png">
+    <meta name="theme-color" content="#1E40AF">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #3B82F6;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #94A3B8;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3B82F6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #CBD5E1;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 4px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        input::placeholder {
+            color: #475569;
+            letter-spacing: normal;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #FCA5A5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .info-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #64748B;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="/evenpass-icon-512.png" alt="SAMA Pass">
+            </div>
+            <div class="badge">⚓ MARITIME</div>
+            <h1>Connexion Contrôleur</h1>
+            <p class="subtitle">Transport Maritime & Fluvial</p>
+        </div>
+
+        <div class="card">
+            <div id="errorMessage" class="error"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="codeInput">Code à 6 chiffres</label>
+                    <input
+                        type="text"
+                        id="codeInput"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="6"
+                        placeholder="000000"
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+
+                <button type="submit" id="submitBtn">
+                    VÉRIFIER
+                </button>
+            </form>
+
+            <p class="info-text">
+                Code d'accès fourni par le commandant ou l'équipe d'embarquement
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDR_yRI2ZLCSfyf3DQ_BXEie_2PzE8F0sk",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpass-2b39c.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpass-2b39c-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpass-2b39c",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpass-2b39c.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "964478366450",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:964478366450:web:2aa533bc2fe41dcd78005a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const codeInput = document.getElementById('codeInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        codeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rawCode = codeInput.value.replace(/\s/g, '');
+
+            if (rawCode.length !== 6) {
+                showError('Le code doit contenir 6 chiffres');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'VÉRIFICATION...';
+
+            try {
+                const maritimeCodesRef = collection(db, 'maritime_access_codes');
+                const maritimeQuery = query(maritimeCodesRef,
+                    where('access_code', '==', rawCode),
+                    where('is_active', '==', true)
+                );
+                const maritimeSnapshot = await getDocs(maritimeQuery);
+
+                if (!maritimeSnapshot.empty) {
+                    const codeData = maritimeSnapshot.docs[0].data();
+
+                    sessionStorage.setItem('controller_code', rawCode);
+                    sessionStorage.setItem('controller_type', 'maritime');
+                    sessionStorage.setItem('controller_id', codeData.controller_id);
+                    sessionStorage.setItem('controller_name', codeData.controller_name);
+                    sessionStorage.setItem('vessel_id', codeData.vessel_id);
+                    sessionStorage.setItem('vessel_name', codeData.vessel_name || 'Navire');
+                    sessionStorage.setItem('controller_role', codeData.controller_role || 'Contrôleur');
+
+                    console.log('[SAMA Pass Maritime] ✅ Controller authenticated:', codeData.controller_name);
+                    console.log('[SAMA Pass Maritime] Vessel:', codeData.vessel_name);
+                    console.log('[SAMA Pass Maritime] Role:', codeData.controller_role);
+
+                    window.location.href = '/epscanv-maritime.html';
+                    return;
+                }
+
+                showError('Code invalide ou inactif. Vérifiez votre code maritime.');
+            } catch (error) {
+                console.error('[SAMA Pass Maritime] ❌ Error:', error);
+                showError('Erreur de connexion. Vérifiez votre connexion internet.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'VÉRIFIER';
+            }
+        });
+
+        console.log('[SAMA Pass Maritime] Login page ready');
+    </script>
+</body>
+</html>
