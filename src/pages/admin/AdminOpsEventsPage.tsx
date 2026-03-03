@@ -38,6 +38,10 @@ export default function AdminOpsEventsPage() {
     position: ''
   });
 
+  const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [successModal, setSuccessModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; message: string; onConfirm: () => void }>({ show: false, message: '', onConfirm: () => {} });
+
   useEffect(() => {
     loadEvents();
   }, []);
@@ -122,7 +126,7 @@ export default function AdminOpsEventsPage() {
       setControllerForm({ name: '', position: '' });
     } catch (error) {
       console.error('Error creating controller:', error);
-      alert('Erreur lors de l\'ajout du contrôleur');
+      setErrorModal({ show: true, message: 'Erreur lors de l\'ajout du contrôleur. Veuillez réessayer.' });
     }
   };
 
@@ -135,27 +139,42 @@ export default function AdminOpsEventsPage() {
   };
 
   const handleDeleteController = async (controllerId: string) => {
-    if (!confirm('Désactiver ce contrôleur définitivement ?')) return;
-    try {
-      await deleteController(controllerId);
-    } catch (error) {
-      console.error('Error deleting controller:', error);
-    }
+    setConfirmModal({
+      show: true,
+      message: 'Désactiver ce contrôleur définitivement ?',
+      onConfirm: async () => {
+        try {
+          await deleteController(controllerId);
+          setConfirmModal({ show: false, message: '', onConfirm: () => {} });
+        } catch (error) {
+          console.error('Error deleting controller:', error);
+          setConfirmModal({ show: false, message: '', onConfirm: () => {} });
+          setErrorModal({ show: true, message: 'Erreur lors de la suppression du contrôleur.' });
+        }
+      }
+    });
   };
 
   const handleCompleteMission = async () => {
     if (!selectedEvent) return;
-    if (!confirm('Terminer la mission ? Tous les codes seront désactivés.')) return;
 
-    try {
-      await completeMission(selectedEvent.id);
-      setView('grid');
-      setSelectedEvent(null);
-      alert('Mission terminée avec succès');
-    } catch (error) {
-      console.error('Error completing mission:', error);
-      alert('Erreur lors de la clôture');
-    }
+    setConfirmModal({
+      show: true,
+      message: 'Terminer la mission ? Tous les codes seront désactivés.',
+      onConfirm: async () => {
+        try {
+          await completeMission(selectedEvent.id);
+          setView('grid');
+          setSelectedEvent(null);
+          setConfirmModal({ show: false, message: '', onConfirm: () => {} });
+          setSuccessModal({ show: true, message: 'Mission terminée avec succès' });
+        } catch (error) {
+          console.error('Error completing mission:', error);
+          setConfirmModal({ show: false, message: '', onConfirm: () => {} });
+          setErrorModal({ show: true, message: 'Erreur lors de la clôture de la mission.' });
+        }
+      }
+    });
   };
 
   const handleExportReport = async () => {
@@ -170,9 +189,10 @@ export default function AdminOpsEventsPage() {
       a.href = url;
       a.download = `rapport-${selectedEvent.name.replace(/\s/g, '-')}-${Date.now()}.csv`;
       a.click();
+      setSuccessModal({ show: true, message: 'Rapport exporté avec succès' });
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Erreur lors de l\'export');
+      setErrorModal({ show: true, message: 'Erreur lors de l\'export du rapport.' });
     }
   };
 
@@ -196,7 +216,7 @@ export default function AdminOpsEventsPage() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    alert(`Code ${code} copié !`);
+    setSuccessModal({ show: true, message: `Code ${code} copié dans le presse-papier !` });
   };
 
   const getEventStats = (event: Event) => {
@@ -735,6 +755,71 @@ export default function AdminOpsEventsPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {errorModal.show && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-red-500/50 rounded-xl p-8 max-w-md w-full">
+            <div className="text-center">
+              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Erreur</h3>
+              <p className="text-zinc-400 mb-6">{errorModal.message}</p>
+              <button
+                onClick={() => setErrorModal({ show: false, message: '' })}
+                className="w-full px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-semibold transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {successModal.show && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-green-500/50 rounded-xl p-8 max-w-md w-full">
+            <div className="text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Succès</h3>
+              <p className="text-zinc-400 mb-6">{successModal.message}</p>
+              <button
+                onClick={() => setSuccessModal({ show: false, message: '' })}
+                className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmModal.show && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-orange-500/50 rounded-xl p-8 max-w-md w-full">
+            <div className="text-center">
+              <AlertTriangle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Confirmation</h3>
+              <p className="text-zinc-400 mb-6">{confirmModal.message}</p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setConfirmModal({ show: false, message: '', onConfirm: () => {} })}
+                  className="flex-1 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={confirmModal.onConfirm}
+                  className="flex-1 px-6 py-3 bg-orange-600 hover:bg-orange-500 rounded-lg font-semibold transition-colors"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

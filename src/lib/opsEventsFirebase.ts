@@ -69,30 +69,49 @@ export async function createController(
   name: string,
   position: string
 ): Promise<Controller> {
-  let code = generateControllerCode();
+  console.log('[CREATE CONTROLLER] Starting creation for:', { eventId, name, position });
 
-  // Ensure code is unique
-  while (!(await isCodeUnique(code))) {
-    code = generateControllerCode();
+  try {
+    let code = generateControllerCode();
+    console.log('[CREATE CONTROLLER] Generated code:', code);
+
+    // Ensure code is unique
+    let attempts = 0;
+    while (!(await isCodeUnique(code)) && attempts < 10) {
+      code = generateControllerCode();
+      attempts++;
+      console.log('[CREATE CONTROLLER] Code collision, retry:', attempts);
+    }
+
+    if (attempts >= 10) {
+      throw new Error('Impossible de générer un code unique après 10 tentatives');
+    }
+
+    const controllersRef = ref(database, 'opsEvents/controllers');
+    const newControllerRef = push(controllersRef);
+    console.log('[CREATE CONTROLLER] Generated controller ID:', newControllerRef.key);
+
+    const controller: Controller = {
+      id: newControllerRef.key!,
+      name,
+      code,
+      eventId,
+      position,
+      createdAt: Date.now(),
+      isActive: true,
+      totalScans: 0,
+      fraudAttempts: 0
+    };
+
+    console.log('[CREATE CONTROLLER] Saving to database:', controller);
+    await set(newControllerRef, controller);
+    console.log('[CREATE CONTROLLER] Successfully created controller');
+
+    return controller;
+  } catch (error) {
+    console.error('[CREATE CONTROLLER] Error creating controller:', error);
+    throw error;
   }
-
-  const controllersRef = ref(database, 'opsEvents/controllers');
-  const newControllerRef = push(controllersRef);
-
-  const controller: Controller = {
-    id: newControllerRef.key!,
-    name,
-    code,
-    eventId,
-    position,
-    createdAt: Date.now(),
-    isActive: true,
-    totalScans: 0,
-    fraudAttempts: 0
-  };
-
-  await set(newControllerRef, controller);
-  return controller;
 }
 
 // Get controller by code
