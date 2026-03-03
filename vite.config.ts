@@ -32,6 +32,18 @@ window.ENV = {
   FIREBASE_ADMIN_APP_ID: '${env.VITE_FIREBASE_ADMIN_APP_ID || ''}',
   ADMIN_UID: '${env.VITE_ADMIN_UID || ''}'
 };
+
+window.__FIREBASE_CONFIG__ = {
+  apiKey: "${env.VITE_FIREBASE_API_KEY || 'AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo'}",
+  authDomain: "${env.VITE_FIREBASE_AUTH_DOMAIN || 'evenpasssenegal.firebaseapp.com'}",
+  databaseURL: "${env.VITE_FIREBASE_DATABASE_URL || 'https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app'}",
+  projectId: "${env.VITE_FIREBASE_PROJECT_ID || 'evenpasssenegal'}",
+  storageBucket: "${env.VITE_FIREBASE_STORAGE_BUCKET || 'evenpasssenegal.firebasestorage.app'}",
+  messagingSenderId: "${env.VITE_FIREBASE_MESSAGING_SENDER_ID || '882782977052'}",
+  appId: "${env.VITE_FIREBASE_APP_ID || '1:882782977052:web:1f2ea147010066017cf3d9'}"
+};
+
+console.log('[ENV] Firebase config loaded');
       `.trim();
 
       try {
