@@ -3,16 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPscanV - Contrôleur Transport</title>
-    <link rel="manifest" href="/manifest-epscanv.json">
-    <meta name="theme-color" content="#10B981">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EPscanV">
-    <link rel="apple-touch-icon" href="/epscan-512.png">
-    <link rel="icon" href="/epscan-512.png">
+    <title>EPscanV - Contrôleur Events</title>
     <script src="/env-config.js"></script>
+    <link rel="icon" type="image/png" href="/evenpass-icon-512.png">
+    <meta name="theme-color" content="#F97316">
     <style>
         * {
             margin: 0;
@@ -22,7 +16,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
             color: white;
             min-height: 100vh;
             display: flex;
@@ -32,16 +26,8 @@
         }
 
         .container {
-            max-width: 450px;
+            max-width: 400px;
             width: 100%;
-        }
-
-        .login-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border: 2px solid #334155;
         }
 
         .header {
@@ -53,370 +39,204 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 20px;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: 900;
-            color: white;
-            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #F97316;
         }
 
         .subtitle {
-            color: #94a3b8;
             font-size: 14px;
-            font-weight: 600;
+            color: #94A3B8;
         }
 
-        .input-group {
-            margin-bottom: 30px;
+        .badge {
+            display: inline-block;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            color: #F97316;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
+            margin-bottom: 8px;
             font-size: 14px;
-            font-weight: 700;
-            color: #cbd5e1;
-            margin-bottom: 10px;
+            font-weight: 500;
+            color: #CBD5E1;
         }
 
-        .code-input {
+        input {
             width: 100%;
-            padding: 20px;
-            font-size: 32px;
-            font-weight: 900;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(249, 115, 22, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
             text-align: center;
-            letter-spacing: 8px;
-            background: #0f172a;
-            border: 3px solid #334155;
-            border-radius: 16px;
-            color: white;
-            transition: all 0.3s;
+            letter-spacing: 4px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
             outline: none;
-        }
-
-        .code-input:focus {
             border-color: #F97316;
-            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+            background: rgba(0, 0, 0, 0.5);
         }
 
-        .code-input::placeholder {
+        input::placeholder {
             color: #475569;
-            letter-spacing: 8px;
+            letter-spacing: normal;
         }
 
-        .btn {
+        button {
             width: 100%;
-            padding: 18px;
-            font-size: 16px;
-            font-weight: 900;
+            padding: 16px;
             background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            color: white;
             border: none;
-            border-radius: 16px;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .btn:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(249, 115, 22, 0.4);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
         }
 
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
+        button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .error-message {
-            background: rgba(239, 68, 68, 0.2);
-            border: 2px solid rgba(239, 68, 68, 0.5);
-            border-radius: 12px;
-            padding: 16px;
+        .error {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #FCA5A5;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 20px;
+            font-size: 14px;
             text-align: center;
-            font-weight: 700;
-            color: #fca5a5;
             display: none;
-        }
-
-        .error-message.show {
-            display: block;
         }
 
         .info-text {
             text-align: center;
             margin-top: 20px;
-            font-size: 13px;
-            color: #64748b;
-            font-weight: 600;
-        }
-
-        .numeric-hint {
-            text-align: center;
-            margin-top: 15px;
             font-size: 12px;
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .install-prompt {
-            text-align: center;
-            margin-top: 20px;
-            padding: 16px;
-            background: rgba(249, 115, 22, 0.1);
-            border: 2px solid rgba(249, 115, 22, 0.3);
-            border-radius: 12px;
-        }
-
-        .install-btn-static {
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 900;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-
-        .install-btn-static:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 2px solid #334155;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            animation: modalSlideIn 0.3s ease-out;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 15px;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 900;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        .modal-text {
-            font-size: 14px;
-            color: #94a3b8;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .modal-btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 15px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .modal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+            color: #64748B;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="login-card">
-            <div class="header">
-                <div class="logo">
-                    <img src="/assets/logo_EPscanV_pwa.svg" alt="EPscanV" style="width: 100%; height: 100%; object-fit: contain; border-radius: 20px;">
-                </div>
-                <h1>EPscanV Contrôle</h1>
-                <p class="subtitle">Entrez votre code d'accès à 6 chiffres</p>
+        <div class="header">
+            <div class="logo">
+                <img src="/evenpass-icon-512.png" alt="EPscanV Events">
             </div>
+            <div class="badge">🎟️ EVENTS</div>
+            <h1>Contrôleur Events</h1>
+            <p class="subtitle">Scanner de billets d'événements</p>
+        </div>
 
-            <div id="error-message" class="error-message"></div>
+        <div class="card">
+            <div id="errorMessage" class="error"></div>
 
-            <form id="login-form">
-                <div class="input-group">
-                    <label for="access-code">Code d'Accès</label>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="codeInput">Code à 6 chiffres</label>
                     <input
                         type="text"
-                        id="access-code"
-                        class="code-input"
-                        placeholder="000000"
+                        id="codeInput"
                         inputmode="numeric"
                         pattern="[0-9]*"
-                        maxlength="7"
+                        maxlength="6"
+                        placeholder="000000"
                         autocomplete="off"
                         required
-                    />
-                    <p class="numeric-hint">Le code se compose de 6 chiffres</p>
+                    >
                 </div>
 
-                <button type="submit" id="submit-btn" class="btn">
-                    VALIDER
+                <button type="submit" id="submitBtn">
+                    VÉRIFIER
                 </button>
             </form>
 
             <p class="info-text">
-                Code fourni par l'Ops Manager
+                Code d'accès fourni par l'OPS Manager Events
             </p>
-
-            <div id="install-prompt" class="install-prompt" style="display: none;">
-                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
-                    Installer EPscanV sur votre téléphone
-                </div>
-                <button id="install-btn-static" class="install-btn-static">
-                    INSTALLER L'APPLICATION
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale d'information -->
-    <div id="info-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-icon">ℹ️</div>
-                <div class="modal-title" id="modal-title">Information</div>
-            </div>
-            <div class="modal-text" id="modal-text"></div>
-            <button class="modal-btn" onclick="closeModal()">COMPRIS</button>
         </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { getDatabase, ref as dbRef, query as rtdbQuery, orderByChild, equalTo, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+        import { getDatabase, ref as dbRef, query as rtdbQuery, orderByChild, equalTo, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
 
         const firebaseConfig = {
-            apiKey: window.ENV.FIREBASE_API_KEY,
-            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
-            databaseURL: window.ENV.FIREBASE_DATABASE_URL,
-            projectId: window.ENV.FIREBASE_PROJECT_ID,
-            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.ENV.FIREBASE_APP_ID
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDR_yRI2ZLCSfyf3DQ_BXEie_2PzE8F0sk",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpass-2b39c.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpass-2b39c-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpass-2b39c",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpass-2b39c.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "964478366450",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:964478366450:web:2aa533bc2fe41dcd78005a"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const rtdb = getDatabase(app);
 
-        const codeInput = document.getElementById('access-code');
-        const form = document.getElementById('login-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const errorMessage = document.getElementById('error-message');
-
-        // Format code avec espace au milieu (123 456)
-        codeInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 6) value = value.slice(0, 6);
-
-            if (value.length > 3) {
-                e.target.value = value.slice(0, 3) + ' ' + value.slice(3);
-            } else {
-                e.target.value = value;
-            }
-
-            // Auto-submit quand 6 chiffres
-            if (value.length === 6) {
-                setTimeout(() => form.requestSubmit(), 300);
-            }
-        });
+        const codeInput = document.getElementById('codeInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
 
         function showError(message) {
             errorMessage.textContent = message;
-            errorMessage.classList.add('show');
+            errorMessage.style.display = 'block';
             setTimeout(() => {
-                errorMessage.classList.remove('show');
+                errorMessage.style.display = 'none';
             }, 5000);
         }
 
-        form.addEventListener('submit', async (e) => {
+        codeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const rawCode = codeInput.value.replace(/\s/g, '');
@@ -430,29 +250,6 @@
             submitBtn.textContent = 'VÉRIFICATION...';
 
             try {
-                const accessCodesRef = collection(db, 'access_codes');
-                const accessQuery = query(accessCodesRef,
-                    where('code', '==', rawCode),
-                    where('isActive', '==', true)
-                );
-                const accessSnapshot = await getDocs(accessQuery);
-
-                if (!accessSnapshot.empty) {
-                    const codeData = accessSnapshot.docs[0].data();
-                    sessionStorage.setItem('controller_code', rawCode);
-                    sessionStorage.setItem('controller_type', codeData.type);
-                    sessionStorage.setItem('vehicle_id', codeData.vehicleId || '');
-                    sessionStorage.setItem('vehicle_plate', codeData.vehiclePlate || '');
-                    sessionStorage.setItem('staff_name', codeData.staffName || '');
-                    sessionStorage.setItem('staff_role', codeData.staffRole || '');
-
-                    console.log('[EPscanV] ✅ Transport controller authenticated:', codeData.staffName);
-                    console.log('[EPscanV] Vehicle:', codeData.vehiclePlate);
-
-                    window.location.href = '/scanner.html';
-                    return;
-                }
-
                 const opsEventsRef = dbRef(rtdb, 'opsEvents/controllers');
                 const opsQuery = rtdbQuery(opsEventsRef, orderByChild('code'), equalTo(rawCode));
                 const opsSnapshot = await rtdbGet(opsQuery);
@@ -462,31 +259,33 @@
                     const controllerId = Object.keys(controllers)[0];
                     const controller = controllers[controllerId];
 
-                    if (controller.isActive) {
-                        sessionStorage.setItem('controller_code', rawCode);
-                        sessionStorage.setItem('controller_id', controllerId);
-                        sessionStorage.setItem('controller_name', controller.name);
-                        sessionStorage.setItem('controller_position', controller.position);
-                        sessionStorage.setItem('event_id', controller.eventId);
-                        sessionStorage.setItem('controller_type', 'ops_events');
-
-                        console.log('[EPscanV] ✅ OPS Events controller authenticated:', controller.name);
-
-                        const eventRef = dbRef(rtdb, `opsEvents/events/${controller.eventId}`);
-                        const eventSnapshot = await rtdbGet(eventRef);
-
-                        if (eventSnapshot.exists()) {
-                            const event = eventSnapshot.val();
-                            sessionStorage.setItem('event_name', event.name);
-                            console.log('[EPscanV] Event:', event.name);
-                        }
-
-                        window.location.href = '/scanner.html';
-                        return;
-                    } else {
+                    if (!controller.isActive) {
                         showError('Code désactivé. Mission terminée.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'VÉRIFIER';
                         return;
                     }
+
+                    sessionStorage.setItem('controller_code', rawCode);
+                    sessionStorage.setItem('controller_id', controllerId);
+                    sessionStorage.setItem('controller_name', controller.name);
+                    sessionStorage.setItem('controller_position', controller.position);
+                    sessionStorage.setItem('event_id', controller.eventId);
+                    sessionStorage.setItem('controller_type', 'ops_events');
+
+                    console.log('[EPscanV Events] ✅ OPS Events controller authenticated:', controller.name);
+
+                    const eventRef = dbRef(rtdb, `opsEvents/events/${controller.eventId}`);
+                    const eventSnapshot = await rtdbGet(eventRef);
+
+                    if (eventSnapshot.exists()) {
+                        const event = eventSnapshot.val();
+                        sessionStorage.setItem('event_name', event.name);
+                        console.log('[EPscanV Events] Event:', event.name);
+                    }
+
+                    window.location.href = '/epscanv-events.html';
+                    return;
                 }
 
                 const evenCodesRef = collection(db, 'agent_access_codes');
@@ -498,430 +297,32 @@
 
                 if (!evenSnapshot.empty) {
                     const codeData = evenSnapshot.docs[0].data();
+
                     sessionStorage.setItem('controller_code', rawCode);
                     sessionStorage.setItem('controller_id', codeData.agent_id);
                     sessionStorage.setItem('controller_name', codeData.agent_name);
                     sessionStorage.setItem('event_id', codeData.event_id);
-                    sessionStorage.setItem('controller_type', 'even');
-                    window.location.href = '/scanner.html';
+                    sessionStorage.setItem('event_name', codeData.event_name || 'Événement');
+                    sessionStorage.setItem('controller_type', 'evenpass');
+
+                    console.log('[EPscanV Events] ✅ EvenPass controller authenticated:', codeData.agent_name);
+                    console.log('[EPscanV Events] Event:', codeData.event_name);
+
+                    window.location.href = '/epscanv-events.html';
                     return;
                 }
 
-                const passCodesRef = collection(db, 'maritime_access_codes');
-                const passQuery = query(passCodesRef,
-                    where('access_code', '==', rawCode),
-                    where('is_active', '==', true)
-                );
-                const passSnapshot = await getDocs(passQuery);
-
-                if (!passSnapshot.empty) {
-                    const codeData = passSnapshot.docs[0].data();
-                    sessionStorage.setItem('controller_code', rawCode);
-                    sessionStorage.setItem('controller_id', codeData.controller_id);
-                    sessionStorage.setItem('controller_name', codeData.controller_name);
-                    sessionStorage.setItem('vessel_id', codeData.vessel_id);
-                    sessionStorage.setItem('controller_type', 'pass');
-                    window.location.href = '/epscan-plus.html';
-                    return;
-                }
-
-                showError('Code invalide ou inactif');
+                showError('Code invalide ou inactif. Vérifiez votre code Events.');
             } catch (error) {
-                console.error('Error:', error);
-                showError('Erreur de connexion. Réessayez.');
+                console.error('[EPscanV Events] ❌ Error:', error);
+                showError('Erreur de connexion. Vérifiez votre connexion internet.');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'VALIDER';
+                submitBtn.textContent = 'VÉRIFIER';
             }
         });
 
-        // Focus automatique
-        codeInput.focus();
-
-        // Forcer HTTPS en production
-        if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-            console.log('[EPscanV] Redirecting to HTTPS...');
-            location.replace(`https:${location.href.substring(location.protocol.length)}`);
-        }
-
-        // Diagnostic complet PWA
-        async function diagnosePWA() {
-            console.group('[EPscanV] 🔍 PWA Diagnostic');
-
-            // 1. Protocol
-            console.log('Protocol:', location.protocol);
-            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                console.warn('⚠️ HTTPS required for PWA installation');
-            }
-
-            // 2. Service Worker
-            if ('serviceWorker' in navigator) {
-                console.log('✅ Service Worker API supported');
-            } else {
-                console.error('❌ Service Worker not supported');
-            }
-
-            // 3. Manifeste
-            try {
-                const manifestLink = document.querySelector('link[rel="manifest"]');
-                if (manifestLink) {
-                    console.log('✅ Manifest link found:', manifestLink.href);
-                    const response = await fetch(manifestLink.href);
-                    const contentType = response.headers.get('content-type');
-                    console.log('Manifest Content-Type:', contentType);
-
-                    const manifest = await response.json();
-                    console.log('✅ Manifest loaded:', manifest);
-                    console.log('Icons:', manifest.icons?.length || 0, 'icon(s)');
-                    console.log('Start URL:', manifest.start_url);
-                    console.log('Display:', manifest.display);
-                    console.log('Scope:', manifest.scope);
-
-                    // Vérifier les icônes
-                    if (manifest.icons && manifest.icons.length > 0) {
-                        console.group('Icon verification:');
-                        for (const icon of manifest.icons) {
-                            try {
-                                const iconResponse = await fetch(icon.src);
-                                if (iconResponse.ok) {
-                                    console.log(`✅ ${icon.sizes} - ${icon.src}`);
-                                } else {
-                                    console.error(`❌ ${icon.sizes} - ${icon.src} (${iconResponse.status})`);
-                                }
-                            } catch (err) {
-                                console.error(`❌ ${icon.sizes} - ${icon.src} (fetch failed)`);
-                            }
-                        }
-                        console.groupEnd();
-                    } else {
-                        console.error('❌ No icons defined in manifest');
-                    }
-                } else {
-                    console.error('❌ No manifest link found');
-                }
-            } catch (err) {
-                console.error('❌ Failed to load manifest:', err);
-            }
-
-            // 4. Standalone mode
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-            console.log('Standalone mode:', isStandalone ? '✅ Yes' : '❌ No');
-
-            console.groupEnd();
-        }
-
-        // Exécuter le diagnostic
-        diagnosePWA();
-
-        // Enregistrer le Service Worker dédié EPscanV
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-epscanv.js')
-                .then(reg => {
-                    console.log('[EPscanV] ✅ Service Worker registered:', reg);
-                    console.log('[EPscanV] Scope:', reg.scope);
-                    console.log('[EPscanV] Active:', reg.active ? 'Yes' : 'No');
-                })
-                .catch(err => console.error('[EPscanV] ❌ Service Worker registration failed:', err));
-        } else {
-            console.warn('[EPscanV] ⚠️ Service Worker not supported in this browser');
-        }
-
-        // Détection et prompt d'installation PWA
-        let deferredPrompt;
-        const installPrompt = document.getElementById('install-prompt');
-        const installBtnStatic = document.getElementById('install-btn-static');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('[EPscanV] ✅ beforeinstallprompt event fired - Installation is available!');
-            e.preventDefault();
-            deferredPrompt = e;
-
-            // Vérifier si déjà installé ou si l'utilisateur a refusé
-            const isDismissed = localStorage.getItem('epscanv_pwa_dismissed');
-            const isInstalled = localStorage.getItem('epscanv_pwa_installed');
-
-            if (!isDismissed && !isInstalled) {
-                console.log('[EPscanV] Showing install button and banner');
-                installPrompt.style.display = 'block';
-                createAndShowBanner();
-            } else {
-                console.log('[EPscanV] Installation previously dismissed or already installed');
-            }
-        });
-
-        // Fonction pour afficher la modale
-        function showModal(title, message) {
-            const modal = document.getElementById('info-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalText = document.getElementById('modal-text');
-
-            modalTitle.textContent = title;
-            modalText.textContent = message;
-            modal.classList.add('show');
-        }
-
-        // Fonction pour fermer la modale
-        window.closeModal = function() {
-            const modal = document.getElementById('info-modal');
-            modal.classList.remove('show');
-        }
-
-        // Fermer la modale en cliquant sur le fond
-        document.getElementById('info-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'info-modal') {
-                closeModal();
-            }
-        });
-
-        // Gestionnaire du bouton statique
-        installBtnStatic.addEventListener('click', () => {
-            if (deferredPrompt) {
-                installPWA();
-            } else {
-                showManualInstallInstructions();
-            }
-        });
-
-        // Instructions d'installation manuelle détaillées
-        function showManualInstallInstructions() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isAndroid = /Android/.test(navigator.userAgent);
-            const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            const isEdge = /Edge|Edg/.test(navigator.userAgent);
-
-            let title = 'Comment installer EPscanV';
-            let message = '';
-
-            if (isIOS) {
-                message = `
-                    <div style="text-align: left; line-height: 1.8;">
-                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour iOS/Safari :</p>
-                        <ol style="padding-left: 20px; color: #cbd5e1;">
-                            <li style="margin-bottom: 10px;">Cliquez sur le bouton <strong>Partager</strong> (icône carrée avec flèche vers le haut) en bas de l'écran</li>
-                            <li style="margin-bottom: 10px;">Faites défiler et sélectionnez <strong>"Sur l'écran d'accueil"</strong></li>
-                            <li style="margin-bottom: 10px;">Cliquez sur <strong>"Ajouter"</strong> en haut à droite</li>
-                            <li>L'application EPscanV apparaîtra sur votre écran d'accueil</li>
-                        </ol>
-                    </div>
-                `;
-            } else if (isAndroid && isChrome) {
-                message = `
-                    <div style="text-align: left; line-height: 1.8;">
-                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour Android/Chrome :</p>
-                        <ol style="padding-left: 20px; color: #cbd5e1;">
-                            <li style="margin-bottom: 10px;">Cliquez sur les <strong>3 points verticaux</strong> (⋮) en haut à droite</li>
-                            <li style="margin-bottom: 10px;">Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
-                            <li style="margin-bottom: 10px;">Confirmez en cliquant sur <strong>"Installer"</strong></li>
-                            <li>L'application EPscanV sera installée sur votre appareil</li>
-                        </ol>
-                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">💡 Astuce : Assurez-vous d'être en HTTPS</p>
-                    </div>
-                `;
-            } else if (isAndroid) {
-                message = `
-                    <div style="text-align: left; line-height: 1.8;">
-                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour Android :</p>
-                        <ol style="padding-left: 20px; color: #cbd5e1;">
-                            <li style="margin-bottom: 10px;">Ouvrez le <strong>menu</strong> de votre navigateur (généralement les 3 points)</li>
-                            <li style="margin-bottom: 10px;">Recherchez l'option <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
-                            <li style="margin-bottom: 10px;">Suivez les instructions pour installer EPscanV</li>
-                        </ol>
-                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">💡 Pour une meilleure expérience, utilisez Chrome</p>
-                    </div>
-                `;
-            } else if (isChrome || isEdge) {
-                message = `
-                    <div style="text-align: left; line-height: 1.8;">
-                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">💻 Instructions pour ${isEdge ? 'Edge' : 'Chrome'} Desktop :</p>
-                        <ol style="padding-left: 20px; color: #cbd5e1;">
-                            <li style="margin-bottom: 10px;">Cherchez l'icône <strong>d'installation</strong> (⊕) dans la barre d'adresse (à droite)</li>
-                            <li style="margin-bottom: 10px;">OU cliquez sur les <strong>3 points</strong> (⋮) > <strong>"Installer EPscanV"</strong></li>
-                            <li style="margin-bottom: 10px;">Confirmez l'installation dans la fenêtre contextuelle</li>
-                        </ol>
-                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">⚠️ Vérifiez que vous êtes bien en <strong>HTTPS</strong></p>
-                    </div>
-                `;
-            } else {
-                message = `
-                    <div style="text-align: left; line-height: 1.8;">
-                        <p style="margin-bottom: 15px; color: #cbd5e1;">L'installation automatique n'est pas disponible sur votre navigateur.</p>
-                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📋 Recommandations :</p>
-                        <ul style="padding-left: 20px; color: #cbd5e1;">
-                            <li style="margin-bottom: 10px;">Utilisez <strong>Chrome</strong> ou <strong>Edge</strong> pour une installation facile</li>
-                            <li style="margin-bottom: 10px;">Assurez-vous d'être en <strong>HTTPS</strong></li>
-                            <li>Consultez le menu de votre navigateur pour l'option "Ajouter à l'écran d'accueil"</li>
-                        </ul>
-                    </div>
-                `;
-            }
-
-            showModal(title, message);
-        }
-
-        function createAndShowBanner() {
-            const existingBanner = document.getElementById('pwa-install-banner');
-            if (existingBanner) {
-                existingBanner.style.display = 'block';
-                return;
-            }
-
-            const banner = document.createElement('div');
-            banner.id = 'pwa-install-banner';
-            banner.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-                color: white;
-                padding: 20px;
-                border-radius: 16px;
-                box-shadow: 0 10px 40px rgba(249, 115, 22, 0.5);
-                z-index: 9999;
-                animation: slideUp 0.3s ease-out;
-            `;
-
-            banner.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <div style="flex-shrink: 0; width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#F97316"/>
-                            <path d="M2 17L12 22L22 17" stroke="#F97316" stroke-width="2"/>
-                            <path d="M2 12L12 17L22 12" stroke="#F97316" stroke-width="2"/>
-                        </svg>
-                    </div>
-                    <div style="flex: 1; min-width: 150px;">
-                        <div style="font-weight: 900; font-size: 16px; margin-bottom: 4px;">Installer EPscanV</div>
-                        <div style="font-size: 13px; opacity: 0.9;">Accès rapide et hors ligne</div>
-                    </div>
-                    <button id="pwa-install-btn" style="background: white; color: #F97316; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;">
-                        INSTALLER
-                    </button>
-                    <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 10px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 40px; height: 40px;">
-                        ✕
-                    </button>
-                </div>
-            `;
-
-            document.body.appendChild(banner);
-
-            banner.querySelector('#pwa-install-btn').addEventListener('click', installPWA);
-            banner.querySelector('#pwa-dismiss-btn').addEventListener('click', dismissBanner);
-        }
-
-        function dismissBanner() {
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) {
-                banner.style.display = 'none';
-            }
-            installPrompt.style.display = 'none';
-            localStorage.setItem('epscanv_pwa_dismissed', 'true');
-        }
-
-        async function installPWA() {
-            if (!deferredPrompt) {
-                console.log('[EPscanV] Installation prompt not available');
-                return;
-            }
-
-            try {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-
-                console.log(`[EPscanV] User choice: ${outcome}`);
-
-                if (outcome === 'accepted') {
-                    console.log('[EPscanV] PWA installed successfully');
-                    localStorage.setItem('epscanv_pwa_installed', 'true');
-                    installPrompt.style.display = 'none';
-                } else {
-                    localStorage.setItem('epscanv_pwa_dismissed', 'true');
-                }
-
-                const banner = document.getElementById('pwa-install-banner');
-                if (banner) {
-                    banner.style.display = 'none';
-                }
-                deferredPrompt = null;
-            } catch (error) {
-                console.error('[EPscanV] Error during installation:', error);
-            }
-        }
-
-        window.addEventListener('appinstalled', () => {
-            console.log('[EPscanV] PWA was installed');
-            localStorage.setItem('epscanv_pwa_installed', 'true');
-            installPrompt.style.display = 'none';
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) {
-                banner.style.display = 'none';
-            }
-        });
-
-        // Vérifier si l'app est déjà installée
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            console.log('[EPscanV] App is running in standalone mode');
-            localStorage.setItem('epscanv_pwa_installed', 'true');
-        }
-
-        // Vérifier si l'installation PWA est supportée
-        function checkPWASupport() {
-            const isInstalled = localStorage.getItem('epscanv_pwa_installed');
-            const isDismissed = localStorage.getItem('epscanv_pwa_dismissed');
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-            const isPWACapable = 'serviceWorker' in navigator && 'BeforeInstallPromptEvent' in window;
-
-            return {
-                isInstalled,
-                isDismissed,
-                isStandalone,
-                isPWACapable
-            };
-        }
-
-        // Fonction pour afficher la bannière de fallback
-        function showFallbackInstallBanner() {
-            const status = checkPWASupport();
-
-            // Ne pas afficher si déjà installé, refusé ou en standalone
-            if (status.isInstalled || status.isDismissed || status.isStandalone) {
-                return;
-            }
-
-            // Afficher le bouton d'installation même sans beforeinstallprompt
-            installPrompt.style.display = 'block';
-            console.log('[EPscanV] 🔄 Showing fallback install button');
-        }
-
-        // Vérification après 3 secondes si le PWA est installable
-        setTimeout(() => {
-            const status = checkPWASupport();
-
-            if (status.isInstalled) {
-                console.log('[EPscanV] ℹ️ App already installed');
-                return;
-            }
-
-            if (status.isDismissed) {
-                console.log('[EPscanV] ℹ️ Installation previously dismissed by user');
-                return;
-            }
-
-            if (status.isStandalone) {
-                console.log('[EPscanV] ℹ️ App is running in standalone mode');
-                return;
-            }
-
-            if (deferredPrompt) {
-                // L'événement beforeinstallprompt a déjà affiché le bouton
-                console.log('[EPscanV] ✅ Install prompt already shown via beforeinstallprompt');
-            } else {
-                console.log('[EPscanV] ⚠️ beforeinstallprompt not fired, showing fallback banner');
-                // Afficher la bannière de fallback même sans l'événement
-                showFallbackInstallBanner();
-            }
-        }, 3000);
+        console.log('[EPscanV Events] Login page ready');
     </script>
 </body>
 </html>
