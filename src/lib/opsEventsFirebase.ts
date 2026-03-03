@@ -219,49 +219,63 @@ export async function getEventScans(eventId: string): Promise<ScanRecord[]> {
 export async function getAllEventsFromFirestore(): Promise<Event[]> {
   try {
     const eventsRef = collection(firestore, 'events');
-    const q = firestoreQuery(
-      eventsRef,
-      where('status', 'in', ['published', 'active']),
-      firestoreOrderBy('start_date', 'desc')
-    );
-    const snapshot = await getDocs(q);
 
-    console.log('[OPS EVENTS] Loading events from Firestore, found:', snapshot.size);
+    // FORCE : AUCUN FILTRE - LECTURE BRUTE DE TOUS LES DOCUMENTS
+    const snapshot = await getDocs(eventsRef);
+
+    console.log('🔍 [OPS EVENTS DEBUG] Collection "events" - Nombre total de documents:', snapshot.size);
+
+    if (snapshot.empty) {
+      console.error('❌ [OPS EVENTS] COLLECTION VIDE - Aucun document trouvé dans "events"');
+      return [];
+    }
 
     const events: Event[] = [];
 
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
 
-      console.log('[OPS EVENTS] Processing event:', {
+      console.log('📄 [OPS EVENTS] Document trouvé:', {
         id: docSnap.id,
+        allFields: Object.keys(data),
         title: data.title,
+        name: data.name,
         status: data.status,
-        start_date: data.start_date
+        statut: data.statut,
+        start_date: data.start_date,
+        date: data.date,
+        venue_name: data.venue_name,
+        venue_city: data.venue_city
       });
 
-      const startDate = data.start_date?.toMillis ? data.start_date.toMillis() : Date.now();
+      // Mapping flexible - accepte plusieurs variations de champs
+      const eventName = data.title || data.name || 'Événement sans titre';
+      const eventDate = data.start_date?.toMillis
+        ? data.start_date.toMillis()
+        : (data.date?.toMillis ? data.date.toMillis() : Date.now());
+
       const now = Date.now();
       let status: 'upcoming' | 'ongoing' | 'completed' = 'upcoming';
 
-      if (startDate < now) {
-        const endDate = data.end_date?.toMillis ? data.end_date.toMillis() : startDate + 86400000;
+      if (eventDate < now) {
+        const endDate = data.end_date?.toMillis ? data.end_date.toMillis() : eventDate + 86400000;
         status = endDate < now ? 'completed' : 'ongoing';
       }
 
       const event: Event = {
         id: docSnap.id,
-        name: data.title || 'Événement sans titre',
+        name: eventName,
         description: data.description || '',
-        date: startDate,
-        location: `${data.venue_name || ''}, ${data.venue_city || ''}`.trim(),
+        date: eventDate,
+        location: `${data.venue_name || ''}, ${data.venue_city || ''}`.trim() || 'Lieu non spécifié',
         status,
-        totalTickets: data.total_capacity || 1000,
+        totalTickets: data.total_capacity || data.capacity || 1000,
         scannedTickets: 0,
         activeControllers: 0,
         createdAt: data.created_at?.toMillis ? data.created_at.toMillis() : Date.now()
       };
 
+      // Vérifier si l'événement a des données OPS
       const opsEventRef = ref(database, `opsEvents/events/${docSnap.id}`);
       const opsSnapshot = await get(opsEventRef);
 
@@ -272,13 +286,14 @@ export async function getAllEventsFromFirestore(): Promise<Event[]> {
       }
 
       events.push(event);
+      console.log('✅ [OPS EVENTS] Événement ajouté:', eventName);
     }
 
-    console.log('[OPS EVENTS] Loaded events:', events.length);
+    console.log('📊 [OPS EVENTS] Total événements chargés:', events.length);
 
     return events;
   } catch (error) {
-    console.error('[OPS EVENTS] Error loading events from Firestore:', error);
+    console.error('❌ [OPS EVENTS] ERREUR lors du chargement:', error);
     return [];
   }
 }

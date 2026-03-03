@@ -276,10 +276,19 @@ export default function AdminOpsEventsPage() {
           </div>
 
           {events.length === 0 ? (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
-              <Activity className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-              <p className="text-zinc-500 text-lg mb-2">Aucun événement actif</p>
-              <p className="text-zinc-600 text-sm">Les événements publiés sur la plateforme apparaîtront ici</p>
+            <div className="bg-red-950 border-2 border-red-500 rounded-xl p-12 text-center">
+              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <p className="text-red-400 text-xl font-bold mb-3">DIAGNOSTIC : COLLECTION VIDE</p>
+              <p className="text-red-300 text-lg mb-2">Tentative de lecture de la collection "events" : 0 documents trouvés</p>
+              <p className="text-red-400 text-sm">Vérifiez la console du navigateur (F12) pour les détails de connexion Firestore</p>
+              <div className="mt-6 p-4 bg-black/50 rounded-lg">
+                <p className="text-zinc-400 text-xs font-mono">
+                  Collection cible : firestore.collection('events')
+                </p>
+                <p className="text-zinc-400 text-xs font-mono mt-2">
+                  Filtre appliqué : AUCUN (lecture brute de tous les documents)
+                </p>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
