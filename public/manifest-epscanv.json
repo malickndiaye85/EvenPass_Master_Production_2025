@@ -12,22 +12,22 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/assets/logo_EPscanV_pwa.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/logo_EPscanV_pwa.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/assets/logo_EPscanV_pwa.svg",
+      "src": "/epscan-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/epscan-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/epscan-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["business", "productivity", "utilities"],
@@ -39,8 +39,9 @@
       "url": "/controller-epscanv",
       "icons": [
         {
-          "src": "/assets/logo_EPscanV_pwa.svg",
-          "sizes": "192x192"
+          "src": "/epscan-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }

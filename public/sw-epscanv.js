@@ -6,7 +6,8 @@ const CRITICAL_RESOURCES = [
   '/controller-login.html',
   '/controller-epscanv',
   '/manifest-epscanv.json',
-  '/assets/logo_EPscanV_pwa.svg',
+  '/epscan-192.png',
+  '/epscan-512.png',
 ];
 
 self.addEventListener('install', (event) => {

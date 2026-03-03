@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="EPscanV">
-    <link rel="apple-touch-icon" href="/assets/logo_EPscanV_pwa.svg">
-    <link rel="icon" href="/assets/logo_EPscanV_pwa.svg">
+    <link rel="apple-touch-icon" href="/epscan-512.png">
+    <link rel="icon" href="/epscan-512.png">
     <script src="/env-config.js"></script>
     <style>
         * {
@@ -693,6 +693,20 @@
             };
         }
 
+        // Fonction pour afficher la bannière de fallback
+        function showFallbackInstallBanner() {
+            const status = checkPWASupport();
+
+            // Ne pas afficher si déjà installé, refusé ou en standalone
+            if (status.isInstalled || status.isDismissed || status.isStandalone) {
+                return;
+            }
+
+            // Afficher le bouton d'installation même sans beforeinstallprompt
+            installPrompt.style.display = 'block';
+            console.log('[EPscanV] 🔄 Showing fallback install button');
+        }
+
         // Vérification après 3 secondes si le PWA est installable
         setTimeout(() => {
             const status = checkPWASupport();
@@ -716,12 +730,9 @@
                 // L'événement beforeinstallprompt a déjà affiché le bouton
                 console.log('[EPscanV] ✅ Install prompt already shown via beforeinstallprompt');
             } else {
-                console.log('[EPscanV] ❌ PWA installation not available on this browser/context');
-                console.log('[EPscanV] Possible reasons:');
-                console.log('  - Not using HTTPS');
-                console.log('  - Browser doesn\'t support PWA installation');
-                console.log('  - App is already installed');
-                console.log('  - Service Worker registration failed');
+                console.log('[EPscanV] ⚠️ beforeinstallprompt not fired, showing fallback banner');
+                // Afficher la bannière de fallback même sans l'événement
+                showFallbackInstallBanner();
             }
         }, 3000);
     </script>
