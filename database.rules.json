@@ -165,6 +165,29 @@
         ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
         ".validate": "newData.hasChildren(['url', 'updatedAt']) && newData.child('url').isString() && newData.child('updatedAt').isNumber()"
       }
+    },
+
+    "opsEvents": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "events": {
+        ".read": "auth != null",
+        "$eventId": {
+          ".write": "auth != null"
+        }
+      },
+      "controllers": {
+        ".read": "auth != null",
+        "$controllerId": {
+          ".write": "auth != null"
+        }
+      },
+      "scans": {
+        ".read": "auth != null",
+        "$scanId": {
+          ".write": "auth != null"
+        }
+      }
     }
   }
 }
