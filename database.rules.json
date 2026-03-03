@@ -181,6 +181,7 @@
       "controllers": {
         ".read": "auth != null",
         ".write": "auth != null",
+        ".indexOn": ["eventId", "code"],
         "$controllerId": {
           ".read": "auth != null",
           ".write": "auth != null"
@@ -189,6 +190,7 @@
       "scans": {
         ".read": "auth != null",
         ".write": "auth != null",
+        ".indexOn": ["eventId", "timestamp"],
         "$scanId": {
           ".read": "auth != null",
           ".write": "auth != null"
