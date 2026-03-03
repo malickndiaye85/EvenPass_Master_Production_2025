@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPscanV - Scanner Events</title>
+    <title>EPscanV - HUD Scanner</title>
     <script src="/env-config.js"></script>
     <link rel="icon" type="image/png" href="/evenpass-icon-512.png">
     <link rel="apple-touch-icon" href="/evenpass-icon-512.png">
-    <meta name="theme-color" content="#F97316">
+    <meta name="theme-color" content="#0F172A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EPscanV Events">
+    <meta name="apple-mobile-web-app-title" content="EPscanV HUD">
     <style>
         * {
             margin: 0;
@@ -19,53 +19,107 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #0F172A;
-            color: white;
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #00FF41;
             min-height: 100vh;
             overflow: hidden;
+            position: relative;
         }
 
-        .events-header {
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+        .hud-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .event-info {
-            font-size: 20px;
+        .hud-header {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #00FF41;
+            padding: 16px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), 0 4px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        .hud-title {
+            font-size: 18px;
             font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .controller-info {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .mode-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 8px;
+            color: #00FF41;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .hud-subtitle {
+            font-size: 12px;
+            color: #00FF41;
+            text-align: center;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+
+        .mission-badge {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00FF41;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
 
         #scanner-container {
             position: relative;
             width: 100%;
-            height: calc(100vh - 280px);
-            background: #1E293B;
+            height: calc(100vh - 250px);
+            background: #000000;
             overflow: hidden;
+            border-top: 1px solid rgba(0, 255, 65, 0.2);
+            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
         }
 
         #reader {
             width: 100%;
             height: 100%;
+            filter: contrast(1.1) brightness(0.9);
         }
 
         #reader video {
@@ -81,10 +135,9 @@
             transform: translate(-50%, -50%);
             width: 280px;
             height: 280px;
-            border: 3px solid #F97316;
-            border-radius: 20px;
+            border: 2px solid #00FF41;
             pointer-events: none;
-            box-shadow: 0 0 0 99999px rgba(15, 23, 42, 0.7);
+            box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 255, 65, 0.2);
         }
 
         .scan-line {
@@ -92,8 +145,9 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #F97316, transparent);
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00FF41, transparent);
+            box-shadow: 0 0 10px #00FF41;
             animation: scan 2s linear infinite;
         }
 
@@ -104,14 +158,15 @@
 
         .scan-corners {
             position: absolute;
-            inset: -3px;
+            inset: -2px;
         }
 
         .corner {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            border: 4px solid #F97316;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #00FF41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
 
         .corner.top-left {
@@ -119,7 +174,6 @@
             left: 0;
             border-right: none;
             border-bottom: none;
-            border-radius: 20px 0 0 0;
         }
 
         .corner.top-right {
@@ -127,7 +181,6 @@
             right: 0;
             border-left: none;
             border-bottom: none;
-            border-radius: 0 20px 0 0;
         }
 
         .corner.bottom-left {
@@ -135,7 +188,6 @@
             left: 0;
             border-right: none;
             border-top: none;
-            border-radius: 0 0 0 20px;
         }
 
         .corner.bottom-right {
@@ -143,7 +195,46 @@
             right: 0;
             border-left: none;
             border-top: none;
-            border-radius: 0 0 20px 0;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-info {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00FF41;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #00FF41;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .target-lock {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00FF41;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
 
         .start-button {
@@ -151,51 +242,109 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-size: 18px;
+            padding: 16px 32px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid #00FF41;
+            color: #00FF41;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 8px 30px rgba(249, 115, 22, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
             z-index: 10;
             display: none;
+            transition: all 0.2s;
+        }
+
+        .start-button:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.6);
         }
 
         .start-button:active {
             transform: translate(-50%, -50%) scale(0.95);
         }
 
-        .stats-container {
-            background: #1E293B;
-            padding: 20px;
+        .hud-footer {
+            background: linear-gradient(0deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid #00FF41;
+            padding: 12px;
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            position: relative;
+            z-index: 10;
         }
 
         .stat-card {
-            background: rgba(249, 115, 22, 0.1);
-            border: 1px solid rgba(249, 115, 22, 0.2);
-            border-radius: 12px;
-            padding: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00FF41;
+            padding: 12px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00FF41, transparent);
+            animation: scanLine 3s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: #F97316;
+            color: #00FF41;
             margin-bottom: 4px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            font-family: 'Courier New', monospace;
         }
 
         .stat-label {
-            font-size: 12px;
-            color: #94A3B8;
+            font-size: 9px;
+            color: #00FF41;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .end-mission-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00FF41;
+            color: #00FF41;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-family: 'Courier New', monospace;
+            z-index: 20;
+        }
+
+        .end-mission-btn:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
         }
 
         .result-modal {
@@ -204,12 +353,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(0, 0, 0, 0.95);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
         @keyframes fadeIn {
@@ -218,12 +368,13 @@
         }
 
         .result-content {
-            background: #1E293B;
-            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #00FF41;
             padding: 30px;
             max-width: 90%;
             text-align: center;
             animation: slideUp 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
         }
 
         @keyframes slideUp {
@@ -235,86 +386,215 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 20px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 40px;
+            border: 3px solid;
+            position: relative;
         }
 
         .result-icon.success {
-            background: rgba(34, 197, 94, 0.2);
-            border: 3px solid #22C55E;
+            border-color: #00FF41;
+            color: #00FF41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
         }
 
         .result-icon.error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 3px solid #EF4444;
+            border-color: #EF4444;
+            color: #EF4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
         }
 
         .result-icon.warning {
-            background: rgba(255, 193, 7, 0.2);
-            border: 3px solid #FFC107;
+            border-color: #FFC107;
+            color: #FFC107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
         }
 
         .result-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
         }
 
         .result-message {
-            font-size: 16px;
-            color: #94A3B8;
+            font-size: 14px;
+            color: #00FF41;
             margin-bottom: 24px;
+            opacity: 0.9;
+            font-family: 'Courier New', monospace;
         }
 
         .result-details {
-            background: rgba(249, 115, 22, 0.1);
-            border: 1px solid rgba(249, 115, 22, 0.2);
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 65, 0.3);
             padding: 16px;
             margin-bottom: 24px;
             text-align: left;
+            font-family: 'Courier New', monospace;
         }
 
         .detail-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .detail-label {
-            color: #94A3B8;
+            color: rgba(0, 255, 65, 0.7);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
         }
 
         .detail-value {
-            color: white;
+            color: #00FF41;
             font-weight: 600;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
         }
 
         .result-button {
-            padding: 14px 32px;
-            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
+            padding: 12px 32px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid #00FF41;
+            color: #00FF41;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+
+        .result-button:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+        }
+
+        .mission-summary-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            backdrop-filter: blur(5px);
+        }
+
+        .summary-content {
+            background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #00FF41;
+            padding: 40px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
+        }
+
+        .summary-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00FF41;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-stats {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .summary-stat {
+            margin-bottom: 16px;
+        }
+
+        .summary-stat-label {
+            font-size: 11px;
+            color: rgba(0, 255, 65, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-stat-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: #00FF41;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-message {
+            font-size: 16px;
+            color: #00FF41;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .summary-btn {
+            padding: 12px 24px;
+            border: 2px solid #00FF41;
+            background: rgba(0, 255, 65, 0.1);
+            color: #00FF41;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+
+        .summary-btn:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+        }
+
+        .summary-btn.primary {
+            background: rgba(0, 255, 65, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="events-header">
-        <div class="event-info" id="eventInfo">Chargement...</div>
-        <div class="controller-info" id="controllerInfo"></div>
-        <div class="mode-badge">🎟️ EVENTS</div>
+    <div class="hud-grid"></div>
+
+    <div class="hud-header">
+        <button class="logout-btn" onclick="window.location.href='/controller-login.html'">EXIT</button>
+        <div class="hud-title" id="eventInfo">INITIALISATION...</div>
+        <div class="hud-subtitle" id="controllerInfo">AGENT: CHARGEMENT...</div>
+        <div style="text-align: center;">
+            <span class="mission-badge">MISSION ACTIVE</span>
+        </div>
     </div>
 
     <div id="scanner-container">
         <div id="reader"></div>
+        <div class="hud-overlay">
+            <div class="hud-info">STATUS: OPERATIONAL</div>
+            <div class="hud-info" id="sessionTime">00:00:00</div>
+        </div>
         <div class="scan-overlay">
             <div class="scan-line"></div>
             <div class="scan-corners">
@@ -324,18 +604,24 @@
                 <div class="corner bottom-right"></div>
             </div>
         </div>
-        <button class="start-button" id="startButton">🎟️ DÉMARRER LE SCAN</button>
+        <div class="target-lock">[ TARGET ACQUISITION MODE ]</div>
+        <button class="start-button" id="startButton">INITIALISER SCANNER</button>
     </div>
 
-    <div class="stats-container">
+    <div class="hud-footer">
+        <div class="stat-card">
+            <div class="stat-value" id="personalCount">0</div>
+            <div class="stat-label">MES SCANS</div>
+        </div>
         <div class="stat-card">
             <div class="stat-value" id="validCount">0</div>
-            <div class="stat-label">Scannés</div>
+            <div class="stat-label">Validés</div>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="invalidCount">0</div>
             <div class="stat-label">Refusés</div>
         </div>
+        <button class="end-mission-btn" id="endMissionBtn">FIN DE SERVICE</button>
     </div>
 
     <div class="result-modal" id="resultModal">
@@ -344,7 +630,34 @@
             <div class="result-title" id="resultTitle"></div>
             <div class="result-message" id="resultMessage"></div>
             <div class="result-details" id="resultDetails" style="display: none;"></div>
-            <button class="result-button" id="continueButton">Continuer</button>
+            <button class="result-button" id="continueButton">CONTINUER</button>
+        </div>
+    </div>
+
+    <div class="mission-summary-modal" id="summaryModal">
+        <div class="summary-content">
+            <div class="summary-title">RAPPORT DE MISSION</div>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Agent</div>
+                    <div class="summary-stat-value" style="font-size: 24px;" id="summaryAgent">-</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Total Validé</div>
+                    <div class="summary-stat-value" id="summaryTotal">0</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Durée Mission</div>
+                    <div class="summary-stat-value" style="font-size: 28px;" id="summaryDuration">00:00:00</div>
+                </div>
+            </div>
+            <div class="summary-message" id="summaryMessage">
+                Excellent travail ! Mission accomplie avec succès.
+            </div>
+            <div class="summary-buttons">
+                <button class="summary-btn" id="continueMissionBtn">CONTINUER</button>
+                <button class="summary-btn primary" onclick="window.location.href='/controller-login.html'">DÉCONNEXION</button>
+            </div>
         </div>
     </div>
 
@@ -373,20 +686,60 @@
         const controllerName = sessionStorage.getItem('controller_name') || 'Contrôleur';
         const controllerPosition = sessionStorage.getItem('controller_position') || '';
         const controllerType = sessionStorage.getItem('controller_type') || '';
+        const controllerId = sessionStorage.getItem('controller_id') || Date.now().toString();
 
         if (!eventName || !controllerName) {
             window.location.href = '/controller-login.html';
         }
 
-        document.getElementById('eventInfo').textContent = eventName;
-        document.getElementById('controllerInfo').textContent = `${controllerName}${controllerPosition ? ' - ' + controllerPosition : ''}`;
+        document.getElementById('eventInfo').textContent = eventName.toUpperCase();
+        document.getElementById('controllerInfo').textContent = `AGENT: ${controllerName.toUpperCase()}${controllerPosition ? ' - ' + controllerPosition.toUpperCase() : ''}`;
 
-        let validCount = 0;
-        let invalidCount = 0;
+        const sessionKey = `epscanv_session_${controllerId}_${eventId}`;
+
+        function getSessionData() {
+            const data = localStorage.getItem(sessionKey);
+            if (data) {
+                return JSON.parse(data);
+            }
+            return {
+                personalCount: 0,
+                validCount: 0,
+                invalidCount: 0,
+                startTime: Date.now(),
+                scannedTickets: []
+            };
+        }
+
+        function saveSessionData(data) {
+            localStorage.setItem(sessionKey, JSON.stringify(data));
+        }
+
+        let sessionData = getSessionData();
+        let validCount = sessionData.validCount || 0;
+        let invalidCount = sessionData.invalidCount || 0;
+        let personalCount = sessionData.personalCount || 0;
         let html5QrCode;
         let isProcessing = false;
+        let sessionStartTime = sessionData.startTime || Date.now();
 
-        function showResult(type, title, message, details = null) {
+        document.getElementById('validCount').textContent = validCount;
+        document.getElementById('invalidCount').textContent = invalidCount;
+        document.getElementById('personalCount').textContent = personalCount;
+
+        function updateSessionTimer() {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('sessionTime').textContent =
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        setInterval(updateSessionTimer, 1000);
+        updateSessionTimer();
+
+        function showResult(type, title, message, details = null, ticketId = null) {
             const modal = document.getElementById('resultModal');
             const icon = document.getElementById('resultIcon');
             const titleEl = document.getElementById('resultTitle');
@@ -396,7 +749,7 @@
             icon.className = `result-icon ${type}`;
             icon.textContent = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✗';
             titleEl.textContent = title;
-            titleEl.style.color = type === 'success' ? '#22C55E' : type === 'warning' ? '#FFC107' : '#EF4444';
+            titleEl.style.color = type === 'success' ? '#00FF41' : type === 'warning' ? '#FFC107' : '#EF4444';
             messageEl.textContent = message;
 
             if (details) {
@@ -410,11 +763,23 @@
 
             if (type === 'success') {
                 validCount++;
+                personalCount++;
+
+                if (ticketId && !sessionData.scannedTickets.includes(ticketId)) {
+                    sessionData.scannedTickets.push(ticketId);
+                }
+
                 document.getElementById('validCount').textContent = validCount;
+                document.getElementById('personalCount').textContent = personalCount;
             } else {
                 invalidCount++;
                 document.getElementById('invalidCount').textContent = invalidCount;
             }
+
+            sessionData.validCount = validCount;
+            sessionData.invalidCount = invalidCount;
+            sessionData.personalCount = personalCount;
+            saveSessionData(sessionData);
 
             navigator.vibrate && navigator.vibrate(type === 'success' ? [100] : [200, 100, 200]);
         }
@@ -422,6 +787,36 @@
         document.getElementById('continueButton').addEventListener('click', () => {
             document.getElementById('resultModal').style.display = 'none';
             isProcessing = false;
+        });
+
+        document.getElementById('endMissionBtn').addEventListener('click', () => {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const duration = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            document.getElementById('summaryAgent').textContent = controllerName.toUpperCase();
+            document.getElementById('summaryTotal').textContent = personalCount;
+            document.getElementById('summaryDuration').textContent = duration;
+
+            let message = '';
+            if (personalCount === 0) {
+                message = 'Aucun billet scanné durant cette session.';
+            } else if (personalCount < 10) {
+                message = `Bon travail ${controllerName} ! Tu as validé ${personalCount} billet${personalCount > 1 ? 's' : ''} durant cette mission.`;
+            } else if (personalCount < 50) {
+                message = `Excellent travail ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission.`;
+            } else {
+                message = `Performance exceptionnelle ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission !`;
+            }
+
+            document.getElementById('summaryMessage').textContent = message;
+            document.getElementById('summaryModal').style.display = 'flex';
+        });
+
+        document.getElementById('continueMissionBtn').addEventListener('click', () => {
+            document.getElementById('summaryModal').style.display = 'none';
         });
 
         async function onScanSuccess(decodedText) {
@@ -441,13 +836,13 @@
                     const ticket = snapshot.val();
 
                     if (ticket.eventId !== eventId) {
-                        showResult('error', 'Mauvais Événement', 'Ce billet n\'est pas pour cet événement');
+                        showResult('error', 'ÉVÉNEMENT INCORRECT', 'Ce billet n\'appartient pas à cet événement');
                         return;
                     }
 
                     if (ticket.scanned) {
                         const scannedDate = new Date(ticket.scannedAt).toLocaleString('fr-FR');
-                        showResult('warning', 'Déjà Scanné', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
+                        showResult('warning', 'DÉJÀ VALIDÉ', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
                         return;
                     }
 
@@ -476,26 +871,26 @@
                         scannedBy: controllerName
                     });
 
-                    showResult('success', 'Billet Valide', `Bienvenue ${ticket.buyerName || ''}`, details);
+                    showResult('success', 'ACCÈS AUTORISÉ', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
                 } else {
                     const ticketRef = doc(db, 'tickets', decodedText);
                     const snapshot = await getDoc(ticketRef);
 
                     if (!snapshot.exists()) {
-                        showResult('error', 'Billet Invalide', 'Ce billet n\'existe pas');
+                        showResult('error', 'BILLET INVALIDE', 'Ce billet n\'existe pas dans le système');
                         return;
                     }
 
                     const ticket = snapshot.data();
 
                     if (ticket.eventId !== eventId) {
-                        showResult('error', 'Mauvais Événement', 'Ce billet n\'est pas pour cet événement');
+                        showResult('error', 'ÉVÉNEMENT INCORRECT', 'Ce billet n\'appartient pas à cet événement');
                         return;
                     }
 
                     if (ticket.scanned) {
                         const scannedDate = new Date(ticket.scannedAt).toLocaleString('fr-FR');
-                        showResult('warning', 'Déjà Scanné', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
+                        showResult('warning', 'DÉJÀ VALIDÉ', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
                         return;
                     }
 
@@ -524,11 +919,11 @@
                         scannedBy: controllerName
                     });
 
-                    showResult('success', 'Billet Valide', `Bienvenue ${ticket.buyerName || ''}`, details);
+                    showResult('success', 'ACCÈS AUTORISÉ', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
                 }
             } catch (error) {
                 console.error('[EPscanV Events] Scan error:', error);
-                showResult('error', 'Erreur', 'Impossible de vérifier ce billet');
+                showResult('error', 'ERREUR SYSTÈME', 'Impossible de vérifier ce billet');
             }
         }
 
