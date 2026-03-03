@@ -171,19 +171,19 @@
       ".read": "auth != null",
       ".write": "auth != null",
       "events": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": "auth != null",
         "$eventId": {
-          ".read": "auth != null",
+          ".read": true,
           ".write": "auth != null"
         }
       },
       "controllers": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": "auth != null",
         ".indexOn": ["eventId", "code"],
         "$controllerId": {
-          ".read": "auth != null",
+          ".read": true,
           ".write": "auth != null"
         }
       },
