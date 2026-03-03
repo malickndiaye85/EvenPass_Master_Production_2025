@@ -124,6 +124,8 @@ import AdminOpsEventPage from './pages/admin/AdminOpsEventPage';
 
 import AdminOpsEventsPage from './pages/admin/AdminOpsEventsPage';
 
+import AdminOpsLoginPage from './pages/admin/AdminOpsLoginPage';
+
 import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
 
 import AdminPINCodesPage from './pages/admin/AdminPINCodesPage';
@@ -574,6 +576,14 @@ function AppRoutes() {
           </RoleBasedRoute>
 
         }
+
+      />
+
+      <Route
+
+        path="/admin/ops-login"
+
+        element={<AdminOpsLoginPage />}
 
       />
 
