@@ -1,5 +1,6 @@
-import { database } from '../firebase';
+import { database, firestore } from '../firebase';
 import { ref, push, set, get, update, remove, onValue, query, orderByChild, equalTo } from 'firebase/database';
+import { collection, query as firestoreQuery, getDocs, orderBy as firestoreOrderBy, where } from 'firebase/firestore';
 
 export interface Controller {
   id: string;
@@ -214,32 +215,61 @@ export async function getEventScans(eventId: string): Promise<ScanRecord[]> {
   return scans.sort((a, b) => b.timestamp - a.timestamp);
 }
 
-// Create event
-export async function createEvent(
-  name: string,
-  description: string,
-  date: number,
-  location: string,
-  totalTickets: number
-): Promise<Event> {
-  const eventsRef = ref(database, 'opsEvents/events');
-  const newEventRef = push(eventsRef);
+// Get all events from global Firestore collection and sync to OPS tracking
+export async function getAllEventsFromFirestore(): Promise<Event[]> {
+  try {
+    const eventsRef = collection(firestore, 'events');
+    const q = firestoreQuery(
+      eventsRef,
+      where('status', 'in', ['published', 'ongoing']),
+      firestoreOrderBy('start_date', 'desc')
+    );
+    const snapshot = await getDocs(q);
 
-  const event: Event = {
-    id: newEventRef.key!,
-    name,
-    description,
-    date,
-    location,
-    status: 'upcoming',
-    totalTickets,
-    scannedTickets: 0,
-    activeControllers: 0,
-    createdAt: Date.now()
-  };
+    const events: Event[] = [];
 
-  await set(newEventRef, event);
-  return event;
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+
+      const startDate = data.start_date?.toMillis ? data.start_date.toMillis() : Date.now();
+      const now = Date.now();
+      let status: 'upcoming' | 'ongoing' | 'completed' = 'upcoming';
+
+      if (startDate < now) {
+        const endDate = data.end_date?.toMillis ? data.end_date.toMillis() : startDate + 86400000;
+        status = endDate < now ? 'completed' : 'ongoing';
+      }
+
+      const event: Event = {
+        id: docSnap.id,
+        name: data.title || 'Événement sans titre',
+        description: data.description || '',
+        date: startDate,
+        location: `${data.venue_name || ''}, ${data.venue_city || ''}`.trim(),
+        status,
+        totalTickets: data.total_capacity || 1000,
+        scannedTickets: 0,
+        activeControllers: 0,
+        createdAt: data.created_at?.toMillis ? data.created_at.toMillis() : Date.now()
+      };
+
+      const opsEventRef = ref(database, `opsEvents/events/${docSnap.id}`);
+      const opsSnapshot = await get(opsEventRef);
+
+      if (opsSnapshot.exists()) {
+        const opsData = opsSnapshot.val();
+        event.scannedTickets = opsData.scannedTickets || 0;
+        event.activeControllers = opsData.activeControllers || 0;
+      }
+
+      events.push(event);
+    }
+
+    return events;
+  } catch (error) {
+    console.error('[OPS EVENTS] Error loading events from Firestore:', error);
+    return [];
+  }
 }
 
 // Update event
@@ -251,21 +281,9 @@ export async function updateEvent(
   await update(eventRef, updates);
 }
 
-// Get all events
+// Legacy: Get all events from OPS tracking only (deprecated, use getAllEventsFromFirestore)
 export async function getAllEvents(): Promise<Event[]> {
-  const eventsRef = ref(database, 'opsEvents/events');
-  const snapshot = await get(eventsRef);
-
-  if (!snapshot.exists()) {
-    return [];
-  }
-
-  const events: Event[] = [];
-  snapshot.forEach((child) => {
-    events.push({ ...child.val(), id: child.key });
-  });
-
-  return events.sort((a, b) => b.date - a.date);
+  return getAllEventsFromFirestore();
 }
 
 // Get event
