@@ -175,6 +175,44 @@
             color: #94a3b8;
             font-weight: 600;
         }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .install-prompt {
+            text-align: center;
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(249, 115, 22, 0.1);
+            border: 2px solid rgba(249, 115, 22, 0.3);
+            border-radius: 12px;
+        }
+
+        .install-btn-static {
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .install-btn-static:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -215,6 +253,15 @@
             <p class="info-text">
                 Code fourni par l'Ops Manager
             </p>
+
+            <div id="install-prompt" class="install-prompt" style="display: none;">
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
+                    Installer EPscanV sur votre téléphone
+                </div>
+                <button id="install-btn-static" class="install-btn-static">
+                    INSTALLER L'APPLICATION
+                </button>
+            </div>
         </div>
     </div>
 
@@ -356,7 +403,8 @@
 
         // Détection et prompt d'installation PWA
         let deferredPrompt;
-        const pwaInstallBanner = createInstallBanner();
+        const installPrompt = document.getElementById('install-prompt');
+        const installBtnStatic = document.getElementById('install-btn-static');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('[EPscanV] beforeinstallprompt event fired');
@@ -364,12 +412,31 @@
             deferredPrompt = e;
 
             // Vérifier si déjà installé ou si l'utilisateur a refusé
-            if (!localStorage.getItem('epscanv_pwa_dismissed')) {
-                showInstallBanner();
+            const isDismissed = localStorage.getItem('epscanv_pwa_dismissed');
+            const isInstalled = localStorage.getItem('epscanv_pwa_installed');
+
+            if (!isDismissed && !isInstalled) {
+                installPrompt.style.display = 'block';
+                createAndShowBanner();
             }
         });
 
-        function createInstallBanner() {
+        // Gestionnaire du bouton statique
+        installBtnStatic.addEventListener('click', () => {
+            if (deferredPrompt) {
+                installPWA();
+            } else {
+                alert('L\'installation PWA n\'est pas disponible. Assurez-vous d\'utiliser un navigateur compatible (Chrome, Edge, Safari).');
+            }
+        });
+
+        function createAndShowBanner() {
+            const existingBanner = document.getElementById('pwa-install-banner');
+            if (existingBanner) {
+                existingBanner.style.display = 'block';
+                return;
+            }
+
             const banner = document.createElement('div');
             banner.id = 'pwa-install-banner';
             banner.style.cssText = `
@@ -382,13 +449,12 @@
                 padding: 20px;
                 border-radius: 16px;
                 box-shadow: 0 10px 40px rgba(249, 115, 22, 0.5);
-                display: none;
                 z-index: 9999;
                 animation: slideUp 0.3s ease-out;
             `;
 
             banner.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <div style="flex-shrink: 0; width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#F97316"/>
@@ -396,14 +462,14 @@
                             <path d="M2 12L12 17L22 12" stroke="#F97316" stroke-width="2"/>
                         </svg>
                     </div>
-                    <div style="flex: 1;">
+                    <div style="flex: 1; min-width: 150px;">
                         <div style="font-weight: 900; font-size: 16px; margin-bottom: 4px;">Installer EPscanV</div>
-                        <div style="font-size: 13px; opacity: 0.9;">Accès rapide et utilisation hors ligne</div>
+                        <div style="font-size: 13px; opacity: 0.9;">Accès rapide et hors ligne</div>
                     </div>
                     <button id="pwa-install-btn" style="background: white; color: #F97316; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;">
                         INSTALLER
                     </button>
-                    <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-left: 8px;">
+                    <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 10px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 40px; height: 40px;">
                         ✕
                     </button>
                 </div>
@@ -413,16 +479,14 @@
 
             banner.querySelector('#pwa-install-btn').addEventListener('click', installPWA);
             banner.querySelector('#pwa-dismiss-btn').addEventListener('click', dismissBanner);
-
-            return banner;
-        }
-
-        function showInstallBanner() {
-            pwaInstallBanner.style.display = 'block';
         }
 
         function dismissBanner() {
-            pwaInstallBanner.style.display = 'none';
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+            installPrompt.style.display = 'none';
             localStorage.setItem('epscanv_pwa_dismissed', 'true');
         }
 
@@ -432,32 +496,58 @@
                 return;
             }
 
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
+            try {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
 
-            console.log(`[EPscanV] User choice: ${outcome}`);
+                console.log(`[EPscanV] User choice: ${outcome}`);
 
-            if (outcome === 'accepted') {
-                console.log('[EPscanV] PWA installed successfully');
-                localStorage.setItem('epscanv_pwa_installed', 'true');
-            } else {
-                localStorage.setItem('epscanv_pwa_dismissed', 'true');
+                if (outcome === 'accepted') {
+                    console.log('[EPscanV] PWA installed successfully');
+                    localStorage.setItem('epscanv_pwa_installed', 'true');
+                    installPrompt.style.display = 'none';
+                } else {
+                    localStorage.setItem('epscanv_pwa_dismissed', 'true');
+                }
+
+                const banner = document.getElementById('pwa-install-banner');
+                if (banner) {
+                    banner.style.display = 'none';
+                }
+                deferredPrompt = null;
+            } catch (error) {
+                console.error('[EPscanV] Error during installation:', error);
             }
-
-            pwaInstallBanner.style.display = 'none';
-            deferredPrompt = null;
         }
 
         window.addEventListener('appinstalled', () => {
             console.log('[EPscanV] PWA was installed');
             localStorage.setItem('epscanv_pwa_installed', 'true');
-            pwaInstallBanner.style.display = 'none';
+            installPrompt.style.display = 'none';
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
         });
 
         // Vérifier si l'app est déjà installée
         if (window.matchMedia('(display-mode: standalone)').matches) {
             console.log('[EPscanV] App is running in standalone mode');
+            localStorage.setItem('epscanv_pwa_installed', 'true');
         }
+
+        // Afficher le prompt après un délai si pas encore installé
+        setTimeout(() => {
+            const isInstalled = localStorage.getItem('epscanv_pwa_installed');
+            const isDismissed = localStorage.getItem('epscanv_pwa_dismissed');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+            if (!isInstalled && !isDismissed && !isStandalone && !deferredPrompt) {
+                // Afficher le bouton statique même sans beforeinstallprompt
+                installPrompt.style.display = 'block';
+                console.log('[EPscanV] Showing install prompt (no beforeinstallprompt yet)');
+            }
+        }, 2000);
     </script>
 </body>
 </html>
