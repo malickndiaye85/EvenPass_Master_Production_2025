@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPscanV - Pro Scanner</title>
+    <script src="/env-config.js"></script>
+    <link rel="icon" type="image/png" href="/evenpass-icon-512.png">
+    <link rel="apple-touch-icon" href="/evenpass-icon-512.png">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EPscanV">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #FAFAFA;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-header {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(249, 115, 22, 0.2);
+            padding: 16px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .event-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FAFAFA;
+            text-align: center;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .agent-info {
+            font-size: 13px;
+            color: rgba(250, 250, 250, 0.7);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #F97316;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #EF4444;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .exit-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #EF4444;
+        }
+
+        #scanner-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 280px);
+            background: #000000;
+            overflow: hidden;
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
+        .scanner-overlay-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .overlay-info {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #FAFAFA;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .frame-border {
+            position: absolute;
+            inset: 0;
+            border: 2px solid #F97316;
+            border-radius: 16px;
+            box-shadow:
+                0 0 0 99999px rgba(0, 0, 0, 0.7),
+                inset 0 0 30px rgba(249, 115, 22, 0.15),
+                0 0 40px rgba(249, 115, 22, 0.3);
+            animation: frameGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes frameGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 99999px rgba(0, 0, 0, 0.7),
+                    inset 0 0 30px rgba(249, 115, 22, 0.15),
+                    0 0 40px rgba(249, 115, 22, 0.3);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 99999px rgba(0, 0, 0, 0.7),
+                    inset 0 0 30px rgba(249, 115, 22, 0.25),
+                    0 0 60px rgba(249, 115, 22, 0.5);
+            }
+        }
+
+        .frame-corners span {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #F97316;
+        }
+
+        .frame-corners span:nth-child(1) {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 16px 0 0 0;
+        }
+
+        .frame-corners span:nth-child(2) {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 16px 0 0;
+        }
+
+        .frame-corners span:nth-child(3) {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 16px;
+        }
+
+        .frame-corners span:nth-child(4) {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 16px 0;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #F97316, transparent);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.8);
+            animation: scanMove 2.5s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0%, 100% { top: 0; opacity: 0.5; }
+            50% { top: calc(100% - 2px); opacity: 1; }
+        }
+
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 14px 32px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(249, 115, 22, 0.7));
+            border: 1px solid rgba(249, 115, 22, 0.5);
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+            z-index: 10;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(135deg, #F97316, rgba(249, 115, 22, 0.85));
+            box-shadow: 0 12px 35px rgba(249, 115, 22, 0.6);
+            transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        .stats-footer {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(249, 115, 22, 0.2);
+            padding: 16px 20px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .personal-stat {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.2);
+        }
+
+        .personal-stat-label {
+            font-size: 11px;
+            color: rgba(249, 115, 22, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .personal-stat-value {
+            font-size: 56px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            color: #F97316;
+            text-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
+            line-height: 1;
+        }
+
+        .other-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.08);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+            color: #FAFAFA;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: rgba(250, 250, 250, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .end-service-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            color: #F97316;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            z-index: 20;
+        }
+
+        .end-service-btn:hover {
+            background: rgba(249, 115, 22, 0.15);
+            border-color: #F97316;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-content {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 90%;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            border: 3px solid;
+            border-radius: 50%;
+        }
+
+        .result-icon.success {
+            border-color: #F97316;
+            color: #F97316;
+            background: rgba(249, 115, 22, 0.1);
+            box-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
+        }
+
+        .result-icon.error {
+            border-color: #EF4444;
+            color: #EF4444;
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+
+        .result-icon.warning {
+            border-color: #FFC107;
+            color: #FFC107;
+            background: rgba(255, 193, 7, 0.1);
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-message {
+            font-size: 14px;
+            color: rgba(250, 250, 250, 0.8);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: rgba(250, 250, 250, 0.6);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #FAFAFA;
+            font-weight: 700;
+        }
+
+        .result-button {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #F97316, rgba(249, 115, 22, 0.85));
+            border: none;
+            border-radius: 10px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .result-button:hover {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 1.1), #F97316);
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+        }
+
+        .summary-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .summary-content {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(249, 115, 22, 0.3);
+        }
+
+        .summary-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #F97316;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .summary-stats {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 30px;
+        }
+
+        .summary-stat {
+            margin-bottom: 20px;
+        }
+
+        .summary-stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-stat-label {
+            font-size: 11px;
+            color: rgba(250, 250, 250, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .summary-stat-value {
+            font-size: 48px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            color: #F97316;
+            text-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
+        }
+
+        .summary-message {
+            font-size: 15px;
+            color: rgba(250, 250, 250, 0.9);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .summary-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .summary-btn {
+            padding: 12px 24px;
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            background: transparent;
+            color: #F97316;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .summary-btn:hover {
+            background: rgba(249, 115, 22, 0.15);
+            border-color: #F97316;
+        }
+
+        .summary-btn.primary {
+            background: linear-gradient(135deg, #F97316, rgba(249, 115, 22, 0.85));
+            border-color: #F97316;
+            color: #FFFFFF;
+        }
+
+        .summary-btn.primary:hover {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 1.1), #F97316);
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-header">
+        <button class="exit-btn" onclick="window.location.href='/controller-login.html'">Exit</button>
+        <div class="event-title" id="eventInfo">Chargement...</div>
+        <div class="agent-info" id="agentInfo">Agent : Chargement...</div>
+        <div style="text-align: center;">
+            <span class="status-badge">● En ligne</span>
+        </div>
+    </div>
+
+    <div id="scanner-container">
+        <div id="reader"></div>
+        <div class="scanner-overlay-top">
+            <div class="overlay-info">● ACTIF</div>
+            <div class="overlay-info" id="sessionTime">00:00:00</div>
+        </div>
+        <div class="scan-frame">
+            <div class="frame-border"></div>
+            <div class="frame-corners">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="scan-line"></div>
+        </div>
+        <button class="start-button" id="startButton">Démarrer le scanner</button>
+    </div>
+
+    <div class="stats-footer">
+        <div class="personal-stat">
+            <div class="personal-stat-label">Mes Scans</div>
+            <div class="personal-stat-value" id="personalCount">0</div>
+        </div>
+        <div class="other-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="validCount">0</div>
+                <div class="stat-label">Validés</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="invalidCount">0</div>
+                <div class="stat-label">Refusés</div>
+            </div>
+        </div>
+        <button class="end-service-btn" id="endServiceBtn">Fin de service</button>
+    </div>
+
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="result-icon" id="resultIcon"></div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-message" id="resultMessage"></div>
+            <div class="result-details" id="resultDetails" style="display: none;"></div>
+            <button class="result-button" id="continueButton">Continuer</button>
+        </div>
+    </div>
+
+    <div class="summary-modal" id="summaryModal">
+        <div class="summary-content">
+            <div class="summary-title">Rapport de Mission</div>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Agent</div>
+                    <div class="summary-stat-value" style="font-size: 24px;" id="summaryAgent">-</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Total Validé</div>
+                    <div class="summary-stat-value" id="summaryTotal">0</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-label">Durée Mission</div>
+                    <div class="summary-stat-value" style="font-size: 32px;" id="summaryDuration">00:00:00</div>
+                </div>
+            </div>
+            <div class="summary-message" id="summaryMessage">
+                Excellent travail ! Mission accomplie avec succès.
+            </div>
+            <div class="summary-buttons">
+                <button class="summary-btn" id="continueMissionBtn">Continuer</button>
+                <button class="summary-btn primary" onclick="window.location.href='/controller-login.html'">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, updateDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, update as rtdbUpdate } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app);
+
+        const eventName = sessionStorage.getItem('event_name') || 'Événement';
+        const eventId = sessionStorage.getItem('event_id') || '';
+        const controllerName = sessionStorage.getItem('controller_name') || 'Contrôleur';
+        const controllerPosition = sessionStorage.getItem('controller_position') || '';
+        const controllerType = sessionStorage.getItem('controller_type') || '';
+        const controllerId = sessionStorage.getItem('controller_id') || Date.now().toString();
+
+        if (!eventName || !controllerName) {
+            window.location.href = '/controller-login.html';
+        }
+
+        document.getElementById('eventInfo').textContent = eventName;
+        document.getElementById('agentInfo').textContent = `Agent : ${controllerName}${controllerPosition ? ' - ' + controllerPosition : ''}`;
+
+        const sessionKey = `epscanv_session_${controllerId}_${eventId}`;
+
+        function getSessionData() {
+            const data = localStorage.getItem(sessionKey);
+            if (data) {
+                return JSON.parse(data);
+            }
+            return {
+                personalCount: 0,
+                validCount: 0,
+                invalidCount: 0,
+                startTime: Date.now(),
+                scannedTickets: []
+            };
+        }
+
+        function saveSessionData(data) {
+            localStorage.setItem(sessionKey, JSON.stringify(data));
+        }
+
+        let sessionData = getSessionData();
+        let validCount = sessionData.validCount || 0;
+        let invalidCount = sessionData.invalidCount || 0;
+        let personalCount = sessionData.personalCount || 0;
+        let html5QrCode;
+        let isProcessing = false;
+        let sessionStartTime = sessionData.startTime || Date.now();
+
+        document.getElementById('validCount').textContent = validCount;
+        document.getElementById('invalidCount').textContent = invalidCount;
+        document.getElementById('personalCount').textContent = personalCount;
+
+        function updateSessionTimer() {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('sessionTime').textContent =
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        setInterval(updateSessionTimer, 1000);
+        updateSessionTimer();
+
+        function showResult(type, title, message, details = null, ticketId = null) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const titleEl = document.getElementById('resultTitle');
+            const messageEl = document.getElementById('resultMessage');
+            const detailsEl = document.getElementById('resultDetails');
+
+            icon.className = `result-icon ${type}`;
+            icon.textContent = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✗';
+            titleEl.textContent = title;
+            titleEl.style.color = type === 'success' ? '#F97316' : type === 'warning' ? '#FFC107' : '#EF4444';
+            messageEl.textContent = message;
+
+            if (details) {
+                detailsEl.innerHTML = details;
+                detailsEl.style.display = 'block';
+            } else {
+                detailsEl.style.display = 'none';
+            }
+
+            modal.style.display = 'flex';
+
+            if (type === 'success') {
+                validCount++;
+                personalCount++;
+
+                if (ticketId && !sessionData.scannedTickets.includes(ticketId)) {
+                    sessionData.scannedTickets.push(ticketId);
+                }
+
+                document.getElementById('validCount').textContent = validCount;
+                document.getElementById('personalCount').textContent = personalCount;
+            } else {
+                invalidCount++;
+                document.getElementById('invalidCount').textContent = invalidCount;
+            }
+
+            sessionData.validCount = validCount;
+            sessionData.invalidCount = invalidCount;
+            sessionData.personalCount = personalCount;
+            saveSessionData(sessionData);
+
+            navigator.vibrate && navigator.vibrate(type === 'success' ? [100] : [200, 100, 200]);
+        }
+
+        document.getElementById('continueButton').addEventListener('click', () => {
+            document.getElementById('resultModal').style.display = 'none';
+            isProcessing = false;
+        });
+
+        document.getElementById('endServiceBtn').addEventListener('click', () => {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const duration = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            document.getElementById('summaryAgent').textContent = controllerName;
+            document.getElementById('summaryTotal').textContent = personalCount;
+            document.getElementById('summaryDuration').textContent = duration;
+
+            let message = '';
+            if (personalCount === 0) {
+                message = 'Aucun billet scanné durant cette session.';
+            } else if (personalCount < 10) {
+                message = `Bon travail ${controllerName} ! Tu as validé ${personalCount} billet${personalCount > 1 ? 's' : ''} durant cette mission.`;
+            } else if (personalCount < 50) {
+                message = `Excellent travail ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission.`;
+            } else {
+                message = `Performance exceptionnelle ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission !`;
+            }
+
+            document.getElementById('summaryMessage').textContent = message;
+            document.getElementById('summaryModal').style.display = 'flex';
+        });
+
+        document.getElementById('continueMissionBtn').addEventListener('click', () => {
+            document.getElementById('summaryModal').style.display = 'none';
+        });
+
+        async function onScanSuccess(decodedText) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            try {
+                if (controllerType === 'ops_events') {
+                    const ticketRef = dbRef(rtdb, `opsEvents/tickets/${decodedText}`);
+                    const snapshot = await rtdbGet(ticketRef);
+
+                    if (!snapshot.exists()) {
+                        showResult('error', 'Billet Invalide', 'Ce billet n\'existe pas');
+                        return;
+                    }
+
+                    const ticket = snapshot.val();
+
+                    if (ticket.eventId !== eventId) {
+                        showResult('error', 'Événement Incorrect', 'Ce billet n\'appartient pas à cet événement');
+                        return;
+                    }
+
+                    if (ticket.scanned) {
+                        const scannedDate = new Date(ticket.scannedAt).toLocaleString('fr-FR');
+                        showResult('warning', 'Déjà Validé', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
+                        return;
+                    }
+
+                    const details = `
+                        <div class="detail-row">
+                            <span class="detail-label">Nom</span>
+                            <span class="detail-value">${ticket.buyerName || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Email</span>
+                            <span class="detail-value">${ticket.buyerEmail || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Téléphone</span>
+                            <span class="detail-value">${ticket.buyerPhone || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Catégorie</span>
+                            <span class="detail-value">${ticket.category || 'Standard'}</span>
+                        </div>
+                    `;
+
+                    await rtdbUpdate(ticketRef, {
+                        scanned: true,
+                        scannedAt: new Date().toISOString(),
+                        scannedBy: controllerName
+                    });
+
+                    showResult('success', 'Accès Autorisé', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
+                } else {
+                    const ticketRef = doc(db, 'tickets', decodedText);
+                    const snapshot = await getDoc(ticketRef);
+
+                    if (!snapshot.exists()) {
+                        showResult('error', 'Billet Invalide', 'Ce billet n\'existe pas dans le système');
+                        return;
+                    }
+
+                    const ticket = snapshot.data();
+
+                    if (ticket.eventId !== eventId) {
+                        showResult('error', 'Événement Incorrect', 'Ce billet n\'appartient pas à cet événement');
+                        return;
+                    }
+
+                    if (ticket.scanned) {
+                        const scannedDate = new Date(ticket.scannedAt).toLocaleString('fr-FR');
+                        showResult('warning', 'Déjà Validé', `Scanné le ${scannedDate} par ${ticket.scannedBy}`);
+                        return;
+                    }
+
+                    const details = `
+                        <div class="detail-row">
+                            <span class="detail-label">Nom</span>
+                            <span class="detail-value">${ticket.buyerName || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Email</span>
+                            <span class="detail-value">${ticket.buyerEmail || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Téléphone</span>
+                            <span class="detail-value">${ticket.buyerPhone || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Catégorie</span>
+                            <span class="detail-value">${ticket.category || 'Standard'}</span>
+                        </div>
+                    `;
+
+                    await updateDoc(ticketRef, {
+                        scanned: true,
+                        scannedAt: new Date().toISOString(),
+                        scannedBy: controllerName
+                    });
+
+                    showResult('success', 'Accès Autorisé', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
+                }
+            } catch (error) {
+                console.error('[EPscanV Events] Scan error:', error);
+                showResult('error', 'Erreur Système', 'Impossible de vérifier ce billet');
+            }
+        }
+
+        async function startScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("reader");
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    onScanSuccess
+                );
+
+                document.getElementById('startButton').style.display = 'none';
+                console.log('[EPscanV Events] ✅ Scanner started');
+            } catch (err) {
+                console.error('[EPscanV Events] ❌ Camera error:', err);
+                document.getElementById('startButton').style.display = 'block';
+                document.getElementById('startButton').textContent = '📷 Activer la Caméra';
+            }
+        }
+
+        document.getElementById('startButton').addEventListener('click', startScanner);
+
+        setTimeout(() => {
+            startScanner();
+        }, 500);
+
+        console.log('[EPscanV Events] Ready for', eventName);
+    </script>
+</body>
+</html>
