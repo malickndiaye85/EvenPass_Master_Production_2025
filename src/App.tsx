@@ -122,6 +122,8 @@ import AdminFinanceVoyagePage from './pages/admin/AdminFinanceVoyagePage';
 
 import AdminOpsEventPage from './pages/admin/AdminOpsEventPage';
 
+import AdminOpsEventsPage from './pages/admin/AdminOpsEventsPage';
+
 import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
 
 import AdminPINCodesPage from './pages/admin/AdminPINCodesPage';
@@ -568,6 +570,22 @@ function AppRoutes() {
           <RoleBasedRoute allowedRoles={['super_admin', 'ops_event']}>
 
             <AdminOpsEventPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/ops-events"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'ops_event']}>
+
+            <AdminOpsEventsPage />
 
           </RoleBasedRoute>
 

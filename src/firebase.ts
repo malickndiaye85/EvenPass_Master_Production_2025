@@ -50,3 +50,4 @@ if (isFirebaseConfigured) {
 }
 
 export { app, db, firestore, storage, auth, analytics };
+export const database = db;
