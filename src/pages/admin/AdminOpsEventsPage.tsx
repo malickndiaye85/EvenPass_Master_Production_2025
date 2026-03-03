@@ -76,10 +76,12 @@ export default function AdminOpsEventsPage() {
   const loadEvents = async () => {
     setLoading(true);
     try {
+      console.log('[OPS MANAGER PAGE] Loading events...');
       const allEvents = await getAllEvents();
+      console.log('[OPS MANAGER PAGE] Loaded events:', allEvents);
       setEvents(allEvents);
     } catch (error) {
-      console.error('Error loading events:', error);
+      console.error('[OPS MANAGER PAGE] Error loading events:', error);
     } finally {
       setLoading(false);
     }
