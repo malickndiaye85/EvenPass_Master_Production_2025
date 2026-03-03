@@ -1,0 +1,36 @@
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} !^localhost [NC]
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# MIME Types pour PWA
+AddType application/manifest+json .json
+AddType application/manifest+json .webmanifest
+
+# Service Worker
+AddType application/javascript .js
+
+# Cache Control
+<FilesMatch "\.(json|webmanifest)$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+</FilesMatch>
+
+<FilesMatch "sw.*\.js$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+    Header set Service-Worker-Allowed "/"
+</FilesMatch>
+
+# Images
+<FilesMatch "\.(png|jpg|jpeg|gif|svg|webp)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/manifest+json
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+</IfModule>

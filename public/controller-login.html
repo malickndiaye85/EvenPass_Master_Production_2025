@@ -6,6 +6,7 @@
     <title>EPscanV - Contrôleur Transport</title>
     <link rel="manifest" href="/manifest-epscanv.json">
     <meta name="theme-color" content="#10B981">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="EPscanV">
@@ -495,11 +496,92 @@
         // Focus automatique
         codeInput.focus();
 
+        // Forcer HTTPS en production
+        if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            console.log('[EPscanV] Redirecting to HTTPS...');
+            location.replace(`https:${location.href.substring(location.protocol.length)}`);
+        }
+
+        // Diagnostic complet PWA
+        async function diagnosePWA() {
+            console.group('[EPscanV] 🔍 PWA Diagnostic');
+
+            // 1. Protocol
+            console.log('Protocol:', location.protocol);
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                console.warn('⚠️ HTTPS required for PWA installation');
+            }
+
+            // 2. Service Worker
+            if ('serviceWorker' in navigator) {
+                console.log('✅ Service Worker API supported');
+            } else {
+                console.error('❌ Service Worker not supported');
+            }
+
+            // 3. Manifeste
+            try {
+                const manifestLink = document.querySelector('link[rel="manifest"]');
+                if (manifestLink) {
+                    console.log('✅ Manifest link found:', manifestLink.href);
+                    const response = await fetch(manifestLink.href);
+                    const contentType = response.headers.get('content-type');
+                    console.log('Manifest Content-Type:', contentType);
+
+                    const manifest = await response.json();
+                    console.log('✅ Manifest loaded:', manifest);
+                    console.log('Icons:', manifest.icons?.length || 0, 'icon(s)');
+                    console.log('Start URL:', manifest.start_url);
+                    console.log('Display:', manifest.display);
+                    console.log('Scope:', manifest.scope);
+
+                    // Vérifier les icônes
+                    if (manifest.icons && manifest.icons.length > 0) {
+                        console.group('Icon verification:');
+                        for (const icon of manifest.icons) {
+                            try {
+                                const iconResponse = await fetch(icon.src);
+                                if (iconResponse.ok) {
+                                    console.log(`✅ ${icon.sizes} - ${icon.src}`);
+                                } else {
+                                    console.error(`❌ ${icon.sizes} - ${icon.src} (${iconResponse.status})`);
+                                }
+                            } catch (err) {
+                                console.error(`❌ ${icon.sizes} - ${icon.src} (fetch failed)`);
+                            }
+                        }
+                        console.groupEnd();
+                    } else {
+                        console.error('❌ No icons defined in manifest');
+                    }
+                } else {
+                    console.error('❌ No manifest link found');
+                }
+            } catch (err) {
+                console.error('❌ Failed to load manifest:', err);
+            }
+
+            // 4. Standalone mode
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            console.log('Standalone mode:', isStandalone ? '✅ Yes' : '❌ No');
+
+            console.groupEnd();
+        }
+
+        // Exécuter le diagnostic
+        diagnosePWA();
+
         // Enregistrer le Service Worker dédié EPscanV
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw-epscanv.js')
-                .then(reg => console.log('[EPscanV] Service Worker registered:', reg))
-                .catch(err => console.error('[EPscanV] Service Worker registration failed:', err));
+                .then(reg => {
+                    console.log('[EPscanV] ✅ Service Worker registered:', reg);
+                    console.log('[EPscanV] Scope:', reg.scope);
+                    console.log('[EPscanV] Active:', reg.active ? 'Yes' : 'No');
+                })
+                .catch(err => console.error('[EPscanV] ❌ Service Worker registration failed:', err));
+        } else {
+            console.warn('[EPscanV] ⚠️ Service Worker not supported in this browser');
         }
 
         // Détection et prompt d'installation PWA
@@ -554,23 +636,86 @@
             if (deferredPrompt) {
                 installPWA();
             } else {
-                // Détecter le navigateur pour un message personnalisé
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-                let message = '';
-
-                if (isIOS) {
-                    message = 'Sur iOS/Safari : Appuyez sur le bouton de partage puis "Sur l\'écran d\'accueil" pour installer l\'application.';
-                } else if (isSafari) {
-                    message = 'L\'application est déjà accessible. Sur Safari, utilisez le menu "Fichier" > "Ajouter à l\'écran d\'accueil".';
-                } else {
-                    message = 'L\'installation n\'est pas disponible. Vérifiez que vous utilisez HTTPS et un navigateur compatible (Chrome, Edge). L\'application peut déjà être installée.';
-                }
-
-                showModal('Installation non disponible', message);
+                showManualInstallInstructions();
             }
         });
+
+        // Instructions d'installation manuelle détaillées
+        function showManualInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            const isEdge = /Edge|Edg/.test(navigator.userAgent);
+
+            let title = 'Comment installer EPscanV';
+            let message = '';
+
+            if (isIOS) {
+                message = `
+                    <div style="text-align: left; line-height: 1.8;">
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour iOS/Safari :</p>
+                        <ol style="padding-left: 20px; color: #cbd5e1;">
+                            <li style="margin-bottom: 10px;">Cliquez sur le bouton <strong>Partager</strong> (icône carrée avec flèche vers le haut) en bas de l'écran</li>
+                            <li style="margin-bottom: 10px;">Faites défiler et sélectionnez <strong>"Sur l'écran d'accueil"</strong></li>
+                            <li style="margin-bottom: 10px;">Cliquez sur <strong>"Ajouter"</strong> en haut à droite</li>
+                            <li>L'application EPscanV apparaîtra sur votre écran d'accueil</li>
+                        </ol>
+                    </div>
+                `;
+            } else if (isAndroid && isChrome) {
+                message = `
+                    <div style="text-align: left; line-height: 1.8;">
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour Android/Chrome :</p>
+                        <ol style="padding-left: 20px; color: #cbd5e1;">
+                            <li style="margin-bottom: 10px;">Cliquez sur les <strong>3 points verticaux</strong> (⋮) en haut à droite</li>
+                            <li style="margin-bottom: 10px;">Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                            <li style="margin-bottom: 10px;">Confirmez en cliquant sur <strong>"Installer"</strong></li>
+                            <li>L'application EPscanV sera installée sur votre appareil</li>
+                        </ol>
+                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">💡 Astuce : Assurez-vous d'être en HTTPS</p>
+                    </div>
+                `;
+            } else if (isAndroid) {
+                message = `
+                    <div style="text-align: left; line-height: 1.8;">
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📱 Instructions pour Android :</p>
+                        <ol style="padding-left: 20px; color: #cbd5e1;">
+                            <li style="margin-bottom: 10px;">Ouvrez le <strong>menu</strong> de votre navigateur (généralement les 3 points)</li>
+                            <li style="margin-bottom: 10px;">Recherchez l'option <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                            <li style="margin-bottom: 10px;">Suivez les instructions pour installer EPscanV</li>
+                        </ol>
+                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">💡 Pour une meilleure expérience, utilisez Chrome</p>
+                    </div>
+                `;
+            } else if (isChrome || isEdge) {
+                message = `
+                    <div style="text-align: left; line-height: 1.8;">
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">💻 Instructions pour ${isEdge ? 'Edge' : 'Chrome'} Desktop :</p>
+                        <ol style="padding-left: 20px; color: #cbd5e1;">
+                            <li style="margin-bottom: 10px;">Cherchez l'icône <strong>d'installation</strong> (⊕) dans la barre d'adresse (à droite)</li>
+                            <li style="margin-bottom: 10px;">OU cliquez sur les <strong>3 points</strong> (⋮) > <strong>"Installer EPscanV"</strong></li>
+                            <li style="margin-bottom: 10px;">Confirmez l'installation dans la fenêtre contextuelle</li>
+                        </ol>
+                        <p style="margin-top: 15px; color: #94a3b8; font-size: 13px;">⚠️ Vérifiez que vous êtes bien en <strong>HTTPS</strong></p>
+                    </div>
+                `;
+            } else {
+                message = `
+                    <div style="text-align: left; line-height: 1.8;">
+                        <p style="margin-bottom: 15px; color: #cbd5e1;">L'installation automatique n'est pas disponible sur votre navigateur.</p>
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #F97316;">📋 Recommandations :</p>
+                        <ul style="padding-left: 20px; color: #cbd5e1;">
+                            <li style="margin-bottom: 10px;">Utilisez <strong>Chrome</strong> ou <strong>Edge</strong> pour une installation facile</li>
+                            <li style="margin-bottom: 10px;">Assurez-vous d'être en <strong>HTTPS</strong></li>
+                            <li>Consultez le menu de votre navigateur pour l'option "Ajouter à l'écran d'accueil"</li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            showModal(title, message);
+        }
 
         function createAndShowBanner() {
             const existingBanner = document.getElementById('pwa-install-banner');
