@@ -11,6 +11,11 @@ const Footer: React.FC = () => {
     navigate('/admin/login?redirectTo=/admin/finance/voyage');
   };
 
+  const handleInstagramClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/admin/ops-login');
+  };
+
   return (
     <footer className="bg-gray-900 dark:bg-black text-white py-16 px-8 transition-colors">
       <div className="max-w-7xl mx-auto">
@@ -55,9 +60,13 @@ const Footer: React.FC = () => {
               <a href="#" className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors">
+              <button
+                onClick={handleInstagramClick}
+                className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors"
+                aria-label="Instagram"
+              >
                 <Instagram size={20} />
-              </a>
+              </button>
               <button
                 onClick={handleTwitterClick}
                 className="p-3 bg-gray-800 rounded-full hover:bg-orange-500 transition-colors"

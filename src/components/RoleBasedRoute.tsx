@@ -67,8 +67,13 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   }
 
   if (!user) {
-    console.log('[ROLE BASED ROUTE] No user detected after loading complete, redirecting to /');
-    return <Navigate to="/" replace />;
+    console.log('[ROLE BASED ROUTE] No user detected after loading complete, redirecting...');
+
+    const isOpsEventsRoute = location.pathname.startsWith('/admin/ops-events');
+    const redirectPath = isOpsEventsRoute ? '/admin/ops-login' : '/';
+
+    console.log('[ROLE BASED ROUTE] Redirecting to:', redirectPath);
+    return <Navigate to={redirectPath} replace />;
   }
 
   if (!user.role) {

@@ -55,8 +55,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermission> = {
   ops_event: {
     role: 'ops_event',
     silo: 'événement',
-    allowedRoutes: ['/admin/ops/event', '/organizer/dashboard'],
-    defaultRedirect: '/admin/ops/event',
+    allowedRoutes: ['/admin/ops/event', '/admin/ops-events', '/organizer/dashboard'],
+    defaultRedirect: '/admin/ops-events',
     canAccessTransversal: false,
     canAccessFinance: false,
     canManageStaff: false
