@@ -213,6 +213,95 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
         }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #F97316 0%, #EF4444 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -262,6 +351,18 @@
                     INSTALLER L'APPLICATION
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modale d'information -->
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">ℹ️</div>
+                <div class="modal-title" id="modal-title">Information</div>
+            </div>
+            <div class="modal-text" id="modal-text"></div>
+            <button class="modal-btn" onclick="closeModal()">COMPRIS</button>
         </div>
     </div>
 
@@ -421,12 +522,39 @@
             }
         });
 
+        // Fonction pour afficher la modale
+        function showModal(title, message) {
+            const modal = document.getElementById('info-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalText = document.getElementById('modal-text');
+
+            modalTitle.textContent = title;
+            modalText.textContent = message;
+            modal.classList.add('show');
+        }
+
+        // Fonction pour fermer la modale
+        window.closeModal = function() {
+            const modal = document.getElementById('info-modal');
+            modal.classList.remove('show');
+        }
+
+        // Fermer la modale en cliquant sur le fond
+        document.getElementById('info-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'info-modal') {
+                closeModal();
+            }
+        });
+
         // Gestionnaire du bouton statique
         installBtnStatic.addEventListener('click', () => {
             if (deferredPrompt) {
                 installPWA();
             } else {
-                alert('L\'installation PWA n\'est pas disponible. Assurez-vous d\'utiliser un navigateur compatible (Chrome, Edge, Safari).');
+                showModal(
+                    'Installation non disponible',
+                    'L\'installation PWA n\'est pas disponible. Assurez-vous d\'utiliser un navigateur compatible (Chrome, Edge, Safari).'
+                );
             }
         });
 
@@ -536,18 +664,48 @@
             localStorage.setItem('epscanv_pwa_installed', 'true');
         }
 
-        // Afficher le prompt après un délai si pas encore installé
-        setTimeout(() => {
+        // Vérifier si l'installation PWA est supportée
+        function checkPWASupport() {
             const isInstalled = localStorage.getItem('epscanv_pwa_installed');
             const isDismissed = localStorage.getItem('epscanv_pwa_dismissed');
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isPWACapable = 'serviceWorker' in navigator && 'BeforeInstallPromptEvent' in window;
 
-            if (!isInstalled && !isDismissed && !isStandalone && !deferredPrompt) {
-                // Afficher le bouton statique même sans beforeinstallprompt
-                installPrompt.style.display = 'block';
-                console.log('[EPscanV] Showing install prompt (no beforeinstallprompt yet)');
+            return {
+                isInstalled,
+                isDismissed,
+                isStandalone,
+                isPWACapable
+            };
+        }
+
+        // Afficher le prompt après un délai si pas encore installé
+        setTimeout(() => {
+            const status = checkPWASupport();
+
+            if (!status.isInstalled && !status.isDismissed && !status.isStandalone) {
+                if (deferredPrompt || status.isPWACapable) {
+                    // Afficher le bouton si le PWA est capable ou si l'événement a été déclenché
+                    installPrompt.style.display = 'block';
+                    console.log('[EPscanV] Showing install prompt');
+                } else {
+                    // Ne pas afficher le bouton si le navigateur ne supporte pas le PWA
+                    console.log('[EPscanV] PWA not supported on this browser');
+                }
             }
         }, 2000);
+
+        // Si l'événement beforeinstallprompt n'est pas déclenché après 5 secondes
+        // et que le navigateur supporte les PWA, afficher le bouton quand même
+        setTimeout(() => {
+            if (!deferredPrompt) {
+                const status = checkPWASupport();
+                if (status.isPWACapable && !status.isInstalled && !status.isDismissed && !status.isStandalone) {
+                    installPrompt.style.display = 'block';
+                    console.log('[EPscanV] Showing install prompt (delayed check)');
+                }
+            }
+        }, 5000);
     </script>
 </body>
 </html>
