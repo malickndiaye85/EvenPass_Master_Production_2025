@@ -508,7 +508,7 @@
         const installBtnStatic = document.getElementById('install-btn-static');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('[EPscanV] beforeinstallprompt event fired');
+            console.log('[EPscanV] ✅ beforeinstallprompt event fired - Installation is available!');
             e.preventDefault();
             deferredPrompt = e;
 
@@ -517,8 +517,11 @@
             const isInstalled = localStorage.getItem('epscanv_pwa_installed');
 
             if (!isDismissed && !isInstalled) {
+                console.log('[EPscanV] Showing install button and banner');
                 installPrompt.style.display = 'block';
                 createAndShowBanner();
+            } else {
+                console.log('[EPscanV] Installation previously dismissed or already installed');
             }
         });
 
@@ -551,10 +554,21 @@
             if (deferredPrompt) {
                 installPWA();
             } else {
-                showModal(
-                    'Installation non disponible',
-                    'L\'installation PWA n\'est pas disponible. Assurez-vous d\'utiliser un navigateur compatible (Chrome, Edge, Safari).'
-                );
+                // Détecter le navigateur pour un message personnalisé
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+                let message = '';
+
+                if (isIOS) {
+                    message = 'Sur iOS/Safari : Appuyez sur le bouton de partage puis "Sur l\'écran d\'accueil" pour installer l\'application.';
+                } else if (isSafari) {
+                    message = 'L\'application est déjà accessible. Sur Safari, utilisez le menu "Fichier" > "Ajouter à l\'écran d\'accueil".';
+                } else {
+                    message = 'L\'installation n\'est pas disponible. Vérifiez que vous utilisez HTTPS et un navigateur compatible (Chrome, Edge). L\'application peut déjà être installée.';
+                }
+
+                showModal('Installation non disponible', message);
             }
         });
 
@@ -679,33 +693,37 @@
             };
         }
 
-        // Afficher le prompt après un délai si pas encore installé
+        // Vérification après 3 secondes si le PWA est installable
         setTimeout(() => {
             const status = checkPWASupport();
 
-            if (!status.isInstalled && !status.isDismissed && !status.isStandalone) {
-                if (deferredPrompt || status.isPWACapable) {
-                    // Afficher le bouton si le PWA est capable ou si l'événement a été déclenché
-                    installPrompt.style.display = 'block';
-                    console.log('[EPscanV] Showing install prompt');
-                } else {
-                    // Ne pas afficher le bouton si le navigateur ne supporte pas le PWA
-                    console.log('[EPscanV] PWA not supported on this browser');
-                }
+            if (status.isInstalled) {
+                console.log('[EPscanV] ℹ️ App already installed');
+                return;
             }
-        }, 2000);
 
-        // Si l'événement beforeinstallprompt n'est pas déclenché après 5 secondes
-        // et que le navigateur supporte les PWA, afficher le bouton quand même
-        setTimeout(() => {
-            if (!deferredPrompt) {
-                const status = checkPWASupport();
-                if (status.isPWACapable && !status.isInstalled && !status.isDismissed && !status.isStandalone) {
-                    installPrompt.style.display = 'block';
-                    console.log('[EPscanV] Showing install prompt (delayed check)');
-                }
+            if (status.isDismissed) {
+                console.log('[EPscanV] ℹ️ Installation previously dismissed by user');
+                return;
             }
-        }, 5000);
+
+            if (status.isStandalone) {
+                console.log('[EPscanV] ℹ️ App is running in standalone mode');
+                return;
+            }
+
+            if (deferredPrompt) {
+                // L'événement beforeinstallprompt a déjà affiché le bouton
+                console.log('[EPscanV] ✅ Install prompt already shown via beforeinstallprompt');
+            } else {
+                console.log('[EPscanV] ❌ PWA installation not available on this browser/context');
+                console.log('[EPscanV] Possible reasons:');
+                console.log('  - Not using HTTPS');
+                console.log('  - Browser doesn\'t support PWA installation');
+                console.log('  - App is already installed');
+                console.log('  - Service Worker registration failed');
+            }
+        }, 3000);
     </script>
 </body>
 </html>
