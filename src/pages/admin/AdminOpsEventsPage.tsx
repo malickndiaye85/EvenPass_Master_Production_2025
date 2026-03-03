@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Calendar, Activity, TrendingUp, AlertTriangle, Download, CheckCircle, XCircle, Plus, Eye, Trash2, CreditCard as Edit2, Copy, Trophy, Medal, Award, Clock, Zap, Shield } from 'lucide-react';
+import { auth } from '../../firebase';
 import {
   getAllEvents,
   getEvent,
@@ -116,17 +117,51 @@ export default function AdminOpsEventsPage() {
     e.preventDefault();
     if (!selectedEvent) return;
 
+    const currentUser = auth.currentUser;
+    console.log('[ADD CONTROLLER] Starting creation process...');
+    console.log('[ADD CONTROLLER] Current User:', {
+      uid: currentUser?.uid,
+      email: currentUser?.email,
+      isAuthenticated: !!currentUser
+    });
+    console.log('[ADD CONTROLLER] Selected Event:', selectedEvent);
+    console.log('[ADD CONTROLLER] Form Data:', controllerForm);
+
+    if (!currentUser) {
+      setErrorModal({
+        show: true,
+        message: 'Vous n\'êtes pas authentifié. Veuillez vous reconnecter.'
+      });
+      return;
+    }
+
     try {
       const controller = await createController(
         selectedEvent.id,
         controllerForm.name,
         controllerForm.position
       );
+      console.log('[ADD CONTROLLER] Controller created successfully:', controller);
       setNewControllerCode(controller.code);
       setControllerForm({ name: '', position: '' });
-    } catch (error) {
-      console.error('Error creating controller:', error);
-      setErrorModal({ show: true, message: 'Erreur lors de l\'ajout du contrôleur. Veuillez réessayer.' });
+    } catch (error: any) {
+      console.error('[ADD CONTROLLER] Error creating controller:', error);
+      console.error('[ADD CONTROLLER] Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+        full: error
+      });
+
+      let errorMessage = 'Erreur lors de l\'ajout du contrôleur.';
+
+      if (error?.code === 'PERMISSION_DENIED') {
+        errorMessage = 'Permission refusée. Vérifiez que vous êtes bien authentifié comme OPS Manager.';
+      } else if (error?.message) {
+        errorMessage = `Erreur: ${error.message}`;
+      }
+
+      setErrorModal({ show: true, message: errorMessage });
     }
   };
 

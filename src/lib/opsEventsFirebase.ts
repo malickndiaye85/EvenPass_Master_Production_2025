@@ -72,6 +72,24 @@ export async function createController(
   console.log('[CREATE CONTROLLER] Starting creation for:', { eventId, name, position });
 
   try {
+    // STEP 1: Ensure the event exists in opsEvents/events
+    const opsEventRef = ref(database, `opsEvents/events/${eventId}`);
+    const opsEventSnapshot = await get(opsEventRef);
+
+    if (!opsEventSnapshot.exists()) {
+      console.log('[CREATE CONTROLLER] Event not found in opsEvents, initializing...');
+
+      // Initialize the event in opsEvents
+      await set(opsEventRef, {
+        id: eventId,
+        scannedTickets: 0,
+        activeControllers: 0,
+        createdAt: Date.now()
+      });
+      console.log('[CREATE CONTROLLER] Event initialized in opsEvents/events');
+    }
+
+    // STEP 2: Generate unique code
     let code = generateControllerCode();
     console.log('[CREATE CONTROLLER] Generated code:', code);
 
@@ -87,6 +105,7 @@ export async function createController(
       throw new Error('Impossible de générer un code unique après 10 tentatives');
     }
 
+    // STEP 3: Create the controller
     const controllersRef = ref(database, 'opsEvents/controllers');
     const newControllerRef = push(controllersRef);
     console.log('[CREATE CONTROLLER] Generated controller ID:', newControllerRef.key);
@@ -106,6 +125,11 @@ export async function createController(
     console.log('[CREATE CONTROLLER] Saving to database:', controller);
     await set(newControllerRef, controller);
     console.log('[CREATE CONTROLLER] Successfully created controller');
+
+    // STEP 4: Update event's active controller count
+    await update(opsEventRef, {
+      activeControllers: (opsEventSnapshot.val()?.activeControllers || 0) + 1
+    });
 
     return controller;
   } catch (error) {
