@@ -172,19 +172,25 @@
       ".write": "auth != null",
       "events": {
         ".read": "auth != null",
+        ".write": "auth != null",
         "$eventId": {
+          ".read": "auth != null",
           ".write": "auth != null"
         }
       },
       "controllers": {
         ".read": "auth != null",
+        ".write": "auth != null",
         "$controllerId": {
+          ".read": "auth != null",
           ".write": "auth != null"
         }
       },
       "scans": {
         ".read": "auth != null",
+        ".write": "auth != null",
         "$scanId": {
+          ".read": "auth != null",
           ".write": "auth != null"
         }
       }
