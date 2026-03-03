@@ -370,6 +370,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getDatabase, ref as dbRef, query as rtdbQuery, orderByChild, equalTo, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: window.ENV.FIREBASE_API_KEY,
@@ -383,6 +384,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const rtdb = getDatabase(app);
 
         const codeInput = document.getElementById('access-code');
         const form = document.getElementById('login-form');
@@ -445,6 +447,42 @@
                     sessionStorage.setItem('staff_role', codeData.staffRole || '');
                     window.location.href = '/controller-epscanv';
                     return;
+                }
+
+                const opsEventsRef = dbRef(rtdb, 'opsEvents/controllers');
+                const opsQuery = rtdbQuery(opsEventsRef, orderByChild('code'), equalTo(rawCode));
+                const opsSnapshot = await rtdbGet(opsQuery);
+
+                if (opsSnapshot.exists()) {
+                    const controllers = opsSnapshot.val();
+                    const controllerId = Object.keys(controllers)[0];
+                    const controller = controllers[controllerId];
+
+                    if (controller.isActive) {
+                        sessionStorage.setItem('controller_code', rawCode);
+                        sessionStorage.setItem('controller_id', controllerId);
+                        sessionStorage.setItem('controller_name', controller.name);
+                        sessionStorage.setItem('controller_position', controller.position);
+                        sessionStorage.setItem('event_id', controller.eventId);
+                        sessionStorage.setItem('controller_type', 'ops_events');
+
+                        console.log('[EPscanV] ✅ OPS Events controller authenticated:', controller.name);
+
+                        const eventRef = dbRef(rtdb, `opsEvents/events/${controller.eventId}`);
+                        const eventSnapshot = await rtdbGet(eventRef);
+
+                        if (eventSnapshot.exists()) {
+                            const event = eventSnapshot.val();
+                            sessionStorage.setItem('event_name', event.name);
+                            console.log('[EPscanV] Event:', event.name);
+                        }
+
+                        window.location.href = '/scanner.html';
+                        return;
+                    } else {
+                        showError('Code désactivé. Mission terminée.');
+                        return;
+                    }
                 }
 
                 const evenCodesRef = collection(db, 'agent_access_codes');
