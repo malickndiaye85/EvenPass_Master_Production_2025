@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Activity, TrendingUp, AlertTriangle, Download, CheckCircle, XCircle, Plus, Eye, Trash2, Edit2, Copy, Trophy, Medal, Award, Clock, Zap, Shield } from 'lucide-react';
+import { Users, Calendar, Activity, TrendingUp, AlertTriangle, Download, CheckCircle, XCircle, Plus, Eye, Trash2, CreditCard as Edit2, Copy, Trophy, Medal, Award, Clock, Zap, Shield } from 'lucide-react';
 import {
   getAllEvents,
   getEvent,
