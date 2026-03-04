@@ -880,17 +880,38 @@
             }
         })();
 
-        const eventName = sessionStorage.getItem('event_name');
-        const eventId = sessionStorage.getItem('event_id');
-        const controllerName = sessionStorage.getItem('controller_name');
-        const controllerPosition = sessionStorage.getItem('controller_position') || '';
-        const controllerType = sessionStorage.getItem('controller_type') || '';
-        const controllerId = sessionStorage.getItem('controller_id');
+        let eventName = sessionStorage.getItem('event_name');
+        let eventId = sessionStorage.getItem('event_id');
+        let controllerName = sessionStorage.getItem('controller_name');
+        let controllerPosition = sessionStorage.getItem('controller_position') || '';
+        let controllerType = sessionStorage.getItem('controller_type') || '';
+        let controllerId = sessionStorage.getItem('controller_id');
 
         if (!eventName || !controllerName || !eventId || !controllerId) {
-            console.warn('[EPscanV] Session invalide - Redirection vers login');
-            sessionStorage.clear();
-            window.location.href = '/controller-login.html';
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('test_mode') === 'true') {
+                console.log('[EPscanV] 🧪 MODE TEST ACTIVÉ - Session automatique');
+                eventName = 'La Nuit du Zikr';
+                eventId = 'test-event-001';
+                controllerName = 'Testeur';
+                controllerPosition = 'Test';
+                controllerType = '';
+                controllerId = 'test-controller-001';
+
+                sessionStorage.setItem('event_name', eventName);
+                sessionStorage.setItem('event_id', eventId);
+                sessionStorage.setItem('controller_name', controllerName);
+                sessionStorage.setItem('controller_position', controllerPosition);
+                sessionStorage.setItem('controller_type', controllerType);
+                sessionStorage.setItem('controller_id', controllerId);
+
+                console.log('[EPscanV] ✅ Session de test créée');
+            } else {
+                console.warn('[EPscanV] Session invalide - Redirection vers login');
+                console.log('[EPscanV] 💡 CONSEIL: Ajoutez ?test_mode=true à l\'URL pour le mode test');
+                sessionStorage.clear();
+                window.location.href = '/controller-login.html';
+            }
         }
 
         document.getElementById('eventInfo').textContent = eventName.toUpperCase();
