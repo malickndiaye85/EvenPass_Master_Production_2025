@@ -427,7 +427,7 @@
         }
 
         .stat-block-value {
-            font-size: clamp(32px, 64px, 64px);
+            font-size: clamp(32px, 52px, 52px);
             font-weight: 900;
             font-family: 'Orbitron', monospace;
             line-height: 1;
@@ -851,9 +851,9 @@
             let fontSize;
 
             if (digitCount <= 2) {
-                fontSize = '64px';
-            } else if (digitCount === 3) {
                 fontSize = '52px';
+            } else if (digitCount === 3) {
+                fontSize = '44px';
             } else if (digitCount === 4) {
                 fontSize = '44px';
             } else {
