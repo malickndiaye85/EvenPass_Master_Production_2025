@@ -45,6 +45,9 @@
             text-align: center;
             margin-bottom: 8px;
             letter-spacing: 0.5px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            text-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
         }
 
         .agent-info {
@@ -800,19 +803,20 @@
         const db = getFirestore(app);
         const rtdb = getDatabase(app);
 
-        const eventName = sessionStorage.getItem('event_name') || 'Événement';
-        const eventId = sessionStorage.getItem('event_id') || '';
-        const controllerName = sessionStorage.getItem('controller_name') || 'Contrôleur';
+        const eventName = sessionStorage.getItem('event_name');
+        const eventId = sessionStorage.getItem('event_id');
+        const controllerName = sessionStorage.getItem('controller_name');
         const controllerPosition = sessionStorage.getItem('controller_position') || '';
         const controllerType = sessionStorage.getItem('controller_type') || '';
-        const controllerId = sessionStorage.getItem('controller_id') || Date.now().toString();
+        const controllerId = sessionStorage.getItem('controller_id');
 
-        if (!eventName || !controllerName) {
+        if (!eventName || !controllerName || !eventId || !controllerId) {
+            console.warn('[EPscanV] Session invalide - Redirection vers login');
+            sessionStorage.clear();
             window.location.href = '/controller-login.html';
         }
 
-        const displayEventName = eventName === 'Événement' ? sessionStorage.getItem('event_name') || 'Événement' : eventName;
-        document.getElementById('eventInfo').textContent = displayEventName;
+        document.getElementById('eventInfo').textContent = eventName.toUpperCase();
         document.getElementById('agentInfo').textContent = `Agent : ${controllerName}${controllerPosition ? ' - ' + controllerPosition : ''}`;
 
         const sessionKey = `epscanv_session_${controllerId}_${eventId}`;

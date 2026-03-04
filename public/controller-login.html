@@ -294,8 +294,11 @@
 
                     if (eventSnapshot.exists()) {
                         const event = eventSnapshot.val();
-                        sessionStorage.setItem('event_name', event.name);
+                        sessionStorage.setItem('event_name', event.name || 'Événement Inconnu');
                         console.log('[EPscanV Events] Event:', event.name);
+                    } else {
+                        sessionStorage.setItem('event_name', 'Événement Inconnu');
+                        console.warn('[EPscanV Events] Event not found in database');
                     }
 
                     window.location.href = '/epscanv-events.html';
@@ -318,11 +321,15 @@
                     sessionStorage.setItem('controller_id', codeData.agent_id);
                     sessionStorage.setItem('controller_name', codeData.agent_name);
                     sessionStorage.setItem('event_id', codeData.event_id);
-                    sessionStorage.setItem('event_name', codeData.event_name || 'Événement');
+                    sessionStorage.setItem('event_name', codeData.event_name || 'Événement Inconnu');
                     sessionStorage.setItem('controller_type', 'evenpass');
 
                     console.log('[EPscanV Events] ✅ EvenPass controller authenticated:', codeData.agent_name);
                     console.log('[EPscanV Events] Event:', codeData.event_name);
+
+                    if (!codeData.event_name) {
+                        console.warn('[EPscanV Events] ⚠️ event_name is missing in access code data');
+                    }
 
                     window.location.href = '/epscanv-events.html';
                     return;
