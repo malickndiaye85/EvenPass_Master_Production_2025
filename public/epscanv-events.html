@@ -1109,7 +1109,11 @@
 
                     if (!snapshot.exists()) {
                         console.log('[EPscanV] ⚠️ Ticket not found in database');
-                        showResult('error', 'BILLET INCONNU', 'Ce billet n\'existe pas dans le système');
+                        console.log('[EPscanV] Searched for ticket ID:', decodedText);
+                        console.log('[EPscanV] Collection path: tickets/' + decodedText);
+                        console.log('[EPscanV] 💡 HINT: Make sure the ticket was generated BEFORE scanning');
+                        console.log('[EPscanV] 💡 HINT: Click "Générer le Billet Premium" button first, wait for green confirmation, then scan');
+                        showResult('error', 'BILLET INCONNU', 'Ce billet n\'existe pas dans le système. Générez d\'abord le billet avant de scanner.');
                         return;
                     }
 

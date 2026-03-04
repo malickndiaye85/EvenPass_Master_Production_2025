@@ -7,6 +7,7 @@ const TicketTestPage: React.FC = () => {
   const navigate = useNavigate();
   const [generatedTicket, setGeneratedTicket] = useState<string | null>(null);
   const [ticketId, setTicketId] = useState<string>('');
+  const [ticketSaved, setTicketSaved] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const generateTicketId = () => {
@@ -31,6 +32,7 @@ const TicketTestPage: React.FC = () => {
   const handleTicketGenerated = (canvas: HTMLCanvasElement) => {
     const dataUrl = canvas.toDataURL('image/png');
     setGeneratedTicket(dataUrl);
+    setTicketSaved(true);
 
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
@@ -40,6 +42,27 @@ const TicketTestPage: React.FC = () => {
         ctx.drawImage(canvas, 0, 0);
       }
     }
+
+    setTimeout(() => {
+      const successMsg = document.createElement('div');
+      successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce';
+      successMsg.innerHTML = `
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <div>
+            <div class="font-bold">Billet enregistré dans Firebase</div>
+            <div class="text-sm">Vous pouvez maintenant le scanner</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(successMsg);
+
+      setTimeout(() => {
+        successMsg.remove();
+      }, 4000);
+    }, 100);
   };
 
   const downloadTicket = () => {
@@ -54,6 +77,7 @@ const TicketTestPage: React.FC = () => {
   const regenerateTicket = () => {
     setTicketId(generateTicketId());
     setGeneratedTicket(null);
+    setTicketSaved(false);
   };
 
   return (
@@ -185,9 +209,14 @@ const TicketTestPage: React.FC = () => {
                     className="max-w-full h-auto rounded-xl shadow-2xl border-4 border-white"
                     style={{ maxHeight: '800px' }}
                   />
-                  <div className="absolute -top-4 -right-4 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">
-                    Prêt à scanner
-                  </div>
+                  {ticketSaved && (
+                    <div className="absolute -top-4 -right-4 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                      </svg>
+                      Enregistré dans Firebase
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="mt-6 text-center">

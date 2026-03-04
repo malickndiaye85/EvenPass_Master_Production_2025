@@ -79,6 +79,15 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
       }
 
       console.log('[Ticket Generator] 📝 Creating ticket in Firestore:', ticketData.ticketId);
+      console.log('[Ticket Generator] Ticket data:', {
+        ticketId: ticketData.ticketId,
+        eventName: ticketData.eventName,
+        category: ticketData.category,
+        date: ticketData.date,
+        venue: ticketData.venue,
+        holderName: ticketData.holderName || 'Test Client',
+        price: ticketData.price
+      });
 
       await setDoc(doc(firestore, 'tickets', ticketData.ticketId), {
         ticketId: ticketData.ticketId,
@@ -94,7 +103,10 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
         generatedBy: 'test-generator'
       });
 
-      console.log('[Ticket Generator] ✅ Ticket injected into Firebase:', ticketData.ticketId);
+      console.log('[Ticket Generator] ✅ Ticket successfully saved to Firestore');
+      console.log('[Ticket Generator] You can now scan ticket ID:', ticketData.ticketId);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
