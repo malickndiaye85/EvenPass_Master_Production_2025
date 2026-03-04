@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { db } from '../firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface TicketData {
   ticketId: string;
@@ -59,6 +61,21 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
     setIsGenerating(true);
 
     try {
+      await setDoc(doc(db, 'tickets', ticketData.ticketId), {
+        ticketId: ticketData.ticketId,
+        status: 'valid',
+        eventName: ticketData.eventName,
+        category: ticketData.category,
+        date: ticketData.date,
+        venue: ticketData.venue,
+        holderName: ticketData.holderName || 'Test Client',
+        price: parseInt(ticketData.price?.replace(/[^0-9]/g, '') || '25000'),
+        scanned: false,
+        createdAt: serverTimestamp(),
+        generatedBy: 'test-generator'
+      });
+
+      console.log('Ticket injected into Firebase:', ticketData.ticketId);
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
