@@ -39,19 +39,19 @@
         }
 
         .event-title {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 800;
             color: #FAFAFA;
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             letter-spacing: 0.5px;
         }
 
         .agent-info {
-            font-size: 13px;
-            color: rgba(250, 250, 250, 0.7);
+            font-size: 15px;
+            color: rgba(250, 250, 250, 0.8);
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .status-badge {
@@ -75,10 +75,10 @@
             background: transparent;
             border: 1px solid rgba(239, 68, 68, 0.4);
             color: #EF4444;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -89,6 +89,111 @@
         .exit-btn:hover {
             background: rgba(239, 68, 68, 0.1);
             border-color: #EF4444;
+        }
+
+        .exit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .exit-modal-content {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .exit-modal-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #F97316;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .exit-modal-info {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .exit-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .exit-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .exit-info-label {
+            color: rgba(250, 250, 250, 0.6);
+            font-weight: 600;
+        }
+
+        .exit-info-value {
+            color: #F97316;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .exit-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .exit-modal-btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .exit-modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(250, 250, 250, 0.2);
+            color: rgba(250, 250, 250, 0.8);
+        }
+
+        .exit-modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(250, 250, 250, 0.3);
+        }
+
+        .exit-modal-btn.confirm {
+            background: linear-gradient(135deg, #F97316, rgba(249, 115, 22, 0.85));
+            border: none;
+            color: #FFFFFF;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .exit-modal-btn.confirm:hover {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 1.1), #F97316);
+            box-shadow: 0 8px 30px rgba(249, 115, 22, 0.6);
         }
 
         #scanner-container {
@@ -127,11 +232,11 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(250, 250, 250, 0.1);
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-radius: 8px;
-            font-size: 11px;
+            font-size: 14px;
             color: #FAFAFA;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
         }
 
@@ -261,94 +366,81 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(249, 115, 22, 0.2);
-            padding: 16px 20px 20px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
             position: relative;
             z-index: 10;
         }
 
-        .personal-stat {
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
-            border: 1px solid rgba(249, 115, 22, 0.4);
+        .stat-block {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
             border-radius: 16px;
             padding: 20px;
             text-align: center;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.2);
+            position: relative;
         }
 
-        .personal-stat-label {
-            font-size: 11px;
-            color: rgba(249, 115, 22, 0.9);
+        .stat-block.valid {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .stat-block.invalid {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .stat-block.personal {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+            border-color: rgba(249, 115, 22, 0.5);
+            box-shadow: 0 4px 25px rgba(249, 115, 22, 0.25);
+        }
+
+        .stat-block-label {
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-bottom: 8px;
-            font-weight: 700;
+            margin-bottom: 12px;
+            font-weight: 800;
         }
 
-        .personal-stat-value {
-            font-size: 56px;
+        .stat-block.valid .stat-block-label {
+            color: #22C55E;
+        }
+
+        .stat-block.invalid .stat-block-label {
+            color: #EF4444;
+        }
+
+        .stat-block.personal .stat-block-label {
+            color: #F97316;
+        }
+
+        .stat-block-value {
+            font-size: 64px;
             font-weight: 900;
             font-family: 'Orbitron', monospace;
-            color: #F97316;
-            text-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
             line-height: 1;
         }
 
-        .other-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+        .stat-block.valid .stat-block-value {
+            color: #22C55E;
+            text-shadow: 0 0 35px rgba(34, 197, 94, 0.4);
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(250, 250, 250, 0.08);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
+        .stat-block.invalid .stat-block-value {
+            color: #EF4444;
+            text-shadow: 0 0 35px rgba(239, 68, 68, 0.4);
         }
 
-        .stat-value {
-            font-size: 36px;
-            font-weight: 800;
-            font-family: 'Orbitron', monospace;
-            color: #FAFAFA;
-            margin-bottom: 4px;
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: rgba(250, 250, 250, 0.6);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .end-service-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: transparent;
-            border: 1px solid rgba(249, 115, 22, 0.4);
+        .stat-block.personal .stat-block-value {
             color: #F97316;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-            z-index: 20;
+            text-shadow: 0 0 35px rgba(249, 115, 22, 0.5);
         }
 
-        .end-service-btn:hover {
-            background: rgba(249, 115, 22, 0.15);
-            border-color: #F97316;
-            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
-        }
 
         .result-modal {
             position: fixed;
@@ -602,7 +694,7 @@
 </head>
 <body>
     <div class="glass-header">
-        <button class="exit-btn" onclick="window.location.href='/controller-login.html'">Exit</button>
+        <button class="exit-btn" id="exitBtn">Exit</button>
         <div class="event-title" id="eventInfo">Chargement...</div>
         <div class="agent-info" id="agentInfo">Agent : Chargement...</div>
         <div style="text-align: center;">
@@ -630,21 +722,18 @@
     </div>
 
     <div class="stats-footer">
-        <div class="personal-stat">
-            <div class="personal-stat-label">Mes Scans</div>
-            <div class="personal-stat-value" id="personalCount">0</div>
+        <div class="stat-block valid">
+            <div class="stat-block-label">Validés</div>
+            <div class="stat-block-value" id="validCount">0</div>
         </div>
-        <div class="other-stats">
-            <div class="stat-card">
-                <div class="stat-value" id="validCount">0</div>
-                <div class="stat-label">Validés</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="invalidCount">0</div>
-                <div class="stat-label">Refusés</div>
-            </div>
+        <div class="stat-block invalid">
+            <div class="stat-block-label">Refusés</div>
+            <div class="stat-block-value" id="invalidCount">0</div>
         </div>
-        <button class="end-service-btn" id="endServiceBtn">Fin de service</button>
+        <div class="stat-block personal">
+            <div class="stat-block-label">Mes Scans</div>
+            <div class="stat-block-value" id="personalCount">0</div>
+        </div>
     </div>
 
     <div class="result-modal" id="resultModal">
@@ -657,29 +746,22 @@
         </div>
     </div>
 
-    <div class="summary-modal" id="summaryModal">
-        <div class="summary-content">
-            <div class="summary-title">Rapport de Mission</div>
-            <div class="summary-stats">
-                <div class="summary-stat">
-                    <div class="summary-stat-label">Agent</div>
-                    <div class="summary-stat-value" style="font-size: 24px;" id="summaryAgent">-</div>
+    <div class="exit-modal" id="exitModal">
+        <div class="exit-modal-content">
+            <div class="exit-modal-title">Clôturer la mission ?</div>
+            <div class="exit-modal-info">
+                <div class="exit-info-row">
+                    <span class="exit-info-label">Agent</span>
+                    <span class="exit-info-value" id="exitAgent">-</span>
                 </div>
-                <div class="summary-stat">
-                    <div class="summary-stat-label">Total Validé</div>
-                    <div class="summary-stat-value" id="summaryTotal">0</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="summary-stat-label">Durée Mission</div>
-                    <div class="summary-stat-value" style="font-size: 32px;" id="summaryDuration">00:00:00</div>
+                <div class="exit-info-row">
+                    <span class="exit-info-label">Total validés</span>
+                    <span class="exit-info-value" id="exitTotal">0</span>
                 </div>
             </div>
-            <div class="summary-message" id="summaryMessage">
-                Excellent travail ! Mission accomplie avec succès.
-            </div>
-            <div class="summary-buttons">
-                <button class="summary-btn" id="continueMissionBtn">Continuer</button>
-                <button class="summary-btn primary" onclick="window.location.href='/controller-login.html'">Déconnexion</button>
+            <div class="exit-modal-buttons">
+                <button class="exit-modal-btn cancel" id="cancelExitBtn">Rester</button>
+                <button class="exit-modal-btn confirm" id="confirmExitBtn">Terminer la mission</button>
             </div>
         </div>
     </div>
@@ -715,7 +797,8 @@
             window.location.href = '/controller-login.html';
         }
 
-        document.getElementById('eventInfo').textContent = eventName;
+        const displayEventName = eventName === 'Événement' ? sessionStorage.getItem('event_name') || 'Événement' : eventName;
+        document.getElementById('eventInfo').textContent = displayEventName;
         document.getElementById('agentInfo').textContent = `Agent : ${controllerName}${controllerPosition ? ' - ' + controllerPosition : ''}`;
 
         const sessionKey = `epscanv_session_${controllerId}_${eventId}`;
@@ -812,34 +895,20 @@
             isProcessing = false;
         });
 
-        document.getElementById('endServiceBtn').addEventListener('click', () => {
-            const elapsed = Date.now() - sessionStartTime;
-            const hours = Math.floor(elapsed / 3600000);
-            const minutes = Math.floor((elapsed % 3600000) / 60000);
-            const seconds = Math.floor((elapsed % 60000) / 1000);
-            const duration = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            document.getElementById('summaryAgent').textContent = controllerName;
-            document.getElementById('summaryTotal').textContent = personalCount;
-            document.getElementById('summaryDuration').textContent = duration;
-
-            let message = '';
-            if (personalCount === 0) {
-                message = 'Aucun billet scanné durant cette session.';
-            } else if (personalCount < 10) {
-                message = `Bon travail ${controllerName} ! Tu as validé ${personalCount} billet${personalCount > 1 ? 's' : ''} durant cette mission.`;
-            } else if (personalCount < 50) {
-                message = `Excellent travail ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission.`;
-            } else {
-                message = `Performance exceptionnelle ${controllerName} ! Tu as validé ${personalCount} billets durant cette mission !`;
-            }
-
-            document.getElementById('summaryMessage').textContent = message;
-            document.getElementById('summaryModal').style.display = 'flex';
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            document.getElementById('exitAgent').textContent = controllerName;
+            document.getElementById('exitTotal').textContent = personalCount;
+            document.getElementById('exitModal').style.display = 'flex';
         });
 
-        document.getElementById('continueMissionBtn').addEventListener('click', () => {
-            document.getElementById('summaryModal').style.display = 'none';
+        document.getElementById('cancelExitBtn').addEventListener('click', () => {
+            document.getElementById('exitModal').style.display = 'none';
+        });
+
+        document.getElementById('confirmExitBtn').addEventListener('click', () => {
+            localStorage.removeItem(sessionKey);
+            sessionStorage.clear();
+            window.location.href = '/controller-login.html';
         });
 
         async function onScanSuccess(decodedText) {
