@@ -243,6 +243,30 @@
             letter-spacing: 0.5px;
         }
 
+        .firebase-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .firebase-status.connected {
+            background: #22C55E;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .firebase-status.disconnected {
+            background: #EF4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
         .scan-frame {
             position: absolute;
             top: 50%;
@@ -741,7 +765,10 @@
     <div id="scanner-container">
         <div id="reader"></div>
         <div class="scanner-overlay-top">
-            <div class="overlay-info">● ACTIF</div>
+            <div class="overlay-info">
+                <span class="firebase-status disconnected" id="firebaseStatus"></span>
+                ACTIF
+            </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
         </div>
         <div class="scan-frame">
@@ -821,6 +848,37 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const rtdb = getDatabase(app);
+
+        let isFirebaseConnected = false;
+        const firebaseStatusEl = document.getElementById('firebaseStatus');
+
+        (async function testFirebaseConnection() {
+            try {
+                console.log('[EPscanV] Testing Firebase connection...');
+                console.log('[EPscanV] Config:', {
+                    projectId: firebaseConfig.projectId,
+                    authDomain: firebaseConfig.authDomain
+                });
+
+                const testRef = doc(db, '_connection_test', 'test');
+                await getDoc(testRef);
+
+                isFirebaseConnected = true;
+                firebaseStatusEl.classList.remove('disconnected');
+                firebaseStatusEl.classList.add('connected');
+                console.log('[EPscanV] ✅ Firebase Firestore connected successfully');
+            } catch (error) {
+                isFirebaseConnected = false;
+                firebaseStatusEl.classList.remove('connected');
+                firebaseStatusEl.classList.add('disconnected');
+                console.error('[EPscanV] ❌ Firebase connection failed:', error);
+                console.error('[EPscanV] Error details:', {
+                    code: error.code,
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+        })();
 
         const eventName = sessionStorage.getItem('event_name');
         const eventId = sessionStorage.getItem('event_id');
@@ -979,6 +1037,10 @@
             if (isProcessing) return;
             isProcessing = true;
 
+            console.log('[EPscanV] 🔍 Scan detected:', decodedText);
+            console.log('[EPscanV] Firebase status:', isFirebaseConnected ? 'Connected' : 'Disconnected');
+            console.log('[EPscanV] Controller type:', controllerType);
+
             try {
                 if (controllerType === 'ops_events') {
                     const ticketRef = dbRef(rtdb, `opsEvents/tickets/${decodedText}`);
@@ -1029,17 +1091,35 @@
 
                     showResult('success', 'Accès Autorisé', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
                 } else {
+                    console.log('[EPscanV] 📝 Checking Firestore for ticket:', decodedText);
                     const ticketRef = doc(db, 'tickets', decodedText);
-                    const snapshot = await getDoc(ticketRef);
+                    let snapshot;
+
+                    try {
+                        snapshot = await getDoc(ticketRef);
+                        console.log('[EPscanV] Firestore query completed');
+                        console.log('[EPscanV] Ticket exists:', snapshot.exists());
+                    } catch (firestoreError) {
+                        console.error('[EPscanV] ❌ Firestore query failed:', firestoreError);
+                        console.error('[EPscanV] Error code:', firestoreError.code);
+                        console.error('[EPscanV] Error message:', firestoreError.message);
+                        showResult('error', 'ERREUR SYSTÈME', `Impossible d'accéder à Firebase: ${firestoreError.message}`);
+                        return;
+                    }
 
                     if (!snapshot.exists()) {
+                        console.log('[EPscanV] ⚠️ Ticket not found in database');
                         showResult('error', 'BILLET INCONNU', 'Ce billet n\'existe pas dans le système');
                         return;
                     }
 
+                    console.log('[EPscanV] ✅ Ticket found in database');
+
                     const ticket = snapshot.data();
+                    console.log('[EPscanV] Ticket data:', ticket);
 
                     if (ticket.eventName && eventName !== ticket.eventName) {
+                        console.log('[EPscanV] Updating event name from ticket:', ticket.eventName);
                         document.getElementById('eventInfo').textContent = ticket.eventName.toUpperCase();
                         sessionStorage.setItem('event_name', ticket.eventName);
                     }
