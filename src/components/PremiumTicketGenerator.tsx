@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { db } from '../firebase';
+import { firestore } from '../firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface TicketData {
@@ -71,7 +71,16 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
     setIsGenerating(true);
 
     try {
-      await setDoc(doc(db, 'tickets', ticketData.ticketId), {
+      if (!firestore) {
+        console.error('[Ticket Generator] ❌ Firebase not initialized');
+        alert('Erreur: Firebase non configuré. Impossible de créer le billet.');
+        setIsGenerating(false);
+        return;
+      }
+
+      console.log('[Ticket Generator] 📝 Creating ticket in Firestore:', ticketData.ticketId);
+
+      await setDoc(doc(firestore, 'tickets', ticketData.ticketId), {
         ticketId: ticketData.ticketId,
         status: 'valid',
         eventName: ticketData.eventName,
@@ -79,13 +88,13 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
         date: ticketData.date,
         venue: ticketData.venue,
         holderName: ticketData.holderName || 'Test Client',
-        price: parseInt(ticketData.price?.replace(/[^0-9]/g, '') || '25000'),
+        price: parseInt(ticketData.price?.replace(/[^0-9]/g, '') || '5000'),
         scanned: false,
         createdAt: serverTimestamp(),
         generatedBy: 'test-generator'
       });
 
-      console.log('Ticket injected into Firebase:', ticketData.ticketId);
+      console.log('[Ticket Generator] ✅ Ticket injected into Firebase:', ticketData.ticketId);
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;

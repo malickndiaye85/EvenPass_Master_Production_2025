@@ -436,6 +436,31 @@ service cloud.firestore {
     }
 
     // ============================================
+    // TICKETS COLLECTION (Root level - for test tickets)
+    // ============================================
+    match /tickets/{ticketId} {
+      // Lecture publique pour scanner EPscanV
+      allow read: if true;
+
+      // Création pour générateur de billets test
+      allow create: if true;
+
+      // Modification pour marquer comme scanné
+      allow update: if true;
+
+      // Admin : Accès total
+      allow read, write: if isAdminFinance();
+    }
+
+    // ============================================
+    // TEST CONNECTION COLLECTION
+    // ============================================
+    match /_connection_test/{testId} {
+      // Lecture pour test de connexion
+      allow read: if true;
+    }
+
+    // ============================================
     // BLOCAGE PAR DÉFAUT
     // ============================================
     // Toute autre collection est bloquée par défaut
