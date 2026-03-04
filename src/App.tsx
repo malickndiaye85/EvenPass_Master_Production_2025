@@ -28,6 +28,8 @@ import SuccessPage from './pages/SuccessPage';
 
 import ErrorPage from './pages/ErrorPage';
 
+import TicketTestPage from './pages/TicketTestPage';
+
 import HowItWorksPage from './pages/HowItWorksPage';
 
 import ForOrganizersPage from './pages/ForOrganizersPage';
@@ -461,6 +463,8 @@ function AppRoutes() {
       <Route path="/success" element={<SuccessPage />} />
 
       <Route path="/error" element={<ErrorPage />} />
+
+      <Route path="/test-ticket" element={<TicketTestPage />} />
 
       <Route path="/how-it-works" element={<HowItWorksPage />} />
 
