@@ -1,77 +1,18 @@
 /**
- * Service d'authentification AUTONOME pour les apprentis-chauffeurs
+ * Service d'authentification pour les véhicules transport DEM-DEM Express
  *
  * Philosophie:
- * - Validation 100% LOCALE (aucun appel Firebase au login)
- * - Base de données véhicules hardcodée
+ * - Validation via Firebase Realtime Database
+ * - Base de données véhicules dans /transport/vehicles
  * - Session locale dans localStorage
  * - Tracking des scans par véhicule exact
+ * - Scalable pour centaines de véhicules
  */
 
 import { db } from '../firebase';
-import { ref, push, serverTimestamp } from 'firebase/database';
+import { ref, push, serverTimestamp, get } from 'firebase/database';
 
 const VEHICLE_SESSION_KEY = 'epscanv_vehicle_session';
-
-/**
- * BASE DE DONNÉES LOCALE DES VÉHICULES ENRÔLÉS
- * Ajoutez ici tous les bus avec leur PIN EPscanV
- */
-const LOCAL_VEHICLE_DATABASE: Record<string, {
-  vehicleId: string;
-  vehicle_number: string;
-  license_plate: string;
-  capacity: number;
-  route: string;
-  driver_name?: string;
-  driver_phone?: string;
-}> = {
-  '435016': {
-    vehicleId: 'VEHICLE_DK2022S',
-    vehicle_number: 'DK-2022-S',
-    license_plate: 'DK-2022-S',
-    capacity: 32,
-    route: 'Ligne 7 - Parcelles Assainies',
-    driver_name: 'Boubacar Diallo',
-    driver_phone: '+221771234567'
-  },
-  '411546': {
-    vehicleId: 'VEHICLE_DK2023T',
-    vehicle_number: 'DK-2023-T',
-    license_plate: 'DK-2023-T',
-    capacity: 35,
-    route: 'Ligne 12 - Guédiawaye',
-    driver_name: 'Mamadou Sall',
-    driver_phone: '+221779876543'
-  },
-  '789012': {
-    vehicleId: 'VEHICLE_DK2024U',
-    vehicle_number: 'DK-2024-U',
-    license_plate: 'DK-2024-U',
-    capacity: 40,
-    route: 'Ligne 5 - Pikine',
-    driver_name: 'Abdoulaye Ndiaye',
-    driver_phone: '+221765432109'
-  },
-  '345678': {
-    vehicleId: 'VEHICLE_DK2024V',
-    vehicle_number: 'DK-2024-V',
-    license_plate: 'DK-2024-V',
-    capacity: 38,
-    route: 'Ligne 8 - Rufisque',
-    driver_name: 'Cheikh Sy',
-    driver_phone: '+221773456789'
-  },
-  '901234': {
-    vehicleId: 'VEHICLE_DK2025W',
-    vehicle_number: 'DK-2025-W',
-    license_plate: 'DK-2025-W',
-    capacity: 42,
-    route: 'Ligne 3 - Thiaroye',
-    driver_name: 'Moussa Diop',
-    driver_phone: '+221776543210'
-  }
-};
 
 export interface VehicleSession {
   vehicleId: string;
@@ -86,9 +27,8 @@ export interface VehicleSession {
 }
 
 /**
- * Authentification par PIN - 100% LOCAL
- * AUCUN appel Firebase pendant le login
- * Validation instantanée contre la base locale
+ * Authentification par PIN via Firebase Realtime Database
+ * Scalable pour centaines de véhicules
  */
 export async function authenticateVehicleByPIN(pinCode: string): Promise<{
   success: boolean;
@@ -96,11 +36,10 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
   error?: string;
 }> {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🚌 [VEHICLE-AUTH] Authentification 100% locale');
+  console.log('🚌 [VEHICLE-AUTH] Authentification Firebase');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   try {
-    // Validation format
     const normalizedPin = String(pinCode).trim();
     if (!/^\d{6}$/.test(normalizedPin)) {
       return { success: false, error: 'Le code doit contenir 6 chiffres' };
@@ -108,37 +47,57 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     console.log('[VEHICLE-AUTH] PIN normalisé:', normalizedPin);
 
-    // Recherche dans la base locale
-    const vehicleData = LOCAL_VEHICLE_DATABASE[normalizedPin];
+    const vehiclesRef = ref(db, 'transport/vehicles');
+    const snapshot = await get(vehiclesRef);
 
-    if (!vehicleData) {
-      console.error('[VEHICLE-AUTH] ❌ PIN non trouvé dans la base locale');
-      return { success: false, error: 'Code incorrect' };
+    if (!snapshot.exists()) {
+      console.warn('[VEHICLE-AUTH] ⚠️ Aucun véhicule dans Firebase');
+      return { success: false, error: 'Aucun véhicule enregistré' };
     }
 
-    console.log('[VEHICLE-AUTH] ✅ Véhicule trouvé:', vehicleData.vehicle_number);
+    const vehicles = snapshot.val();
+    let foundVehicle: any = null;
+    let foundVehicleId: string | null = null;
 
-    // Création de la session locale
+    for (const [vehicleId, vehicleData] of Object.entries(vehicles as Record<string, any>)) {
+      if (vehicleData.pin === normalizedPin && vehicleData.isActive) {
+        foundVehicle = vehicleData;
+        foundVehicleId = vehicleId;
+        break;
+      }
+    }
+
+    if (!foundVehicle || !foundVehicleId) {
+      console.error('[VEHICLE-AUTH] ❌ PIN non trouvé ou véhicule inactif');
+      return { success: false, error: 'Code incorrect ou véhicule inactif' };
+    }
+
+    console.log('[VEHICLE-AUTH] ✅ Véhicule trouvé:', foundVehicle.licensePlate);
+
     const session: VehicleSession = {
-      vehicleId: vehicleData.vehicleId,
-      vehicleNumber: vehicleData.vehicle_number,
-      licensePlate: vehicleData.license_plate,
-      capacity: vehicleData.capacity,
-      route: vehicleData.route,
-      driverName: vehicleData.driver_name || 'Apprenti',
-      driverPhone: vehicleData.driver_phone || '',
+      vehicleId: foundVehicleId,
+      vehicleNumber: foundVehicle.licensePlate || foundVehicleId,
+      licensePlate: foundVehicle.licensePlate,
+      capacity: foundVehicle.capacity || 0,
+      route: foundVehicle.route || 'DEM-DEM Express',
+      driverName: foundVehicle.driverName || 'Chauffeur',
+      driverPhone: foundVehicle.driverPhone || '',
       loginTimestamp: Date.now(),
       pin: normalizedPin
     };
 
-    // Sauvegarde dans localStorage (source de vérité)
     localStorage.setItem(VEHICLE_SESSION_KEY, JSON.stringify(session));
-    console.log('[VEHICLE-AUTH] ✅ Session créée et sauvegardée');
-    console.log('[VEHICLE-AUTH] Véhicule:', session.vehicleNumber);
-    console.log('[VEHICLE-AUTH] Trajet:', session.route);
+    console.log('[VEHICLE-AUTH] ✅ Session créée:', session.vehicleNumber);
+
+    const sessionRef = ref(db, `transport/sessions/${foundVehicleId}`);
+    await push(sessionRef, {
+      lastLogin: serverTimestamp(),
+      deviceId: 'web-app',
+      isOnline: true
+    });
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎉 [VEHICLE-AUTH] LOGIN INSTANTANÉ RÉUSSI!');
+    console.log('🎉 [VEHICLE-AUTH] LOGIN FIREBASE RÉUSSI!');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     return { success: true, session };
@@ -152,7 +111,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     return {
       success: false,
-      error: `Erreur de connexion: ${error?.message || 'Erreur inconnue'}`
+      error: `Erreur Firebase: ${error?.message || 'Erreur inconnue'}`
     };
   }
 }
