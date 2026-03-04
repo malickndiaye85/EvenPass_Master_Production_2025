@@ -880,16 +880,35 @@
             }
         })();
 
-        let eventName = sessionStorage.getItem('event_name');
-        let eventId = sessionStorage.getItem('event_id');
-        let controllerName = sessionStorage.getItem('controller_name');
-        let controllerPosition = sessionStorage.getItem('controller_position') || '';
-        let controllerType = sessionStorage.getItem('controller_type') || '';
-        let controllerId = sessionStorage.getItem('controller_id');
+        function safeGetStorage(key) {
+            try {
+                return sessionStorage.getItem(key);
+            } catch (e) {
+                console.warn('[EPscanV] SessionStorage blocked:', e.message);
+                return null;
+            }
+        }
 
-        if (!eventName || !controllerName || !eventId || !controllerId) {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('test_mode') === 'true') {
+        function safeSetStorage(key, value) {
+            try {
+                sessionStorage.setItem(key, value);
+            } catch (e) {
+                console.warn('[EPscanV] Cannot set sessionStorage:', e.message);
+            }
+        }
+
+        let eventName = safeGetStorage('event_name');
+        let eventId = safeGetStorage('event_id');
+        let controllerName = safeGetStorage('controller_name');
+        let controllerPosition = safeGetStorage('controller_position') || '';
+        let controllerType = safeGetStorage('controller_type') || '';
+        let controllerId = safeGetStorage('controller_id');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isTestMode = urlParams.get('test_mode') === 'true';
+
+        if (!eventName || !controllerName || !eventId || !controllerId || isTestMode) {
+            if (isTestMode || !eventName) {
                 console.log('[EPscanV] 🧪 MODE TEST ACTIVÉ - Session automatique');
                 eventName = 'La Nuit du Zikr';
                 eventId = 'test-event-001';
@@ -898,24 +917,28 @@
                 controllerType = '';
                 controllerId = 'test-controller-001';
 
-                sessionStorage.setItem('event_name', eventName);
-                sessionStorage.setItem('event_id', eventId);
-                sessionStorage.setItem('controller_name', controllerName);
-                sessionStorage.setItem('controller_position', controllerPosition);
-                sessionStorage.setItem('controller_type', controllerType);
-                sessionStorage.setItem('controller_id', controllerId);
+                safeSetStorage('event_name', eventName);
+                safeSetStorage('event_id', eventId);
+                safeSetStorage('controller_name', controllerName);
+                safeSetStorage('controller_position', controllerPosition);
+                safeSetStorage('controller_type', controllerType);
+                safeSetStorage('controller_id', controllerId);
 
                 console.log('[EPscanV] ✅ Session de test créée');
+                console.log('[EPscanV] Event:', eventName);
+                console.log('[EPscanV] Controller:', controllerName);
             } else {
                 console.warn('[EPscanV] Session invalide - Redirection vers login');
                 console.log('[EPscanV] 💡 CONSEIL: Ajoutez ?test_mode=true à l\'URL pour le mode test');
-                sessionStorage.clear();
+                try {
+                    sessionStorage.clear();
+                } catch (e) {}
                 window.location.href = '/controller-login.html';
             }
         }
 
-        document.getElementById('eventInfo').textContent = eventName.toUpperCase();
-        document.getElementById('agentInfo').textContent = `Agent : ${controllerName}${controllerPosition ? ' - ' + controllerPosition : ''}`;
+        document.getElementById('eventInfo').textContent = (eventName || 'Événement de Test').toUpperCase();
+        document.getElementById('agentInfo').textContent = `Agent : ${controllerName || 'Agent Test'}${controllerPosition ? ' - ' + controllerPosition : ''}`;
 
         const sessionKey = `epscanv_session_${controllerId}_${eventId}`;
 
