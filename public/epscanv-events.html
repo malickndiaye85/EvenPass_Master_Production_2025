@@ -383,6 +383,13 @@
             padding: 20px;
             text-align: center;
             position: relative;
+            width: 100%;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
         .stat-block.valid {
@@ -420,10 +427,17 @@
         }
 
         .stat-block-value {
-            font-size: 64px;
+            font-size: clamp(32px, 64px, 64px);
             font-weight: 900;
             font-family: 'Orbitron', monospace;
             line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            transition: font-size 0.2s ease;
         }
 
         .stat-block.valid .stat-block-value {
@@ -829,9 +843,29 @@
         let isProcessing = false;
         let sessionStartTime = sessionData.startTime || Date.now();
 
-        document.getElementById('validCount').textContent = validCount;
-        document.getElementById('invalidCount').textContent = invalidCount;
-        document.getElementById('personalCount').textContent = personalCount;
+        function updateCounterValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            element.textContent = value;
+
+            const digitCount = value.toString().length;
+            let fontSize;
+
+            if (digitCount <= 2) {
+                fontSize = '64px';
+            } else if (digitCount === 3) {
+                fontSize = '52px';
+            } else if (digitCount === 4) {
+                fontSize = '44px';
+            } else {
+                fontSize = '36px';
+            }
+
+            element.style.fontSize = fontSize;
+        }
+
+        updateCounterValue('validCount', validCount);
+        updateCounterValue('invalidCount', invalidCount);
+        updateCounterValue('personalCount', personalCount);
 
         function updateSessionTimer() {
             const elapsed = Date.now() - sessionStartTime;
@@ -875,11 +909,11 @@
                     sessionData.scannedTickets.push(ticketId);
                 }
 
-                document.getElementById('validCount').textContent = validCount;
-                document.getElementById('personalCount').textContent = personalCount;
+                updateCounterValue('validCount', validCount);
+                updateCounterValue('personalCount', personalCount);
             } else {
                 invalidCount++;
-                document.getElementById('invalidCount').textContent = invalidCount;
+                updateCounterValue('invalidCount', invalidCount);
             }
 
             sessionData.validCount = validCount;
