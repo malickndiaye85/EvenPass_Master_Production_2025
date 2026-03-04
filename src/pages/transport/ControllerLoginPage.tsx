@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, AlertCircle, Bus, Check, Delete, MessageCircle } from 'lucide-react';
-import { authenticateVehicleByPIN, vibrateDevice, openWhatsAppSupport } from '../../lib/vehicleAuthService';
+import { Scan, AlertCircle, Bus, Check, Delete, MessageCircle, CalendarCheck } from 'lucide-react';
+import { authenticateVehicleByPIN, vibrateDevice as vibrateVehicle, openWhatsAppSupport } from '../../lib/vehicleAuthService';
+import { authenticateController, vibrateDevice as vibrateController } from '../../lib/controllerAuthService';
 import PWAInstallBanner from '../../components/PWAInstallBanner';
 
 const ControllerLoginPage: React.FC = () => {
@@ -11,6 +12,7 @@ const ControllerLoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [shake, setShake] = useState(false);
+  const [mode, setMode] = useState<'auto' | 'transport' | 'events'>('auto');
 
   useEffect(() => {
     if (pin.length === 6) {
@@ -22,19 +24,56 @@ const ControllerLoginPage: React.FC = () => {
     setError('');
     setLoading(true);
 
-    const result = await authenticateVehicleByPIN(pin);
+    // Mode automatique : essayer d'abord Events, puis Transport
+    if (mode === 'auto' || mode === 'events') {
+      console.log('[LOGIN] Tentative authentification Events...');
+      const eventsResult = await authenticateController(pin);
 
-    if (result.success) {
-      setSuccess(true);
-      vibrateDevice([50, 100, 50]);
+      if (eventsResult.success) {
+        setSuccess(true);
+        vibrateController([50, 100, 50]);
 
-      setTimeout(() => {
-        navigate('/controller-epscanv');
-      }, 800);
-    } else {
-      setError(result.error || 'Code incorrect');
+        setTimeout(() => {
+          navigate('/controller-events-scanner');
+        }, 800);
+        return;
+      }
+
+      // Si mode Events explicite, ne pas essayer Transport
+      if (mode === 'events') {
+        setError(eventsResult.error || 'Code incorrect');
+        setShake(true);
+        vibrateController([100, 50, 100, 50, 100]);
+
+        setTimeout(() => setShake(false), 500);
+        setTimeout(() => {
+          setPin('');
+          setError('');
+          setLoading(false);
+        }, 1500);
+        return;
+      }
+    }
+
+    // Mode auto : si Events a échoué, essayer Transport
+    // Mode transport explicite : uniquement Transport
+    if (mode === 'auto' || mode === 'transport') {
+      console.log('[LOGIN] Tentative authentification Transport...');
+      const transportResult = await authenticateVehicleByPIN(pin);
+
+      if (transportResult.success) {
+        setSuccess(true);
+        vibrateVehicle([50, 100, 50]);
+
+        setTimeout(() => {
+          navigate('/controller-epscanv');
+        }, 800);
+        return;
+      }
+
+      setError(transportResult.error || 'Code incorrect');
       setShake(true);
-      vibrateDevice([100, 50, 100, 50, 100]);
+      vibrateVehicle([100, 50, 100, 50, 100]);
 
       setTimeout(() => setShake(false), 500);
       setTimeout(() => {
@@ -105,6 +144,40 @@ const ControllerLoginPage: React.FC = () => {
           shake ? 'animate-shake' : ''
         }`}>
           <div className="mb-6">
+            <div className="flex justify-center gap-2 mb-4">
+              <button
+                onClick={() => setMode('auto')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  mode === 'auto'
+                    ? 'bg-[#10B981] text-white'
+                    : 'bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A]'
+                }`}
+              >
+                Auto
+              </button>
+              <button
+                onClick={() => setMode('events')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  mode === 'events'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A]'
+                }`}
+              >
+                <CalendarCheck className="w-3 h-3" />
+                Events
+              </button>
+              <button
+                onClick={() => setMode('transport')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  mode === 'transport'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A]'
+                }`}
+              >
+                <Bus className="w-3 h-3" />
+                Transport
+              </button>
+            </div>
             <label className="block text-center text-sm font-bold text-white mb-4">
               Code d'accès à 6 chiffres
             </label>

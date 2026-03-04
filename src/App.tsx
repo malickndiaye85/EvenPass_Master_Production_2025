@@ -136,6 +136,8 @@ import EPscanVPage from './pages/transport/EPscanVPage';
 
 import ControllerLoginPage from './pages/transport/ControllerLoginPage';
 
+import ControllerEventsScanner from './pages/transport/ControllerEventsScanner';
+
 import PassQRGenerator from './pages/transport/PassQRGenerator';
 
 
@@ -441,6 +443,16 @@ function AppRoutes() {
         <ThemeWrapper mode="transport">
 
           <EPscanVPage />
+
+        </ThemeWrapper>
+
+      } />
+
+      <Route path="/controller-events-scanner" element={
+
+        <ThemeWrapper mode="transport">
+
+          <ControllerEventsScanner />
 
         </ThemeWrapper>
 
