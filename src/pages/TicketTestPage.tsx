@@ -22,10 +22,10 @@ const TicketTestPage: React.FC = () => {
     ticketId: ticketId,
     eventName: 'La Nuit du Zikr',
     category: 'VIP - Carré Or',
-    date: '15 Mars 2026 - 20h00',
-    venue: 'Grand Théâtre National - Dakar',
+    date: 'samedi 21 mars 2026 - 20h00',
+    venue: 'Grand Théâtre National, Dakar',
     holderName: 'Test Client',
-    price: '25,000 FCFA'
+    price: '5000 F'
   };
 
   const handleTicketGenerated = (canvas: HTMLCanvasElement) => {
