@@ -759,7 +759,7 @@
         if (!sessionData) {
             console.warn('[EPscanT] Pas de session véhicule - redirection');
             alert('Session expirée. Veuillez vous reconnecter.');
-            window.location.href = '/controller/login';
+            window.location.href = '/epscant-login.html';
         }
 
         const vehicleSession = JSON.parse(sessionData);
@@ -903,7 +903,7 @@
         document.getElementById('confirmExitBtn').addEventListener('click', () => {
             localStorage.removeItem(sessionKey);
             localStorage.removeItem('demdem_vehicle_session');
-            window.location.href = '/controller/login';
+            window.location.href = '/epscant-login.html';
         });
 
         async function onScanSuccess(decodedText) {
