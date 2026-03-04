@@ -34,7 +34,8 @@ const ControllerLoginPage: React.FC = () => {
         vibrateController([50, 100, 50]);
 
         setTimeout(() => {
-          navigate('/controller-events-scanner');
+          // Rediriger vers epscanv-events.html (HTML pur)
+          window.location.href = '/epscanv-events.html';
         }, 800);
         return;
       }
@@ -66,7 +67,8 @@ const ControllerLoginPage: React.FC = () => {
         vibrateVehicle([50, 100, 50]);
 
         setTimeout(() => {
-          navigate('/controller-epscanv');
+          // Rediriger vers epscant-transport.html (HTML pur)
+          window.location.href = '/epscant-transport.html';
         }, 800);
         return;
       }
