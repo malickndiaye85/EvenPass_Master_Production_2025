@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { firestore } from '../firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 interface TicketData {
   ticketId: string;
@@ -107,6 +107,19 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
       console.log('[Ticket Generator] You can now scan ticket ID:', ticketData.ticketId);
 
       await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log('[Ticket Generator] 🔍 Verifying ticket was saved...');
+      const verifyDoc = await getDoc(doc(firestore, 'tickets', ticketData.ticketId));
+
+      if (verifyDoc.exists()) {
+        console.log('[Ticket Generator] ✅ VERIFICATION SUCCESS: Ticket exists in Firestore');
+        console.log('[Ticket Generator] Verified data:', verifyDoc.data());
+      } else {
+        console.error('[Ticket Generator] ❌ VERIFICATION FAILED: Ticket NOT found in Firestore');
+        alert('ERREUR: Le billet n\'a pas été enregistré dans Firebase. Vérifiez les règles Firestore.');
+        setIsGenerating(false);
+        return;
+      }
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;

@@ -1092,17 +1092,26 @@
                     showResult('success', 'Accès Autorisé', `Bienvenue ${ticket.buyerName || ''}`, details, decodedText);
                 } else {
                     console.log('[EPscanV] 📝 Checking Firestore for ticket:', decodedText);
+                    console.log('[EPscanV] Collection path: tickets/' + decodedText);
+                    console.log('[EPscanV] Firestore instance:', db);
+                    console.log('[EPscanV] Firebase app name:', db.app.name);
+                    console.log('[EPscanV] Firebase project ID:', db.app.options.projectId);
+
                     const ticketRef = doc(db, 'tickets', decodedText);
+                    console.log('[EPscanV] Document reference created:', ticketRef.path);
                     let snapshot;
 
                     try {
+                        console.log('[EPscanV] Executing getDoc...');
                         snapshot = await getDoc(ticketRef);
-                        console.log('[EPscanV] Firestore query completed');
+                        console.log('[EPscanV] ✅ Firestore query completed successfully');
                         console.log('[EPscanV] Ticket exists:', snapshot.exists());
+                        console.log('[EPscanV] Snapshot metadata:', snapshot.metadata);
                     } catch (firestoreError) {
                         console.error('[EPscanV] ❌ Firestore query failed:', firestoreError);
                         console.error('[EPscanV] Error code:', firestoreError.code);
                         console.error('[EPscanV] Error message:', firestoreError.message);
+                        console.error('[EPscanV] Full error:', firestoreError);
                         showResult('error', 'ERREUR SYSTÈME', `Impossible d'accéder à Firebase: ${firestoreError.message}`);
                         return;
                     }
