@@ -122,14 +122,14 @@ const WalletPage: React.FC = () => {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-[#1E2936] to-[#1A2332] border-2 border-gray-700/50 rounded-xl shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:from-[#FFC700] active:to-[#FF8800] active:border-[#FFC700]"
+      className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-[#1E2936] to-[#1A2332] border-2 border-gray-700/50 rounded-lg shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:from-[#FFC700] active:to-[#FF8800] active:border-[#FFC700]"
       style={{
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'transparent'
       }}
     >
-      <span className="select-none text-white text-4xl font-black" style={{ textShadow: '0 2px 8px rgba(255, 199, 0, 0.4)' }}>{value}</span>
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+      <span className="select-none text-white text-3xl font-black" style={{ textShadow: '0 2px 8px rgba(255, 199, 0, 0.4)' }}>{value}</span>
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
     </button>
   );
 
@@ -289,8 +289,8 @@ const WalletPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 flex flex-col pb-1">
-            <div className="grid grid-cols-3 gap-2.5">
+          <div className="flex-1 min-h-0 flex flex-col pb-1 items-center">
+            <div className="grid grid-cols-3 gap-2 max-w-[280px] w-full">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <KeypadButton
                   key={digit}
@@ -308,14 +308,14 @@ const WalletPage: React.FC = () => {
               <button
                 onClick={handleDelete}
                 disabled={loading || phoneNumber.length === 0}
-                className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-red-600/90 to-red-700/90 border-2 border-red-500/50 rounded-xl text-white shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 disabled:border-gray-600"
+                className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-red-600/90 to-red-700/90 border-2 border-red-500/50 rounded-lg text-white shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 disabled:border-gray-600"
                 style={{
                   touchAction: 'manipulation',
                   WebkitTapHighlightColor: 'transparent'
                 }}
               >
-                <Delete className="w-6 h-6" />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
+                <Delete className="w-5 h-5" />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
               </button>
             </div>
           </div>
