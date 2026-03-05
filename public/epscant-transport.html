@@ -645,6 +645,7 @@
         <div class="driver-info" id="driverInfo">Chauffeur : Chargement...</div>
         <div style="text-align: center;">
             <span class="status-badge">● Transport Actif</span>
+            <div id="offlineInfo" style="margin-top: 8px; font-size: 11px; color: rgba(250, 250, 250, 0.6); font-weight: 500;"></div>
         </div>
     </div>
 
@@ -734,9 +735,230 @@
         const rtdb = getDatabase(app);
 
         let isFirebaseConnected = false;
+        let offlineDB = null;
         const firebaseStatusEl = document.getElementById('firebaseStatus');
 
-        (async function testFirebaseConnection() {
+        const DB_NAME = 'epscant_offline_db';
+        const DB_VERSION = 1;
+        const SUBSCRIPTIONS_STORE = 'subscriptions';
+        const PENDING_SCANS_STORE = 'pending_scans';
+
+        async function initOfflineDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    offlineDB = request.result;
+                    console.log('[EPscanT] ✅ IndexedDB initialisée');
+                    resolve(offlineDB);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    if (!db.objectStoreNames.contains(SUBSCRIPTIONS_STORE)) {
+                        const subsStore = db.createObjectStore(SUBSCRIPTIONS_STORE, { keyPath: 'id' });
+                        subsStore.createIndex('qr_code', 'qr_code', { unique: false });
+                        subsStore.createIndex('subscriber_phone', 'subscriber_phone', { unique: false });
+                        console.log('[EPscanT] 📦 Store subscriptions créé');
+                    }
+
+                    if (!db.objectStoreNames.contains(PENDING_SCANS_STORE)) {
+                        const scansStore = db.createObjectStore(PENDING_SCANS_STORE, { keyPath: 'id' });
+                        scansStore.createIndex('synced', 'synced', { unique: false });
+                        console.log('[EPscanT] 📦 Store pending_scans créé');
+                    }
+                };
+            });
+        }
+
+        async function syncSubscriptionsFromFirebase() {
+            try {
+                console.log('[EPscanT] 🔄 Synchronisation des abonnements...');
+                const abonnementsRef = dbRef(rtdb, 'abonnements_express');
+                const snapshot = await rtdbGet(abonnementsRef);
+
+                if (!snapshot.exists()) {
+                    console.log('[EPscanT] ⚠️ Aucun abonnement à synchroniser');
+                    return 0;
+                }
+
+                const allSubscriptions = snapshot.val();
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readwrite');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+
+                await store.clear();
+
+                const now = Date.now();
+                let count = 0;
+
+                for (const [id, sub] of Object.entries(allSubscriptions)) {
+                    if (sub.status === 'active' && new Date(sub.end_date) > new Date()) {
+                        await store.put({
+                            id,
+                            subscriber_phone: sub.subscriber_phone,
+                            subscriber_name: sub.subscriber_name,
+                            full_name: sub.full_name || sub.subscriber_name,
+                            qr_code: sub.qr_code,
+                            status: sub.status,
+                            start_date: sub.start_date,
+                            end_date: sub.end_date,
+                            subscription_type: sub.subscription_type,
+                            vehicle_id: sub.vehicle_id,
+                            cachedAt: now
+                        });
+                        count++;
+                    }
+                }
+
+                localStorage.setItem('last_sync_timestamp', now.toString());
+                localStorage.setItem('cached_subscriptions_count', count.toString());
+
+                console.log(`[EPscanT] ✅ ${count} abonnements synchronisés localement`);
+                return count;
+            } catch (error) {
+                console.error('[EPscanT] ❌ Erreur sync:', error);
+                return 0;
+            }
+        }
+
+        async function getSubscriptionFromCache(qrCode) {
+            if (!offlineDB) return null;
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+                const index = store.index('qr_code');
+                const request = index.get(qrCode);
+
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function getSubscriptionByPhoneFromCache(phone) {
+            if (!offlineDB) return null;
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+                const index = store.index('subscriber_phone');
+                const request = index.get(phone);
+
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && result.status === 'active' && new Date(result.end_date) > new Date()) {
+                        resolve(result);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function addPendingScan(scanData) {
+            if (!offlineDB) return;
+
+            const pendingScan = {
+                id: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                subscriptionId: scanData.subscriptionId,
+                vehicleId: scanData.vehicleId,
+                timestamp: Date.now(),
+                scanData: scanData.data,
+                synced: false
+            };
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                const store = transaction.objectStore(PENDING_SCANS_STORE);
+                const request = store.add(pendingScan);
+
+                request.onsuccess = () => {
+                    console.log('[EPscanT] 📝 Scan mis en queue:', pendingScan.id);
+                    resolve();
+                };
+                request.onerror = () => resolve();
+            });
+        }
+
+        async function syncPendingScans() {
+            if (!offlineDB || !navigator.onLine) return;
+
+            return new Promise(async (resolve) => {
+                const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                const store = transaction.objectStore(PENDING_SCANS_STORE);
+                const index = store.index('synced');
+                const request = index.getAll(false);
+
+                request.onsuccess = async () => {
+                    const pendingScans = request.result || [];
+                    console.log(`[EPscanT] 🔄 ${pendingScans.length} scans en attente de sync`);
+
+                    for (const scan of pendingScans) {
+                        try {
+                            const scanRef = dbRef(rtdb, `transport/scans/${scan.id}`);
+                            await rtdbSet(scanRef, {
+                                ...scan.scanData,
+                                vehicleId: scan.vehicleId,
+                                timestamp: scan.timestamp,
+                                syncedAt: Date.now()
+                            });
+
+                            scan.synced = true;
+                            await store.put(scan);
+                            console.log('[EPscanT] ✅ Scan synchronisé:', scan.id);
+                        } catch (error) {
+                            console.error('[EPscanT] ❌ Erreur sync scan:', error);
+                        }
+                    }
+
+                    resolve();
+                };
+                request.onerror = () => resolve();
+            });
+        }
+
+        async function clearOfflineData() {
+            if (!offlineDB) return;
+
+            const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE, PENDING_SCANS_STORE], 'readwrite');
+            transaction.objectStore(SUBSCRIPTIONS_STORE).clear();
+            transaction.objectStore(PENDING_SCANS_STORE).clear();
+
+            localStorage.removeItem('last_sync_timestamp');
+            localStorage.removeItem('cached_subscriptions_count');
+
+            console.log('[EPscanT] 🗑️ Cache hors-ligne vidé');
+        }
+
+        function updateOfflineInfo() {
+            const cachedCount = localStorage.getItem('cached_subscriptions_count') || 0;
+            const lastSync = localStorage.getItem('last_sync_timestamp');
+            const offlineInfoEl = document.getElementById('offlineInfo');
+
+            if (!navigator.onLine) {
+                offlineInfoEl.textContent = `📱 Mode Hors-Ligne • ${cachedCount} abonnements en cache`;
+                offlineInfoEl.style.color = '#FFC107';
+            } else if (lastSync) {
+                const syncDate = new Date(parseInt(lastSync));
+                const minutesAgo = Math.floor((Date.now() - syncDate.getTime()) / 60000);
+                if (minutesAgo < 60) {
+                    offlineInfoEl.textContent = `🔄 Synchronisé il y a ${minutesAgo}min • ${cachedCount} abonnements`;
+                } else {
+                    const hoursAgo = Math.floor(minutesAgo / 60);
+                    offlineInfoEl.textContent = `🔄 Synchronisé il y a ${hoursAgo}h • ${cachedCount} abonnements`;
+                }
+                offlineInfoEl.style.color = 'rgba(250, 250, 250, 0.6)';
+            } else {
+                offlineInfoEl.textContent = '';
+            }
+        }
+
+        (async function initialize() {
+            await initOfflineDB();
+
             try {
                 console.log('[EPscanT] Testing Firebase connection...');
                 const testRef = dbRef(rtdb, '_connection_test/test');
@@ -745,13 +967,42 @@
                 firebaseStatusEl.classList.remove('disconnected');
                 firebaseStatusEl.classList.add('connected');
                 console.log('[EPscanT] ✅ Firebase connected');
+
+                const syncCount = await syncSubscriptionsFromFirebase();
+                console.log(`[EPscanT] ✅ Sync initiale: ${syncCount} abonnements`);
+
+                await syncPendingScans();
+                updateOfflineInfo();
             } catch (error) {
                 isFirebaseConnected = false;
                 firebaseStatusEl.classList.remove('connected');
                 firebaseStatusEl.classList.add('disconnected');
                 console.error('[EPscanT] ❌ Firebase connection failed:', error);
+
+                const cachedCount = localStorage.getItem('cached_subscriptions_count') || 0;
+                console.log(`[EPscanT] 📱 Mode hors-ligne: ${cachedCount} abonnements en cache`);
+                updateOfflineInfo();
             }
         })();
+
+        window.addEventListener('online', async () => {
+            console.log('[EPscanT] 🌐 Connexion rétablie');
+            isFirebaseConnected = true;
+            firebaseStatusEl.classList.remove('disconnected');
+            firebaseStatusEl.classList.add('connected');
+
+            await syncSubscriptionsFromFirebase();
+            await syncPendingScans();
+            updateOfflineInfo();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('[EPscanT] 📴 Mode hors-ligne');
+            isFirebaseConnected = false;
+            firebaseStatusEl.classList.remove('connected');
+            firebaseStatusEl.classList.add('disconnected');
+            updateOfflineInfo();
+        });
 
         // Récupérer session véhicule depuis localStorage
         const sessionData = localStorage.getItem('demdem_vehicle_session');
@@ -900,7 +1151,8 @@
             document.getElementById('exitModal').style.display = 'none';
         });
 
-        document.getElementById('confirmExitBtn').addEventListener('click', () => {
+        document.getElementById('confirmExitBtn').addEventListener('click', async () => {
+            await clearOfflineData();
             localStorage.removeItem(sessionKey);
             localStorage.removeItem('demdem_vehicle_session');
             window.location.href = '/epscant-login.html';
@@ -913,39 +1165,60 @@
             console.log('[EPscanT] 📱 Scan détecté:', decodedText);
 
             try {
-                // Rechercher l'abonnement dans abonnements_express
-                const abonnementsRef = dbRef(rtdb, 'abonnements_express');
-                const abonnementsSnapshot = await rtdbGet(abonnementsRef);
-
                 let subscription = null;
+                let fromCache = false;
 
-                if (abonnementsSnapshot.exists()) {
-                    const allSubscriptions = abonnementsSnapshot.val();
+                subscription = await getSubscriptionFromCache(decodedText);
 
-                    // Recherche par QR Code
-                    for (const [id, sub] of Object.entries(allSubscriptions)) {
-                        if (sub.qr_code === decodedText) {
-                            subscription = { ...sub, id };
-                            console.log('[EPscanT] ✅ Abonnement trouvé:', subscription.full_name);
-                            break;
+                if (subscription) {
+                    console.log('[EPscanT] ✅ Abonnement trouvé dans le cache:', subscription.full_name);
+                    fromCache = true;
+                } else {
+                    const phone = extractPhoneFromQR(decodedText);
+                    if (phone) {
+                        subscription = await getSubscriptionByPhoneFromCache(phone);
+                        if (subscription) {
+                            console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (cache):', phone);
+                            fromCache = true;
                         }
                     }
+                }
 
-                    // Si pas trouvé, essayer par téléphone (mode hors-ligne)
-                    if (!subscription) {
-                        const phone = extractPhoneFromQR(decodedText);
-                        if (phone) {
-                            const now = new Date();
+                if (!subscription && navigator.onLine) {
+                    console.log('[EPscanT] 🌐 Recherche en ligne...');
+                    try {
+                        const abonnementsRef = dbRef(rtdb, 'abonnements_express');
+                        const abonnementsSnapshot = await rtdbGet(abonnementsRef);
+
+                        if (abonnementsSnapshot.exists()) {
+                            const allSubscriptions = abonnementsSnapshot.val();
+
                             for (const [id, sub] of Object.entries(allSubscriptions)) {
-                                if (sub.subscriber_phone === phone &&
-                                    sub.status === 'active' &&
-                                    new Date(sub.end_date) > now) {
+                                if (sub.qr_code === decodedText) {
                                     subscription = { ...sub, id };
-                                    console.log('[EPscanT] ✅ Abonnement trouvé par téléphone:', phone);
+                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne:', subscription.full_name);
                                     break;
                                 }
                             }
+
+                            if (!subscription) {
+                                const phone = extractPhoneFromQR(decodedText);
+                                if (phone) {
+                                    const now = new Date();
+                                    for (const [id, sub] of Object.entries(allSubscriptions)) {
+                                        if (sub.subscriber_phone === phone &&
+                                            sub.status === 'active' &&
+                                            new Date(sub.end_date) > now) {
+                                            subscription = { ...sub, id };
+                                            console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (en ligne):', phone);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
+                    } catch (firebaseError) {
+                        console.warn('[EPscanT] ⚠️ Erreur Firebase, utilisation du cache uniquement');
                     }
                 }
 
@@ -985,20 +1258,47 @@
                     }
                 }
 
-                // ✅ PASS VALIDE - Enregistrer le scan
-                const scanRef = dbRef(rtdb, `transport/scans/${vehicleId}/${Date.now()}`);
-                await rtdbSet(scanRef, {
-                    vehicleId: vehicleId,
-                    timestamp: new Date().toISOString(),
-                    passengerPhone: subscription.subscriber_phone,
-                    passengerName: subscription.full_name,
-                    subscriptionType: subscription.subscription_type,
-                    subscriptionTier: subscription.subscription_tier,
-                    routeName: subscription.route_name,
-                    scanStatus: 'valid'
-                });
+                const scanData = {
+                    subscriber_phone: subscription.subscriber_phone,
+                    subscriber_name: subscription.full_name,
+                    subscription_type: subscription.subscription_type,
+                    subscription_tier: subscription.subscription_tier,
+                    route_name: subscription.route_name,
+                    scan_status: 'valid'
+                };
 
-                console.log('[EPscanT] ✅ Scan enregistré pour:', subscription.full_name);
+                if (navigator.onLine && !fromCache) {
+                    try {
+                        const scanRef = dbRef(rtdb, `transport/scans/${vehicleId}/${Date.now()}`);
+                        await rtdbSet(scanRef, {
+                            vehicleId: vehicleId,
+                            timestamp: new Date().toISOString(),
+                            passengerPhone: scanData.subscriber_phone,
+                            passengerName: scanData.subscriber_name,
+                            subscriptionType: scanData.subscription_type,
+                            subscriptionTier: scanData.subscription_tier,
+                            routeName: scanData.route_name,
+                            scanStatus: scanData.scan_status
+                        });
+                        console.log('[EPscanT] ✅ Scan enregistré en ligne pour:', subscription.full_name);
+                    } catch (error) {
+                        console.warn('[EPscanT] ⚠️ Échec enregistrement en ligne, mise en queue');
+                        await addPendingScan({
+                            subscriptionId: subscription.id,
+                            vehicleId: vehicleId,
+                            timestamp: Date.now(),
+                            data: scanData
+                        });
+                    }
+                } else {
+                    await addPendingScan({
+                        subscriptionId: subscription.id,
+                        vehicleId: vehicleId,
+                        timestamp: Date.now(),
+                        data: scanData
+                    });
+                    console.log('[EPscanT] 📱 Scan mis en queue (mode hors-ligne)');
+                }
 
                 const durationLabel = {
                     'weekly': 'Hebdo',
