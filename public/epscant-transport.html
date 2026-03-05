@@ -910,67 +910,154 @@
             if (isProcessing) return;
             isProcessing = true;
 
-            console.log('[EPscanT] Scan détecté:', decodedText);
+            console.log('[EPscanT] 📱 Scan détecté:', decodedText);
 
             try {
-                // Vérifier si c'est un QR SAMA Pass
-                const passRef = dbRef(rtdb, `samaPass/${decodedText}`);
-                const passSnapshot = await rtdbGet(passRef);
+                // Rechercher l'abonnement dans abonnements_express
+                const abonnementsRef = dbRef(rtdb, 'abonnements_express');
+                const abonnementsSnapshot = await rtdbGet(abonnementsRef);
 
-                if (!passSnapshot.exists()) {
-                    showResult('error', 'PASS INVALIDE', 'Ce QR code n\'est pas un SAMA Pass valide');
+                let subscription = null;
+
+                if (abonnementsSnapshot.exists()) {
+                    const allSubscriptions = abonnementsSnapshot.val();
+
+                    // Recherche par QR Code
+                    for (const [id, sub] of Object.entries(allSubscriptions)) {
+                        if (sub.qr_code === decodedText) {
+                            subscription = { ...sub, id };
+                            console.log('[EPscanT] ✅ Abonnement trouvé:', subscription.full_name);
+                            break;
+                        }
+                    }
+
+                    // Si pas trouvé, essayer par téléphone (mode hors-ligne)
+                    if (!subscription) {
+                        const phone = extractPhoneFromQR(decodedText);
+                        if (phone) {
+                            const now = new Date();
+                            for (const [id, sub] of Object.entries(allSubscriptions)) {
+                                if (sub.subscriber_phone === phone &&
+                                    sub.status === 'active' &&
+                                    new Date(sub.end_date) > now) {
+                                    subscription = { ...sub, id };
+                                    console.log('[EPscanT] ✅ Abonnement trouvé par téléphone:', phone);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!subscription) {
+                    console.log('[EPscanT] ❌ Abonnement introuvable');
+                    showResult('error', 'PASS INVALIDE', 'Code non reconnu');
                     return;
                 }
 
-                const passData = passSnapshot.val();
-                console.log('[EPscanT] SAMA Pass trouvé:', passData);
+                // Valider le statut
+                const now = new Date();
+                const endDate = new Date(subscription.end_date);
+                const startDate = new Date(subscription.start_date);
 
-                // Vérifier la date d'expiration
-                if (passData.expiresAt && Date.now() > passData.expiresAt) {
-                    showResult('error', 'PASS EXPIRÉ', 'Ce SAMA Pass a expiré');
+                // Vérifier si l'abonnement est actif
+                if (subscription.status !== 'active') {
+                    showResult('error', `PASS ${subscription.status.toUpperCase()}`, 'Abonnement inactif');
                     return;
                 }
 
-                // Vérifier si actif
-                if (!passData.isActive) {
-                    showResult('error', 'PASS DÉSACTIVÉ', 'Ce SAMA Pass a été désactivé');
+                // Vérifier si pas encore actif
+                if (now < startDate) {
+                    showResult('warning', 'PASS PAS ENCORE ACTIF', 'Date de début non atteinte');
                     return;
                 }
 
-                // Enregistrer le scan
-                const scanDate = new Date().toISOString().split('T')[0];
-                const scanRef = dbRef(rtdb, `scans/${vehicleId}/${scanDate}/${Date.now()}`);
+                // Vérifier si expiré
+                if (now > endDate) {
+                    const daysSinceExpiry = Math.floor((now - endDate) / (1000 * 60 * 60 * 24));
 
+                    if (daysSinceExpiry <= 2) {
+                        showResult('warning', `PASS EXPIRÉ - ${daysSinceExpiry}j`, 'Renouvellement nécessaire');
+                        return;
+                    } else {
+                        showResult('error', 'PASS EXPIRÉ', 'Abonnement non valide');
+                        return;
+                    }
+                }
+
+                // ✅ PASS VALIDE - Enregistrer le scan
+                const scanRef = dbRef(rtdb, `transport/scans/${vehicleId}/${Date.now()}`);
                 await rtdbSet(scanRef, {
-                    passId: decodedText,
-                    passengerName: passData.holderName || 'N/A',
-                    timestamp: Date.now(),
                     vehicleId: vehicleId,
-                    driverName: driverName,
-                    scannedAt: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    passengerPhone: subscription.subscriber_phone,
+                    passengerName: subscription.full_name,
+                    subscriptionType: subscription.subscription_type,
+                    subscriptionTier: subscription.subscription_tier,
+                    routeName: subscription.route_name,
+                    scanStatus: 'valid'
                 });
+
+                console.log('[EPscanT] ✅ Scan enregistré pour:', subscription.full_name);
+
+                const durationLabel = {
+                    'weekly': 'Hebdo',
+                    'monthly': 'Mensuel',
+                    'quarterly': 'Trimestriel'
+                };
+
+                const tierLabel = {
+                    'eco': 'Éco',
+                    'prestige': 'Prestige'
+                };
 
                 const details = `
                     <div class="detail-row">
-                        <span class="detail-label">Passager</span>
-                        <span class="detail-value">${passData.holderName || 'N/A'}</span>
+                        <span class="detail-label">Abonné</span>
+                        <span class="detail-value">${subscription.full_name}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Type</span>
-                        <span class="detail-value">${passData.passType || 'Standard'}</span>
+                        <span class="detail-label">Forfait</span>
+                        <span class="detail-value">${tierLabel[subscription.subscription_tier] || subscription.subscription_tier} ${durationLabel[subscription.subscription_type] || subscription.subscription_type}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ligne</span>
+                        <span class="detail-value">${subscription.route_name}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Expire le</span>
-                        <span class="detail-value">${passData.expiresAt ? new Date(passData.expiresAt).toLocaleDateString('fr-FR') : 'Illimité'}</span>
+                        <span class="detail-value">${new Date(subscription.end_date).toLocaleDateString('fr-FR')}</span>
                     </div>
                 `;
 
-                showResult('success', 'ACCÈS AUTORISÉ', `Bienvenue ${passData.holderName || ''}`, details);
+                showResult('success', 'PASS VALIDE', `Bienvenue à bord`, details);
 
             } catch (error) {
-                console.error('[EPscanT] Erreur scan:', error);
+                console.error('[EPscanT] ❌ Erreur scan:', error);
                 showResult('error', 'ERREUR SYSTÈME', 'Impossible de vérifier ce QR code');
             }
+        }
+
+        function extractPhoneFromQR(qrCode) {
+            // Format SAMAPASS-221771234567-xxx
+            const samaPassMatch = qrCode.match(/SAMAPASS-(\d+)-/);
+            if (samaPassMatch) {
+                return samaPassMatch[1];
+            }
+
+            // Format téléphone direct (77/78/76/70 + 7 chiffres)
+            const phoneMatch = qrCode.match(/^(77|78|76|70)\d{7}$/);
+            if (phoneMatch) {
+                return `221${qrCode}`;
+            }
+
+            // Format international (221...)
+            const intlMatch = qrCode.match(/^221(77|78|76|70)\d{7}$/);
+            if (intlMatch) {
+                return qrCode;
+            }
+
+            return null;
         }
 
         async function startScanner() {

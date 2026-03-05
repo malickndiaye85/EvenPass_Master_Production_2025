@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ref, onValue, push, set, update } from 'firebase/database';
+import { ref, onValue, push, set, update, get } from 'firebase/database';
 import { db, auth, firestore } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
 import { doc, setDoc } from 'firebase/firestore';
@@ -64,6 +64,7 @@ const AdminOpsTransportPage: React.FC = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastIdCounter, setToastIdCounter] = useState(0);
   const [newVehicleIds, setNewVehicleIds] = useState<Set<string>>(new Set());
+  const [vehicleScans, setVehicleScans] = useState<Record<string, number>>({});
 
   const loadData = () => {
     if (!db) return;
@@ -165,12 +166,52 @@ const AdminOpsTransportPage: React.FC = () => {
       }
     });
 
+    // Charger les stats de scans pour chaque véhicule
+    const loadVehicleScans = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const scansCount: Record<string, number> = {};
+
+      const allVehiclesRef = ref(db, 'fleet_vehicles');
+      const vehiclesSnapshot = await get(allVehiclesRef);
+
+      if (vehiclesSnapshot.exists()) {
+        const vehiclesData = vehiclesSnapshot.val();
+
+        for (const vehicleId of Object.keys(vehiclesData)) {
+          const vehicleScansRef = ref(db, `transport/scans/${vehicleId}`);
+          const scansSnapshot = await get(vehicleScansRef);
+
+          if (scansSnapshot.exists()) {
+            const allScans = scansSnapshot.val();
+            let todayScans = 0;
+
+            Object.values(allScans).forEach((scan: any) => {
+              const scanDate = scan.timestamp?.split('T')[0];
+              if (scanDate === today && scan.scanStatus === 'valid') {
+                todayScans++;
+              }
+            });
+
+            scansCount[vehicleId] = todayScans;
+          } else {
+            scansCount[vehicleId] = 0;
+          }
+        }
+      }
+
+      setVehicleScans(scansCount);
+    };
+
+    loadVehicleScans();
+    const scanInterval = setInterval(loadVehicleScans, 30000); // Refresh toutes les 30s
+
     return () => {
       unsubVehicles();
       unsubSubscribers();
       unsubScans();
       unsubLines();
       unsubDrivers();
+      clearInterval(scanInterval);
     };
   };
 
@@ -631,11 +672,11 @@ const AdminOpsTransportPage: React.FC = () => {
 
               <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-800">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-xs uppercase">Rotations Aujourd'hui</span>
+                  <span className="text-gray-400 text-xs uppercase">Scans SAMA PASS Aujourd'hui</span>
                   <RefreshCw className="text-[#10B981]" size={16} />
                 </div>
-                <div className="text-3xl font-black text-white">{vehicles.reduce((sum, v) => sum + (v.current_trips_today || 0), 0)}</div>
-                <div className="text-gray-500 text-xs mt-1">Total des trajets complétés</div>
+                <div className="text-3xl font-black text-white">{Object.values(vehicleScans).reduce((sum, count) => sum + count, 0)}</div>
+                <div className="text-gray-500 text-xs mt-1">Abonnés DEM-DEM Express transportés</div>
               </div>
 
               <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-800">
@@ -835,7 +876,7 @@ const AdminOpsTransportPage: React.FC = () => {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Ligne</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Statut</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Capacité</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Trajets/Jour</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Scans/Jour</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Occupation</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dernier Scan</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
@@ -901,7 +942,16 @@ const AdminOpsTransportPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-white font-medium">{vehicle.capacity} places</td>
-                      <td className="px-6 py-4 text-white font-bold">{vehicle.current_trips_today || 0}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-white font-bold text-lg">{vehicleScans[vehicle.id] || 0}</span>
+                          {(vehicleScans[vehicle.id] || 0) > 0 && (
+                            <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded-full text-xs font-bold">
+                              SAMA PASS
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <div className="flex-1 bg-gray-700 rounded-full h-2 w-16">
