@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer Véhicule Transport - Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0A0A0B 0%, #1A1A1B 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #10B981;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #6B7280;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .card {
+            background: #1E1E1E;
+            border: 1px solid #2A2A2A;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #9CA3AF;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2A2A2A;
+            border: 1px solid #3A3A3A;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #10B981;
+            background: #1A1A1A;
+        }
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #10B981;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        button:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #4B5563;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10B981;
+            color: #10B981;
+        }
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+        }
+        .info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3B82F6;
+            color: #3B82F6;
+        }
+        pre {
+            background: #0A0A0B;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #10B981;
+            margin-top: 12px;
+        }
+        .pin-display {
+            background: #0A0A0B;
+            border: 2px solid #10B981;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .pin-display .label {
+            color: #9CA3AF;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .pin-display .pin {
+            color: #10B981;
+            font-size: 48px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Création Véhicule Transport</h1>
+        <p class="subtitle">Script admin pour créer un véhicule dans transport/vehicles</p>
+
+        <div class="card">
+            <div class="info status">
+                <strong>ℹ️ Mode Admin</strong><br>
+                Ce script se connecte avec le compte Super Admin et contourne les règles Firebase normales.
+            </div>
+
+            <div class="form-group">
+                <label>📍 Email Admin</label>
+                <input type="email" id="adminEmail" value="boubacar.a.mbodji@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label>🔑 Mot de passe Admin</label>
+                <input type="password" id="adminPassword" value="">
+            </div>
+
+            <div class="form-group">
+                <label>🔢 PIN Véhicule (6 chiffres)</label>
+                <input type="text" id="pin" value="138192" maxlength="6" pattern="[0-9]{6}">
+            </div>
+
+            <div class="form-group">
+                <label>🚗 Immatriculation</label>
+                <input type="text" id="licensePlate" value="DK-TEST-138192">
+            </div>
+
+            <div class="form-group">
+                <label>👤 Nom Chauffeur</label>
+                <input type="text" id="driverName" value="Test Driver (Keur Massar)">
+            </div>
+
+            <button id="createBtn" onclick="createVehicle()">
+                🚀 Créer le Véhicule
+            </button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js';
+        import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: "evenpasssenegal.firebaseapp.com",
+            databaseURL: "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "evenpasssenegal",
+            storageBucket: "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: "882782977052",
+            appId: "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        window.createVehicle = async function() {
+            const btn = document.getElementById('createBtn');
+            const output = document.getElementById('output');
+
+            const adminEmail = document.getElementById('adminEmail').value;
+            const adminPassword = document.getElementById('adminPassword').value;
+            const pin = document.getElementById('pin').value;
+            const licensePlate = document.getElementById('licensePlate').value;
+            const driverName = document.getElementById('driverName').value;
+
+            if (!adminEmail || !adminPassword) {
+                output.innerHTML = '<div class="error status">❌ Veuillez renseigner email et mot de passe admin</div>';
+                return;
+            }
+
+            if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+                output.innerHTML = '<div class="error status">❌ Le PIN doit contenir exactement 6 chiffres</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Connexion admin...';
+            output.innerHTML = '';
+
+            try {
+                // 1. Connexion avec compte admin
+                output.innerHTML += '<div class="info status">🔐 Connexion avec compte Super Admin...</div>';
+                const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+                const user = userCredential.user;
+
+                output.innerHTML += `<div class="success status">✅ Connecté: ${user.email} (UID: ${user.uid})</div>`;
+
+                // 2. Créer le véhicule
+                const vehicleId = `vehicle_${pin}_${Date.now()}`;
+                const vehicleData = {
+                    pin: pin,
+                    licensePlate: licensePlate,
+                    driverName: driverName,
+                    isActive: true,
+                    vehicleId: vehicleId,
+                    createdAt: new Date().toISOString(),
+                    createdBy: user.uid,
+                    testVehicle: true,
+                    route: 'Keur Massar ↔ Dakar Centre',
+                    capacity: 25,
+                    type: 'ndiaga_ndiaye'
+                };
+
+                output.innerHTML += '<div class="info status">📝 Création du véhicule dans transport/vehicles...</div>';
+                output.innerHTML += `<pre>${JSON.stringify(vehicleData, null, 2)}</pre>`;
+
+                const vehicleRef = ref(db, `transport/vehicles/${vehicleId}`);
+                await set(vehicleRef, vehicleData);
+
+                output.innerHTML += '<div class="success status">✅ Véhicule créé dans Firebase!</div>';
+
+                // 3. Vérifier la création
+                output.innerHTML += '<div class="info status">🔍 Vérification...</div>';
+                const verifySnapshot = await get(vehicleRef);
+
+                if (verifySnapshot.exists()) {
+                    output.innerHTML += '<div class="success status">✅ CONFIRMATION: Le véhicule est bien présent dans Firebase!</div>';
+                    output.innerHTML += `<pre>${JSON.stringify(verifySnapshot.val(), null, 2)}</pre>`;
+
+                    // Afficher le PIN en grand
+                    output.innerHTML += `
+                        <div class="pin-display">
+                            <div class="label">PIN de connexion EPscanT</div>
+                            <div class="pin">${pin}</div>
+                        </div>
+                    `;
+
+                    output.innerHTML += `
+                        <div class="success status">
+                            <strong>🎉 VÉHICULE CRÉÉ AVEC SUCCÈS!</strong><br><br>
+                            ✅ Immatriculation: <strong>${licensePlate}</strong><br>
+                            ✅ Chauffeur: <strong>${driverName}</strong><br>
+                            ✅ PIN: <strong>${pin}</strong><br>
+                            ✅ ID: <strong>${vehicleId}</strong><br><br>
+                            📱 Testez maintenant sur: <a href="/epscant-login.html" style="color: #10B981; font-weight: bold;">/epscant-login.html</a>
+                        </div>
+                    `;
+                } else {
+                    output.innerHTML += '<div class="error status">❌ ERREUR: Véhicule non trouvé après création!</div>';
+                }
+
+                // 4. Déconnexion
+                await signOut(auth);
+                output.innerHTML += '<div class="info status">👋 Déconnecté du compte admin</div>';
+
+                btn.textContent = '✅ Véhicule créé!';
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error('Erreur complète:', error);
+                output.innerHTML += `
+                    <div class="error status">
+                        <strong>❌ ERREUR</strong><br><br>
+                        <strong>Message:</strong> ${error.message}<br>
+                        <strong>Code:</strong> ${error.code || 'N/A'}<br><br>
+                        ${error.code === 'auth/wrong-password' ? '🔑 Mot de passe incorrect' : ''}
+                        ${error.code === 'auth/user-not-found' ? '👤 Utilisateur non trouvé' : ''}
+                        ${error.code === 'PERMISSION_DENIED' ? '🚫 Permission refusée (problème de règles Firebase)' : ''}
+                    </div>
+                `;
+                output.innerHTML += `<pre>${error.stack || 'Pas de stack trace'}</pre>`;
+
+                btn.disabled = false;
+                btn.textContent = '🔄 Réessayer';
+            }
+        };
+    </script>
+</body>
+</html>
