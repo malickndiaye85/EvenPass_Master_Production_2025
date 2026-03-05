@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer Véhicule Test - PIN 138192</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #0A0A0B;
+            color: #10B981;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #10B981;
+            border-bottom: 2px solid #10B981;
+            padding-bottom: 10px;
+        }
+
+        pre {
+            background: #1A1A1B;
+            border: 1px solid #10B981;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        button {
+            background: #10B981;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 20px 0;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #059669;
+            transform: scale(1.02);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10B981;
+            color: #10B981;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+        }
+
+        .info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3B82F6;
+            color: #3B82F6;
+        }
+
+        .code {
+            background: #1A1A1B;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #10B981;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚗 Création Véhicule Test - PIN 138192</h1>
+
+    <div class="info status">
+        <strong>📌 OBJECTIF :</strong> Créer un véhicule test avec le PIN <span class="code">138192</span> pour tester EPscanT Transport
+    </div>
+
+    <button id="createBtn" onclick="createTestVehicle()">
+        🚀 CRÉER LE VÉHICULE TEST (PIN: 138192)
+    </button>
+
+    <div id="output"></div>
+
+    <h2>📋 Détails Véhicule</h2>
+    <pre>
+PIN de connexion    : 138192
+Immatriculation     : DK-TEST-138192
+Nom chauffeur       : Test Driver (Keur Massar)
+Type                : Ndiaga Ndiaye
+Capacité            : 25 places
+Route               : Keur Massar ↔ Dakar Centre
+Statut              : Actif (isActive: true)
+    </pre>
+
+    <h2>🔧 Données Firebase</h2>
+    <pre id="firebaseData"></pre>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: "evenpasssenegal.firebaseapp.com",
+            databaseURL: "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "evenpasssenegal",
+            storageBucket: "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: "882782977052",
+            appId: "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.createTestVehicle = async function() {
+            const btn = document.getElementById('createBtn');
+            const output = document.getElementById('output');
+            const firebaseData = document.getElementById('firebaseData');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Création en cours...';
+            output.innerHTML = '';
+
+            try {
+                const vehicleId = 'test_vehicle_138192';
+                const pin = '138192';
+
+                // Données pour transport/vehicles
+                const transportPayload = {
+                    pin: pin,
+                    licensePlate: 'DK-TEST-138192',
+                    driverName: 'Test Driver (Keur Massar)',
+                    isActive: true,
+                    vehicleId: vehicleId,
+                    createdAt: new Date().toISOString(),
+                    testVehicle: true,
+                    route: 'Keur Massar ↔ Dakar Centre',
+                    capacity: 25,
+                    type: 'ndiaga_ndiaye'
+                };
+
+                // Afficher les données
+                firebaseData.textContent = JSON.stringify(transportPayload, null, 2);
+
+                // 1. Créer dans transport/vehicles
+                output.innerHTML += '<div class="info status">📤 Écriture dans transport/vehicles...</div>';
+                const transportRef = ref(db, `transport/vehicles/${vehicleId}`);
+                await set(transportRef, transportPayload);
+                output.innerHTML += '<div class="success status">✅ Véhicule créé dans transport/vehicles</div>';
+
+                // 2. Vérifier que ça a bien été écrit
+                output.innerHTML += '<div class="info status">🔍 Vérification lecture...</div>';
+                const verifySnapshot = await get(transportRef);
+
+                if (verifySnapshot.exists()) {
+                    output.innerHTML += '<div class="success status">✅ LECTURE CONFIRMÉE: Le véhicule est bien dans Firebase!</div>';
+                    output.innerHTML += `<pre>${JSON.stringify(verifySnapshot.val(), null, 2)}</pre>`;
+                } else {
+                    output.innerHTML += '<div class="error status">❌ ERREUR: Véhicule non trouvé après création</div>';
+                }
+
+                // 3. Lister tous les véhicules
+                output.innerHTML += '<div class="info status">📋 Liste de tous les véhicules dans transport/vehicles...</div>';
+                const allVehiclesRef = ref(db, 'transport/vehicles');
+                const allSnapshot = await get(allVehiclesRef);
+
+                if (allSnapshot.exists()) {
+                    const vehicles = allSnapshot.val();
+                    const count = Object.keys(vehicles).length;
+                    output.innerHTML += `<div class="success status">✅ ${count} véhicule(s) total dans transport/vehicles</div>`;
+                    output.innerHTML += `<pre>${JSON.stringify(vehicles, null, 2)}</pre>`;
+                } else {
+                    output.innerHTML += '<div class="error status">⚠️ Aucun véhicule trouvé dans transport/vehicles</div>';
+                }
+
+                // Succès final
+                output.innerHTML += `
+                    <div class="success status">
+                        <strong>🎉 VÉHICULE TEST CRÉÉ AVEC SUCCÈS !</strong><br><br>
+                        ✅ Vous pouvez maintenant tester sur EPscanT Transport<br>
+                        📱 URL: <a href="/epscant-login.html" style="color: #10B981;">/epscant-login.html</a><br>
+                        🔑 PIN: <strong style="font-size: 24px;">138192</strong>
+                    </div>
+                `;
+
+                btn.textContent = '✅ Véhicule créé !';
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                output.innerHTML += `
+                    <div class="error status">
+                        <strong>❌ ERREUR :</strong><br>
+                        ${error.message}<br><br>
+                        <strong>Code:</strong> ${error.code || 'N/A'}<br>
+                        <strong>Stack:</strong><br>
+                        <pre>${error.stack || 'N/A'}</pre>
+                    </div>
+                `;
+                btn.disabled = false;
+                btn.textContent = '🔄 Réessayer';
+            }
+        };
+    </script>
+</body>
+</html>
