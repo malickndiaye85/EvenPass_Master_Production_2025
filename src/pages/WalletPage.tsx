@@ -122,9 +122,15 @@ const WalletPage: React.FC = () => {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="aspect-square flex items-center justify-center bg-[#1A2332] border border-gray-800 rounded-xl text-white text-2xl font-bold hover:bg-[#2A3342] active:bg-[#FFC700] active:text-[#0F1419] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+      className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-[#1E2936] to-[#1A2332] border-2 border-gray-700/50 rounded-2xl text-white text-3xl font-black shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:from-[#FFC700] active:to-[#FF8800] active:text-[#0F1419] active:border-[#FFC700]"
+      style={{
+        minHeight: '70px',
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent'
+      }}
     >
-      {value}
+      <span className="select-none">{value}</span>
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
     </button>
   );
 
@@ -204,82 +210,88 @@ const WalletPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#0F1419] overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-[#0A1628] via-[#0F1419] to-[#1a2942] overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-4 pt-4 pb-2">
+        <div className="flex-shrink-0 px-5 pt-5 pb-3">
           <button
             onClick={() => navigate('/voyage')}
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors active:scale-95 p-2 -ml-2 rounded-xl"
+            style={{
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent'
+            }}
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium text-sm">Retour</span>
+            <ArrowLeft className="w-6 h-6" />
+            <span className="font-bold text-base">Retour</span>
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
-          <div className="flex-shrink-0 text-center mb-4">
-            <div className="inline-flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#FFC700] to-[#FF8800] rounded-xl flex items-center justify-center shadow-lg">
-                <Zap className="w-6 h-6 text-[#0F1419]" />
+        <div className="flex-1 flex flex-col px-5 pb-5 overflow-hidden">
+          <div className="flex-shrink-0 text-center mb-5">
+            <div className="inline-flex items-center gap-3 mb-3">
+              <div className="w-14 h-14 bg-gradient-to-br from-[#FFC700] to-[#FF8800] rounded-2xl flex items-center justify-center shadow-2xl">
+                <Zap className="w-8 h-8 text-[#0F1419]" />
               </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">MON PASS</h1>
+              <h1 className="text-3xl font-black text-white tracking-tight">MON PASS</h1>
             </div>
-            <p className="text-gray-400 text-xs font-medium">
+            <p className="text-gray-400 text-sm font-semibold">
               Carte d'abonnement DEM-DEM Express
             </p>
           </div>
 
-          <div className="flex-shrink-0 bg-[#1A2332] rounded-2xl p-4 border border-gray-800 mb-3">
-            <h2 className="text-lg font-bold text-white text-center mb-1">
+          <div className="flex-shrink-0 bg-gradient-to-br from-[#1E2936] to-[#1A2332] rounded-3xl p-5 border-2 border-gray-700/50 mb-4 shadow-2xl">
+            <h2 className="text-xl font-black text-white text-center mb-1 tracking-tight">
               Gënaa Gaaw
             </h2>
-            <p className="text-gray-400 text-center text-xs mb-3 leading-relaxed">
+            <p className="text-gray-400 text-center text-sm mb-4 font-medium">
               Entrez votre numéro de téléphone
             </p>
 
-            <div className="relative mb-3">
-              <div className="bg-[#0F1419] border-2 border-gray-800 rounded-xl p-4 text-center min-h-[60px] flex items-center justify-center">
+            <div className="relative mb-4">
+              <div className="bg-[#0F1419] border-2 border-[#FFC700]/30 rounded-2xl p-5 text-center min-h-[80px] flex items-center justify-center shadow-inner">
                 {loading ? (
-                  <Loader className="w-6 h-6 text-[#FFC700] animate-spin" />
+                  <Loader className="w-8 h-8 text-[#FFC700] animate-spin" />
                 ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-gray-500 font-medium text-lg">+221</span>
-                    <span className="text-white text-2xl font-bold tracking-wider min-w-[140px]">
+                  <div className="flex items-baseline justify-center gap-3">
+                    <span className="text-gray-500 font-bold text-xl">+221</span>
+                    <span className="text-white text-3xl font-black tracking-widest" style={{ fontFamily: 'monospace' }}>
                       {formatPhoneDisplay(phoneNumber) || '_ _ _  _ _ _  _ _  _ _'}
                     </span>
                   </div>
                 )}
               </div>
               {phoneNumber.length > 0 && !loading && (
-                <div className="absolute top-2 right-2">
-                  <span className="text-xs text-gray-500 bg-[#1A2332] px-2 py-1 rounded">
-                    {phoneNumber.length}/9
-                  </span>
+                <div className="absolute -top-3 right-3">
+                  <div className="bg-gradient-to-br from-[#FFC700] to-[#FF8800] text-[#0F1419] px-3 py-1 rounded-full shadow-lg">
+                    <span className="text-xs font-black">
+                      {phoneNumber.length}/9
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mb-3">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-400 leading-tight">
+              <div className="bg-red-500/20 border-2 border-red-500/40 rounded-2xl p-3 mb-4 animate-shake">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-300 leading-snug font-medium">
                     {error}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-1 mb-2">
-              <Zap className="w-3 h-3 text-[#FFC700]" />
-              <p className="text-xs text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-2 bg-[#FFC700]/10 rounded-full border border-[#FFC700]/30">
+              <Zap className="w-4 h-4 text-[#FFC700]" />
+              <p className="text-xs text-[#FFC700] font-bold">
                 Auto-recherche à 9 chiffres
               </p>
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 flex flex-col">
-            <div className="grid grid-cols-3 gap-2">
+          <div className="flex-1 min-h-0 flex flex-col pb-2">
+            <div className="grid grid-cols-3 gap-3">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <KeypadButton
                   key={digit}
@@ -288,7 +300,7 @@ const WalletPage: React.FC = () => {
                   disabled={loading || phoneNumber.length >= 9}
                 />
               ))}
-              <div></div>
+              <div className="aspect-square"></div>
               <KeypadButton
                 value="0"
                 onClick={() => handleNumberInput('0')}
@@ -297,9 +309,15 @@ const WalletPage: React.FC = () => {
               <button
                 onClick={handleDelete}
                 disabled={loading || phoneNumber.length === 0}
-                className="aspect-square flex items-center justify-center bg-[#1A2332] border border-gray-800 rounded-xl text-white hover:bg-red-500/20 hover:border-red-500/30 active:bg-red-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-red-600/90 to-red-700/90 border-2 border-red-500/50 rounded-2xl text-white shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 disabled:border-gray-600"
+                style={{
+                  minHeight: '70px',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
               >
-                <Delete className="w-6 h-6" />
+                <Delete className="w-7 h-7" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
               </button>
             </div>
           </div>
@@ -319,6 +337,27 @@ const WalletPage: React.FC = () => {
         }
         .animate-fadeIn {
           animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
+        }
+        .animate-shake {
+          animation: shake 0.4s ease-in-out;
+        }
+
+        /* Améliorer le feedback tactile */
+        button:active {
+          transform: scale(0.95);
+        }
+
+        /* Empêcher la sélection de texte lors du tap */
+        button {
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
         }
       `}</style>
     </div>
