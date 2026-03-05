@@ -203,7 +203,7 @@
         ".read": true,
         ".indexOn": ["pin", "licensePlate", "isActive"],
         "$vehicleId": {
-          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('admins').child(auth.uid).child('role').val() === 'super_admin' || root.child('admins').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
           ".validate": "newData.hasChildren(['pin', 'driverName', 'licensePlate', 'isActive']) && newData.child('pin').isString() && newData.child('pin').val().length === 6"
         }
       },
@@ -215,11 +215,11 @@
       },
       "scans": {
         "$vehicleId": {
-          ".read": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".read": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('admins').child(auth.uid).child('role').val() === 'super_admin' || root.child('admins').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
           ".write": true,
           ".indexOn": ["timestamp", "passengerId"],
           "$date": {
-            ".read": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+            ".read": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('admins').child(auth.uid).child('role').val() === 'super_admin' || root.child('admins').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
             ".write": true
           }
         }
@@ -229,7 +229,7 @@
     "adminRoles": {
       ".read": "auth != null",
       "$userId": {
-        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+        ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || (auth.uid === $userId && !data.exists())",
         ".validate": "newData.hasChildren(['role', 'email']) && newData.child('role').isString()"
       }
     },

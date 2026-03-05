@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Bus, Calendar, Users, Shield, AlertTriangle, MapPin, Clock,
   TrendingUp, Activity, Radio, Plus, Settings, BarChart3,
-  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause, LogOut, X, UserCheck, Database
+  RefreshCw, Zap, Eye, CheckCircle, XCircle, Pause, LogOut, X, UserCheck, Database, Trash2
 } from 'lucide-react';
 import { useAuth } from '../../context/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { ref, onValue, push, set, update } from 'firebase/database';
 import { db, auth, firestore } from '../../firebase';
 import { FleetVehicle, LineAnalytics, ScanEvent, AvailabilityMetrics } from '../../types/transport';
 import { doc, setDoc } from 'firebase/firestore';
+import { autoSyncCurrentUser } from '../../lib/ensureAdminRoleSync';
 
 interface Toast {
   id: number;
@@ -175,6 +176,14 @@ const AdminOpsTransportPage: React.FC = () => {
 
   useEffect(() => {
     const cleanup = loadData();
+
+    // Auto-sync adminRoles au démarrage
+    if (user?.uid && user?.email && user?.role) {
+      autoSyncCurrentUser(user.uid, user.email, user.role).catch(err => {
+        console.error('[ADMIN-OPS-TRANSPORT] Erreur sync adminRoles:', err);
+      });
+    }
+
     return cleanup;
   }, []);
 
@@ -214,6 +223,34 @@ const AdminOpsTransportPage: React.FC = () => {
 
   const hideToast = (id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleDeleteVehicle = async (vehicle: FleetVehicle) => {
+    if (!db) return;
+
+    const confirmDelete = window.confirm(
+      `⚠️ ATTENTION : Suppression définitive\n\n` +
+      `Véhicule: ${vehicle.vehicle_number}\n` +
+      `Immatriculation: ${vehicle.license_plate || 'N/A'}\n\n` +
+      `Cette action est IRRÉVERSIBLE.\n\n` +
+      `Voulez-vous vraiment supprimer ce véhicule ?`
+    );
+
+    if (!confirmDelete) return;
+
+    const loadingToastId = showToast('loading', `Suppression de ${vehicle.vehicle_number}...`);
+
+    try {
+      const vehicleRef = ref(db, `fleet_vehicles/${vehicle.id}`);
+      await set(vehicleRef, null);
+
+      hideToast(loadingToastId);
+      showToast('success', `Véhicule ${vehicle.vehicle_number} supprimé avec succès`);
+    } catch (error: any) {
+      hideToast(loadingToastId);
+      showToast('error', `Erreur lors de la suppression: ${error.message}`);
+      console.error('Erreur suppression véhicule:', error);
+    }
   };
 
   const handleSetMaintenance = async (vehicle: FleetVehicle) => {
@@ -916,6 +953,14 @@ const AdminOpsTransportPage: React.FC = () => {
                               >
                                 <MapPin size={14} className="text-yellow-400" />
                                 <span>Localiser</span>
+                              </button>
+                              <div className="border-t border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => handleDeleteVehicle(vehicle)}
+                                className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-900/20 transition-colors flex items-center space-x-2 text-sm"
+                              >
+                                <Trash2 size={14} className="text-red-400" />
+                                <span>Supprimer</span>
                               </button>
                             </div>
                           </div>
