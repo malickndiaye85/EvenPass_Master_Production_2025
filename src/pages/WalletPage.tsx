@@ -122,15 +122,14 @@ const WalletPage: React.FC = () => {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-[#1E2936] to-[#1A2332] border-2 border-gray-700/50 rounded-2xl text-white text-3xl font-black shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:from-[#FFC700] active:to-[#FF8800] active:text-[#0F1419] active:border-[#FFC700]"
+      className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-[#1E2936] to-[#1A2332] border-2 border-gray-700/50 rounded-xl shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:from-[#FFC700] active:to-[#FF8800] active:border-[#FFC700]"
       style={{
-        minHeight: '70px',
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'transparent'
       }}
     >
-      <span className="select-none">{value}</span>
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+      <span className="select-none text-white text-4xl font-black" style={{ textShadow: '0 2px 8px rgba(255, 199, 0, 0.4)' }}>{value}</span>
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
     </button>
   );
 
@@ -226,43 +225,43 @@ const WalletPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col px-5 pb-5 overflow-hidden">
-          <div className="flex-shrink-0 text-center mb-5">
-            <div className="inline-flex items-center gap-3 mb-3">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#FFC700] to-[#FF8800] rounded-2xl flex items-center justify-center shadow-2xl">
-                <Zap className="w-8 h-8 text-[#0F1419]" />
+        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
+          <div className="flex-shrink-0 text-center mb-3">
+            <div className="inline-flex items-center gap-2 mb-1">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#FFC700] to-[#FF8800] rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-[#0F1419]" />
               </div>
-              <h1 className="text-3xl font-black text-white tracking-tight">MON PASS</h1>
+              <h1 className="text-2xl font-black text-white tracking-tight">MON PASS</h1>
             </div>
-            <p className="text-gray-400 text-sm font-semibold">
+            <p className="text-gray-400 text-xs font-semibold">
               Carte d'abonnement DEM-DEM Express
             </p>
           </div>
 
-          <div className="flex-shrink-0 bg-gradient-to-br from-[#1E2936] to-[#1A2332] rounded-3xl p-5 border-2 border-gray-700/50 mb-4 shadow-2xl">
-            <h2 className="text-xl font-black text-white text-center mb-1 tracking-tight">
+          <div className="flex-shrink-0 bg-gradient-to-br from-[#1E2936] to-[#1A2332] rounded-2xl p-4 border-2 border-gray-700/50 mb-3 shadow-2xl">
+            <h2 className="text-lg font-black text-white text-center mb-1">
               Gënaa Gaaw
             </h2>
-            <p className="text-gray-400 text-center text-sm mb-4 font-medium">
+            <p className="text-gray-400 text-center text-xs mb-3 font-medium">
               Entrez votre numéro de téléphone
             </p>
 
-            <div className="relative mb-4">
-              <div className="bg-[#0F1419] border-2 border-[#FFC700]/30 rounded-2xl p-5 text-center min-h-[80px] flex items-center justify-center shadow-inner">
+            <div className="relative mb-3">
+              <div className="bg-[#0F1419] border-2 border-[#FFC700]/30 rounded-xl p-3 text-center min-h-[65px] flex items-center justify-center shadow-inner">
                 {loading ? (
-                  <Loader className="w-8 h-8 text-[#FFC700] animate-spin" />
+                  <Loader className="w-6 h-6 text-[#FFC700] animate-spin" />
                 ) : (
-                  <div className="flex items-baseline justify-center gap-3">
-                    <span className="text-gray-500 font-bold text-xl">+221</span>
-                    <span className="text-white text-3xl font-black tracking-widest" style={{ fontFamily: 'monospace' }}>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-gray-500 font-bold text-base">+221</span>
+                    <span className="text-white text-2xl font-black tracking-widest" style={{ fontFamily: 'monospace' }}>
                       {formatPhoneDisplay(phoneNumber) || '_ _ _  _ _ _  _ _  _ _'}
                     </span>
                   </div>
                 )}
               </div>
               {phoneNumber.length > 0 && !loading && (
-                <div className="absolute -top-3 right-3">
-                  <div className="bg-gradient-to-br from-[#FFC700] to-[#FF8800] text-[#0F1419] px-3 py-1 rounded-full shadow-lg">
+                <div className="absolute -top-2 right-2">
+                  <div className="bg-gradient-to-br from-[#FFC700] to-[#FF8800] text-[#0F1419] px-2 py-0.5 rounded-full shadow-lg">
                     <span className="text-xs font-black">
                       {phoneNumber.length}/9
                     </span>
@@ -272,26 +271,26 @@ const WalletPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border-2 border-red-500/40 rounded-2xl p-3 mb-4 animate-shake">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-300 leading-snug font-medium">
+              <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-2 mb-3 animate-shake">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-300 leading-snug font-medium">
                     {error}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-2 py-2 bg-[#FFC700]/10 rounded-full border border-[#FFC700]/30">
-              <Zap className="w-4 h-4 text-[#FFC700]" />
+            <div className="flex items-center justify-center gap-1.5 py-1.5 bg-[#FFC700]/10 rounded-full border border-[#FFC700]/30">
+              <Zap className="w-3.5 h-3.5 text-[#FFC700]" />
               <p className="text-xs text-[#FFC700] font-bold">
                 Auto-recherche à 9 chiffres
               </p>
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 flex flex-col pb-2">
-            <div className="grid grid-cols-3 gap-3">
+          <div className="flex-1 min-h-0 flex flex-col pb-1">
+            <div className="grid grid-cols-3 gap-2.5">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <KeypadButton
                   key={digit}
@@ -309,15 +308,14 @@ const WalletPage: React.FC = () => {
               <button
                 onClick={handleDelete}
                 disabled={loading || phoneNumber.length === 0}
-                className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-red-600/90 to-red-700/90 border-2 border-red-500/50 rounded-2xl text-white shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 disabled:border-gray-600"
+                className="relative aspect-square flex items-center justify-center bg-gradient-to-br from-red-600/90 to-red-700/90 border-2 border-red-500/50 rounded-xl text-white shadow-lg active:scale-95 active:shadow-xl transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 disabled:border-gray-600"
                 style={{
-                  minHeight: '70px',
                   touchAction: 'manipulation',
                   WebkitTapHighlightColor: 'transparent'
                 }}
               >
-                <Delete className="w-7 h-7" />
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
+                <Delete className="w-6 h-6" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
               </button>
             </div>
           </div>
