@@ -200,7 +200,7 @@
 
     "transport": {
       "vehicles": {
-        ".read": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+        ".read": true,
         ".indexOn": ["pin", "licensePlate", "isActive"],
         "$vehicleId": {
           ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",

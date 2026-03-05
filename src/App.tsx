@@ -130,6 +130,8 @@ import AdminOpsLoginPage from './pages/admin/AdminOpsLoginPage';
 
 import AdminOpsTransportPage from './pages/admin/AdminOpsTransportPage';
 
+import MigrationVehiclesPage from './pages/admin/MigrationVehiclesPage';
+
 import AdminPINCodesPage from './pages/admin/AdminPINCodesPage';
 
 import ControllerLoginPage from './pages/transport/ControllerLoginPage';
@@ -605,6 +607,22 @@ function AppRoutes() {
           <RoleBasedRoute allowedRoles={['super_admin', 'ops_transport']}>
 
             <AdminOpsTransportPage />
+
+          </RoleBasedRoute>
+
+        }
+
+      />
+
+      <Route
+
+        path="/admin/ops/transport/migration"
+
+        element={
+
+          <RoleBasedRoute allowedRoles={['super_admin', 'ops_transport']}>
+
+            <MigrationVehiclesPage />
 
           </RoleBasedRoute>
 
