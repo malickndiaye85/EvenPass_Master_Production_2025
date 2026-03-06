@@ -241,6 +241,19 @@
         ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
         ".validate": "newData.hasChildren(['code', 'type', 'createdAt']) && newData.child('code').isString() && newData.child('code').val().length === 6"
       }
+    },
+
+    "abonnements_express": {
+      ".read": true,
+      ".indexOn": ["qr_code", "subscriber_phone", "status", "vehicle_id"],
+      "$subscriptionId": {
+        ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+      }
+    },
+
+    "_connection_test": {
+      ".read": true,
+      ".write": false
     }
   }
 }
