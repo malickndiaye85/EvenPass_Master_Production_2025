@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bus, MapPin, Clock } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Bus, MapPin, Clock, TestTube } from 'lucide-react';
 import DynamicLogo from '../../components/DynamicLogo';
 import DemDemPurchaseTunnel, { UserIdentity } from '../../components/DemDemPurchaseTunnel';
 import FirebaseDiagnostic from '../../components/FirebaseDiagnostic';
 import { getActiveTransportLines, BusRouteDisplay } from '../../lib/transportLinesService';
+import { generateTestSAMAPass, type TestSAMAPass } from '../../lib/testPassGenerator';
+import QRCode from 'react-qr-code';
 
 type SubscriptionDuration = 'weekly' | 'monthly' | 'quarterly';
 type SubscriptionTier = 'eco' | 'prestige';
@@ -17,9 +19,14 @@ interface PurchaseSelection {
 
 export default function DemDemExpressPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [routes, setRoutes] = useState<BusRouteDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchaseSelection, setPurchaseSelection] = useState<PurchaseSelection | null>(null);
+  const [generatedTestPass, setGeneratedTestPass] = useState<TestSAMAPass | null>(null);
+  const [generatingTestPass, setGeneratingTestPass] = useState(false);
+
+  const showDevTools = searchParams.get('dev') === 'true' || import.meta.env.DEV;
 
   useEffect(() => {
     loadRoutes();
@@ -87,6 +94,19 @@ export default function DemDemExpressPage() {
     return labels[duration];
   };
 
+  const handleGenerateTestPass = async () => {
+    setGeneratingTestPass(true);
+    try {
+      const testPass = await generateTestSAMAPass();
+      setGeneratedTestPass(testPass);
+    } catch (error) {
+      console.error('Erreur génération pass test:', error);
+      alert('Erreur lors de la génération du pass de test');
+    } finally {
+      setGeneratingTestPass(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A1628] via-[#1a2942] to-[#0A1628]">
       <nav className="bg-blue-950/95 backdrop-blur-xl shadow-lg sticky top-0 z-50 border-b border-white/10">
@@ -104,7 +124,67 @@ export default function DemDemExpressPage() {
             <p className="text-xl text-white/70">
               Abonnements transport urbain
             </p>
+
+            {showDevTools && (
+              <div className="mt-6">
+                <button
+                  onClick={handleGenerateTestPass}
+                  disabled={generatingTestPass}
+                  className="px-6 py-3 bg-green-500/20 hover:bg-green-500/30 border-2 border-green-500 text-green-300 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                >
+                  <TestTube className="w-5 h-5" />
+                  {generatingTestPass ? 'Génération...' : 'Générer Pass de Test'}
+                </button>
+              </div>
+            )}
           </div>
+
+          {generatedTestPass && (
+            <div className="mb-8 bg-green-950/30 border-2 border-green-500/50 rounded-2xl p-6">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-green-400 mb-4">Pass de Test Généré</h3>
+
+                <div className="bg-white p-6 rounded-xl inline-block mb-4">
+                  <QRCode value={generatedTestPass.qr_code} size={200} />
+                </div>
+
+                <div className="space-y-2 text-left max-w-md mx-auto bg-black/30 rounded-xl p-4">
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Nom:</span>
+                    <span className="text-white font-bold">{generatedTestPass.full_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Téléphone:</span>
+                    <span className="text-white font-mono">{generatedTestPass.subscriber_phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Type:</span>
+                    <span className="text-white font-bold">{generatedTestPass.subscription_type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Ligne:</span>
+                    <span className="text-white">{generatedTestPass.route_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Valide jusqu'au:</span>
+                    <span className="text-green-400 font-bold">{generatedTestPass.end_date}</span>
+                  </div>
+                  <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30">
+                    <p className="text-xs text-blue-300 font-mono break-all">
+                      QR: {generatedTestPass.qr_code}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setGeneratedTestPass(null)}
+                  className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold transition-all"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          )}
 
 {loading ? (
             <div className="flex items-center justify-center py-20">

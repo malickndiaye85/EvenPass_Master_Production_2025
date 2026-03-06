@@ -22,6 +22,7 @@ import {
 } from '../lib/financialReports';
 import { ref, onValue, push, set, remove, update } from 'firebase/database';
 import { db } from '../firebase';
+import { deleteAllTestPasses, getTestPassesCount } from '../lib/testPassGenerator';
 
 interface TransportLine {
   id: string;
@@ -55,11 +56,37 @@ const AdminTransversalDashboard: React.FC = () => {
   const [transportLines, setTransportLines] = useState<TransportLine[]>([]);
   const [showCreateLineModal, setShowCreateLineModal] = useState(false);
   const [pendingEventsCount, setPendingEventsCount] = useState(0);
+  const [testPassesCount, setTestPassesCount] = useState(0);
+  const [deletingTestPasses, setDeletingTestPasses] = useState(false);
 
   useEffect(() => {
     loadData();
     loadTransportLines();
+    loadTestPassesCount();
   }, []);
+
+  const loadTestPassesCount = async () => {
+    const count = await getTestPassesCount();
+    setTestPassesCount(count);
+  };
+
+  const handleDeleteTestPasses = async () => {
+    if (!confirm(`Voulez-vous vraiment supprimer ${testPassesCount} pass de test ?`)) {
+      return;
+    }
+
+    setDeletingTestPasses(true);
+    try {
+      const deletedCount = await deleteAllTestPasses();
+      alert(`${deletedCount} pass de test supprimés avec succès`);
+      await loadTestPassesCount();
+    } catch (error) {
+      console.error('Erreur suppression pass test:', error);
+      alert('Erreur lors de la suppression des pass de test');
+    } finally {
+      setDeletingTestPasses(false);
+    }
+  };
 
   const loadTransportLines = () => {
     if (!db) return;
@@ -514,11 +541,23 @@ const AdminTransversalDashboard: React.FC = () => {
 
           {activeTab === 'events' && (
             <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <Ticket className="w-8 h-8 text-purple-400" />
-                <h2 className="text-2xl font-black text-white">
-                  Gestion des Événements (EVEN)
-                </h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Ticket className="w-8 h-8 text-purple-400" />
+                  <h2 className="text-2xl font-black text-white">
+                    Gestion des Événements (EVEN)
+                  </h2>
+                </div>
+
+                {testPassesCount > 0 && (
+                  <button
+                    onClick={handleDeleteTestPasses}
+                    disabled={deletingTestPasses}
+                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingTestPasses ? 'Suppression...' : `Supprimer ${testPassesCount} Pass Test`}
+                  </button>
+                )}
               </div>
 
               <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -688,11 +727,23 @@ const AdminTransversalDashboard: React.FC = () => {
 
           {activeTab === 'voyage' && (
             <div className="rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <Bus className="w-8 h-8 text-cyan-400" />
-                <h2 className="text-2xl font-black text-white">
-                  Gestion Transport & Voyage (DEM-DEM)
-                </h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Bus className="w-8 h-8 text-cyan-400" />
+                  <h2 className="text-2xl font-black text-white">
+                    Gestion Transport & Voyage (DEM-DEM)
+                  </h2>
+                </div>
+
+                {testPassesCount > 0 && (
+                  <button
+                    onClick={handleDeleteTestPasses}
+                    disabled={deletingTestPasses}
+                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingTestPasses ? 'Suppression...' : `Supprimer ${testPassesCount} Pass Test`}
+                  </button>
+                )}
               </div>
 
               <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
