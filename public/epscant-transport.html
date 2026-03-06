@@ -654,7 +654,7 @@
         <div class="scanner-overlay-top">
             <div class="overlay-info">
                 <span class="firebase-status disconnected" id="firebaseStatus"></span>
-                ACTIF
+                <span id="connectionText">Hors Ligne</span>
             </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
         </div>
@@ -737,6 +737,7 @@
         let isFirebaseConnected = false;
         let offlineDB = null;
         const firebaseStatusEl = document.getElementById('firebaseStatus');
+        const connectionTextEl = document.getElementById('connectionText');
 
         const DB_NAME = 'epscant_offline_db';
         const DB_VERSION = 1;
@@ -966,6 +967,7 @@
                 isFirebaseConnected = true;
                 firebaseStatusEl.classList.remove('disconnected');
                 firebaseStatusEl.classList.add('connected');
+                connectionTextEl.textContent = 'En Ligne';
                 console.log('[EPscanT] ✅ Firebase connected');
 
                 const syncCount = await syncSubscriptionsFromFirebase();
@@ -977,6 +979,7 @@
                 isFirebaseConnected = false;
                 firebaseStatusEl.classList.remove('connected');
                 firebaseStatusEl.classList.add('disconnected');
+                connectionTextEl.textContent = 'Hors Ligne';
                 console.error('[EPscanT] ❌ Firebase connection failed:', error);
 
                 const cachedCount = localStorage.getItem('cached_subscriptions_count') || 0;
@@ -990,6 +993,7 @@
             isFirebaseConnected = true;
             firebaseStatusEl.classList.remove('disconnected');
             firebaseStatusEl.classList.add('connected');
+            connectionTextEl.textContent = 'En Ligne';
 
             await syncSubscriptionsFromFirebase();
             await syncPendingScans();
@@ -1001,6 +1005,7 @@
             isFirebaseConnected = false;
             firebaseStatusEl.classList.remove('connected');
             firebaseStatusEl.classList.add('disconnected');
+            connectionTextEl.textContent = 'Hors Ligne';
             updateOfflineInfo();
         });
 
