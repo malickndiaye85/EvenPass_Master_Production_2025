@@ -1,0 +1,27 @@
+{
+  "name": "EPscanT - Transport Scanner",
+  "short_name": "EPscanT",
+  "description": "Scanner de passes transport DemDem Express",
+  "start_url": "/epscant-transport.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0EA5E9",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/EPscanT_logo_pwa.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/EPscanT_logo_pwa.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["transport", "utilities"],
+  "screenshots": []
+}

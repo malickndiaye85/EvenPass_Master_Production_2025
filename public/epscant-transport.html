@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EPscanT - Transport Scanner</title>
     <script src="/env-config.js"></script>
-    <link rel="icon" type="image/png" href="/EPSCAN_512x512.png">
-    <link rel="apple-touch-icon" href="/EPSCAN_512x512.png">
+    <link rel="manifest" href="/manifest-epscant.json">
+    <link rel="icon" type="image/jpeg" href="/assets/EPscanT_logo_pwa.jpg">
+    <link rel="apple-touch-icon" href="/assets/EPscanT_logo_pwa.jpg">
     <meta name="theme-color" content="#0EA5E9">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1394,6 +1395,16 @@
         }, 500);
 
         console.log('[EPscanT] Ready for', driverName);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-epscant.js', { scope: '/' })
+                .then((registration) => {
+                    console.log('[EPscanT] Service Worker registered:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('[EPscanT] Service Worker registration failed:', error);
+                });
+        }
     </script>
 </body>
 </html>
