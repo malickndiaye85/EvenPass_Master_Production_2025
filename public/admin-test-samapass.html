@@ -451,17 +451,28 @@
             }
         };
 
-        async function generateQRCodeImage(text) {
-            const canvas = document.createElement('canvas');
-            await QRCode.toCanvas(canvas, text, {
-                width: 250,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            });
-            return canvas;
+        async function generateQRCodeImage(text, targetElement) {
+            try {
+                const canvas = document.createElement('canvas');
+                await QRCode.toCanvas(canvas, text, {
+                    width: 250,
+                    margin: 2,
+                    errorCorrectionLevel: 'H',
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                });
+
+                targetElement.innerHTML = '';
+                targetElement.appendChild(canvas);
+                window.currentQRCanvas = canvas;
+                return canvas;
+            } catch (err) {
+                console.error('Erreur génération QR:', err);
+                targetElement.innerHTML = '<p style="color: red;">Erreur génération QR Code</p>';
+                return null;
+            }
         }
 
         function showResult(type, title, details) {
@@ -496,13 +507,11 @@
 
             if (details && typeof details === 'object' && details.qrCode) {
                 setTimeout(async () => {
-                    const canvas = await generateQRCodeImage(details.qrCode);
                     const qrCanvas = document.getElementById('qrCanvas');
                     if (qrCanvas) {
-                        qrCanvas.appendChild(canvas);
-                        window.currentQRCanvas = canvas;
+                        await generateQRCodeImage(details.qrCode, qrCanvas);
                     }
-                }, 100);
+                }, 200);
             }
 
             setTimeout(() => {
