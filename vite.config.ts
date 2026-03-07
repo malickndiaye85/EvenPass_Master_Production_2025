@@ -5,6 +5,10 @@ import { join } from 'path';
 
 const buildTimestamp = Date.now();
 
+/**
+ * Plugin pour copier les fichiers HTML statiques de public/ vers dist/
+ * Nécessaire pour les scans EPscanV et les accès contrôleurs
+ */
 const copyPublicHtmlPlugin = (): Plugin => {
   return {
     name: 'copy-public-html-plugin',
@@ -34,14 +38,22 @@ const copyPublicHtmlPlugin = (): Plugin => {
   };
 };
 
+/**
+ * Plugin pour injecter les variables d'environnement Firebase directement dans le HTML
+ * Utilise les secrets GitHub en priorité pour la production demdem.sn
+ */
 const inlineEnvPlugin = (): Plugin => {
   return {
     name: 'inline-env-plugin',
     apply: 'build',
     closeBundle() {
       const distPath = join(__dirname, 'dist');
-      // CORRECTION ICI : On fusionne les variables système (GitHub Secrets) avec le fichier .env
-      const env = { ...process.env, ...loadEnv('production', process.cwd(), '') };
+      
+      // FUSION CRUCIALE : On charge les variables du .env ET du système (GitHub Secrets)
+      const env = { 
+        ...process.env, 
+        ...loadEnv('production', process.cwd(), '') 
+      };
 
       const envScript = `
 window.ENV = {
@@ -53,13 +65,6 @@ window.ENV = {
   FIREBASE_MESSAGING_SENDER_ID: '${env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''}',
   FIREBASE_APP_ID: '${env.VITE_FIREBASE_APP_ID || ''}',
   FIREBASE_MEASUREMENT_ID: '${env.VITE_FIREBASE_MEASUREMENT_ID || ''}',
-  FIREBASE_ADMIN_API_KEY: '${env.VITE_FIREBASE_ADMIN_API_KEY || ''}',
-  FIREBASE_ADMIN_AUTH_DOMAIN: '${env.VITE_FIREBASE_ADMIN_AUTH_DOMAIN || ''}',
-  FIREBASE_ADMIN_DATABASE_URL: '${env.VITE_FIREBASE_ADMIN_DATABASE_URL || ''}',
-  FIREBASE_ADMIN_PROJECT_ID: '${env.VITE_FIREBASE_ADMIN_PROJECT_ID || ''}',
-  FIREBASE_ADMIN_STORAGE_BUCKET: '${env.VITE_FIREBASE_ADMIN_STORAGE_BUCKET || ''}',
-  FIREBASE_ADMIN_MESSAGING_SENDER_ID: '${env.VITE_FIREBASE_ADMIN_MESSAGING_SENDER_ID || ''}',
-  FIREBASE_ADMIN_APP_ID: '${env.VITE_FIREBASE_ADMIN_APP_ID || ''}',
   ADMIN_UID: '${env.VITE_ADMIN_UID || ''}'
 };
 
@@ -72,13 +77,41 @@ window.__FIREBASE_CONFIG__ = {
   messagingSenderId: "${env.VITE_FIREBASE_MESSAGING_SENDER_ID || '882782977052'}",
   appId: "${env.VITE_FIREBASE_APP_ID || '1:882782977052:web:1f2ea147010066017cf3d9'}"
 };
-
-console.log('[ENV] Firebase config loaded from GitHub/System');
+console.log('[PROD] Firebase config injected successfully');
       `.trim();
 
       try {
         const htmlFiles = readdirSync(distPath).filter(file => file.endsWith('.html'));
-
         htmlFiles.forEach(file => {
           const filePath = join(distPath, file);
-          let content
+          let content = readFileSync(filePath, 'utf-8');
+          content = content.replace(
+            /<script src="\/env-config\.js"><\/script>/g,
+            `<script>${envScript}</script>`
+          );
+          writeFileSync(filePath, content, 'utf-8');
+        });
+        console.log(`✓ Env injected in ${htmlFiles.length} files`);
+      } catch (e) {
+        console.error('Env injection failed:', e);
+      }
+    }
+  };
+};
+
+export default defineConfig({
+  base: '/',
+  plugins: [react(), copyPublicHtmlPlugin(), inlineEnvPlugin()],
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  }
+});
