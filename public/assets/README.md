@@ -35,4 +35,4 @@ The Logo component (`/src/components/Logo.tsx`) automatically applies:
 - **Transport theme:** No filter (original colors)
 - **Event theme:** `brightness(0) invert(1)` CSS filter (converts to white)
 
-This ensures the logo looks premium on both light (Transport) and dark (Event) backgrounds.
+This ensures the logo looks premium on both light (Transport) and dark (Event) backgrounds..
