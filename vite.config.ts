@@ -40,7 +40,8 @@ const inlineEnvPlugin = (): Plugin => {
     apply: 'build',
     closeBundle() {
       const distPath = join(__dirname, 'dist');
-      const env = loadEnv('production', process.cwd(), '');
+      // CORRECTION ICI : On fusionne les variables système (GitHub Secrets) avec le fichier .env
+      const env = { ...process.env, ...loadEnv('production', process.cwd(), '') };
 
       const envScript = `
 window.ENV = {
@@ -72,7 +73,7 @@ window.__FIREBASE_CONFIG__ = {
   appId: "${env.VITE_FIREBASE_APP_ID || '1:882782977052:web:1f2ea147010066017cf3d9'}"
 };
 
-console.log('[ENV] Firebase config loaded');
+console.log('[ENV] Firebase config loaded from GitHub/System');
       `.trim();
 
       try {
@@ -80,58 +81,4 @@ console.log('[ENV] Firebase config loaded');
 
         htmlFiles.forEach(file => {
           const filePath = join(distPath, file);
-          let content = readFileSync(filePath, 'utf-8');
-
-          content = content.replace(
-            /<script src="\/env-config\.js"><\/script>/g,
-            `<script>${envScript}</script>`
-          );
-
-          writeFileSync(filePath, content, 'utf-8');
-        });
-
-        console.log(`✓ Environment variables injected inline in ${htmlFiles.length} HTML files`);
-      } catch (error) {
-        console.error('Failed to inject inline env variables:', error);
-      }
-    }
-  };
-};
-
-const swVersionPlugin = (): Plugin => {
-  return {
-    name: 'sw-version-plugin',
-    apply: 'build',
-    closeBundle() {
-      const swPath = join(__dirname, 'dist', 'sw.js');
-      try {
-        let content = readFileSync(swPath, 'utf-8');
-
-        content = content.replace(
-          /const CACHE_VERSION = Date\.now\(\);/,
-          `const CACHE_VERSION = ${buildTimestamp};`
-        );
-
-        writeFileSync(swPath, content, 'utf-8');
-        console.log(`✓ Service Worker versioned with timestamp: ${buildTimestamp}`);
-      } catch (error) {
-        console.warn('⚠️ Service Worker not found, skipping versioning');
-      }
-    }
-  };
-};
-
-export default defineConfig({
-  base: '/',
-  plugins: [react(), copyPublicHtmlPlugin(), inlineEnvPlugin(), swVersionPlugin()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
-    }
-  }
-});
+          let content
