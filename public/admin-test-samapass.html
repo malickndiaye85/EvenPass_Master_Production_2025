@@ -247,7 +247,7 @@
             100% { transform: rotate(360deg); }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -452,23 +452,28 @@
             }
         };
 
-        async function generateQRCodeImage(text, targetElement) {
+        function generateQRCodeImage(text, targetElement) {
             try {
-                const canvas = document.createElement('canvas');
-                await QRCode.toCanvas(canvas, text, {
+                targetElement.innerHTML = '';
+
+                const qrcode = new QRCode(targetElement, {
+                    text: text,
                     width: 250,
-                    margin: 2,
-                    errorCorrectionLevel: 'H',
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
+                    height: 250,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
                 });
 
-                targetElement.innerHTML = '';
-                targetElement.appendChild(canvas);
-                window.currentQRCanvas = canvas;
-                return canvas;
+                setTimeout(() => {
+                    const canvas = targetElement.querySelector('canvas');
+                    if (canvas) {
+                        window.currentQRCanvas = canvas;
+                        console.log('[QR] Canvas généré avec succès');
+                    }
+                }, 100);
+
+                return qrcode;
             } catch (err) {
                 console.error('Erreur génération QR:', err);
                 targetElement.innerHTML = '<p style="color: red;">Erreur génération QR Code</p>';
@@ -507,12 +512,12 @@
             resultDiv.innerHTML = html;
 
             if (details && typeof details === 'object' && details.qrCode) {
-                setTimeout(async () => {
+                setTimeout(() => {
                     const qrCanvas = document.getElementById('qrCanvas');
                     if (qrCanvas) {
-                        await generateQRCodeImage(details.qrCode, qrCanvas);
+                        generateQRCodeImage(details.qrCode, qrCanvas);
                     }
-                }, 200);
+                }, 300);
             }
 
             setTimeout(() => {
