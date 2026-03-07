@@ -21,7 +21,10 @@ const copyPublicHtmlPlugin = (): Plugin => {
         'controller-login.html',
         'epscanv-events.html',
         'epscanv-maritime.html',
-        'admin-test-samapass.html'
+        'admin-test-samapass.html',
+        'epscant-transport.html',
+        'epscant-login.html',
+        'test-ticket.html'
       ];
 
       let copiedCount = 0;

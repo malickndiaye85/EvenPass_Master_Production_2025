@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SAMA PASS</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-left: 4px solid #1e3c72;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-valid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e3c72;
+            border: 2px solid #1e3c72;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 Test SAMA PASS</h1>
+        <p class="subtitle">Testez la validation d'un SAMA PASS valide</p>
+
+        <div id="loadingMessage" class="loading">
+            Chargement du SAMA PASS de test...
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Passager</span>
+                    <span class="info-value" id="passengerName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Téléphone</span>
+                    <span class="info-value" id="passengerPhone">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ligne</span>
+                    <span class="info-value" id="lineName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Type</span>
+                    <span class="info-value" id="passType">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Statut</span>
+                    <span class="status-badge status-valid">✓ Valide</span>
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <div id="qrcode"></div>
+                <p style="margin-top: 15px; color: #666; font-size: 12px;">
+                    Code QR: <strong id="qrText">-</strong>
+                </p>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPasses">0</div>
+                    <div class="stat-label">Pass Actifs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="testPasses">0</div>
+                    <div class="stat-label">Pass Test</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="location.href='/admin-test-samapass.html'">
+                    Créer Nouveau Pass
+                </button>
+                <button class="btn-primary" onclick="location.href='/epscant-transport.html'">
+                    Tester Scanner
+                </button>
+            </div>
+        </div>
+
+        <div id="errorMessage" style="display: none;" class="alert alert-error"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getDatabase, ref, query, orderByChild, limitToLast, get, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+        const firebaseConfig = window.__FIREBASE_CONFIG__ || window.ENV;
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function loadLatestPass() {
+            try {
+                console.log('[TEST] Chargement du dernier SAMA PASS...');
+
+                const passesRef = ref(db, 'demdem/sama_passes');
+                const latestQuery = query(passesRef, orderByChild('createdAt'), limitToLast(1));
+
+                const snapshot = await get(latestQuery);
+
+                if (!snapshot.exists()) {
+                    throw new Error('Aucun SAMA PASS trouvé. Créez-en un d\'abord.');
+                }
+
+                const passData = Object.values(snapshot.val())[0];
+                console.log('[TEST] PASS trouvé:', passData);
+
+                // Afficher les informations
+                document.getElementById('passengerName').textContent = passData.passengerName;
+                document.getElementById('passengerPhone').textContent = passData.passengerPhone;
+                document.getElementById('lineName').textContent = passData.lineName || 'Ligne Test DEM-DEM';
+                document.getElementById('passType').textContent = passData.duration === 30 ? 'Mensuel (30j)' : 'Hebdomadaire (7j)';
+
+                // Générer le QR Code
+                const qrText = passData.qrCode;
+                document.getElementById('qrText').textContent = qrText;
+
+                await QRCode.toCanvas(
+                    document.createElement('canvas'),
+                    qrText,
+                    {
+                        width: 250,
+                        margin: 2,
+                        color: {
+                            dark: '#000000',
+                            light: '#FFFFFF'
+                        }
+                    }
+                ).then(canvas => {
+                    const qrDiv = document.getElementById('qrcode');
+                    qrDiv.innerHTML = '';
+                    qrDiv.appendChild(canvas);
+                });
+
+                // Statistiques
+                updateStats();
+
+                // Afficher le contenu
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                console.error('[TEST] Erreur:', error);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+
+        async function updateStats() {
+            const passesRef = ref(db, 'demdem/sama_passes');
+            const snapshot = await get(passesRef);
+
+            if (snapshot.exists()) {
+                const passes = Object.values(snapshot.val());
+                const now = Date.now();
+
+                const activePasses = passes.filter(p => p.expiresAt > now);
+                const testPasses = passes.filter(p => p.isTest === true);
+
+                document.getElementById('totalPasses').textContent = activePasses.length;
+                document.getElementById('testPasses').textContent = testPasses.length;
+            }
+        }
+
+        // Charger au démarrage
+        loadLatestPass();
+
+        // Écouter les changements en temps réel
+        const passesRef = ref(db, 'demdem/sama_passes');
+        onValue(passesRef, () => {
+            updateStats();
+        });
+    </script>
+</body>
+</html>
