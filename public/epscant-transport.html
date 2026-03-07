@@ -889,36 +889,46 @@
             if (!offlineDB || !navigator.onLine) return;
 
             return new Promise(async (resolve) => {
-                const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
-                const store = transaction.objectStore(PENDING_SCANS_STORE);
-                const index = store.index('synced');
-                const request = index.getAll(false);
+                try {
+                    const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                    const store = transaction.objectStore(PENDING_SCANS_STORE);
+                    const request = store.getAll();
 
-                request.onsuccess = async () => {
-                    const pendingScans = request.result || [];
-                    console.log(`[EPscanT] 🔄 ${pendingScans.length} scans en attente de sync`);
+                    request.onsuccess = async () => {
+                        const allScans = request.result || [];
+                        const pendingScans = allScans.filter(scan => !scan.synced);
+                        console.log(`[EPscanT] 🔄 ${pendingScans.length} scans en attente de sync`);
 
-                    for (const scan of pendingScans) {
-                        try {
-                            const scanRef = dbRef(rtdb, `transport/scans/${scan.id}`);
-                            await rtdbSet(scanRef, {
-                                ...scan.scanData,
-                                vehicleId: scan.vehicleId,
-                                timestamp: scan.timestamp,
-                                syncedAt: Date.now()
-                            });
+                        for (const scan of pendingScans) {
+                            try {
+                                const scanRef = dbRef(rtdb, `transport/scans/${scan.id}`);
+                                await rtdbSet(scanRef, {
+                                    ...scan.scanData,
+                                    vehicleId: scan.vehicleId,
+                                    timestamp: scan.timestamp,
+                                    syncedAt: Date.now()
+                                });
 
-                            scan.synced = true;
-                            await store.put(scan);
-                            console.log('[EPscanT] ✅ Scan synchronisé:', scan.id);
-                        } catch (error) {
-                            console.error('[EPscanT] ❌ Erreur sync scan:', error);
+                                scan.synced = true;
+                                const updateTransaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                                const updateStore = updateTransaction.objectStore(PENDING_SCANS_STORE);
+                                await updateStore.put(scan);
+                                console.log('[EPscanT] ✅ Scan synchronisé:', scan.id);
+                            } catch (error) {
+                                console.error('[EPscanT] ❌ Erreur sync scan:', error);
+                            }
                         }
-                    }
 
+                        resolve();
+                    };
+                    request.onerror = () => {
+                        console.error('[EPscanT] ❌ Erreur getAll scans');
+                        resolve();
+                    };
+                } catch (error) {
+                    console.error('[EPscanT] ❌ Erreur syncPendingScans:', error);
                     resolve();
-                };
-                request.onerror = () => resolve();
+                }
             });
         }
 
