@@ -251,6 +251,30 @@
       }
     },
 
+    "demdem": {
+      "sama_passes": {
+        ".read": true,
+        ".indexOn": ["qrCode", "passengerPhone", "expiresAt", "isTest"],
+        "$passId": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['qrCode', 'passengerName', 'passengerPhone', 'createdAt', 'expiresAt']) && newData.child('qrCode').isString()"
+        }
+      },
+      "transport_scans": {
+        ".read": true,
+        "$scanId": {
+          ".write": true,
+          ".indexOn": ["timestamp", "vehicleId", "passId"]
+        }
+      },
+      "transport_lines": {
+        ".read": true,
+        "$lineId": {
+          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+        }
+      }
+    },
+
     "_connection_test": {
       ".read": true,
       ".write": false
