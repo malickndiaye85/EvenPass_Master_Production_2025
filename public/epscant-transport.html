@@ -1169,6 +1169,8 @@
             isProcessing = true;
 
             console.log('[EPscanT] 📱 Scan détecté:', decodedText);
+            console.log('[EPscanT] 🔍 Longueur QR:', decodedText.length);
+            console.log('[EPscanT] 🔍 Commence par SAMAPASS?', decodedText.startsWith('SAMAPASS'));
 
             try {
                 let subscription = null;
@@ -1181,6 +1183,7 @@
                     fromCache = true;
                 } else {
                     const phone = extractPhoneFromQR(decodedText);
+                    console.log('[EPscanT] 📞 Téléphone extrait:', phone);
                     if (phone) {
                         subscription = await getSubscriptionByPhoneFromCache(phone);
                         if (subscription) {
@@ -1198,39 +1201,53 @@
 
                         if (abonnementsSnapshot.exists()) {
                             const allSubscriptions = abonnementsSnapshot.val();
+                            const totalSubs = Object.keys(allSubscriptions).length;
+                            console.log(`[EPscanT] 📊 ${totalSubs} abonnements dans la base`);
 
+                            let foundMatch = false;
                             for (const [id, sub] of Object.entries(allSubscriptions)) {
                                 if (sub.qr_code === decodedText) {
                                     subscription = { ...sub, id };
-                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne:', subscription.full_name);
+                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne (QR exact):', subscription.full_name);
+                                    foundMatch = true;
                                     break;
                                 }
                             }
 
-                            if (!subscription) {
+                            if (!foundMatch) {
+                                console.log('[EPscanT] ⚠️ Aucune correspondance QR exacte, recherche par téléphone...');
                                 const phone = extractPhoneFromQR(decodedText);
                                 if (phone) {
                                     const now = new Date();
+                                    console.log(`[EPscanT] 🔍 Recherche téléphone: ${phone}`);
                                     for (const [id, sub] of Object.entries(allSubscriptions)) {
                                         if (sub.subscriber_phone === phone &&
                                             sub.status === 'active' &&
                                             new Date(sub.end_date) > now) {
                                             subscription = { ...sub, id };
                                             console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (en ligne):', phone);
+                                            console.log('[EPscanT] 📋 QR dans la base:', sub.qr_code);
+                                            console.log('[EPscanT] 📋 QR scanné:', decodedText);
+                                            console.log('[EPscanT] 📋 Correspondent?', sub.qr_code === decodedText);
                                             break;
                                         }
                                     }
                                 }
                             }
+                        } else {
+                            console.log('[EPscanT] ⚠️ Collection abonnements_express vide');
                         }
                     } catch (firebaseError) {
-                        console.warn('[EPscanT] ⚠️ Erreur Firebase, utilisation du cache uniquement');
+                        console.error('[EPscanT] ❌ Erreur Firebase:', firebaseError);
+                        console.warn('[EPscanT] ⚠️ Utilisation du cache uniquement');
                     }
                 }
 
                 if (!subscription) {
-                    console.log('[EPscanT] ❌ Abonnement introuvable');
-                    showResult('error', 'PASS INVALIDE', 'Code non reconnu');
+                    console.log('[EPscanT] ❌ Abonnement introuvable après toutes les tentatives');
+                    console.log('[EPscanT] ❌ QR scanné:', decodedText);
+                    console.log('[EPscanT] ❌ Format reconnu?', decodedText.startsWith('SAMAPASS') ? 'OUI' : 'NON');
+                    showResult('error', 'PASS INVALIDE', `Code non reconnu: ${decodedText.substring(0, 30)}...`);
                     return;
                 }
 
