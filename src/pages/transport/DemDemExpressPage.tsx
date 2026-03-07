@@ -68,14 +68,19 @@ export default function DemDemExpressPage() {
 
       // Générer le QR Code au format EPscanT
       const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const qrCode = `SAMAPASS-${userData.phone}-${subscriptionId}`;
 
+      // Nettoyer le numéro : enlever +, espaces, garder seulement 221XXXXXXXXX
+      const cleanPhone = userData.phone.replace(/[\s+]/g, ''); // Enlève + et espaces
+      const qrCode = `SAMAPASS-${cleanPhone}-${subscriptionId}`;
+
+      console.log('[DEMDEM-EXPRESS] 📞 Téléphone original:', userData.phone);
+      console.log('[DEMDEM-EXPRESS] 📞 Téléphone nettoyé:', cleanPhone);
       console.log('[DEMDEM-EXPRESS] 📱 QR Code généré:', qrCode);
 
       // Créer les données d'abonnement pour Firebase
       const firebaseSubscription = {
         id: subscriptionId,
-        subscriber_phone: userData.phone,
+        subscriber_phone: cleanPhone,
         full_name: `${userData.firstName} ${userData.lastName}`,
         subscription_type: duration,
         subscription_tier: tier,
@@ -87,7 +92,8 @@ export default function DemDemExpressPage() {
         qr_code: qrCode,
         created_at: startDate.toISOString(),
         photo_url: userData.photoUrl || '',
-        amount_paid: price
+        amount_paid: price,
+        isTest: true // MODE TEST - Permet l'écriture dans Firebase sans authentification admin
       };
 
       console.log('[DEMDEM-EXPRESS] 💾 Sauvegarde dans Firebase...', firebaseSubscription);
@@ -143,7 +149,10 @@ export default function DemDemExpressPage() {
         expiresAt.setDate(expiresAt.getDate() + daysMap[duration]);
         const startDate = new Date();
         const subscriptionId = `sub_test_${Date.now()}`;
-        const qrCode = `SAMAPASS-${userData.phone}-${subscriptionId}`;
+
+        // Nettoyer le téléphone aussi ici
+        const cleanPhone = userData.phone.replace(/[\s+]/g, '');
+        const qrCode = `SAMAPASS-${cleanPhone}-${subscriptionId}`;
 
         navigate('/transport/subscription-success', {
           state: {

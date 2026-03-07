@@ -4,6 +4,22 @@
 
 ---
 
+## Problèmes Corrigés
+
+### 1. Format du QR Code
+**Problème** : Le QR Code généré contenait `+` dans le numéro de téléphone ce qui cassait la validation EPscanT
+- ❌ Avant : `SAMAPASS-+221771000000-sub_xxx`
+- ✅ Après : `SAMAPASS-221771000000-sub_xxx`
+
+**Solution** : Nettoyage du numéro de téléphone en enlevant les `+` et espaces
+
+### 2. Permission Firebase
+**Problème** : `PERMISSION_DENIED` lors de l'écriture dans `abonnements_express`
+
+**Solution** : Ajout du champ `isTest: true` qui permet l'écriture sans authentification admin (selon les règles Firebase ligne 250)
+
+---
+
 ## Modifications Effectuées
 
 ### 1. Interface Utilisateur - Bouton "Procéder au paiement"
@@ -37,19 +53,22 @@
 **Fichier**: `src/pages/transport/DemDemExpressPage.tsx`
 
 **Améliorations** :
+- ✅ **Nettoyage du numéro de téléphone** : Enlève `+` et espaces pour format compatible EPscanT
+- ✅ **Ajout du champ `isTest: true`** : Permet l'écriture dans Firebase sans authentification admin
 - ✅ Logs détaillés à chaque étape
 - ✅ Gestion d'erreurs Firebase améliorée (continue même en cas d'erreur)
 - ✅ Mode "continuer quand même" si une erreur survient
-- ✅ Création systématique du QR Code valide
+- ✅ Création systématique du QR Code valide au bon format
 
 **Flux de création** :
 ```
 1. 🎯 Début création abonnement MODE TEST
-2. 📱 QR Code généré: SAMAPASS-{phone}-{id}
-3. 💾 Sauvegarde dans Firebase abonnements_express/
+2. 📞 Nettoyage du téléphone: +221 77 100 00 00 → 221771000000
+3. 📱 QR Code généré: SAMAPASS-221771000000-sub_xxx
+4. 💾 Sauvegarde dans Firebase abonnements_express/ (avec isTest: true)
    ├─ ✅ Succès → Log confirmation
    └─ ⚠️ Erreur → Log mais continue
-4. 🚀 Redirection vers /transport/subscription-success
+5. 🚀 Redirection vers /transport/subscription-success
 ```
 
 ---
@@ -96,7 +115,7 @@ URL: /voyage/express
 abonnements_express/
   sub_1709826543210_x8k2p9w4q/
     id: "sub_1709826543210_x8k2p9w4q"
-    subscriber_phone: "221771234567"
+    subscriber_phone: "221771234567"           ← SANS le +
     full_name: "Malick NDIAYE"
     subscription_type: "monthly"
     subscription_tier: "eco"
@@ -105,10 +124,11 @@ abonnements_express/
     start_date: "2026-03-07T10:00:00.000Z"
     end_date: "2026-04-07T10:00:00.000Z"
     status: "active"
-    qr_code: "SAMAPASS-221771234567-sub_1709826543210_x8k2p9w4q"
+    qr_code: "SAMAPASS-221771234567-sub_xxx"   ← Format correct pour EPscanT
     created_at: "2026-03-07T10:00:00.000Z"
     photo_url: "data:image/jpeg;base64,..."
     amount_paid: 19000
+    isTest: true                                ← Permet l'écriture sans auth admin
 ```
 
 ---
@@ -151,11 +171,17 @@ URL: /epscant-transport.html
 **Logs Console** :
 ```
 [DEMDEM-EXPRESS] 🎯 Début création abonnement MODE TEST
-[DEMDEM-EXPRESS] 📱 QR Code généré: SAMAPASS-221771234567-sub_xxx
+[DEMDEM-EXPRESS] 📞 Téléphone original: +221 77 100 00 00
+[DEMDEM-EXPRESS] 📞 Téléphone nettoyé: 221771000000
+[DEMDEM-EXPRESS] 📱 QR Code généré: SAMAPASS-221771000000-sub_xxx
 [DEMDEM-EXPRESS] 💾 Sauvegarde dans Firebase...
 [DEMDEM-EXPRESS] ✅ Abonnement sauvegardé dans Firebase
 [DEMDEM-EXPRESS] 🚀 Redirection vers la page de succès...
 ```
+
+**Si vous voyez encore `PERMISSION_DENIED`**, vérifiez que :
+- Le champ `isTest: true` est bien présent dans les données
+- Les règles Firebase sont déployées (voir `database.rules.json` ligne 246-252)
 
 ---
 
@@ -241,11 +267,48 @@ Ouvrir la console : https://console.firebase.google.com/
 
 ---
 
+## Règles Firebase
+
+Les règles Firebase (ligne 246-252 de `database.rules.json`) autorisent l'écriture si :
+```json
+"abonnements_express": {
+  "$subscriptionId": {
+    ".write": "newData.child('isTest').val() === true || (auth != null && ...admin...)"
+  }
+}
+```
+
+**C'est pourquoi nous ajoutons `isTest: true` dans les données de test.**
+
+---
+
+## Format du QR Code EPscanT
+
+Le scanner EPscanT (voir `src/lib/samaPassScanner.ts` ligne 281-301) attend :
+
+**Format attendu** : `SAMAPASS-221771234567-sub_xxx`
+
+**Regex utilisée** : `/SAMAPASS-(\d+)-/`
+- Le numéro doit être **uniquement des chiffres**
+- Commence par `221` (indicatif Sénégal)
+- Suivi de `77/78/76/70` + 7 chiffres
+
+**Exemples valides** :
+- ✅ `SAMAPASS-221771234567-sub_abc123`
+- ✅ `SAMAPASS-221781234567-sub_xyz789`
+
+**Exemples invalides** :
+- ❌ `SAMAPASS-+221771234567-sub_abc` (le `+` casse le regex)
+- ❌ `SAMAPASS-221 77 123 45 67-sub_abc` (les espaces cassent le regex)
+
+---
+
 ## Résumé
 
 ✅ **Le paiement est maintenant contourné pour les tests**
-✅ **Le QR Code généré est valide et scannable**
-✅ **Les données sont sauvegardées dans Firebase**
-✅ **EPscanT valide correctement les abonnements**
+✅ **Le format du QR Code est compatible EPscanT** (sans `+` ni espaces)
+✅ **L'écriture Firebase fonctionne** (avec `isTest: true`)
+✅ **Les données sont sauvegardées correctement**
+✅ **EPscanT peut maintenant valider les abonnements**
 
-🧪 **MODE TEST ACTIVÉ** - Vous pouvez maintenant tester le tunnel complet !
+🧪 **MODE TEST ACTIVÉ** - Le QR Code généré est maintenant reconnu par EPscanT !
