@@ -9,19 +9,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install & Build
-        # On force l'installation et on ignore les erreurs de TypeScript
         run: |
           npm install --legacy-peer-deps
           CI=false npm run build
-
-      - name: Check if Dist exists
-        run: ls -al dist
 
       - name: Firebase Deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          # CORRECTION ICI : Utilisation du nom EXACT du secret GitHub
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVENPASSSENEGAL }}'
           channelId: live
           projectId: evenpasssenegal
