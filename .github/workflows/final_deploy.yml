@@ -13,8 +13,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install & Build
+        # CI=false empêche le build de s'arrêter sur des avertissements
         run: |
           npm install --legacy-peer-deps
           CI=false npm run build
@@ -23,7 +25,7 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # CORRECTION ICI : Utilisation du nom EXACT du secret GitHub
+          # ATTENTION : Nom exact du secret vérifié dans tes paramètres
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVENPASSSENEGAL }}'
           channelId: live
           projectId: evenpasssenegal
