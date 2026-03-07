@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur SAMA PASS Test</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .result h3 {
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .result-details div {
+            margin-bottom: 6px;
+        }
+
+        .result-details strong {
+            display: inline-block;
+            width: 140px;
+        }
+
+        .qr-code {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            border: 1px solid #d1d5db;
+        }
+
+        .qr-visual {
+            margin-top: 16px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid #10b981;
+        }
+
+        .qr-visual canvas {
+            margin: 16px 0;
+        }
+
+        .qr-download {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .qr-download:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 Générateur SAMA PASS Test</h1>
+        <p class="subtitle">Créez des abonnements de test pour EPscanT</p>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Pass Actifs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="testCount">0</div>
+                <div class="stat-label">Pass Test</div>
+            </div>
+        </div>
+
+        <form id="generateForm">
+            <div class="form-group">
+                <label>Nom complet</label>
+                <input type="text" id="fullName" placeholder="Ex: Amadou Diallo" required>
+            </div>
+
+            <div class="form-group">
+                <label>Téléphone (format: 77XXXXXXX)</label>
+                <input type="text" id="phone" placeholder="Ex: 771234567" pattern="^(77|78|76|70)\d{7}$" required>
+            </div>
+
+            <div class="form-group">
+                <label>Ligne de transport</label>
+                <select id="routeName" required>
+                    <option value="">-- Sélectionner --</option>
+                    <option value="Dakar-Rufisque">Dakar-Rufisque</option>
+                    <option value="Dakar-Pikine">Dakar-Pikine</option>
+                    <option value="Dakar-Guédiawaye">Dakar-Guédiawaye</option>
+                    <option value="Dakar-Thiaroye">Dakar-Thiaroye</option>
+                    <option value="Ligne Test DEM-DEM">Ligne Test DEM-DEM</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Type d'abonnement</label>
+                <select id="subscriptionType" required>
+                    <option value="weekly">Hebdomadaire (7 jours)</option>
+                    <option value="monthly" selected>Mensuel (30 jours)</option>
+                    <option value="quarterly">Trimestriel (90 jours)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Forfait</label>
+                <select id="subscriptionTier" required>
+                    <option value="eco" selected>Éco</option>
+                    <option value="prestige">Prestige</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="refreshStats()">🔄 Actualiser</button>
+                <button type="submit" class="btn-primary" id="generateBtn">✨ Générer SAMA PASS</button>
+            </div>
+
+            <div class="button-group" style="margin-top: 12px;">
+                <button type="button" class="btn-danger" onclick="deleteAllTestPasses()">🗑️ Supprimer tous les pass test</button>
+            </div>
+        </form>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref, get, set, push, remove } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        function generateQRCode(phone) {
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 100000);
+            return `SAMAPASS-221${phone}-${timestamp}${random}`;
+        }
+
+        async function getStats() {
+            try {
+                const abonnementsRef = ref(db, 'abonnements_express');
+                const snapshot = await get(abonnementsRef);
+
+                if (!snapshot.exists()) {
+                    return { total: 0, test: 0 };
+                }
+
+                const data = snapshot.val();
+                const all = Object.values(data);
+                const total = all.length;
+                const test = all.filter(item => item.isTest === true).length;
+
+                return { total, test };
+            } catch (error) {
+                console.error('Erreur stats:', error);
+                return { total: 0, test: 0 };
+            }
+        }
+
+        window.refreshStats = async function() {
+            const stats = await getStats();
+            document.getElementById('totalCount').textContent = stats.total;
+            document.getElementById('testCount').textContent = stats.test;
+        };
+
+        async function generateTestPass(formData) {
+            const now = new Date();
+            const durationDays = {
+                'weekly': 7,
+                'monthly': 30,
+                'quarterly': 90
+            };
+
+            const endDate = new Date(now);
+            endDate.setDate(endDate.getDate() + durationDays[formData.subscriptionType]);
+
+            const qrCode = generateQRCode(formData.phone);
+            const fullPhone = `221${formData.phone}`;
+
+            const testPass = {
+                qr_code: qrCode,
+                full_name: formData.fullName,
+                subscriber_phone: fullPhone,
+                start_date: now.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0],
+                status: 'active',
+                subscription_type: formData.subscriptionType,
+                subscription_tier: formData.subscriptionTier,
+                route_id: `route-${formData.routeName.toLowerCase().replace(/\s+/g, '-')}`,
+                route_name: formData.routeName,
+                created_at: now.toISOString(),
+                isTest: true
+            };
+
+            const abonnementsRef = ref(db, 'abonnements_express');
+            const newPassRef = push(abonnementsRef);
+
+            await set(newPassRef, testPass);
+
+            console.log('[TEST-PASS] ✅ Pass créé:', {
+                id: newPassRef.key,
+                qrCode: qrCode,
+                phone: fullPhone
+            });
+
+            return {
+                id: newPassRef.key,
+                ...testPass
+            };
+        }
+
+        window.deleteAllTestPasses = async function() {
+            if (!confirm('Voulez-vous vraiment supprimer TOUS les pass de test ?')) {
+                return;
+            }
+
+            try {
+                const abonnementsRef = ref(db, 'abonnements_express');
+                const snapshot = await get(abonnementsRef);
+
+                if (!snapshot.exists()) {
+                    showResult('error', 'Aucun pass à supprimer', null);
+                    return;
+                }
+
+                let deletedCount = 0;
+                const deletePromises = [];
+
+                snapshot.forEach((childSnapshot) => {
+                    const pass = childSnapshot.val();
+                    if (pass.isTest === true) {
+                        const passRef = ref(db, `abonnements_express/${childSnapshot.key}`);
+                        deletePromises.push(remove(passRef));
+                        deletedCount++;
+                    }
+                });
+
+                await Promise.all(deletePromises);
+
+                showResult('success', `${deletedCount} pass de test supprimés`, null);
+                await refreshStats();
+            } catch (error) {
+                console.error('Erreur suppression:', error);
+                showResult('error', 'Erreur lors de la suppression', error.message);
+            }
+        };
+
+        function generateQRCodeImage(text, targetElement) {
+            try {
+                targetElement.innerHTML = '';
+
+                const qrcode = new QRCode(targetElement, {
+                    text: text,
+                    width: 250,
+                    height: 250,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                setTimeout(() => {
+                    const canvas = targetElement.querySelector('canvas');
+                    if (canvas) {
+                        window.currentQRCanvas = canvas;
+                        console.log('[QR] Canvas généré avec succès');
+                    }
+                }, 100);
+
+                return qrcode;
+            } catch (err) {
+                console.error('Erreur génération QR:', err);
+                targetElement.innerHTML = '<p style="color: red;">Erreur génération QR Code</p>';
+                return null;
+            }
+        }
+
+        function showResult(type, title, details) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+
+            let html = `<h3>${type === 'success' ? '✅' : '❌'} ${title}</h3>`;
+
+            if (details) {
+                html += '<div class="result-details">';
+                if (typeof details === 'object') {
+                    html += `<div><strong>ID:</strong> ${details.id}</div>`;
+                    html += `<div><strong>Nom:</strong> ${details.full_name}</div>`;
+                    html += `<div><strong>Téléphone:</strong> ${details.subscriber_phone}</div>`;
+                    html += `<div><strong>Ligne:</strong> ${details.route_name}</div>`;
+                    html += `<div><strong>Forfait:</strong> ${details.subscription_tier} ${details.subscription_type}</div>`;
+                    html += `<div><strong>Valide jusqu'au:</strong> ${details.end_date}</div>`;
+                    html += `<div class="qr-code"><strong>QR Code:</strong><br>${details.qr_code}</div>`;
+                    html += `<div class="qr-visual" id="qrVisual">
+                        <strong style="margin-bottom: 8px;">📱 QR Code Scannable</strong>
+                        <div id="qrCanvas"></div>
+                        <button class="qr-download" onclick="downloadQRCode()">⬇️ Télécharger QR Code</button>
+                    </div>`;
+                } else {
+                    html += `<div>${details}</div>`;
+                }
+                html += '</div>';
+            }
+
+            resultDiv.innerHTML = html;
+
+            if (details && typeof details === 'object' && details.qr_code) {
+                setTimeout(() => {
+                    const qrCanvas = document.getElementById('qrCanvas');
+                    if (qrCanvas) {
+                        generateQRCodeImage(details.qr_code, qrCanvas);
+                    }
+                }, 300);
+            }
+
+            setTimeout(() => {
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        window.downloadQRCode = function() {
+            if (!window.currentQRCanvas) return;
+
+            const link = document.createElement('a');
+            link.download = `SAMAPASS-${Date.now()}.png`;
+            link.href = window.currentQRCanvas.toDataURL();
+            link.click();
+        };
+
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Génération...<span class="loading"></span>';
+
+            try {
+                const formData = {
+                    fullName: document.getElementById('fullName').value,
+                    phone: document.getElementById('phone').value,
+                    routeName: document.getElementById('routeName').value,
+                    subscriptionType: document.getElementById('subscriptionType').value,
+                    subscriptionTier: document.getElementById('subscriptionTier').value
+                };
+
+                const pass = await generateTestPass(formData);
+                showResult('success', 'SAMA PASS créé avec succès!', pass);
+                await refreshStats();
+
+                // Reset form
+                document.getElementById('generateForm').reset();
+            } catch (error) {
+                console.error('Erreur:', error);
+                showResult('error', 'Erreur lors de la création', error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '✨ Générer SAMA PASS';
+            }
+        });
+
+        // Load stats on page load
+        refreshStats();
+    </script>
+</body>
+</html>
