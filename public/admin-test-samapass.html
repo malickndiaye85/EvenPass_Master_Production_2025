@@ -310,7 +310,7 @@
 
         async function getStats() {
             try {
-                const abonnementsRef = ref(db, 'abonnements_express');
+                const abonnementsRef = ref(db, 'demdem/sama_passes');
                 const snapshot = await get(abonnementsRef);
 
                 if (!snapshot.exists()) {
@@ -320,7 +320,7 @@
                 const data = snapshot.val();
                 const all = Object.values(data);
                 const total = all.length;
-                const test = all.filter(item => item.test_pass === true).length;
+                const test = all.filter(item => item.isTest === true).length;
 
                 return { total, test };
             } catch (error) {
@@ -350,29 +350,29 @@
             const fullPhone = `221${formData.phone}`;
 
             const testPass = {
-                qr_code: qrCode,
-                full_name: formData.fullName,
-                subscriber_phone: fullPhone,
-                subscriber_name: formData.fullName,
-                start_date: now.toISOString().split('T')[0],
-                end_date: endDate.toISOString().split('T')[0],
+                qrCode: qrCode,
+                passengerName: formData.fullName,
+                passengerPhone: fullPhone,
+                startDate: now.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0],
                 status: 'active',
-                subscription_type: formData.subscriptionType,
-                subscription_tier: formData.subscriptionTier,
-                route_id: `route-${formData.routeName.toLowerCase().replace(/\s+/g, '-')}`,
-                route_name: formData.routeName,
-                created_at: now.toISOString(),
-                test_pass: true
+                subscriptionType: formData.subscriptionType,
+                subscriptionTier: formData.subscriptionTier,
+                routeId: `route-${formData.routeName.toLowerCase().replace(/\s+/g, '-')}`,
+                routeName: formData.routeName,
+                createdAt: Date.now(),
+                expiresAt: endDate.getTime(),
+                isTest: true
             };
 
-            const abonnementsRef = ref(db, 'abonnements_express');
+            const abonnementsRef = ref(db, 'demdem/sama_passes');
             const newPassRef = push(abonnementsRef);
 
             await set(newPassRef, testPass);
 
             console.log('[TEST-PASS] ✅ Pass créé:', {
                 id: newPassRef.key,
-                qr_code: qrCode,
+                qrCode: qrCode,
                 phone: fullPhone
             });
 
@@ -388,7 +388,7 @@
             }
 
             try {
-                const abonnementsRef = ref(db, 'abonnements_express');
+                const abonnementsRef = ref(db, 'demdem/sama_passes');
                 const snapshot = await get(abonnementsRef);
 
                 if (!snapshot.exists()) {
@@ -401,8 +401,8 @@
 
                 snapshot.forEach((childSnapshot) => {
                     const pass = childSnapshot.val();
-                    if (pass.test_pass === true) {
-                        const passRef = ref(db, `abonnements_express/${childSnapshot.key}`);
+                    if (pass.isTest === true) {
+                        const passRef = ref(db, `demdem/sama_passes/${childSnapshot.key}`);
                         deletePromises.push(remove(passRef));
                         deletedCount++;
                     }
@@ -429,12 +429,12 @@
                 html += '<div class="result-details">';
                 if (typeof details === 'object') {
                     html += `<div><strong>ID:</strong> ${details.id}</div>`;
-                    html += `<div><strong>Nom:</strong> ${details.full_name}</div>`;
-                    html += `<div><strong>Téléphone:</strong> ${details.subscriber_phone}</div>`;
-                    html += `<div><strong>Ligne:</strong> ${details.route_name}</div>`;
-                    html += `<div><strong>Forfait:</strong> ${details.subscription_tier} ${details.subscription_type}</div>`;
-                    html += `<div><strong>Valide jusqu'au:</strong> ${details.end_date}</div>`;
-                    html += `<div class="qr-code"><strong>QR Code:</strong><br>${details.qr_code}</div>`;
+                    html += `<div><strong>Nom:</strong> ${details.passengerName}</div>`;
+                    html += `<div><strong>Téléphone:</strong> ${details.passengerPhone}</div>`;
+                    html += `<div><strong>Ligne:</strong> ${details.routeName}</div>`;
+                    html += `<div><strong>Forfait:</strong> ${details.subscriptionTier} ${details.subscriptionType}</div>`;
+                    html += `<div><strong>Valide jusqu'au:</strong> ${details.endDate}</div>`;
+                    html += `<div class="qr-code"><strong>QR Code:</strong><br>${details.qrCode}</div>`;
                 } else {
                     html += `<div>${details}</div>`;
                 }

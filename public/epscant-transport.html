@@ -761,8 +761,8 @@
 
                     if (!db.objectStoreNames.contains(SUBSCRIPTIONS_STORE)) {
                         const subsStore = db.createObjectStore(SUBSCRIPTIONS_STORE, { keyPath: 'id' });
-                        subsStore.createIndex('qr_code', 'qr_code', { unique: false });
-                        subsStore.createIndex('subscriber_phone', 'subscriber_phone', { unique: false });
+                        subsStore.createIndex('qrCode', 'qrCode', { unique: false });
+                        subsStore.createIndex('passengerPhone', 'passengerPhone', { unique: false });
                         console.log('[EPscanT] 📦 Store subscriptions créé');
                     }
 
@@ -778,7 +778,7 @@
         async function syncSubscriptionsFromFirebase() {
             try {
                 console.log('[EPscanT] 🔄 Synchronisation des abonnements...');
-                const abonnementsRef = dbRef(rtdb, 'abonnements_express');
+                const abonnementsRef = dbRef(rtdb, 'demdem/sama_passes');
                 const snapshot = await rtdbGet(abonnementsRef);
 
                 if (!snapshot.exists()) {
@@ -796,18 +796,19 @@
                 let count = 0;
 
                 for (const [id, sub] of Object.entries(allSubscriptions)) {
-                    if (sub.status === 'active' && new Date(sub.end_date) > new Date()) {
+                    if (sub.status === 'active' && sub.expiresAt > now) {
                         await store.put({
                             id,
-                            subscriber_phone: sub.subscriber_phone,
-                            subscriber_name: sub.subscriber_name,
-                            full_name: sub.full_name || sub.subscriber_name,
-                            qr_code: sub.qr_code,
+                            passengerPhone: sub.passengerPhone,
+                            passengerName: sub.passengerName,
+                            qrCode: sub.qrCode,
                             status: sub.status,
-                            start_date: sub.start_date,
-                            end_date: sub.end_date,
-                            subscription_type: sub.subscription_type,
-                            vehicle_id: sub.vehicle_id,
+                            startDate: sub.startDate,
+                            endDate: sub.endDate,
+                            expiresAt: sub.expiresAt,
+                            subscriptionType: sub.subscriptionType,
+                            subscriptionTier: sub.subscriptionTier,
+                            routeName: sub.routeName,
                             cachedAt: now
                         });
                         count++;
@@ -831,7 +832,7 @@
             return new Promise((resolve) => {
                 const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
                 const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
-                const index = store.index('qr_code');
+                const index = store.index('qrCode');
                 const request = index.get(qrCode);
 
                 request.onsuccess = () => resolve(request.result || null);
@@ -845,12 +846,12 @@
             return new Promise((resolve) => {
                 const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
                 const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
-                const index = store.index('subscriber_phone');
+                const index = store.index('passengerPhone');
                 const request = index.get(phone);
 
                 request.onsuccess = () => {
                     const result = request.result;
-                    if (result && result.status === 'active' && new Date(result.end_date) > new Date()) {
+                    if (result && result.status === 'active' && result.expiresAt > Date.now()) {
                         resolve(result);
                     } else {
                         resolve(null);
@@ -1189,7 +1190,7 @@
                 subscription = await getSubscriptionFromCache(decodedText);
 
                 if (subscription) {
-                    console.log('[EPscanT] ✅ Abonnement trouvé dans le cache:', subscription.full_name);
+                    console.log('[EPscanT] ✅ Abonnement trouvé dans le cache:', subscription.passengerName);
                     fromCache = true;
                 } else {
                     const phone = extractPhoneFromQR(decodedText);
@@ -1206,7 +1207,7 @@
                 if (!subscription && navigator.onLine) {
                     console.log('[EPscanT] 🌐 Recherche en ligne...');
                     try {
-                        const abonnementsRef = dbRef(rtdb, 'abonnements_express');
+                        const abonnementsRef = dbRef(rtdb, 'demdem/sama_passes');
                         const abonnementsSnapshot = await rtdbGet(abonnementsRef);
 
                         if (abonnementsSnapshot.exists()) {
@@ -1216,9 +1217,9 @@
 
                             let foundMatch = false;
                             for (const [id, sub] of Object.entries(allSubscriptions)) {
-                                if (sub.qr_code === decodedText) {
+                                if (sub.qrCode === decodedText) {
                                     subscription = { ...sub, id };
-                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne (QR exact):', subscription.full_name);
+                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne (QR exact):', subscription.passengerName);
                                     foundMatch = true;
                                     break;
                                 }
@@ -1228,24 +1229,24 @@
                                 console.log('[EPscanT] ⚠️ Aucune correspondance QR exacte, recherche par téléphone...');
                                 const phone = extractPhoneFromQR(decodedText);
                                 if (phone) {
-                                    const now = new Date();
+                                    const now = Date.now();
                                     console.log(`[EPscanT] 🔍 Recherche téléphone: ${phone}`);
                                     for (const [id, sub] of Object.entries(allSubscriptions)) {
-                                        if (sub.subscriber_phone === phone &&
+                                        if (sub.passengerPhone === phone &&
                                             sub.status === 'active' &&
-                                            new Date(sub.end_date) > now) {
+                                            sub.expiresAt > now) {
                                             subscription = { ...sub, id };
                                             console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (en ligne):', phone);
-                                            console.log('[EPscanT] 📋 QR dans la base:', sub.qr_code);
+                                            console.log('[EPscanT] 📋 QR dans la base:', sub.qrCode);
                                             console.log('[EPscanT] 📋 QR scanné:', decodedText);
-                                            console.log('[EPscanT] 📋 Correspondent?', sub.qr_code === decodedText);
+                                            console.log('[EPscanT] 📋 Correspondent?', sub.qrCode === decodedText);
                                             break;
                                         }
                                     }
                                 }
                             }
                         } else {
-                            console.log('[EPscanT] ⚠️ Collection abonnements_express vide');
+                            console.log('[EPscanT] ⚠️ Collection demdem/sama_passes vide');
                         }
                     } catch (firebaseError) {
                         console.error('[EPscanT] ❌ Erreur Firebase:', firebaseError);
@@ -1262,9 +1263,7 @@
                 }
 
                 // Valider le statut
-                const now = new Date();
-                const endDate = new Date(subscription.end_date);
-                const startDate = new Date(subscription.start_date);
+                const now = Date.now();
 
                 // Vérifier si l'abonnement est actif
                 if (subscription.status !== 'active') {
@@ -1272,15 +1271,9 @@
                     return;
                 }
 
-                // Vérifier si pas encore actif
-                if (now < startDate) {
-                    showResult('warning', 'PASS PAS ENCORE ACTIF', 'Date de début non atteinte');
-                    return;
-                }
-
                 // Vérifier si expiré
-                if (now > endDate) {
-                    const daysSinceExpiry = Math.floor((now - endDate) / (1000 * 60 * 60 * 24));
+                if (now > subscription.expiresAt) {
+                    const daysSinceExpiry = Math.floor((now - subscription.expiresAt) / (1000 * 60 * 60 * 24));
 
                     if (daysSinceExpiry <= 2) {
                         showResult('warning', `PASS EXPIRÉ - ${daysSinceExpiry}j`, 'Renouvellement nécessaire');
@@ -1292,28 +1285,29 @@
                 }
 
                 const scanData = {
-                    subscriber_phone: subscription.subscriber_phone,
-                    subscriber_name: subscription.full_name,
-                    subscription_type: subscription.subscription_type,
-                    subscription_tier: subscription.subscription_tier,
-                    route_name: subscription.route_name,
-                    scan_status: 'valid'
+                    passengerPhone: subscription.passengerPhone,
+                    passengerName: subscription.passengerName,
+                    subscriptionType: subscription.subscriptionType,
+                    subscriptionTier: subscription.subscriptionTier,
+                    routeName: subscription.routeName,
+                    scanStatus: 'valid'
                 };
 
                 if (navigator.onLine && !fromCache) {
                     try {
-                        const scanRef = dbRef(rtdb, `transport/scans/${vehicleId}/${Date.now()}`);
+                        const scanRef = dbRef(rtdb, `demdem/transport_scans/${Date.now()}`);
                         await rtdbSet(scanRef, {
                             vehicleId: vehicleId,
-                            timestamp: new Date().toISOString(),
-                            passengerPhone: scanData.subscriber_phone,
-                            passengerName: scanData.subscriber_name,
-                            subscriptionType: scanData.subscription_type,
-                            subscriptionTier: scanData.subscription_tier,
-                            routeName: scanData.route_name,
-                            scanStatus: scanData.scan_status
+                            timestamp: Date.now(),
+                            passId: subscription.id,
+                            passengerPhone: scanData.passengerPhone,
+                            passengerName: scanData.passengerName,
+                            subscriptionType: scanData.subscriptionType,
+                            subscriptionTier: scanData.subscriptionTier,
+                            routeName: scanData.routeName,
+                            scanStatus: scanData.scanStatus
                         });
-                        console.log('[EPscanT] ✅ Scan enregistré en ligne pour:', subscription.full_name);
+                        console.log('[EPscanT] ✅ Scan enregistré en ligne pour:', subscription.passengerName);
                     } catch (error) {
                         console.warn('[EPscanT] ⚠️ Échec enregistrement en ligne, mise en queue');
                         await addPendingScan({
@@ -1347,19 +1341,19 @@
                 const details = `
                     <div class="detail-row">
                         <span class="detail-label">Abonné</span>
-                        <span class="detail-value">${subscription.full_name}</span>
+                        <span class="detail-value">${subscription.passengerName}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Forfait</span>
-                        <span class="detail-value">${tierLabel[subscription.subscription_tier] || subscription.subscription_tier} ${durationLabel[subscription.subscription_type] || subscription.subscription_type}</span>
+                        <span class="detail-value">${tierLabel[subscription.subscriptionTier] || subscription.subscriptionTier} ${durationLabel[subscription.subscriptionType] || subscription.subscriptionType}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Ligne</span>
-                        <span class="detail-value">${subscription.route_name}</span>
+                        <span class="detail-value">${subscription.routeName}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Expire le</span>
-                        <span class="detail-value">${new Date(subscription.end_date).toLocaleDateString('fr-FR')}</span>
+                        <span class="detail-value">${new Date(subscription.expiresAt).toLocaleDateString('fr-FR')}</span>
                     </div>
                 `;
 
