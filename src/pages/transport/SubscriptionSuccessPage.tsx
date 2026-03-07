@@ -284,7 +284,7 @@ export default function SubscriptionSuccessPage() {
                 </span>
                 <p>
                   <span className="font-semibold text-white">Voyagez illimité</span> sur votre
-                  ligne jusqu'à la date d'expiration
+                  ligne jusqu'à la date d\'expiration
                 </p>
               </li>
             </ul>
