@@ -16,6 +16,8 @@ interface SubscriptionData {
   purchased_at: string;
   expires_at: string;
   status: string;
+  qr_code: string;
+  subscription_id: string;
 }
 
 export default function SubscriptionSuccessPage() {
@@ -68,7 +70,7 @@ export default function SubscriptionSuccessPage() {
     );
   }
 
-  const { route, tier, duration, price, userData, purchased_at, expires_at } = subscription;
+  const { route, tier, duration, price, userData, purchased_at, expires_at, qr_code, subscription_id } = subscription;
 
   const durationLabels = {
     weekly: 'Hebdomadaire',
@@ -84,16 +86,8 @@ export default function SubscriptionSuccessPage() {
     });
   };
 
-  const qrData = JSON.stringify({
-    type: 'demdem_subscription',
-    route: `${route.origin} ⇄ ${route.destination}`,
-    tier,
-    duration,
-    user: `${userData.firstName} ${userData.lastName}`,
-    phone: userData.phone,
-    purchased_at,
-    expires_at
-  });
+  // Utiliser le QR Code généré au format EPscanT
+  const qrData = qr_code;
 
   const handleSaveToPhone = async () => {
     if (!cardRef.current) return;

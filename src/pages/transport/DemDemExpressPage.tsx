@@ -54,7 +54,6 @@ export default function DemDemExpressPage() {
     if (!purchaseSelection) return;
 
     try {
-      // Simuler le paiement et créer l'abonnement
       const { route, tier, duration } = purchaseSelection;
       const price = route.pricing[tier][duration];
 
@@ -63,25 +62,62 @@ export default function DemDemExpressPage() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + daysMap[duration]);
 
-      // Créer les données d'abonnement
+      const startDate = new Date();
+
+      // Générer le QR Code au format EPscanT
+      const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const qrCode = `SAMAPASS-${userData.phone}-${subscriptionId}`;
+
+      // Créer les données d'abonnement pour Firebase
+      const firebaseSubscription = {
+        id: subscriptionId,
+        subscriber_phone: userData.phone,
+        full_name: `${userData.firstName} ${userData.lastName}`,
+        subscription_type: duration,
+        subscription_tier: tier,
+        route_id: route.id,
+        route_name: `${route.origin} ⇄ ${route.destination}`,
+        start_date: startDate.toISOString(),
+        end_date: expiresAt.toISOString(),
+        status: 'active',
+        qr_code: qrCode,
+        created_at: startDate.toISOString(),
+        photo_url: userData.photoUrl || '',
+        amount_paid: price
+      };
+
+      // Sauvegarder dans Firebase abonnements_express
+      console.log('[DEMDEM-EXPRESS] Sauvegarde dans Firebase...', firebaseSubscription);
+
+      const { ref, set } = await import('firebase/database');
+      const { db } = await import('../../firebase');
+
+      const subRef = ref(db, `abonnements_express/${subscriptionId}`);
+      await set(subRef, firebaseSubscription);
+
+      console.log('[DEMDEM-EXPRESS] ✅ Abonnement sauvegardé dans Firebase');
+
+      // Créer les données pour la page de succès
       const subscriptionData = {
         route,
         tier,
         duration,
         price,
         userData,
-        purchased_at: new Date().toISOString(),
+        purchased_at: startDate.toISOString(),
         expires_at: expiresAt.toISOString(),
-        status: 'active'
+        status: 'active',
+        qr_code: qrCode,
+        subscription_id: subscriptionId
       };
 
-      // Rediriger vers la page de confirmation avec les données
+      // Rediriger vers la page de confirmation
       navigate('/transport/subscription-success', {
         state: subscriptionData
       });
     } catch (error) {
-      console.error('Error confirming purchase:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      console.error('[DEMDEM-EXPRESS] ❌ Erreur création abonnement:', error);
+      alert('Une erreur est survenue lors de la création de votre abonnement. Veuillez réessayer.');
     }
   };
 
