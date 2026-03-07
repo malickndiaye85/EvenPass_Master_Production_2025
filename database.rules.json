@@ -251,6 +251,16 @@
       }
     },
 
+    "scans_journaliers": {
+      ".read": true,
+      "$date": {
+        "$subscriptionId": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['count', 'lastScanTime', 'updatedAt'])"
+        }
+      }
+    },
+
     "demdem": {
       "sama_passes": {
         ".read": true,

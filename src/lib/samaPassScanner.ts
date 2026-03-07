@@ -28,10 +28,13 @@ export interface SamaPassSubscription {
 
 export interface ScanValidationResult {
   isValid: boolean;
-  status: 'valid' | 'expired' | 'invalid' | 'not_found';
+  status: 'valid' | 'expired' | 'invalid' | 'not_found' | 'wrong_line' | 'quota_exceeded' | 'too_soon';
   message: string;
   subscription?: SamaPassSubscription;
   color: 'green' | 'orange' | 'red';
+  scansToday?: number;
+  lastScanTime?: string;
+  expectedLine?: string;
 }
 
 export interface TransportScanRecord {
@@ -47,14 +50,16 @@ export interface TransportScanRecord {
 }
 
 /**
- * Valide un QR Code SAMA PASS
+ * Valide un QR Code SAMA PASS avec contrôles de sécurité renforcés
  */
 export async function validateSamaPass(
   qrCode: string,
-  vehicleId: string
+  vehicleId: string,
+  vehicleLineId?: string
 ): Promise<ScanValidationResult> {
 
   console.log(`[SAMA-PASS-SCAN] 📱 Validation QR: ${qrCode.substring(0, 20)}...`);
+  console.log(`[SAMA-PASS-SCAN] 🚍 Véhicule: ${vehicleId}, Ligne: ${vehicleLineId || 'NON SPÉCIFIÉE'}`);
 
   try {
     // 1. Chercher l'abonnement dans abonnements_express
@@ -66,7 +71,7 @@ export async function validateSamaPass(
       if (phoneMatch) {
         const subByPhone = await findActiveSubscriptionByPhone(phoneMatch);
         if (subByPhone) {
-          return validateSubscriptionStatus(subByPhone, vehicleId);
+          return validateSubscriptionStatus(subByPhone, vehicleId, vehicleLineId);
         }
       }
 
@@ -79,8 +84,8 @@ export async function validateSamaPass(
       };
     }
 
-    // 2. Valider le statut de l'abonnement
-    return validateSubscriptionStatus(subscription, vehicleId);
+    // 2. Valider le statut de l'abonnement avec tous les contrôles de sécurité
+    return validateSubscriptionStatus(subscription, vehicleId, vehicleLineId);
 
   } catch (error: any) {
     console.error(`[SAMA-PASS-SCAN] ❌ Erreur validation:`, error);
@@ -162,18 +167,28 @@ async function findActiveSubscriptionByPhone(phone: string): Promise<SamaPassSub
 }
 
 /**
- * Valide le statut d'un abonnement trouvé
+ * Valide le statut d'un abonnement avec contrôles de sécurité renforcés
+ *
+ * Contrôles effectués (Gënaa Wóor) :
+ * 1. Statut de l'abonnement (actif/suspendu)
+ * 2. Période de validité (dates début/fin)
+ * 3. Vérification de la ligne (sectorisation)
+ * 4. Limitation quotidienne (2 trajets/jour max)
+ * 5. Anti-passback (30 min minimum entre scans)
  */
-function validateSubscriptionStatus(
+async function validateSubscriptionStatus(
   subscription: SamaPassSubscription,
-  vehicleId: string
-): ScanValidationResult {
+  vehicleId: string,
+  vehicleLineId?: string
+): Promise<ScanValidationResult> {
 
   const now = new Date();
   const endDate = new Date(subscription.end_date);
   const startDate = new Date(subscription.start_date);
 
-  // Vérifier si l'abonnement est actif
+  // ========================================
+  // CONTRÔLE 1 : Statut de l'abonnement
+  // ========================================
   if (subscription.status !== 'active') {
     console.log(`[SAMA-PASS-SCAN] ⚠️ Abonnement suspendu ou inactif`);
     return {
@@ -185,7 +200,9 @@ function validateSubscriptionStatus(
     };
   }
 
-  // Vérifier si l'abonnement est dans la période de validité
+  // ========================================
+  // CONTRÔLE 2 : Période de validité
+  // ========================================
   if (now < startDate) {
     console.log(`[SAMA-PASS-SCAN] ⚠️ Abonnement pas encore actif`);
     return {
@@ -197,10 +214,8 @@ function validateSubscriptionStatus(
     };
   }
 
-  // Vérifier si l'abonnement est expiré
   if (now > endDate) {
     const daysSinceExpiry = Math.floor((now.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24));
-
     console.log(`[SAMA-PASS-SCAN] ⚠️ Abonnement expiré depuis ${daysSinceExpiry} jours`);
 
     // Tolérance de 2 jours pour renouvellement
@@ -223,20 +238,82 @@ function validateSubscriptionStatus(
     }
   }
 
-  // Abonnement valide
+  // ========================================
+  // CONTRÔLE 3 : Vérification de la ligne (Sectorisation)
+  // ========================================
+  if (vehicleLineId && subscription.route_id) {
+    if (subscription.route_id !== vehicleLineId) {
+      console.log(`[SAMA-PASS-SCAN] ❌ ERREUR LIGNE: Pass pour ${subscription.route_id}, véhicule sur ${vehicleLineId}`);
+      return {
+        isValid: false,
+        status: 'wrong_line',
+        message: `ERREUR LIGNE`,
+        subscription,
+        color: 'red',
+        expectedLine: subscription.route_name
+      };
+    }
+    console.log(`[SAMA-PASS-SCAN] ✅ Ligne correcte: ${subscription.route_name}`);
+  }
+
+  // ========================================
+  // CONTRÔLE 4 : Limitation quotidienne (2 trajets/jour max)
+  // ========================================
+  const todayScans = await getDailyScansCount(subscription.id);
+  console.log(`[SAMA-PASS-SCAN] 📊 Scans aujourd'hui: ${todayScans}/2`);
+
+  if (todayScans >= 2) {
+    console.log(`[SAMA-PASS-SCAN] ⚠️ QUOTA ATTEINT: 2/2 trajets`);
+    return {
+      isValid: false,
+      status: 'quota_exceeded',
+      message: 'LIMITE ATTEINTE',
+      subscription,
+      color: 'orange',
+      scansToday: todayScans
+    };
+  }
+
+  // ========================================
+  // CONTRÔLE 5 : Anti-Passback (30 min minimum)
+  // ========================================
+  const lastScan = await getLastScanTime(subscription.id);
+  if (lastScan) {
+    const lastScanTime = new Date(lastScan);
+    const minutesSinceLastScan = Math.floor((now.getTime() - lastScanTime.getTime()) / (1000 * 60));
+
+    console.log(`[SAMA-PASS-SCAN] ⏱️ Dernier scan: il y a ${minutesSinceLastScan} min`);
+
+    if (minutesSinceLastScan < 30) {
+      const remainingMinutes = 30 - minutesSinceLastScan;
+      console.log(`[SAMA-PASS-SCAN] ⚠️ SCAN TROP RAPPROCHÉ: ${remainingMinutes} min restantes`);
+      return {
+        isValid: false,
+        status: 'too_soon',
+        message: `SCAN TROP RAPPROCHÉ`,
+        subscription,
+        color: 'orange',
+        lastScanTime: lastScan
+      };
+    }
+  }
+
+  // ========================================
+  // ✅ TOUS LES CONTRÔLES PASSÉS - VALIDATION
+  // ========================================
   console.log(`[SAMA-PASS-SCAN] ✅ Validation réussie: ${subscription.full_name}`);
 
   // Enregistrer le scan
-  recordTransportScan(vehicleId, subscription, 'valid').catch(err => {
-    console.error(`[SAMA-PASS-SCAN] ❌ Erreur enregistrement scan:`, err);
-  });
+  await recordTransportScan(vehicleId, subscription, 'valid');
+  await recordDailyScan(subscription.id);
 
   return {
     isValid: true,
     status: 'valid',
     message: 'PASS VALIDE',
     subscription,
-    color: 'green'
+    color: 'green',
+    scansToday: todayScans + 1
   };
 }
 
@@ -270,6 +347,75 @@ export async function recordTransportScan(
 
   } catch (error) {
     console.error(`[SAMA-PASS-SCAN] ❌ Erreur enregistrement scan:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Récupère le nombre de scans effectués aujourd'hui pour un abonnement
+ */
+async function getDailyScansCount(subscriptionId: string): Promise<number> {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const dailyScansRef = ref(db, `scans_journaliers/${today}/${subscriptionId}`);
+    const snapshot = await get(dailyScansRef);
+
+    if (!snapshot.exists()) {
+      return 0;
+    }
+
+    const scans = snapshot.val();
+    return scans.count || 0;
+
+  } catch (error) {
+    console.error(`[SAMA-PASS-SCAN] ❌ Erreur lecture scans quotidiens:`, error);
+    return 0;
+  }
+}
+
+/**
+ * Récupère l'heure du dernier scan pour un abonnement
+ */
+async function getLastScanTime(subscriptionId: string): Promise<string | null> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyScansRef = ref(db, `scans_journaliers/${today}/${subscriptionId}`);
+    const snapshot = await get(dailyScansRef);
+
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const scans = snapshot.val();
+    return scans.lastScanTime || null;
+
+  } catch (error) {
+    console.error(`[SAMA-PASS-SCAN] ❌ Erreur lecture dernier scan:`, error);
+    return null;
+  }
+}
+
+/**
+ * Enregistre un scan dans le compteur quotidien
+ */
+async function recordDailyScan(subscriptionId: string): Promise<void> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyScansRef = ref(db, `scans_journaliers/${today}/${subscriptionId}`);
+
+    const snapshot = await get(dailyScansRef);
+    const currentCount = snapshot.exists() ? (snapshot.val().count || 0) : 0;
+
+    await set(dailyScansRef, {
+      count: currentCount + 1,
+      lastScanTime: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log(`[SAMA-PASS-SCAN] ✅ Compteur quotidien mis à jour: ${currentCount + 1}/2`);
+
+  } catch (error) {
+    console.error(`[SAMA-PASS-SCAN] ❌ Erreur mise à jour compteur:`, error);
     throw error;
   }
 }
