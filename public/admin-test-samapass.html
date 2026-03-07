@@ -173,6 +173,38 @@
             border: 1px solid #d1d5db;
         }
 
+        .qr-visual {
+            margin-top: 16px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid #10b981;
+        }
+
+        .qr-visual canvas {
+            margin: 16px 0;
+        }
+
+        .qr-download {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .qr-download:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
         .stats {
             display: flex;
             gap: 12px;
@@ -285,6 +317,7 @@
         <div class="result" id="result"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
         import { getDatabase, ref, get, set, push, remove } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
@@ -418,6 +451,19 @@
             }
         };
 
+        async function generateQRCodeImage(text) {
+            const canvas = document.createElement('canvas');
+            await QRCode.toCanvas(canvas, text, {
+                width: 250,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            });
+            return canvas;
+        }
+
         function showResult(type, title, details) {
             const resultDiv = document.getElementById('result');
             resultDiv.className = `result ${type}`;
@@ -435,6 +481,11 @@
                     html += `<div><strong>Forfait:</strong> ${details.subscriptionTier} ${details.subscriptionType}</div>`;
                     html += `<div><strong>Valide jusqu'au:</strong> ${details.endDate}</div>`;
                     html += `<div class="qr-code"><strong>QR Code:</strong><br>${details.qrCode}</div>`;
+                    html += `<div class="qr-visual" id="qrVisual">
+                        <strong style="margin-bottom: 8px;">📱 QR Code Scannable</strong>
+                        <div id="qrCanvas"></div>
+                        <button class="qr-download" onclick="downloadQRCode()">⬇️ Télécharger QR Code</button>
+                    </div>`;
                 } else {
                     html += `<div>${details}</div>`;
                 }
@@ -443,10 +494,30 @@
 
             resultDiv.innerHTML = html;
 
+            if (details && typeof details === 'object' && details.qrCode) {
+                setTimeout(async () => {
+                    const canvas = await generateQRCodeImage(details.qrCode);
+                    const qrCanvas = document.getElementById('qrCanvas');
+                    if (qrCanvas) {
+                        qrCanvas.appendChild(canvas);
+                        window.currentQRCanvas = canvas;
+                    }
+                }, 100);
+            }
+
             setTimeout(() => {
                 resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
+
+        window.downloadQRCode = function() {
+            if (!window.currentQRCanvas) return;
+
+            const link = document.createElement('a');
+            link.download = `SAMAPASS-${Date.now()}.png`;
+            link.href = window.currentQRCanvas.toDataURL();
+            link.click();
+        };
 
         document.getElementById('generateForm').addEventListener('submit', async (e) => {
             e.preventDefault();
