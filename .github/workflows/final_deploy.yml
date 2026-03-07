@@ -13,19 +13,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install & Build
-        # CI=false empêche le build de s'arrêter sur des avertissements
+      - name: Clean & Install
+        # On supprime les fichiers temporaires et les verrous qui bloquent le build
         run: |
+          rm -f vite.config.ts.timestamp-* rm -rf node_modules package-lock.json
           npm install --legacy-peer-deps
+
+      - name: Build Production
+        # CI=false force le build même si TypeScript ou ESLint trouvent des erreurs
+        run: |
           CI=false npm run build
 
       - name: Firebase Deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # ATTENTION : Nom exact du secret vérifié dans tes paramètres
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVENPASSSENEGAL }}'
           channelId: live
           projectId: evenpasssenegal
