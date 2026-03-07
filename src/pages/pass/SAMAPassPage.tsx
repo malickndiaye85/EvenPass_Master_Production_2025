@@ -136,27 +136,58 @@ export default function SAMAPassPage() {
       if (!offer) throw new Error('Offre invalide');
 
       const price = getPrice(selectedLine, selectedTier, selectedService);
+      const now = new Date();
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + offer.daysCount);
 
       if (!db) throw new Error('Database not initialized');
 
-      const subscriptionsRef = ref(db as any, `user_subscriptions/${user.id}`);
-      const newSubRef = push(subscriptionsRef);
+      // Générer le QR Code au format attendu par EPscanT
+      const userPhone = user.phoneNumber || user.email?.replace(/[^0-9]/g, '') || '221000000000';
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 100000);
+      const qrCode = `SAMAPASS-${userPhone}-${timestamp}${random}`;
 
-      await set(newSubRef, {
+      // 1. Sauvegarder dans user_subscriptions (pour l'utilisateur)
+      const userSubRef = ref(db as any, `user_subscriptions/${user.id}`);
+      const newUserSubRef = push(userSubRef);
+
+      await set(newUserSubRef, {
         line_id: selectedLine.id,
         line_name: selectedLine.name,
         route: selectedLine.route,
         service_type: selectedService,
         tier: selectedTier,
         price: price,
-        purchased_at: new Date().toISOString(),
+        purchased_at: now.toISOString(),
         expires_at: expiryDate.toISOString(),
-        status: 'active'
+        status: 'active',
+        qr_code: qrCode,
+        user_phone: userPhone
       });
 
-      navigate(`/pass/card?subscription=${newSubRef.key}`);
+      // 2. Sauvegarder dans abonnements_express (pour EPscanT)
+      const abonnementsRef = ref(db as any, 'abonnements_express');
+      const newAbonnementRef = push(abonnementsRef);
+
+      await set(newAbonnementRef, {
+        qr_code: qrCode,
+        full_name: user.email?.split('@')[0] || 'Passager',
+        subscriber_phone: userPhone,
+        start_date: now.toISOString().split('T')[0],
+        end_date: expiryDate.toISOString().split('T')[0],
+        status: 'active',
+        subscription_type: selectedTier,
+        subscription_tier: selectedService,
+        route_id: selectedLine.id,
+        route_name: selectedLine.route,
+        line_name: selectedLine.name,
+        created_at: now.toISOString(),
+        user_id: user.id,
+        isTest: false
+      });
+
+      navigate(`/pass/card?subscription=${newUserSubRef.key}`);
     } catch (error) {
       console.error('Error purchasing pass:', error);
       alert('Erreur lors de l\'achat. Veuillez réessayer.');

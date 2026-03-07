@@ -18,6 +18,8 @@ interface Subscription {
   purchased_at: string;
   expires_at: string;
   status: string;
+  qr_code?: string;
+  user_phone?: string;
 }
 
 export default function SAMAPassCardPage() {
@@ -80,14 +82,8 @@ export default function SAMAPassCardPage() {
     }
   };
 
-  const qrData = JSON.stringify({
-    type: 'sama_pass',
-    subscription_id: subscriptionId,
-    user_id: user?.id,
-    service_type: subscription?.service_type,
-    line_id: subscription?.line_id,
-    expires_at: subscription?.expires_at
-  });
+  // Utiliser le QR Code généré lors de l'achat (format EPscanT)
+  const qrData = subscription?.qr_code || `SAMAPASS-${subscription?.user_phone || '221000000000'}-${subscriptionId}`;
 
   if (loading) {
     return (
@@ -196,6 +192,9 @@ export default function SAMAPassCardPage() {
               </div>
 
               <div className="bg-white rounded-3xl p-8 flex flex-col items-center shadow-xl">
+                <div className="text-xs font-bold text-gray-700 mb-3 text-center uppercase tracking-wide">
+                  QR Code Scannable
+                </div>
                 <QRCode
                   value={qrData}
                   size={220}
@@ -204,6 +203,9 @@ export default function SAMAPassCardPage() {
                 />
                 <p className="text-gray-600 text-sm mt-5 text-center font-medium">
                   Présentez ce QR Code au contrôleur
+                </p>
+                <p className="text-gray-400 text-xs mt-2 font-mono break-all text-center px-4">
+                  {qrData.substring(0, 40)}...
                 </p>
               </div>
 
