@@ -637,6 +637,203 @@
             background: linear-gradient(135deg, rgba(14, 165, 233, 1.1), #0EA5E9);
             box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
         }
+
+        .sama-pass-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(14, 165, 233, 0.3);
+        }
+
+        .pass-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(250, 250, 250, 0.1);
+        }
+
+        .pass-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            overflow: hidden;
+            border: 3px solid #0EA5E9;
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .pass-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pass-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #FAFAFA;
+            margin-bottom: 8px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+        }
+
+        .pass-phone {
+            font-size: 14px;
+            color: rgba(250, 250, 250, 0.7);
+            font-weight: 600;
+        }
+
+        .pass-info-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .pass-info-row {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(250, 250, 250, 0.05);
+        }
+
+        .pass-info-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .pass-info-content {
+            flex: 1;
+        }
+
+        .pass-info-label {
+            font-size: 11px;
+            color: rgba(250, 250, 250, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .pass-info-value {
+            font-size: 14px;
+            color: #FAFAFA;
+            font-weight: 700;
+        }
+
+        .pass-quota {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .pass-quota .pass-info-value {
+            color: #22C55E;
+            font-weight: 800;
+        }
+
+        .pass-tier-eco {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .pass-tier-prestige {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        .pass-tier-prestige .pass-info-value {
+            color: #FFC107;
+            font-weight: 800;
+        }
+
+        .pass-status-badge {
+            text-align: center;
+            padding: 16px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 2px solid #22C55E;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        .pass-status-badge.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: #EF4444;
+        }
+
+        .pass-status-badge.warning {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #FFC107;
+        }
+
+        .pass-status-text {
+            font-size: 18px;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pass-status-badge .pass-status-text {
+            color: #22C55E;
+        }
+
+        .pass-status-badge.error .pass-status-text {
+            color: #EF4444;
+        }
+
+        .pass-status-badge.warning .pass-status-text {
+            color: #FFC107;
+        }
+
+        .error-details {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+        }
+
+        .error-details-title {
+            font-size: 12px;
+            color: rgba(250, 250, 250, 0.6);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .error-details-text {
+            font-size: 15px;
+            color: #EF4444;
+            font-weight: 700;
+        }
+
+        .warning-details {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .warning-details-text {
+            font-size: 14px;
+            color: rgba(250, 250, 250, 0.8);
+            line-height: 1.6;
+        }
+
+        .warning-time {
+            font-size: 18px;
+            color: #FFC107;
+            font-weight: 800;
+            margin-top: 8px;
+            font-family: 'Orbitron', monospace;
+        }
     </style>
 </head>
 <body>
@@ -1104,12 +1301,310 @@
         setInterval(updateSessionTimer, 1000);
         updateSessionTimer();
 
+        function formatPhone(phone) {
+            if (!phone) return 'N/A';
+            if (phone.startsWith('221')) {
+                return `+${phone.substring(0, 3)} ${phone.substring(3, 5)} ${phone.substring(5, 8)} ${phone.substring(8, 10)} ${phone.substring(10)}`;
+            }
+            return phone;
+        }
+
+        function formatDuration(type) {
+            const types = {
+                'weekly': 'Hebdomadaire',
+                'monthly': 'Mensuel',
+                'quarterly': 'Trimestriel'
+            };
+            return types[type] || type;
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function showPassCard(subscription, scansToday = 1) {
+            const modal = document.getElementById('resultModal');
+            const detailsEl = document.getElementById('resultDetails');
+
+            modal.className = 'result-modal success-banner';
+
+            const tierClass = subscription.subscriptionTier === 'prestige' ? 'pass-tier-prestige' : 'pass-tier-eco';
+            const tierLabel = subscription.subscriptionTier === 'prestige' ? '💎 PRESTIGE' : '🚌 ECO';
+
+            const card = `
+                <div class="sama-pass-card">
+                    <div class="pass-header">
+                        <div class="pass-photo">
+                            <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                        </div>
+                        <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                        <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                    </div>
+
+                    <div class="pass-info-grid">
+                        <div class="pass-info-row">
+                            <div class="pass-info-icon">🚌</div>
+                            <div class="pass-info-content">
+                                <div class="pass-info-label">Ligne</div>
+                                <div class="pass-info-value">${subscription.routeName || subscription.route_name}</div>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-row ${tierClass}">
+                            <div class="pass-info-icon">${subscription.subscriptionTier === 'prestige' ? '💎' : '🎫'}</div>
+                            <div class="pass-info-content">
+                                <div class="pass-info-label">Formule</div>
+                                <div class="pass-info-value">${tierLabel}</div>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-row">
+                            <div class="pass-info-icon">📅</div>
+                            <div class="pass-info-content">
+                                <div class="pass-info-label">Type d'abonnement</div>
+                                <div class="pass-info-value">${formatDuration(subscription.subscriptionType || subscription.subscription_type)}</div>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-row pass-quota">
+                            <div class="pass-info-icon">📊</div>
+                            <div class="pass-info-content">
+                                <div class="pass-info-label">Trajets aujourd'hui</div>
+                                <div class="pass-info-value">${scansToday}/2</div>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-row">
+                            <div class="pass-info-icon">⏰</div>
+                            <div class="pass-info-content">
+                                <div class="pass-info-label">Expire le</div>
+                                <div class="pass-info-value">${formatDate(subscription.expiresAt || subscription.end_date)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pass-status-badge">
+                        <div class="pass-status-text">✅ PASS VALIDE</div>
+                    </div>
+                </div>
+            `;
+
+            detailsEl.innerHTML = card;
+            detailsEl.style.display = 'block';
+
+            document.getElementById('resultIcon').style.display = 'none';
+            document.getElementById('resultTitle').style.display = 'none';
+            document.getElementById('resultMessage').style.display = 'none';
+
+            modal.style.display = 'flex';
+
+            validCount++;
+            totalCount++;
+            updateCounterValue('validCount', validCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.validCount = validCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([100]);
+        }
+
+        function showErrorCard(status, message, subscription, details = {}) {
+            const modal = document.getElementById('resultModal');
+            const detailsEl = document.getElementById('resultDetails');
+
+            modal.className = 'result-modal error-banner';
+
+            let errorContent = '';
+
+            if (status === 'wrong_line') {
+                errorContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge error">
+                            <div class="pass-status-text">❌ ERREUR LIGNE</div>
+                        </div>
+
+                        <div class="error-details">
+                            <div class="error-details-title">Ce pass est réservé à :</div>
+                            <div class="error-details-text">${details.expectedLine}</div>
+                        </div>
+
+                        <div class="error-details" style="margin-top: 12px;">
+                            <div class="error-details-title">Véhicule actuel :</div>
+                            <div class="error-details-text">${vehicleSession.lineName || 'Ligne non définie'}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                errorContent = `
+                    <div class="sama-pass-card">
+                        ${subscription ? `
+                            <div class="pass-header">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="pass-status-badge error">
+                            <div class="pass-status-text">❌ ${message}</div>
+                        </div>
+
+                        ${details.reason ? `
+                            <div class="error-details">
+                                <div class="error-details-text">${details.reason}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            detailsEl.innerHTML = errorContent;
+            detailsEl.style.display = 'block';
+
+            document.getElementById('resultIcon').style.display = 'none';
+            document.getElementById('resultTitle').style.display = 'none';
+            document.getElementById('resultMessage').style.display = 'none';
+
+            modal.style.display = 'flex';
+
+            invalidCount++;
+            totalCount++;
+            updateCounterValue('invalidCount', invalidCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([200, 100, 200]);
+        }
+
+        function showWarningCard(status, message, subscription, details = {}) {
+            const modal = document.getElementById('resultModal');
+            const detailsEl = document.getElementById('resultDetails');
+
+            modal.className = 'result-modal';
+
+            let warningContent = '';
+
+            if (status === 'quota_exceeded') {
+                warningContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ LIMITE ATTEINTE</div>
+                        </div>
+
+                        <div class="warning-details">
+                            <div class="warning-details-text">
+                                ${details.scansToday}/2 trajets effectués aujourd'hui
+                                <br><br>
+                                Prochain trajet disponible demain
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (status === 'too_soon') {
+                const lastScanTime = new Date(details.lastScanTime);
+                const now = new Date();
+                const minutesSince = Math.floor((now - lastScanTime) / (1000 * 60));
+                const minutesRemaining = 30 - minutesSince;
+
+                warningContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ SCAN TROP RAPPROCHÉ</div>
+                        </div>
+
+                        <div class="warning-details">
+                            <div class="warning-details-text">
+                                Dernier scan : Il y a ${minutesSince} minutes
+                                <br><br>
+                                Veuillez patienter
+                            </div>
+                            <div class="warning-time">${minutesRemaining} minutes</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                warningContent = `
+                    <div class="sama-pass-card">
+                        ${subscription ? `
+                            <div class="pass-header">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ ${message}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            detailsEl.innerHTML = warningContent;
+            detailsEl.style.display = 'block';
+
+            document.getElementById('resultIcon').style.display = 'none';
+            document.getElementById('resultTitle').style.display = 'none';
+            document.getElementById('resultMessage').style.display = 'none';
+
+            modal.style.display = 'flex';
+
+            invalidCount++;
+            totalCount++;
+            updateCounterValue('invalidCount', invalidCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([200, 100, 200]);
+        }
+
         function showResult(type, title, message, details = null) {
             const modal = document.getElementById('resultModal');
             const icon = document.getElementById('resultIcon');
             const titleEl = document.getElementById('resultTitle');
             const messageEl = document.getElementById('resultMessage');
             const detailsEl = document.getElementById('resultDetails');
+
+            icon.style.display = 'flex';
+            titleEl.style.display = 'block';
+            messageEl.style.display = 'block';
 
             modal.className = 'result-modal';
             if (type === 'success') {
@@ -1262,27 +1757,90 @@
                     return;
                 }
 
-                // Valider le statut
                 const now = Date.now();
+                const vehicleLineId = vehicleSession.lineId;
 
-                // Vérifier si l'abonnement est actif
+                console.log('[EPscanT] 🔐 VALIDATION GËNAA WÓOR - Contrôles de sécurité');
+                console.log('[EPscanT] 🚍 Ligne véhicule:', vehicleLineId || 'NON DÉFINIE');
+                console.log('[EPscanT] 🎫 Ligne pass:', subscription.routeId || 'NON DÉFINIE');
+
                 if (subscription.status !== 'active') {
-                    showResult('error', `PASS ${subscription.status.toUpperCase()}`, 'Abonnement inactif');
+                    console.log('[EPscanT] ❌ STATUT:', subscription.status);
+                    showErrorCard('invalid', `PASS ${subscription.status.toUpperCase()}`, subscription, {
+                        reason: 'Abonnement inactif'
+                    });
                     return;
                 }
 
-                // Vérifier si expiré
                 if (now > subscription.expiresAt) {
                     const daysSinceExpiry = Math.floor((now - subscription.expiresAt) / (1000 * 60 * 60 * 24));
+                    console.log('[EPscanT] ⚠️ EXPIRÉ:', daysSinceExpiry, 'jours');
 
                     if (daysSinceExpiry <= 2) {
-                        showResult('warning', `PASS EXPIRÉ - ${daysSinceExpiry}j`, 'Renouvellement nécessaire');
-                        return;
+                        showErrorCard('expired', `PASS EXPIRÉ - ${daysSinceExpiry}j`, subscription, {
+                            reason: 'Renouvellement nécessaire'
+                        });
                     } else {
-                        showResult('error', 'PASS EXPIRÉ', 'Abonnement non valide');
+                        showErrorCard('expired', 'PASS EXPIRÉ', subscription, {
+                            reason: 'Abonnement non valide'
+                        });
+                    }
+                    return;
+                }
+
+                if (vehicleLineId && subscription.routeId && subscription.routeId !== vehicleLineId) {
+                    console.log('[EPscanT] ❌ ERREUR LIGNE');
+                    console.log('[EPscanT] ❌ Pass pour:', subscription.routeName);
+                    console.log('[EPscanT] ❌ Véhicule sur:', vehicleSession.lineName);
+                    showErrorCard('wrong_line', 'ERREUR LIGNE', subscription, {
+                        expectedLine: subscription.routeName
+                    });
+                    return;
+                }
+                console.log('[EPscanT] ✅ LIGNE: Correcte');
+
+                const today = new Date().toISOString().split('T')[0];
+                const dailyScansKey = `daily_scans_${today}_${subscription.id}`;
+                const dailyScansData = localStorage.getItem(dailyScansKey);
+                let scansToday = 0;
+                let lastScanTime = null;
+
+                if (dailyScansData) {
+                    const data = JSON.parse(dailyScansData);
+                    scansToday = data.count || 0;
+                    lastScanTime = data.lastScanTime;
+                }
+
+                console.log('[EPscanT] 📊 QUOTA:', scansToday, '/2 trajets aujourd\'hui');
+
+                if (scansToday >= 2) {
+                    console.log('[EPscanT] ⚠️ QUOTA ATTEINT');
+                    showWarningCard('quota_exceeded', 'LIMITE ATTEINTE', subscription, {
+                        scansToday: scansToday
+                    });
+                    return;
+                }
+
+                if (lastScanTime) {
+                    const lastScan = new Date(lastScanTime);
+                    const minutesSince = Math.floor((now - lastScan.getTime()) / (1000 * 60));
+                    console.log('[EPscanT] ⏱️ ANTI-PASSBACK: Dernier scan il y a', minutesSince, 'min');
+
+                    if (minutesSince < 30) {
+                        console.log('[EPscanT] ⚠️ SCAN TROP RAPPROCHÉ');
+                        showWarningCard('too_soon', 'SCAN TROP RAPPROCHÉ', subscription, {
+                            lastScanTime: lastScanTime
+                        });
                         return;
                     }
                 }
+
+                console.log('[EPscanT] ✅ TOUS LES CONTRÔLES PASSÉS');
+
+                localStorage.setItem(dailyScansKey, JSON.stringify({
+                    count: scansToday + 1,
+                    lastScanTime: new Date().toISOString()
+                }));
 
                 const scanData = {
                     passengerPhone: subscription.passengerPhone,
@@ -1305,7 +1863,8 @@
                             subscriptionType: scanData.subscriptionType,
                             subscriptionTier: scanData.subscriptionTier,
                             routeName: scanData.routeName,
-                            scanStatus: scanData.scanStatus
+                            scanStatus: scanData.scanStatus,
+                            dailyScansCount: scansToday + 1
                         });
                         console.log('[EPscanT] ✅ Scan enregistré en ligne pour:', subscription.passengerName);
                     } catch (error) {
@@ -1327,37 +1886,7 @@
                     console.log('[EPscanT] 📱 Scan mis en queue (mode hors-ligne)');
                 }
 
-                const durationLabel = {
-                    'weekly': 'Hebdo',
-                    'monthly': 'Mensuel',
-                    'quarterly': 'Trimestriel'
-                };
-
-                const tierLabel = {
-                    'eco': 'Éco',
-                    'prestige': 'Prestige'
-                };
-
-                const details = `
-                    <div class="detail-row">
-                        <span class="detail-label">Abonné</span>
-                        <span class="detail-value">${subscription.passengerName}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Forfait</span>
-                        <span class="detail-value">${tierLabel[subscription.subscriptionTier] || subscription.subscriptionTier} ${durationLabel[subscription.subscriptionType] || subscription.subscriptionType}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Ligne</span>
-                        <span class="detail-value">${subscription.routeName}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Expire le</span>
-                        <span class="detail-value">${new Date(subscription.expiresAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                `;
-
-                showResult('success', 'PASS VALIDE', `Bienvenue à bord`, details);
+                showPassCard(subscription, scansToday + 1);
 
             } catch (error) {
                 console.error('[EPscanT] ❌ Erreur scan:', error);
