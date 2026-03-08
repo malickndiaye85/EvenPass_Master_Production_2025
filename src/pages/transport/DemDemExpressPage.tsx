@@ -77,38 +77,46 @@ export default function DemDemExpressPage() {
       console.log('[DEMDEM-EXPRESS] 📞 Téléphone nettoyé:', cleanPhone);
       console.log('[DEMDEM-EXPRESS] 📱 QR Code généré:', qrCode);
 
-      // Créer les données d'abonnement pour Firebase
+      // Créer les données d'abonnement pour Firebase au format EPscanT
+      // IMPORTANT: Utiliser camelCase et timestamps pour compatibilité avec le scanner
+      const startTimestamp = startDate.getTime();
+      const expiresTimestamp = expiresAt.getTime();
+
       const firebaseSubscription = {
         id: subscriptionId,
-        subscriber_phone: cleanPhone,
-        full_name: `${userData.firstName} ${userData.lastName}`,
-        subscription_type: duration,
-        subscription_tier: tier,
-        route_id: route.id,
-        route_name: `${route.origin} ⇄ ${route.destination}`,
-        start_date: startDate.toISOString(),
-        end_date: expiresAt.toISOString(),
+        qrCode: qrCode,
+        passengerPhone: cleanPhone,
+        passengerName: `${userData.firstName} ${userData.lastName}`,
+        subscriptionType: duration,
+        subscriptionTier: tier,
+        routeId: route.id,
+        routeName: `${route.origin} ⇄ ${route.destination}`,
+        startDate: startTimestamp,
+        endDate: expiresTimestamp,
+        expiresAt: expiresTimestamp,
         status: 'active',
-        qr_code: qrCode,
-        created_at: startDate.toISOString(),
-        photo_url: userData.photoUrl || '',
-        amount_paid: price,
-        isTest: true // MODE TEST - Permet l'écriture dans Firebase sans authentification admin
+        createdAt: startTimestamp,
+        photoUrl: userData.photoUrl || '',
+        amountPaid: price,
+        isTest: true
       };
 
-      console.log('[DEMDEM-EXPRESS] 💾 Sauvegarde dans Firebase...', firebaseSubscription);
+      console.log('[DEMDEM-EXPRESS] 💾 Sauvegarde SAMA PASS dans Firebase...');
+      console.log('[DEMDEM-EXPRESS] 📍 Chemin: demdem/sama_passes');
+      console.log('[DEMDEM-EXPRESS] 📋 Format: camelCase + timestamps');
 
       try {
         const { ref, set } = await import('firebase/database');
         const { db } = await import('../../firebase');
 
-        const subRef = ref(db, `abonnements_express/${subscriptionId}`);
+        const subRef = ref(db, `demdem/sama_passes/${subscriptionId}`);
         await set(subRef, firebaseSubscription);
 
-        console.log('[DEMDEM-EXPRESS] ✅ Abonnement sauvegardé dans Firebase');
+        console.log('[DEMDEM-EXPRESS] ✅ SAMA PASS créé avec succès');
+        console.log('[DEMDEM-EXPRESS] 🎫 ID:', subscriptionId);
+        console.log('[DEMDEM-EXPRESS] 📱 QR:', qrCode);
       } catch (firebaseError) {
         console.error('[DEMDEM-EXPRESS] ⚠️ Erreur Firebase (on continue quand même):', firebaseError);
-        // On continue même en cas d'erreur Firebase pour permettre les tests
       }
 
       // Créer les données pour la page de succès
