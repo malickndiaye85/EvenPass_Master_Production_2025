@@ -184,7 +184,13 @@ export default function DemDemExpressPage() {
   const handleGenerateTestPass = async () => {
     setGeneratingTestPass(true);
     try {
-      const testPass = await generateTestSAMAPass();
+      // Générer avec des paramètres aléatoires pour la variété
+      const tiers = ['eco', 'standard', 'prestige'] as const;
+      const types = ['weekly', 'monthly'] as const;
+      const randomTier = tiers[Math.floor(Math.random() * tiers.length)];
+      const randomType = types[Math.floor(Math.random() * types.length)];
+
+      const testPass = await generateTestSAMAPass(undefined, randomTier, randomType);
       setGeneratedTestPass(testPass);
     } catch (error) {
       console.error('Erreur génération pass test:', error);
@@ -232,33 +238,37 @@ export default function DemDemExpressPage() {
                 <h3 className="text-2xl font-bold text-green-400 mb-4">Pass de Test Généré</h3>
 
                 <div className="bg-white p-6 rounded-xl inline-block mb-4">
-                  <QRCode value={generatedTestPass.qr_code} size={200} />
+                  <QRCode value={generatedTestPass.qrCode} size={200} />
                 </div>
 
                 <div className="space-y-2 text-left max-w-md mx-auto bg-black/30 rounded-xl p-4">
                   <div className="flex justify-between">
                     <span className="text-white/70">Nom:</span>
-                    <span className="text-white font-bold">{generatedTestPass.full_name}</span>
+                    <span className="text-white font-bold">{generatedTestPass.passengerName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">Téléphone:</span>
-                    <span className="text-white font-mono">{generatedTestPass.subscriber_phone}</span>
+                    <span className="text-white font-mono">{generatedTestPass.passengerPhone}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">Type:</span>
-                    <span className="text-white font-bold">{generatedTestPass.subscription_type}</span>
+                    <span className="text-white font-bold">{generatedTestPass.subscriptionType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Formule:</span>
+                    <span className="text-white font-bold uppercase">{generatedTestPass.subscriptionTier}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">Ligne:</span>
-                    <span className="text-white">{generatedTestPass.route_name}</span>
+                    <span className="text-white">{generatedTestPass.routeName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">Valide jusqu'au:</span>
-                    <span className="text-green-400 font-bold">{generatedTestPass.end_date}</span>
+                    <span className="text-green-400 font-bold">{new Date(generatedTestPass.endDate).toLocaleDateString('fr-FR')}</span>
                   </div>
                   <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30">
                     <p className="text-xs text-blue-300 font-mono break-all">
-                      QR: {generatedTestPass.qr_code}
+                      QR: {generatedTestPass.qrCode}
                     </p>
                   </div>
                 </div>

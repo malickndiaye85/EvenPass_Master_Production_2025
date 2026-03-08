@@ -1,159 +1,94 @@
-# Fix SAMA PASS Schema - 2026-03-07
+# FIX SAMA PASS - Schéma Firebase Corrigé
 
-## Problème résolu
-Erreur `PERMISSION_DENIED` lors de la création de SAMA PASS de test.
+**Date**: 2026-03-07
+**Statut**: ✅ RÉSOLU
 
-## Cause
-1. Le chemin Firebase utilisé était `abonnements_express` au lieu de `demdem/sama_passes`
-2. Les noms de champs ne correspondaient pas au schéma validé par Firebase
-3. Les règles Firebase n'existaient pas pour le nouveau chemin
+---
 
-## Corrections appliquées
+## Problème Identifié
 
-### 1. Règles Firebase (`database.rules.json`)
-
-Ajout de la section `demdem`:
-
-```json
-"demdem": {
-  "sama_passes": {
-    ".read": true,
-    ".indexOn": ["qrCode", "passengerPhone", "expiresAt", "isTest"],
-    "$passId": {
-      ".write": true,
-      ".validate": "newData.hasChildren(['qrCode', 'passengerName', 'passengerPhone', 'createdAt', 'expiresAt'])"
-    }
-  },
-  "transport_scans": {
-    ".read": true,
-    "$scanId": {
-      ".write": true,
-      ".indexOn": ["timestamp", "vehicleId", "passId"]
-    }
-  },
-  "transport_lines": {
-    ".read": true,
-    "$lineId": {
-      ".write": "auth != null && (ops_transport || super_admin)"
-    }
-  }
-}
+Les SAMA PASS de test affichaient l'erreur :
+```
+❌ PASS INVALIDE
+Code non reconnu: SAMAPASS-221771234567-xxx
 ```
 
-### 2. Schéma des données
+### Causes Racine
 
-**Ancien schéma (non conforme):**
-```javascript
+1. **Mauvais chemin Firebase** : Le générateur enregistrait dans `abonnements_express` au lieu de `demdem/sama_passes`
+2. **Mauvais schéma de données** : Les champs ne correspondaient pas au format attendu par EPscanT
+3. **Types incompatibles** : Dates en string au lieu de timestamps
+
+---
+
+## Solution Appliquée
+
+### 1. Correction du Chemin Firebase
+
+**AVANT** :
+```typescript
+const abonnementsRef = ref(db, 'abonnements_express');
+```
+
+**APRÈS** :
+```typescript
+const abonnementsRef = ref(db, 'demdem/sama_passes');
+```
+
+### 2. Correction du Schéma de Données
+
+**AVANT** :
+```typescript
 {
-  qr_code: "...",
-  full_name: "...",
-  subscriber_phone: "...",
-  start_date: "...",
-  end_date: "...",
-  test_pass: true
+  qr_code: string,
+  full_name: string,
+  subscriber_phone: string,
+  start_date: string,    // ❌ String
+  end_date: string,      // ❌ String
+  route_id: string,
+  route_name: string
 }
 ```
 
-**Nouveau schéma (conforme):**
-```javascript
+**APRÈS** :
+```typescript
 {
-  qrCode: "...",
-  passengerName: "...",
-  passengerPhone: "...",
-  startDate: "...",
-  endDate: "...",
-  createdAt: 1234567890,
-  expiresAt: 1234567890,
-  isTest: true,
-  status: "active",
-  subscriptionType: "monthly",
-  subscriptionTier: "eco",
-  routeName: "..."
+  qrCode: string,
+  passengerName: string,
+  passengerPhone: string,
+  startDate: number,     // ✅ Timestamp
+  endDate: number,       // ✅ Timestamp
+  expiresAt: number,     // ✅ Timestamp
+  routeId: string,
+  routeName: string,
+  subscriptionType: 'monthly' | 'weekly',
+  subscriptionTier: 'eco' | 'standard' | 'prestige',
+  status: 'active'
 }
 ```
 
-### 3. Fichiers modifiés
+---
 
-#### `/public/admin-test-samapass.html`
-- ✅ Chemin: `abonnements_express` → `demdem/sama_passes`
-- ✅ Champs: camelCase au lieu de snake_case
-- ✅ Timestamps: utilise `Date.now()` au lieu de dates ISO
-- ✅ Flag test: `test_pass` → `isTest`
+## Test du Nouveau Système
 
-#### `/public/epscant-transport.html`
-- ✅ Chemin: `abonnements_express` → `demdem/sama_passes`
-- ✅ Champs: tous les champs adaptés au camelCase
-- ✅ Index IndexedDB: `qr_code` → `qrCode`, `subscriber_phone` → `passengerPhone`
-- ✅ Validation: utilise `expiresAt` (timestamp) au lieu de `end_date` (string)
-- ✅ Scans: enregistrés dans `demdem/transport_scans` avec `passId`
+### Étape 1 : Générer un Pass de Test
 
-#### `/public/test-ticket.html`
-- ✅ Déjà conforme (utilisait déjà le bon chemin et les bons champs)
+1. Aller sur `/demdem/express`
+2. Activer le mode développeur (en bas de page)
+3. Cliquer sur **"Générer Pass de Test"**
+4. Scanner le QR code généré avec EPscanT
 
-## Validation
+### Résultat Attendu
 
-### Test 1: Création de SAMA PASS
-```
-URL: https://demdem.sn/admin-test-samapass.html
-Action: Créer un SAMA PASS de test
-Résultat attendu: Aucune erreur PERMISSION_DENIED
-```
+Vous devriez voir la **carte SAMA PASS complète** avec toutes les informations.
 
-### Test 2: Affichage du SAMA PASS
-```
-URL: https://demdem.sn/test-ticket.html
-Action: Afficher le dernier SAMA PASS créé
-Résultat attendu: QR Code et informations affichés
-```
+---
 
-### Test 3: Scanner le SAMA PASS
-```
-URL: https://demdem.sn/epscant-transport.html
-Action: Scanner le QR Code du SAMA PASS
-Résultat attendu: "PASS VALIDE" avec détails de l'abonné
-```
+## Checklist de Validation
 
-## Structure Firebase finale
-
-```
-/demdem
-  /sama_passes
-    /-On4zLCa0a_fTHIOuzer
-      qrCode: "DEMDEM-2217701234567-1234567890"
-      passengerName: "Mamadou Diallo"
-      passengerPhone: "221770123456"
-      createdAt: 1709772043408
-      expiresAt: 1712364043408
-      status: "active"
-      subscriptionType: "monthly"
-      subscriptionTier: "eco"
-      routeName: "Dakar - Rufisque"
-      isTest: true
-
-  /transport_scans
-    /1709772150123
-      vehicleId: "vehicle-123"
-      passId: "-On4zLCa0a_fTHIOuzer"
-      passengerPhone: "221770123456"
-      passengerName: "Mamadou Diallo"
-      timestamp: 1709772150123
-      scanStatus: "valid"
-
-  /transport_lines
-    /route-dakar-rufisque
-      name: "Dakar - Rufisque"
-      isActive: true
-```
-
-## Déploiement
-
-Les règles Firebase doivent être déployées avec:
-```bash
-firebase deploy --only database
-```
-
-## Pages concernées
-
-✅ `/admin-test-samapass.html` - Création de SAMA PASS
-✅ `/test-ticket.html` - Affichage de SAMA PASS
-✅ `/epscant-transport.html` - Scanner transport DEM-DEM
+- [x] Pass créés dans `demdem/sama_passes`
+- [x] Schéma compatible avec EPscanT
+- [x] Timestamps au lieu de strings
+- [x] Lignes réalistes avec IDs corrects
+- [x] Noms sénégalais aléatoires
+- [x] Formules ECO/STANDARD/PRESTIGE

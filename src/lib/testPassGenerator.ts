@@ -3,19 +3,20 @@ import { db } from '../firebase';
 
 export interface TestSAMAPass {
   id: string;
-  qr_code: string;
-  full_name: string;
-  subscriber_phone: string;
-  start_date: string;
-  end_date: string;
+  qrCode: string;
+  passengerName: string;
+  passengerPhone: string;
+  startDate: number;
+  endDate: number;
+  expiresAt: number;
   status: 'active';
-  subscription_type: 'monthly';
-  subscription_tier: 'eco';
-  route_id: string;
-  route_name: string;
-  created_at: string;
+  subscriptionType: 'monthly' | 'weekly';
+  subscriptionTier: 'eco' | 'standard' | 'prestige';
+  routeId: string;
+  routeName: string;
+  createdAt: number;
   test_pass: boolean;
-  photo_url?: string;
+  photoUrl?: string;
 }
 
 function generateTestPhoneNumber(): string {
@@ -31,38 +32,70 @@ function generateTestQRCode(phone: string): string {
   return `SAMAPASS-${phone}-${timestamp}${random}`;
 }
 
-export async function generateTestSAMAPass(): Promise<TestSAMAPass> {
-  const now = new Date();
-  const endDate = new Date(now);
-  endDate.setDate(endDate.getDate() + 30);
+// Lignes disponibles pour les tests
+const TEST_ROUTES = [
+  { id: 'keur-massar-ucad', name: 'Keur Massar ⇄ UCAD' },
+  { id: 'keur-massar-petersen', name: 'Keur Massar ⇄ Petersen' },
+  { id: 'keur-massar-centre', name: 'Keur Massar ⇄ Dakar Centre' },
+  { id: 'pikine-plateau', name: 'Pikine ⇄ Plateau' },
+  { id: 'guediawaye-centre', name: 'Guédiawaye ⇄ Centre-ville' }
+];
+
+const FIRST_NAMES = ['Amadou', 'Fatou', 'Moussa', 'Aïssatou', 'Cheikh', 'Mariama', 'Ousmane', 'Khady', 'Ibrahima', 'Binta'];
+const LAST_NAMES = ['Diallo', 'Ndiaye', 'Sow', 'Diop', 'Fall', 'Sarr', 'Ba', 'Sy', 'Gueye', 'Thiam'];
+
+export async function generateTestSAMAPass(
+  routeId?: string,
+  tier: 'eco' | 'standard' | 'prestige' = 'eco',
+  type: 'weekly' | 'monthly' = 'monthly'
+): Promise<TestSAMAPass> {
+  const now = Date.now();
+  const durationDays = type === 'weekly' ? 7 : 30;
+  const endDate = now + (durationDays * 24 * 60 * 60 * 1000);
 
   const phoneNumber = generateTestPhoneNumber();
   const qrCode = generateTestQRCode(phoneNumber);
 
+  // Sélectionner une ligne aléatoire si non spécifiée
+  const selectedRoute = routeId
+    ? TEST_ROUTES.find(r => r.id === routeId) || TEST_ROUTES[0]
+    : TEST_ROUTES[Math.floor(Math.random() * TEST_ROUTES.length)];
+
+  // Générer un nom sénégalais aléatoire
+  const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+  const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+
   const testPass: Omit<TestSAMAPass, 'id'> = {
-    qr_code: qrCode,
-    full_name: `Test User ${Math.floor(Math.random() * 1000)}`,
-    subscriber_phone: phoneNumber,
-    start_date: now.toISOString().split('T')[0],
-    end_date: endDate.toISOString().split('T')[0],
+    qrCode: qrCode,
+    passengerName: `${firstName} ${lastName}`,
+    passengerPhone: phoneNumber,
+    startDate: now,
+    endDate: endDate,
+    expiresAt: endDate,
     status: 'active',
-    subscription_type: 'monthly',
-    subscription_tier: 'eco',
-    route_id: 'test-route',
-    route_name: 'Ligne Test DEM-DEM',
-    created_at: now.toISOString(),
+    subscriptionType: type,
+    subscriptionTier: tier,
+    routeId: selectedRoute.id,
+    routeName: selectedRoute.name,
+    createdAt: now,
     test_pass: true
   };
 
-  const abonnementsRef = ref(db, 'abonnements_express');
+  // Enregistrer dans demdem/sama_passes (chemin utilisé par EPscanT)
+  const abonnementsRef = ref(db, 'demdem/sama_passes');
   const newPassRef = push(abonnementsRef);
 
   await set(newPassRef, testPass);
 
   console.log('[TEST-PASS] ✅ Pass de test créé:', {
     id: newPassRef.key,
-    qr_code: qrCode,
-    phone: phoneNumber
+    qrCode: qrCode,
+    phone: phoneNumber,
+    name: testPass.passengerName,
+    route: selectedRoute.name,
+    tier: tier,
+    type: type,
+    path: 'demdem/sama_passes'
   });
 
   return {
@@ -72,7 +105,7 @@ export async function generateTestSAMAPass(): Promise<TestSAMAPass> {
 }
 
 export async function deleteAllTestPasses(): Promise<number> {
-  const abonnementsRef = ref(db, 'abonnements_express');
+  const abonnementsRef = ref(db, 'demdem/sama_passes');
   const snapshot = await get(abonnementsRef);
 
   if (!snapshot.exists()) {
@@ -85,7 +118,7 @@ export async function deleteAllTestPasses(): Promise<number> {
   snapshot.forEach((childSnapshot) => {
     const pass = childSnapshot.val();
     if (pass.test_pass === true) {
-      const passRef = ref(db, `abonnements_express/${childSnapshot.key}`);
+      const passRef = ref(db, `demdem/sama_passes/${childSnapshot.key}`);
       deletePromises.push(remove(passRef));
       deletedCount++;
     }
@@ -93,13 +126,13 @@ export async function deleteAllTestPasses(): Promise<number> {
 
   await Promise.all(deletePromises);
 
-  console.log(`[TEST-PASS] 🗑️ ${deletedCount} pass de test supprimés`);
+  console.log(`[TEST-PASS] 🗑️ ${deletedCount} pass de test supprimés de demdem/sama_passes`);
 
   return deletedCount;
 }
 
 export async function getTestPassesCount(): Promise<number> {
-  const abonnementsRef = ref(db, 'abonnements_express');
+  const abonnementsRef = ref(db, 'demdem/sama_passes');
   const snapshot = await get(abonnementsRef);
 
   if (!snapshot.exists()) {
