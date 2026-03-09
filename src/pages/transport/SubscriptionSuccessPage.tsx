@@ -248,6 +248,16 @@ export default function SubscriptionSuccessPage() {
                   <QrCode className="w-4 h-4" />
                   Présentez ce QR Code
                 </p>
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 mb-1">Code d'abonnement</p>
+                  <p className="text-xs text-gray-700 font-mono font-bold break-all px-2">
+                    {qr_code}
+                  </p>
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-600 font-semibold">ID Firebase certifié</span>
+                  </div>
+                </div>
               </div>
 
               {/* Price - Compact */}

@@ -66,58 +66,73 @@ export default function DemDemExpressPage() {
 
       const startDate = new Date();
 
-      // Générer le QR Code au format EPscanT
-      const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
       // Nettoyer le numéro : enlever +, espaces, garder seulement 221XXXXXXXXX
-      const cleanPhone = userData.phone.replace(/[\s+]/g, ''); // Enlève + et espaces
-      const qrCode = `SAMAPASS-${cleanPhone}-${subscriptionId}`;
+      const cleanPhone = userData.phone.replace(/[\s+]/g, '');
 
       console.log('[DEMDEM-EXPRESS] 📞 Téléphone original:', userData.phone);
       console.log('[DEMDEM-EXPRESS] 📞 Téléphone nettoyé:', cleanPhone);
-      console.log('[DEMDEM-EXPRESS] 📱 QR Code généré:', qrCode);
 
-      // Créer les données d'abonnement pour Firebase au format EPscanT
-      // IMPORTANT: Utiliser camelCase et timestamps pour compatibilité avec le scanner
+      // Créer les données d'abonnement SANS QR Code d'abord
       const startTimestamp = startDate.getTime();
       const expiresTimestamp = expiresAt.getTime();
 
-      const firebaseSubscription = {
-        id: subscriptionId,
-        qrCode: qrCode,
-        passengerPhone: cleanPhone,
-        passengerName: `${userData.firstName} ${userData.lastName}`,
-        subscriptionType: duration,
-        subscriptionTier: tier,
-        routeId: route.id,
-        routeName: `${route.origin} ⇄ ${route.destination}`,
-        startDate: startTimestamp,
-        endDate: expiresTimestamp,
-        expiresAt: expiresTimestamp,
-        status: 'active',
-        createdAt: startTimestamp,
-        photoUrl: userData.photoUrl || '',
-        amountPaid: price,
-        isTest: true
-      };
+      let firebaseId = '';
+      let finalQrCode = '';
 
       console.log('[DEMDEM-EXPRESS] 💾 Sauvegarde SAMA PASS dans Firebase...');
       console.log('[DEMDEM-EXPRESS] 📍 Chemin: demdem/sama_passes');
-      console.log('[DEMDEM-EXPRESS] 📋 Format: camelCase + timestamps');
 
       try {
-        const { ref, set } = await import('firebase/database');
+        const { ref, push, set } = await import('firebase/database');
         const { db } = await import('../../firebase');
 
-        const subRef = ref(db, `demdem/sama_passes/${subscriptionId}`);
-        await set(subRef, firebaseSubscription);
+        const samaPassesRef = ref(db, 'demdem/sama_passes');
 
-        console.log('[DEMDEM-EXPRESS] ✅ SAMA PASS créé avec succès');
-        console.log('[DEMDEM-EXPRESS] 🎫 ID:', subscriptionId);
-        console.log('[DEMDEM-EXPRESS] 📱 QR:', qrCode);
+        // 1. CRÉER L'ENTRÉE FIREBASE POUR OBTENIR L'ID UNIQUE
+        const newPassRef = push(samaPassesRef);
+        firebaseId = newPassRef.key || '';
+
+        console.log('[DEMDEM-EXPRESS] 🆔 ID Firebase généré:', firebaseId);
+
+        // 2. GÉNÉRER LE QR CODE AVEC L'ID FIREBASE RÉEL
+        finalQrCode = `SAMAPASS-${cleanPhone}-${firebaseId}`;
+        console.log('[DEMDEM-EXPRESS] 📱 QR Code FINAL avec ID Firebase:', finalQrCode);
+
+        // 3. SAUVEGARDER AVEC LE QR CODE CORRECT
+        const firebaseSubscription = {
+          id: firebaseId,
+          qrCode: finalQrCode,
+          passengerPhone: cleanPhone,
+          passengerName: `${userData.firstName} ${userData.lastName}`,
+          subscriptionType: duration,
+          subscriptionTier: tier,
+          routeId: route.id,
+          routeName: `${route.origin} ⇄ ${route.destination}`,
+          startDate: startTimestamp,
+          endDate: expiresTimestamp,
+          expiresAt: expiresTimestamp,
+          status: 'active',
+          createdAt: startTimestamp,
+          photoUrl: userData.photoUrl || '',
+          amountPaid: price,
+          isTest: true
+        };
+
+        await set(newPassRef, firebaseSubscription);
+
+        console.log('[DEMDEM-EXPRESS] ✅ SAMA PASS créé avec ID Firebase réel');
+        console.log('[DEMDEM-EXPRESS] 🎫 ID Firebase:', firebaseId);
+        console.log('[DEMDEM-EXPRESS] 📱 QR Code final:', finalQrCode);
       } catch (firebaseError) {
-        console.error('[DEMDEM-EXPRESS] ⚠️ Erreur Firebase (on continue quand même):', firebaseError);
+        console.error('[DEMDEM-EXPRESS] ⚠️ Erreur Firebase:', firebaseError);
+        // En cas d'erreur, utiliser un ID temporaire
+        firebaseId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        finalQrCode = `SAMAPASS-${cleanPhone}-${firebaseId}`;
       }
+
+      // Utiliser l'ID Firebase pour la suite
+      const subscriptionId = firebaseId;
+      const qrCode = finalQrCode;
 
       // Créer les données pour la page de succès
       const subscriptionData = {
