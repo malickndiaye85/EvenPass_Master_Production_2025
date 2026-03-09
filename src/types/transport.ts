@@ -213,6 +213,7 @@ export interface LineAnalytics {
     trips: number;
     demand: number;
   }>;
+  passengers_this_hour?: number;
   active_vehicles: number;
   required_vehicles: number;
 }

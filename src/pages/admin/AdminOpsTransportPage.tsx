@@ -65,6 +65,8 @@ const AdminOpsTransportPage: React.FC = () => {
   const [toastIdCounter, setToastIdCounter] = useState(0);
   const [newVehicleIds, setNewVehicleIds] = useState<Set<string>>(new Set());
   const [vehicleScans, setVehicleScans] = useState<Record<string, number>>({});
+  const [totalScansToday, setTotalScansToday] = useState(0);
+  const [globalOccupancyRate, setGlobalOccupancyRate] = useState(0);
 
   const loadData = () => {
     if (!db) return;
@@ -137,16 +139,26 @@ const AdminOpsTransportPage: React.FC = () => {
     const unsubLines = onValue(linesRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        const linesArray = Object.keys(data).map(key => ({
-          route_id: key,
-          route_name: data[key].name || data[key].route_name,
-          trips_today: data[key].trips_today || 0,
-          average_occupancy_rate: data[key].average_occupancy_rate || 0,
-          total_revenue: data[key].total_revenue || 0,
-          peak_hours: data[key].peak_hours || [],
-          active_vehicles: data[key].active_vehicles || 0,
-          required_vehicles: data[key].required_vehicles || 0
-        }));
+        const linesArray = Object.keys(data).map(key => {
+          const lineData = data[key];
+
+          // Calculer les passagers par heure depuis passengers_per_hour
+          const passengersPerHour = lineData.passengers_per_hour || {};
+          const currentHour = new Date().getHours();
+          const passengersThisHour = passengersPerHour[currentHour] || 0;
+
+          return {
+            route_id: key,
+            route_name: lineData.name || lineData.route_name,
+            trips_today: lineData.trips_today || 0,
+            average_occupancy_rate: lineData.average_occupancy_rate || 0,
+            total_revenue: lineData.total_revenue || 0,
+            peak_hours: lineData.peak_hours || [],
+            active_vehicles: lineData.active_vehicles || 0,
+            required_vehicles: lineData.required_vehicles || 0,
+            passengers_this_hour: passengersThisHour
+          };
+        });
         setLineAnalytics(linesArray);
       } else {
         setLineAnalytics([]);
@@ -205,12 +217,33 @@ const AdminOpsTransportPage: React.FC = () => {
     loadVehicleScans();
     const scanInterval = setInterval(loadVehicleScans, 30000); // Refresh toutes les 30s
 
+    // LISTENER POUR LES STATS GLOBALES (SCANS AUJOURD'HUI + TAUX D'OCCUPATION)
+    const globalStatsRef = ref(db, 'transport_stats/global');
+    const unsubGlobalStats = onValue(globalStatsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const today = new Date().toISOString().split('T')[0];
+
+        // Compteur de scans aujourd'hui depuis scan_events
+        const scansToday = data.total_scans_today || 0;
+        setTotalScansToday(scansToday);
+
+        // Taux d'occupation global
+        const occupancyRate = data.average_occupancy_rate || 0;
+        setGlobalOccupancyRate(occupancyRate);
+      } else {
+        setTotalScansToday(0);
+        setGlobalOccupancyRate(0);
+      }
+    });
+
     return () => {
       unsubVehicles();
       unsubSubscribers();
       unsubScans();
       unsubLines();
       unsubDrivers();
+      unsubGlobalStats();
       clearInterval(scanInterval);
     };
   };
@@ -675,7 +708,7 @@ const AdminOpsTransportPage: React.FC = () => {
                   <span className="text-gray-400 text-xs uppercase">Scans SAMA PASS Aujourd'hui</span>
                   <RefreshCw className="text-[#10B981]" size={16} />
                 </div>
-                <div className="text-3xl font-black text-white">{Object.values(vehicleScans).reduce((sum, count) => sum + count, 0)}</div>
+                <div className="text-3xl font-black text-white">{totalScansToday}</div>
                 <div className="text-gray-500 text-xs mt-1">Abonnés DEM-DEM Express transportés</div>
               </div>
 
@@ -684,7 +717,7 @@ const AdminOpsTransportPage: React.FC = () => {
                   <span className="text-gray-400 text-xs uppercase">Taux d'Occupation Moyen</span>
                   <Activity className="text-[#10B981]" size={16} />
                 </div>
-                <div className="text-3xl font-black text-white">{avgOccupancyRate.toFixed(0)}%</div>
+                <div className="text-3xl font-black text-white">{globalOccupancyRate > 0 ? globalOccupancyRate : avgOccupancyRate.toFixed(0)}%</div>
                 <div className="text-gray-500 text-xs mt-1">Tous véhicules confondus</div>
               </div>
 
@@ -759,7 +792,7 @@ const AdminOpsTransportPage: React.FC = () => {
 
                     <div className="bg-black/30 rounded-lg p-3">
                       <div className="text-gray-400 text-xs mb-1 uppercase">Passagers/Heure</div>
-                      <div className="text-2xl font-black text-[#10B981]">{Math.round(line.trips_today * line.average_occupancy_rate / 10)}</div>
+                      <div className="text-2xl font-black text-[#10B981]">{line.passengers_this_hour || 0}</div>
                     </div>
                   </div>
 

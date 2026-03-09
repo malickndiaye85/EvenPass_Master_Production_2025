@@ -1078,6 +1078,116 @@
             }
         }
 
+        // REMONTÉE DES SCANS VERS LE COMMAND CENTER
+        async function reportScanToCommandCenter(subscription, vehicleSession) {
+            try {
+                console.log('[EPscanT] 📊 Remontée scan vers Command Center...');
+
+                const now = Date.now();
+                const today = new Date().toISOString().split('T')[0];
+                const scanId = `scan_${now}_${Math.random().toString(36).substring(2, 9)}`;
+
+                // 1. ENREGISTRER L'ÉVÉNEMENT DE SCAN
+                const scanEventRef = dbRef(rtdb, `scan_events/${scanId}`);
+                await rtdbSet(scanEventRef, {
+                    scan_time: new Date().toISOString(),
+                    subscriber_id: subscription.id || subscription.qrCode,
+                    subscriber_name: subscription.passengerName || subscription.full_name,
+                    subscriber_phone: subscription.passengerPhone || subscription.subscriber_phone,
+                    vehicle_id: vehicleSession.vehicleId,
+                    vehicle_name: vehicleSession.vehicleName,
+                    line_id: vehicleSession.lineId,
+                    line_name: vehicleSession.lineName || subscription.routeName || subscription.route_name,
+                    driver_name: vehicleSession.driverName,
+                    scan_type: 'sama_pass',
+                    status: 'valid',
+                    tier: subscription.subscriptionTier || 'eco',
+                    timestamp: now
+                });
+
+                // 2. INCRÉMENTER LE COMPTEUR GLOBAL DE SCANS AUJOURD'HUI
+                const globalStatsRef = dbRef(rtdb, 'transport_stats/global');
+                const globalStatsSnapshot = await rtdbGet(globalStatsRef);
+                const globalStats = globalStatsSnapshot.exists() ? globalStatsSnapshot.val() : {};
+
+                await rtdbUpdate(globalStatsRef, {
+                    [`scans_by_date/${today}`]: (globalStats[`scans_by_date/${today}`] || 0) + 1,
+                    total_scans_today: (globalStats.total_scans_today || 0) + 1,
+                    last_scan_time: new Date().toISOString()
+                });
+
+                // 3. METTRE À JOUR LES ANALYTICS DE LIGNE
+                const lineName = vehicleSession.lineName || subscription.routeName || subscription.route_name;
+                if (lineName) {
+                    const lineId = lineName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    const lineRef = dbRef(rtdb, `transport_lines/${lineId}`);
+                    const lineSnapshot = await rtdbGet(lineRef);
+                    const lineData = lineSnapshot.exists() ? lineSnapshot.val() : {};
+
+                    const currentHour = new Date().getHours();
+                    const passengersPerHour = lineData.passengers_per_hour || {};
+                    passengersPerHour[currentHour] = (passengersPerHour[currentHour] || 0) + 1;
+
+                    await rtdbUpdate(lineRef, {
+                        name: lineName,
+                        route_name: lineName,
+                        trips_today: (lineData.trips_today || 0) + 1,
+                        passengers_per_hour: passengersPerHour,
+                        last_scan_time: new Date().toISOString()
+                    });
+                }
+
+                // 4. METTRE À JOUR LES STATS DU VÉHICULE
+                if (vehicleSession.vehicleId) {
+                    const vehicleStatsRef = dbRef(rtdb, `fleet_vehicles/${vehicleSession.vehicleId}/stats/${today}`);
+                    const vehicleStatsSnapshot = await rtdbGet(vehicleStatsRef);
+                    const vehicleStats = vehicleStatsSnapshot.exists() ? vehicleStatsSnapshot.val() : {};
+
+                    await rtdbUpdate(vehicleStatsRef, {
+                        scans_count: (vehicleStats.scans_count || 0) + 1,
+                        last_scan_time: new Date().toISOString()
+                    });
+                }
+
+                // 5. RECALCULER LE TAUX D'OCCUPATION MOYEN
+                const activePassengersRef = dbRef(rtdb, 'transport_stats/active_passengers');
+                const activePassengersSnapshot = await rtdbGet(activePassengersRef);
+                const activePassengers = activePassengersSnapshot.exists() ? activePassengersSnapshot.val() : 0;
+
+                const fleetCapacity = 200; // Capacité de la flotte
+                const occupancyRate = Math.min(100, Math.round((activePassengers / fleetCapacity) * 100));
+
+                await rtdbUpdate(dbRef(rtdb, 'transport_stats/global'), {
+                    active_passengers: activePassengers + 1,
+                    average_occupancy_rate: occupancyRate,
+                    fleet_capacity: fleetCapacity
+                });
+
+                console.log('[EPscanT] ✅ Scan remonté vers Command Center');
+                return true;
+            } catch (error) {
+                console.error('[EPscanT] ❌ Erreur remontée scan:', error);
+
+                // STOCKER EN ATTENTE SI ÉCHEC
+                try {
+                    const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                    const store = transaction.objectStore(PENDING_SCANS_STORE);
+                    await store.put({
+                        id: `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                        subscription: subscription,
+                        vehicleSession: vehicleSession,
+                        timestamp: Date.now(),
+                        synced: false
+                    });
+                    console.log('[EPscanT] 💾 Scan stocké pour synchronisation ultérieure');
+                } catch (storeError) {
+                    console.error('[EPscanT] ❌ Erreur stockage scan:', storeError);
+                }
+
+                return false;
+            }
+        }
+
         async function getSubscriptionFromCache(qrCode) {
             if (!offlineDB) return null;
 
@@ -1472,6 +1582,11 @@
             stats.validCount = validCount;
             stats.totalCount = totalCount;
             saveSessionStats(stats);
+
+            // REMONTÉE VERS LE COMMAND CENTER
+            reportScanToCommandCenter(subscription, vehicleSession).catch(err => {
+                console.error('[EPscanT] ⚠️ Échec remontée Command Center:', err);
+            });
 
             navigator.vibrate && navigator.vibrate([100]);
         }
