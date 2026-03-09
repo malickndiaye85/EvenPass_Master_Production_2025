@@ -639,89 +639,60 @@
             box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
         }
 
+        /* SAMA PASS CARD - DESIGN OFFICIEL */
         .sama-pass-card {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.08));
-            border: 2px solid rgba(14, 165, 233, 0.6);
-            border-radius: 16px;
-            padding: 16px;
-            max-width: 340px;
-            width: calc(100vw - 40px);
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            border-radius: 24px;
+            padding: 0;
+            max-width: 450px;
+            width: 95vw;
             margin: 0 auto;
-            box-shadow:
-                0 10px 40px rgba(14, 165, 233, 0.5),
-                0 0 80px rgba(14, 165, 233, 0.25),
-                inset 0 0 40px rgba(14, 165, 233, 0.08);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             position: relative;
             overflow: hidden;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            min-height: 500px;
         }
 
-        .sama-pass-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
-            animation: cardShimmer 8s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes cardShimmer {
-            0%, 100% { transform: translate(0%, 0%) rotate(0deg); }
-            50% { transform: translate(10%, 10%) rotate(45deg); }
-        }
-
-        .pass-card-top {
-            position: relative;
-            z-index: 1;
+        .sama-pass-header {
+            background: #F59E0B;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
+            align-items: center;
         }
 
-        .pass-card-middle {
-            position: relative;
-            z-index: 1;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .pass-card-bottom {
-            position: relative;
-            z-index: 1;
-            margin-top: 12px;
-        }
-
-        .pass-header {
-            flex: 1;
-        }
-
-        .pass-branding {
+        .sama-pass-title {
             font-family: 'Orbitron', monospace;
-            font-size: 10px;
-            font-weight: 700;
-            color: #0EA5E9;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
+            font-size: 28px;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: 2px;
+        }
+
+        .sama-pass-icon {
+            font-size: 32px;
+        }
+
+        .sama-pass-body {
+            padding: 24px 20px;
+        }
+
+        .sama-pass-identity {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
         }
 
         .pass-photo {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
             overflow: hidden;
-            border: 2px solid #0EA5E9;
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+            border: 6px solid #F59E0B;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.5);
             flex-shrink: 0;
+            background: white;
         }
 
         .pass-photo img {
@@ -730,54 +701,65 @@
             object-fit: cover;
         }
 
+        .pass-identity-info {
+            flex: 1;
+        }
+
         .pass-name {
-            font-size: 16px;
-            font-weight: 800;
-            color: #FAFAFA;
-            margin-bottom: 4px;
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFFFFF;
+            margin-bottom: 8px;
             font-family: 'Orbitron', monospace;
-            text-transform: uppercase;
             line-height: 1.2;
         }
 
         .pass-phone {
-            font-size: 11px;
-            color: rgba(250, 250, 250, 0.7);
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
-        }
-
-        .pass-info-compact {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(0, 0, 0, 0.35);
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(250, 250, 250, 0.08);
+            gap: 6px;
+        }
+
+        .pass-phone::before {
+            content: '📞';
+            font-size: 18px;
+        }
+
+        .sama-pass-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pass-info-box {
+            background: rgba(30, 58, 138, 0.6);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 14px;
         }
 
         .pass-info-icon {
-            font-size: 16px;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .pass-info-text {
-            flex: 1;
-            font-size: 12px;
-            color: #FAFAFA;
-            font-weight: 700;
-            line-height: 1.3;
+            font-size: 20px;
+            margin-bottom: 6px;
         }
 
         .pass-info-label {
-            font-size: 9px;
-            color: rgba(250, 250, 250, 0.5);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            display: block;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+        }
+
+        .pass-info-value {
+            font-size: 16px;
+            color: #FFFFFF;
+            font-weight: 800;
+            line-height: 1.3;
         }
 
         .pass-tier-badge {
@@ -803,21 +785,58 @@
             color: #FFC107;
         }
 
+        .sama-pass-button {
+            background: #F59E0B;
+            color: #1e293b;
+            font-size: 18px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 18px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+            transition: all 0.2s;
+        }
+
+        .sama-pass-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+        }
+
         .pass-status-badge {
             text-align: center;
-            padding: 10px;
-            background: rgba(34, 197, 94, 0.2);
-            border: 1.5px solid #22C55E;
-            border-radius: 8px;
+            padding: 16px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 2px solid #22C55E;
+            border-radius: 12px;
+            margin-bottom: 20px;
         }
 
         .pass-status-text {
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: 900;
             font-family: 'Orbitron', monospace;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             color: #22C55E;
+        }
+
+        .pass-status-badge.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: #EF4444;
+        }
+
+        .pass-status-badge.error .pass-status-text {
+            color: #EF4444;
+        }
+
+        .pass-status-badge.warning {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #FFC107;
         }
 
         .pass-status-badge.warning .pass-status-text {
@@ -1359,65 +1378,65 @@
             }
             portal.innerHTML = '';
 
-            const tierClass = subscription.subscriptionTier === 'prestige' ? 'pass-tier-prestige' : 'pass-tier-eco';
-            const tierLabel = subscription.subscriptionTier === 'prestige' ? '💎 PRESTIGE' : '🚌 ECO';
-
-            const qrCode = subscription.qrCode || subscription.qr_code || '';
+            const tierLabel = subscription.subscriptionTier === 'prestige' ? 'PRESTIGE' : 'ECO';
+            const tierIcon = subscription.subscriptionTier === 'prestige' ? '💎' : '🎫';
 
             const card = `
                 <div class="sama-pass-card">
-                    <div class="pass-card-top">
-                        <div class="pass-header">
-                            <div class="pass-branding">🚌 SAMA PASS</div>
-                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
-                        </div>
-                        <div class="pass-photo">
-                            <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
-                        </div>
+                    <!-- EN-TÊTE JAUNE -->
+                    <div class="sama-pass-header">
+                        <div class="sama-pass-title">SAMA PASS</div>
+                        <div class="sama-pass-icon">🚌</div>
                     </div>
 
-                    <div class="pass-card-middle">
-                        <div class="pass-info-compact">
-                            <div class="pass-info-icon">🚌</div>
-                            <div class="pass-info-text">
-                                <span class="pass-info-label">Ligne</span>
-                                ${subscription.routeName || subscription.route_name}
+                    <!-- CORPS BLEU -->
+                    <div class="sama-pass-body">
+                        <!-- IDENTITÉ AVEC GRANDE PHOTO -->
+                        <div class="sama-pass-identity">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-identity-info">
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
                             </div>
                         </div>
 
-                        <div class="pass-info-compact">
-                            <div class="pass-info-icon">${subscription.subscriptionTier === 'prestige' ? '💎' : '🎫'}</div>
-                            <div class="pass-info-text">
-                                <span class="pass-info-label">Formule</span>
-                                <span class="pass-tier-badge ${tierClass}">${tierLabel}</span>
+                        <!-- GRILLE D'INFORMATIONS -->
+                        <div class="sama-pass-info-grid">
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">🚌</div>
+                                <div class="pass-info-label">Ligne</div>
+                                <div class="pass-info-value">${subscription.routeName || subscription.route_name}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">${tierIcon}</div>
+                                <div class="pass-info-label">Formule</div>
+                                <div class="pass-info-value">${tierLabel}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">📅</div>
+                                <div class="pass-info-label">Durée</div>
+                                <div class="pass-info-value">${formatDuration(subscription.subscriptionType || subscription.subscription_type)}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">✅</div>
+                                <div class="pass-info-label">Valable jusqu'au</div>
+                                <div class="pass-info-value">${formatDate(subscription.expiresAt || subscription.end_date)}</div>
                             </div>
                         </div>
 
-                        <div class="pass-info-compact">
-                            <div class="pass-info-icon">📅</div>
-                            <div class="pass-info-text">
-                                <span class="pass-info-label">Type</span>
-                                ${formatDuration(subscription.subscriptionType || subscription.subscription_type)} •
-                                <span style="color: #22C55E; font-weight: 800;">${scansToday}/2 trajets</span>
-                            </div>
-                        </div>
-
-                        <div class="pass-info-compact">
-                            <div class="pass-info-icon">⏰</div>
-                            <div class="pass-info-text">
-                                <span class="pass-info-label">Expire le</span>
-                                ${formatDate(subscription.expiresAt || subscription.end_date)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pass-card-bottom">
+                        <!-- STATUT VALIDÉ -->
                         <div class="pass-status-badge">
                             <div class="pass-status-text">✅ VALIDE</div>
                         </div>
-                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 12px; width: 100%;">
-                            SCANNER SUIVANT
+
+                        <!-- BOUTON SUIVANT JAUNE -->
+                        <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                            SUIVANT
                         </button>
                     </div>
                 </div>
@@ -1462,51 +1481,75 @@
             if (status === 'wrong_line') {
                 errorContent = `
                     <div class="sama-pass-card">
-                        <div class="pass-header">
-                            <div class="pass-photo">
-                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                        <div class="sama-pass-header">
+                            <div class="sama-pass-title">SAMA PASS</div>
+                            <div class="sama-pass-icon">🚌</div>
+                        </div>
+                        <div class="sama-pass-body">
+                            <div class="sama-pass-identity">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-identity-info">
+                                    <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                    <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                                </div>
                             </div>
-                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
-                        </div>
 
-                        <div class="pass-status-badge error">
-                            <div class="pass-status-text">❌ ERREUR LIGNE</div>
-                        </div>
+                            <div class="pass-status-badge error">
+                                <div class="pass-status-text">❌ ERREUR LIGNE</div>
+                            </div>
 
-                        <div class="error-details">
-                            <div class="error-details-title">Ce pass est réservé à :</div>
-                            <div class="error-details-text">${details.expectedLine}</div>
-                        </div>
+                            <div class="error-details">
+                                <div class="error-details-title">Ce pass est réservé à :</div>
+                                <div class="error-details-text">${details.expectedLine}</div>
+                            </div>
 
-                        <div class="error-details" style="margin-top: 12px;">
-                            <div class="error-details-title">Véhicule actuel :</div>
-                            <div class="error-details-text">${vehicleSession.lineName || 'Ligne non définie'}</div>
+                            <div class="error-details" style="margin-top: 12px;">
+                                <div class="error-details-title">Véhicule actuel :</div>
+                                <div class="error-details-text">${vehicleSession.lineName || 'Ligne non définie'}</div>
+                            </div>
+
+                            <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                                SUIVANT
+                            </button>
                         </div>
                     </div>
                 `;
             } else {
                 errorContent = `
                     <div class="sama-pass-card">
-                        ${subscription ? `
-                            <div class="pass-header">
-                                <div class="pass-photo">
-                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
-                                </div>
-                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
-                            </div>
-                        ` : ''}
-
-                        <div class="pass-status-badge error">
-                            <div class="pass-status-text">❌ ${message}</div>
+                        <div class="sama-pass-header">
+                            <div class="sama-pass-title">SAMA PASS</div>
+                            <div class="sama-pass-icon">🚌</div>
                         </div>
+                        <div class="sama-pass-body">
+                            ${subscription ? `
+                                <div class="sama-pass-identity">
+                                    <div class="pass-photo">
+                                        <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                    </div>
+                                    <div class="pass-identity-info">
+                                        <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                        <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
 
-                        ${details.reason ? `
-                            <div class="error-details">
-                                <div class="error-details-text">${details.reason}</div>
+                            <div class="pass-status-badge error">
+                                <div class="pass-status-text">❌ ${message}</div>
                             </div>
-                        ` : ''}
+
+                            ${details.reason ? `
+                                <div class="error-details">
+                                    <div class="error-details-text">${details.reason}</div>
+                                </div>
+                            ` : ''}
+
+                            <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                                SUIVANT
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -1515,12 +1558,7 @@
             const fullCard = `
                 <div class="result-modal error-banner" style="display: flex;">
                     <div class="result-content">
-                        <div class="result-details" style="display: block;">
-                            ${errorContent}
-                        </div>
-                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 16px; width: 100%;">
-                            SCANNER SUIVANT
-                        </button>
+                        ${errorContent}
                     </div>
                 </div>
             `;
@@ -1553,24 +1591,36 @@
             if (status === 'quota_exceeded') {
                 warningContent = `
                     <div class="sama-pass-card">
-                        <div class="pass-header">
-                            <div class="pass-photo">
-                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
-                            </div>
-                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        <div class="sama-pass-header">
+                            <div class="sama-pass-title">SAMA PASS</div>
+                            <div class="sama-pass-icon">🚌</div>
                         </div>
-
-                        <div class="pass-status-badge warning">
-                            <div class="pass-status-text">⚠️ LIMITE ATTEINTE</div>
-                        </div>
-
-                        <div class="warning-details">
-                            <div class="warning-details-text">
-                                ${details.scansToday}/2 trajets effectués aujourd'hui
-                                <br><br>
-                                Prochain trajet disponible demain
+                        <div class="sama-pass-body">
+                            <div class="sama-pass-identity">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-identity-info">
+                                    <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                    <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                                </div>
                             </div>
+
+                            <div class="pass-status-badge warning">
+                                <div class="pass-status-text">⚠️ LIMITE ATTEINTE</div>
+                            </div>
+
+                            <div class="warning-details">
+                                <div class="warning-details-text">
+                                    ${details.scansToday}/2 trajets effectués aujourd'hui
+                                    <br><br>
+                                    Prochain trajet disponible demain
+                                </div>
+                            </div>
+
+                            <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                                SUIVANT
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1582,43 +1632,67 @@
 
                 warningContent = `
                     <div class="sama-pass-card">
-                        <div class="pass-header">
-                            <div class="pass-photo">
-                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
-                            </div>
-                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        <div class="sama-pass-header">
+                            <div class="sama-pass-title">SAMA PASS</div>
+                            <div class="sama-pass-icon">🚌</div>
                         </div>
-
-                        <div class="pass-status-badge warning">
-                            <div class="pass-status-text">⚠️ SCAN TROP RAPPROCHÉ</div>
-                        </div>
-
-                        <div class="warning-details">
-                            <div class="warning-details-text">
-                                Dernier scan : Il y a ${minutesSince} minutes
-                                <br><br>
-                                Veuillez patienter
+                        <div class="sama-pass-body">
+                            <div class="sama-pass-identity">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-identity-info">
+                                    <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                    <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                                </div>
                             </div>
-                            <div class="warning-time">${minutesRemaining} minutes</div>
+
+                            <div class="pass-status-badge warning">
+                                <div class="pass-status-text">⚠️ SCAN TROP RAPPROCHÉ</div>
+                            </div>
+
+                            <div class="warning-details">
+                                <div class="warning-details-text">
+                                    Dernier scan : Il y a ${minutesSince} minutes
+                                    <br><br>
+                                    Veuillez patienter
+                                </div>
+                                <div class="warning-time">${minutesRemaining} minutes</div>
+                            </div>
+
+                            <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                                SUIVANT
+                            </button>
                         </div>
                     </div>
                 `;
             } else {
                 warningContent = `
                     <div class="sama-pass-card">
-                        ${subscription ? `
-                            <div class="pass-header">
-                                <div class="pass-photo">
-                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                        <div class="sama-pass-header">
+                            <div class="sama-pass-title">SAMA PASS</div>
+                            <div class="sama-pass-icon">🚌</div>
+                        </div>
+                        <div class="sama-pass-body">
+                            ${subscription ? `
+                                <div class="sama-pass-identity">
+                                    <div class="pass-photo">
+                                        <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                    </div>
+                                    <div class="pass-identity-info">
+                                        <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                        <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                                    </div>
                                 </div>
-                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
-                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
-                            </div>
-                        ` : ''}
+                            ` : ''}
 
-                        <div class="pass-status-badge warning">
-                            <div class="pass-status-text">⚠️ ${message}</div>
+                            <div class="pass-status-badge warning">
+                                <div class="pass-status-text">⚠️ ${message}</div>
+                            </div>
+
+                            <button class="sama-pass-button" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                                SUIVANT
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1628,12 +1702,7 @@
             const fullCard = `
                 <div class="result-modal" style="display: flex;">
                     <div class="result-content">
-                        <div class="result-details" style="display: block;">
-                            ${warningContent}
-                        </div>
-                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 16px; width: 100%;">
-                            SCANNER SUIVANT
-                        </button>
+                        ${warningContent}
                     </div>
                 </div>
             `;
