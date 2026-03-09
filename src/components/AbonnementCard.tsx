@@ -13,6 +13,11 @@ export const AbonnementCard: React.FC<AbonnementCardProps> = ({ subscription }) 
   const startDate = passPhoneService.formatDate(subscription.startDate);
   const endDate = passPhoneService.formatDate(subscription.endDate);
 
+  // LOG DE VÉRIFICATION DU QR CODE SOURCE DE VÉRITÉ
+  console.log('[WALLET-CARD] 🎫 QR Code utilisé:', subscription.qrCode);
+  console.log('[WALLET-CARD] 🆔 ID Firebase:', subscription.id);
+  console.log('[WALLET-CARD] 📱 Téléphone:', subscription.phoneNumber);
+
   return (
     <div className="relative bg-gradient-to-br from-[#FFC700] via-[#FF8800] to-[#FF6B00] rounded-3xl p-8 shadow-2xl border border-white/20 backdrop-blur-sm overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -55,9 +60,13 @@ export const AbonnementCard: React.FC<AbonnementCardProps> = ({ subscription }) 
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
               Code d'abonnement
             </p>
-            <p className="text-sm text-gray-700 font-mono font-bold">
-              {subscription.id}
+            <p className="text-sm text-gray-700 font-mono font-bold break-all px-2">
+              {subscription.qrCode}
             </p>
+            <div className="flex items-center justify-center gap-1 mt-2">
+              <ShieldCheck className="w-3 h-3 text-green-600" />
+              <span className="text-xs text-green-600 font-semibold">QR Code certifié Firebase</span>
+            </div>
           </div>
         </div>
 

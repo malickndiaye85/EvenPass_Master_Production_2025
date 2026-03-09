@@ -22,6 +22,8 @@ interface DemDemPass {
   purchased_at: string;
   expires_at: string;
   status: string;
+  qr_code?: string;
+  subscription_id?: string;
 }
 
 interface DemDemPassCardProps {
@@ -45,7 +47,10 @@ export default function DemDemPassCard({ pass }: DemDemPassCardProps) {
     });
   };
 
-  const qrData = JSON.stringify({
+  // UTILISER LE QR CODE EXACT DE FIREBASE (format SAMAPASS-[PHONE]-[ID])
+  // Si qr_code existe, l'utiliser directement (SOURCE DE VÉRITÉ)
+  // Sinon fallback sur l'ancien format JSON (rétrocompatibilité)
+  const qrData = pass.qr_code || JSON.stringify({
     type: 'demdem_subscription',
     route: `${pass.route.origin} ⇄ ${pass.route.destination}`,
     tier: pass.tier,
@@ -55,6 +60,12 @@ export default function DemDemPassCard({ pass }: DemDemPassCardProps) {
     purchased_at: pass.purchased_at,
     expires_at: pass.expires_at
   });
+
+  // LOG DE VÉRIFICATION DU QR CODE SOURCE DE VÉRITÉ
+  console.log('[WALLET-DEMDEM] 🎫 QR Code utilisé:', qrData);
+  console.log('[WALLET-DEMDEM] 🆔 ID:', pass.subscription_id || pass.id);
+  console.log('[WALLET-DEMDEM] 📱 Téléphone:', pass.userData.phone);
+  console.log('[WALLET-DEMDEM] ✅ Utilise qr_code Firebase:', !!pass.qr_code);
 
   const handleSaveImage = async () => {
     if (!cardRef.current) return;
@@ -167,6 +178,15 @@ export default function DemDemPassCard({ pass }: DemDemPassCardProps) {
             <p className="text-gray-600 text-sm font-semibold flex items-center justify-center gap-2">
               <QrCode className="w-4 h-4" />
               Présentez ce QR Code
+            </p>
+            {pass.qr_code && (
+              <div className="mt-2 flex items-center justify-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-green-600 font-semibold">QR Code certifié Firebase</span>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 font-mono mt-1 break-all px-2">
+              {pass.qr_code || 'Format JSON (ancien)'}
             </p>
           </div>
 
