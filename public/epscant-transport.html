@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPscanT - Transport Scanner</title>
+    <script src="/env-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="manifest" href="/manifest-epscant.json">
+    <link rel="icon" type="image/jpeg" href="/assets/EPscanT_logo_pwa.jpg">
+    <link rel="apple-touch-icon" href="/assets/EPscanT_logo_pwa.jpg">
+    <meta name="theme-color" content="#0EA5E9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EPscanT">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #FAFAFA;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-header {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 16px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .vehicle-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #FAFAFA;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            text-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+        }
+
+        .driver-info {
+            font-size: 15px;
+            color: rgba(250, 250, 250, 0.8);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid rgba(14, 165, 233, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #0EA5E9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #EF4444;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .exit-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #EF4444;
+        }
+
+        .exit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .exit-modal-content {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .exit-modal-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0EA5E9;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .exit-modal-info {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .exit-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .exit-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .exit-info-label {
+            color: rgba(250, 250, 250, 0.6);
+            font-weight: 600;
+        }
+
+        .exit-info-value {
+            color: #0EA5E9;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .exit-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .exit-modal-btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .exit-modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(250, 250, 250, 0.2);
+            color: rgba(250, 250, 250, 0.8);
+        }
+
+        .exit-modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(250, 250, 250, 0.3);
+        }
+
+        .exit-modal-btn.confirm {
+            background: linear-gradient(135deg, #0EA5E9, rgba(14, 165, 233, 0.85));
+            border: none;
+            color: #FFFFFF;
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .exit-modal-btn.confirm:hover {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 1.1), #0EA5E9);
+            box-shadow: 0 8px 30px rgba(14, 165, 233, 0.6);
+        }
+
+        #scanner-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 380px);
+            background: #000000;
+            overflow: hidden;
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
+        .scanner-overlay-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .overlay-info {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #FAFAFA;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .firebase-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .firebase-status.connected {
+            background: #22C55E;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .firebase-status.disconnected {
+            background: #EF4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .frame-border {
+            position: absolute;
+            inset: 0;
+            border: 2px solid #0EA5E9;
+            border-radius: 16px;
+            box-shadow:
+                0 0 0 99999px rgba(0, 0, 0, 0.7),
+                inset 0 0 30px rgba(14, 165, 233, 0.15),
+                0 0 40px rgba(14, 165, 233, 0.3);
+            animation: frameGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes frameGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 99999px rgba(0, 0, 0, 0.7),
+                    inset 0 0 30px rgba(14, 165, 233, 0.15),
+                    0 0 40px rgba(14, 165, 233, 0.3);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 99999px rgba(0, 0, 0, 0.7),
+                    inset 0 0 30px rgba(14, 165, 233, 0.25),
+                    0 0 60px rgba(14, 165, 233, 0.5);
+            }
+        }
+
+        .frame-corners span {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #0EA5E9;
+        }
+
+        .frame-corners span:nth-child(1) {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 16px 0 0 0;
+        }
+
+        .frame-corners span:nth-child(2) {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 16px 0 0;
+        }
+
+        .frame-corners span:nth-child(3) {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 16px;
+        }
+
+        .frame-corners span:nth-child(4) {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 16px 0;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #0EA5E9, transparent);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.8);
+            animation: scanMove 2.5s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0%, 100% { top: 0; opacity: 0.5; }
+            50% { top: calc(100% - 2px); opacity: 1; }
+        }
+
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 14px 32px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.9), rgba(14, 165, 233, 0.7));
+            border: 1px solid rgba(14, 165, 233, 0.5);
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+            z-index: 10;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(135deg, #0EA5E9, rgba(14, 165, 233, 0.85));
+            box-shadow: 0 12px 35px rgba(14, 165, 233, 0.6);
+            transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        .stats-footer {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-block {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            width: 100%;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .stat-block.valid {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .stat-block.invalid {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .stat-block.personal {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+            border-color: rgba(14, 165, 233, 0.5);
+            box-shadow: 0 4px 25px rgba(14, 165, 233, 0.25);
+        }
+
+        .stat-block-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .stat-block.valid .stat-block-label {
+            color: #22C55E;
+        }
+
+        .stat-block.invalid .stat-block-label {
+            color: #EF4444;
+        }
+
+        .stat-block.personal .stat-block-label {
+            color: #0EA5E9;
+        }
+
+        .stat-block-value {
+            font-size: clamp(32px, 52px, 52px);
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            transition: font-size 0.2s ease;
+        }
+
+        .stat-block.valid .stat-block-value {
+            color: #22C55E;
+            text-shadow: 0 0 35px rgba(34, 197, 94, 0.4);
+        }
+
+        .stat-block.invalid .stat-block-value {
+            color: #EF4444;
+            text-shadow: 0 0 35px rgba(239, 68, 68, 0.4);
+        }
+
+        .stat-block.personal .stat-block-value {
+            color: #0EA5E9;
+            text-shadow: 0 0 35px rgba(14, 165, 233, 0.5);
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        .result-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            z-index: -1;
+            transition: background 0.3s ease;
+        }
+
+        .result-modal.success-banner::before {
+            background: linear-gradient(180deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0) 100%);
+        }
+
+        .result-modal.error-banner::before {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0) 100%);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-content {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 90%;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            border: 3px solid;
+            border-radius: 50%;
+        }
+
+        .result-icon.success {
+            border-color: #22C55E;
+            color: #22C55E;
+            background: rgba(34, 197, 94, 0.15);
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .result-icon.error {
+            border-color: #EF4444;
+            color: #EF4444;
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+
+        .result-icon.warning {
+            border-color: #FFC107;
+            color: #FFC107;
+            background: rgba(255, 193, 7, 0.1);
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-message {
+            font-size: 14px;
+            color: rgba(250, 250, 250, 0.8);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: rgba(250, 250, 250, 0.6);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #FAFAFA;
+            font-weight: 700;
+        }
+
+        .result-button {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #0EA5E9, rgba(14, 165, 233, 0.85));
+            border: none;
+            border-radius: 10px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .result-button:hover {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 1.1), #0EA5E9);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+        }
+
+        .sama-pass-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.08));
+            border: 2px solid rgba(14, 165, 233, 0.6);
+            border-radius: 16px;
+            padding: 16px;
+            max-width: 340px;
+            width: calc(100vw - 40px);
+            margin: 0 auto;
+            box-shadow:
+                0 10px 40px rgba(14, 165, 233, 0.5),
+                0 0 80px rgba(14, 165, 233, 0.25),
+                inset 0 0 40px rgba(14, 165, 233, 0.08);
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sama-pass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+            animation: cardShimmer 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes cardShimmer {
+            0%, 100% { transform: translate(0%, 0%) rotate(0deg); }
+            50% { transform: translate(10%, 10%) rotate(45deg); }
+        }
+
+        .pass-card-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .pass-card-middle {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pass-card-bottom {
+            position: relative;
+            z-index: 1;
+            margin-top: 12px;
+        }
+
+        .pass-header {
+            flex: 1;
+        }
+
+        .pass-branding {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: #0EA5E9;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .pass-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #0EA5E9;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+            flex-shrink: 0;
+        }
+
+        .pass-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pass-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #FAFAFA;
+            margin-bottom: 4px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .pass-phone {
+            font-size: 11px;
+            color: rgba(250, 250, 250, 0.7);
+            font-weight: 600;
+        }
+
+        .pass-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(250, 250, 250, 0.08);
+        }
+
+        .pass-info-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .pass-info-text {
+            flex: 1;
+            font-size: 12px;
+            color: #FAFAFA;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .pass-info-label {
+            font-size: 9px;
+            color: rgba(250, 250, 250, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .pass-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .pass-tier-eco {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #3B82F6;
+        }
+
+        .pass-tier-prestige {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2));
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            color: #FFC107;
+        }
+
+        .pass-status-badge {
+            text-align: center;
+            padding: 10px;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1.5px solid #22C55E;
+            border-radius: 8px;
+        }
+
+        .pass-status-text {
+            font-size: 14px;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #22C55E;
+        }
+
+        .pass-status-badge.warning .pass-status-text {
+            color: #FFC107;
+        }
+
+        .error-details {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+        }
+
+        .error-details-title {
+            font-size: 12px;
+            color: rgba(250, 250, 250, 0.6);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .error-details-text {
+            font-size: 15px;
+            color: #EF4444;
+            font-weight: 700;
+        }
+
+        .warning-details {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .warning-details-text {
+            font-size: 14px;
+            color: rgba(250, 250, 250, 0.8);
+            line-height: 1.6;
+        }
+
+        .warning-time {
+            font-size: 18px;
+            color: #FFC107;
+            font-weight: 800;
+            margin-top: 8px;
+            font-family: 'Orbitron', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-header">
+        <button class="exit-btn" id="exitBtn">Exit</button>
+        <div class="vehicle-title" id="vehicleInfo">DEM-DEM EXPRESS</div>
+        <div class="driver-info" id="driverInfo">Chauffeur : Chargement...</div>
+        <div style="text-align: center;">
+            <span class="status-badge">● Transport Actif</span>
+            <div id="offlineInfo" style="margin-top: 8px; font-size: 11px; color: rgba(250, 250, 250, 0.6); font-weight: 500;"></div>
+        </div>
+    </div>
+
+    <div id="scanner-container">
+        <div id="reader"></div>
+        <div class="scanner-overlay-top">
+            <div class="overlay-info">
+                <span class="firebase-status disconnected" id="firebaseStatus"></span>
+                <span id="connectionText">Hors Ligne</span>
+            </div>
+            <div class="overlay-info" id="sessionTime">00:00:00</div>
+        </div>
+        <div class="scan-frame">
+            <div class="frame-border"></div>
+            <div class="frame-corners">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="scan-line"></div>
+        </div>
+        <button class="start-button" id="startButton">Démarrer le scanner</button>
+    </div>
+
+    <div class="stats-footer">
+        <div class="stat-block valid">
+            <div class="stat-block-label">Validés</div>
+            <div class="stat-block-value" id="validCount">0</div>
+        </div>
+        <div class="stat-block invalid">
+            <div class="stat-block-label">Refusés</div>
+            <div class="stat-block-value" id="invalidCount">0</div>
+        </div>
+        <div class="stat-block personal">
+            <div class="stat-block-label">Total</div>
+            <div class="stat-block-value" id="personalCount">0</div>
+        </div>
+    </div>
+
+    <!-- PORTAIL UNIQUE D'INSPECTION -->
+    <div id="inspection-portal"></div>
+
+    <div class="exit-modal" id="exitModal">
+        <div class="exit-modal-content">
+            <div class="exit-modal-title">Clôturer la mission ?</div>
+            <div class="exit-modal-info">
+                <div class="exit-info-row">
+                    <span class="exit-info-label">Chauffeur</span>
+                    <span class="exit-info-value" id="exitDriver">-</span>
+                </div>
+                <div class="exit-info-row">
+                    <span class="exit-info-label">Total scans</span>
+                    <span class="exit-info-value" id="exitTotal">0</span>
+                </div>
+            </div>
+            <div class="exit-modal-buttons">
+                <button class="exit-modal-btn cancel" id="cancelExitBtn">Rester</button>
+                <button class="exit-modal-btn confirm" id="confirmExitBtn">Terminer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+
+        let isFirebaseConnected = false;
+        let offlineDB = null;
+        const firebaseStatusEl = document.getElementById('firebaseStatus');
+        const connectionTextEl = document.getElementById('connectionText');
+
+        const DB_NAME = 'epscant_offline_db';
+        const DB_VERSION = 1;
+        const SUBSCRIPTIONS_STORE = 'subscriptions';
+        const PENDING_SCANS_STORE = 'pending_scans';
+
+        async function initOfflineDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    offlineDB = request.result;
+                    console.log('[EPscanT] ✅ IndexedDB initialisée');
+                    resolve(offlineDB);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    if (!db.objectStoreNames.contains(SUBSCRIPTIONS_STORE)) {
+                        const subsStore = db.createObjectStore(SUBSCRIPTIONS_STORE, { keyPath: 'id' });
+                        subsStore.createIndex('qrCode', 'qrCode', { unique: false });
+                        subsStore.createIndex('passengerPhone', 'passengerPhone', { unique: false });
+                        console.log('[EPscanT] 📦 Store subscriptions créé');
+                    }
+
+                    if (!db.objectStoreNames.contains(PENDING_SCANS_STORE)) {
+                        const scansStore = db.createObjectStore(PENDING_SCANS_STORE, { keyPath: 'id' });
+                        scansStore.createIndex('synced', 'synced', { unique: false });
+                        console.log('[EPscanT] 📦 Store pending_scans créé');
+                    }
+                };
+            });
+        }
+
+        async function syncSubscriptionsFromFirebase() {
+            try {
+                console.log('[EPscanT] 🔄 Synchronisation des abonnements...');
+                const abonnementsRef = dbRef(rtdb, 'demdem/sama_passes');
+                const snapshot = await rtdbGet(abonnementsRef);
+
+                if (!snapshot.exists()) {
+                    console.log('[EPscanT] ⚠️ Aucun abonnement à synchroniser');
+                    return 0;
+                }
+
+                const allSubscriptions = snapshot.val();
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readwrite');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+
+                await store.clear();
+
+                const now = Date.now();
+                let count = 0;
+
+                for (const [id, sub] of Object.entries(allSubscriptions)) {
+                    if (sub.status === 'active' && sub.expiresAt > now) {
+                        await store.put({
+                            id,
+                            passengerPhone: sub.passengerPhone,
+                            passengerName: sub.passengerName,
+                            qrCode: sub.qrCode,
+                            status: sub.status,
+                            startDate: sub.startDate,
+                            endDate: sub.endDate,
+                            expiresAt: sub.expiresAt,
+                            subscriptionType: sub.subscriptionType,
+                            subscriptionTier: sub.subscriptionTier,
+                            routeName: sub.routeName,
+                            cachedAt: now
+                        });
+                        count++;
+                    }
+                }
+
+                localStorage.setItem('last_sync_timestamp', now.toString());
+                localStorage.setItem('cached_subscriptions_count', count.toString());
+
+                console.log(`[EPscanT] ✅ ${count} abonnements synchronisés localement`);
+                return count;
+            } catch (error) {
+                console.error('[EPscanT] ❌ Erreur sync:', error);
+                return 0;
+            }
+        }
+
+        async function getSubscriptionFromCache(qrCode) {
+            if (!offlineDB) return null;
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+                const index = store.index('qrCode');
+                const request = index.get(qrCode);
+
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function getSubscriptionByPhoneFromCache(phone) {
+            if (!offlineDB) return null;
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(SUBSCRIPTIONS_STORE);
+                const index = store.index('passengerPhone');
+                const request = index.get(phone);
+
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && result.status === 'active' && result.expiresAt > Date.now()) {
+                        resolve(result);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function addPendingScan(scanData) {
+            if (!offlineDB) return;
+
+            const pendingScan = {
+                id: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                subscriptionId: scanData.subscriptionId,
+                vehicleId: scanData.vehicleId,
+                timestamp: Date.now(),
+                scanData: scanData.data,
+                synced: false
+            };
+
+            return new Promise((resolve) => {
+                const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                const store = transaction.objectStore(PENDING_SCANS_STORE);
+                const request = store.add(pendingScan);
+
+                request.onsuccess = () => {
+                    console.log('[EPscanT] 📝 Scan mis en queue:', pendingScan.id);
+                    resolve();
+                };
+                request.onerror = () => resolve();
+            });
+        }
+
+        async function syncPendingScans() {
+            if (!offlineDB || !navigator.onLine) return;
+
+            return new Promise(async (resolve) => {
+                try {
+                    const transaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                    const store = transaction.objectStore(PENDING_SCANS_STORE);
+                    const request = store.getAll();
+
+                    request.onsuccess = async () => {
+                        const allScans = request.result || [];
+                        const pendingScans = allScans.filter(scan => !scan.synced);
+                        console.log(`[EPscanT] 🔄 ${pendingScans.length} scans en attente de sync`);
+
+                        for (const scan of pendingScans) {
+                            try {
+                                const scanRef = dbRef(rtdb, `transport/scans/${scan.id}`);
+                                await rtdbSet(scanRef, {
+                                    ...scan.scanData,
+                                    vehicleId: scan.vehicleId,
+                                    timestamp: scan.timestamp,
+                                    syncedAt: Date.now()
+                                });
+
+                                scan.synced = true;
+                                const updateTransaction = offlineDB.transaction([PENDING_SCANS_STORE], 'readwrite');
+                                const updateStore = updateTransaction.objectStore(PENDING_SCANS_STORE);
+                                await updateStore.put(scan);
+                                console.log('[EPscanT] ✅ Scan synchronisé:', scan.id);
+                            } catch (error) {
+                                console.error('[EPscanT] ❌ Erreur sync scan:', error);
+                            }
+                        }
+
+                        resolve();
+                    };
+                    request.onerror = () => {
+                        console.error('[EPscanT] ❌ Erreur getAll scans');
+                        resolve();
+                    };
+                } catch (error) {
+                    console.error('[EPscanT] ❌ Erreur syncPendingScans:', error);
+                    resolve();
+                }
+            });
+        }
+
+        async function clearOfflineData() {
+            if (!offlineDB) return;
+
+            const transaction = offlineDB.transaction([SUBSCRIPTIONS_STORE, PENDING_SCANS_STORE], 'readwrite');
+            transaction.objectStore(SUBSCRIPTIONS_STORE).clear();
+            transaction.objectStore(PENDING_SCANS_STORE).clear();
+
+            localStorage.removeItem('last_sync_timestamp');
+            localStorage.removeItem('cached_subscriptions_count');
+
+            console.log('[EPscanT] 🗑️ Cache hors-ligne vidé');
+        }
+
+        function updateOfflineInfo() {
+            const cachedCount = localStorage.getItem('cached_subscriptions_count') || 0;
+            const lastSync = localStorage.getItem('last_sync_timestamp');
+            const offlineInfoEl = document.getElementById('offlineInfo');
+
+            if (!navigator.onLine) {
+                offlineInfoEl.textContent = `📱 Mode Hors-Ligne • ${cachedCount} abonnements en cache`;
+                offlineInfoEl.style.color = '#FFC107';
+            } else if (lastSync) {
+                const syncDate = new Date(parseInt(lastSync));
+                const minutesAgo = Math.floor((Date.now() - syncDate.getTime()) / 60000);
+                if (minutesAgo < 60) {
+                    offlineInfoEl.textContent = `🔄 Synchronisé il y a ${minutesAgo}min • ${cachedCount} abonnements`;
+                } else {
+                    const hoursAgo = Math.floor(minutesAgo / 60);
+                    offlineInfoEl.textContent = `🔄 Synchronisé il y a ${hoursAgo}h • ${cachedCount} abonnements`;
+                }
+                offlineInfoEl.style.color = 'rgba(250, 250, 250, 0.6)';
+            } else {
+                offlineInfoEl.textContent = '';
+            }
+        }
+
+        (async function initialize() {
+            await initOfflineDB();
+
+            try {
+                console.log('[EPscanT] Testing Firebase connection...');
+                const testRef = dbRef(rtdb, '_connection_test/test');
+                await rtdbGet(testRef);
+                isFirebaseConnected = true;
+                firebaseStatusEl.classList.remove('disconnected');
+                firebaseStatusEl.classList.add('connected');
+                connectionTextEl.textContent = 'En Ligne';
+                console.log('[EPscanT] ✅ Firebase connected');
+
+                const syncCount = await syncSubscriptionsFromFirebase();
+                console.log(`[EPscanT] ✅ Sync initiale: ${syncCount} abonnements`);
+
+                await syncPendingScans();
+                updateOfflineInfo();
+            } catch (error) {
+                isFirebaseConnected = false;
+                firebaseStatusEl.classList.remove('connected');
+                firebaseStatusEl.classList.add('disconnected');
+                connectionTextEl.textContent = 'Hors Ligne';
+                console.error('[EPscanT] ❌ Firebase connection failed:', error);
+
+                const cachedCount = localStorage.getItem('cached_subscriptions_count') || 0;
+                console.log(`[EPscanT] 📱 Mode hors-ligne: ${cachedCount} abonnements en cache`);
+                updateOfflineInfo();
+            }
+        })();
+
+        window.addEventListener('online', async () => {
+            console.log('[EPscanT] 🌐 Connexion rétablie');
+            isFirebaseConnected = true;
+            firebaseStatusEl.classList.remove('disconnected');
+            firebaseStatusEl.classList.add('connected');
+            connectionTextEl.textContent = 'En Ligne';
+
+            await syncSubscriptionsFromFirebase();
+            await syncPendingScans();
+            updateOfflineInfo();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('[EPscanT] 📴 Mode hors-ligne');
+            isFirebaseConnected = false;
+            firebaseStatusEl.classList.remove('connected');
+            firebaseStatusEl.classList.add('disconnected');
+            connectionTextEl.textContent = 'Hors Ligne';
+            updateOfflineInfo();
+        });
+
+        // Récupérer session véhicule depuis localStorage
+        const sessionData = localStorage.getItem('demdem_vehicle_session');
+
+        if (!sessionData) {
+            console.warn('[EPscanT] Pas de session véhicule - redirection');
+            alert('Session expirée. Veuillez vous reconnecter.');
+            window.location.href = '/epscant-login.html';
+        }
+
+        const vehicleSession = JSON.parse(sessionData);
+        const vehicleId = vehicleSession.vehicleId;
+        const driverName = vehicleSession.driverName;
+        const licensePlate = vehicleSession.licensePlate;
+
+        console.log('[EPscanT] Session véhicule chargée:', vehicleSession);
+
+        document.getElementById('vehicleInfo').textContent = licensePlate || 'DEM-DEM EXPRESS';
+        document.getElementById('driverInfo').textContent = `Chauffeur : ${driverName}`;
+
+        const sessionKey = `epscant_session_${vehicleId}`;
+
+        function getSessionStats() {
+            const data = localStorage.getItem(sessionKey);
+            if (data) {
+                return JSON.parse(data);
+            }
+            return {
+                validCount: 0,
+                invalidCount: 0,
+                totalCount: 0,
+                startTime: Date.now(),
+                scannedCodes: []
+            };
+        }
+
+        function saveSessionStats(stats) {
+            localStorage.setItem(sessionKey, JSON.stringify(stats));
+        }
+
+        let stats = getSessionStats();
+        let validCount = stats.validCount || 0;
+        let invalidCount = stats.invalidCount || 0;
+        let totalCount = stats.totalCount || 0;
+        let html5QrCode;
+        let isProcessing = false;
+        let sessionStartTime = stats.startTime || Date.now();
+
+        function updateCounterValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            element.textContent = value;
+
+            const digitCount = value.toString().length;
+            let fontSize;
+
+            if (digitCount <= 2) {
+                fontSize = '52px';
+            } else if (digitCount === 3) {
+                fontSize = '44px';
+            } else if (digitCount === 4) {
+                fontSize = '44px';
+            } else {
+                fontSize = '36px';
+            }
+
+            element.style.fontSize = fontSize;
+        }
+
+        updateCounterValue('validCount', validCount);
+        updateCounterValue('invalidCount', invalidCount);
+        updateCounterValue('personalCount', totalCount);
+
+        function updateSessionTimer() {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('sessionTime').textContent =
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        setInterval(updateSessionTimer, 1000);
+        updateSessionTimer();
+
+        function formatPhone(phone) {
+            if (!phone) return 'N/A';
+            if (phone.startsWith('221')) {
+                return `+${phone.substring(0, 3)} ${phone.substring(3, 5)} ${phone.substring(5, 8)} ${phone.substring(8, 10)} ${phone.substring(10)}`;
+            }
+            return phone;
+        }
+
+        function formatDuration(type) {
+            const types = {
+                'weekly': 'Hebdomadaire',
+                'monthly': 'Mensuel',
+                'quarterly': 'Trimestriel'
+            };
+            return types[type] || type;
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function showPassCard(subscription, scansToday = 1) {
+            // NETTOYAGE DU PORTAIL
+            const portal = document.getElementById('inspection-portal');
+            if (!portal) {
+                console.error('[EPscanT] ❌ Portail inspection-portal introuvable');
+                return;
+            }
+            portal.innerHTML = '';
+
+            const tierClass = subscription.subscriptionTier === 'prestige' ? 'pass-tier-prestige' : 'pass-tier-eco';
+            const tierLabel = subscription.subscriptionTier === 'prestige' ? '💎 PRESTIGE' : '🚌 ECO';
+
+            const qrCode = subscription.qrCode || subscription.qr_code || '';
+
+            const card = `
+                <div class="sama-pass-card">
+                    <div class="pass-card-top">
+                        <div class="pass-header">
+                            <div class="pass-branding">🚌 SAMA PASS</div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+                        <div class="pass-photo">
+                            <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                        </div>
+                    </div>
+
+                    <div class="pass-card-middle">
+                        <div class="pass-info-compact">
+                            <div class="pass-info-icon">🚌</div>
+                            <div class="pass-info-text">
+                                <span class="pass-info-label">Ligne</span>
+                                ${subscription.routeName || subscription.route_name}
+                            </div>
+                        </div>
+
+                        <div class="pass-info-compact">
+                            <div class="pass-info-icon">${subscription.subscriptionTier === 'prestige' ? '💎' : '🎫'}</div>
+                            <div class="pass-info-text">
+                                <span class="pass-info-label">Formule</span>
+                                <span class="pass-tier-badge ${tierClass}">${tierLabel}</span>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-compact">
+                            <div class="pass-info-icon">📅</div>
+                            <div class="pass-info-text">
+                                <span class="pass-info-label">Type</span>
+                                ${formatDuration(subscription.subscriptionType || subscription.subscription_type)} •
+                                <span style="color: #22C55E; font-weight: 800;">${scansToday}/2 trajets</span>
+                            </div>
+                        </div>
+
+                        <div class="pass-info-compact">
+                            <div class="pass-info-icon">⏰</div>
+                            <div class="pass-info-text">
+                                <span class="pass-info-label">Expire le</span>
+                                ${formatDate(subscription.expiresAt || subscription.end_date)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pass-card-bottom">
+                        <div class="pass-status-badge">
+                            <div class="pass-status-text">✅ VALIDE</div>
+                        </div>
+                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 12px; width: 100%;">
+                            SCANNER SUIVANT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // INJECTION DANS LE PORTAIL UNIQUE
+            const fullCard = `
+                <div class="result-modal success-banner" style="display: flex;">
+                    <div class="result-content">
+                        <div class="result-details" style="display: block;">
+                            ${card}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            portal.innerHTML = fullCard;
+
+            validCount++;
+            totalCount++;
+            updateCounterValue('validCount', validCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.validCount = validCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([100]);
+        }
+
+        function showErrorCard(status, message, subscription, details = {}) {
+            // NETTOYAGE DU PORTAIL
+            const portal = document.getElementById('inspection-portal');
+            if (!portal) {
+                console.error('[EPscanT] ❌ Portail inspection-portal introuvable');
+                return;
+            }
+            portal.innerHTML = '';
+
+            let errorContent = '';
+
+            if (status === 'wrong_line') {
+                errorContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge error">
+                            <div class="pass-status-text">❌ ERREUR LIGNE</div>
+                        </div>
+
+                        <div class="error-details">
+                            <div class="error-details-title">Ce pass est réservé à :</div>
+                            <div class="error-details-text">${details.expectedLine}</div>
+                        </div>
+
+                        <div class="error-details" style="margin-top: 12px;">
+                            <div class="error-details-title">Véhicule actuel :</div>
+                            <div class="error-details-text">${vehicleSession.lineName || 'Ligne non définie'}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                errorContent = `
+                    <div class="sama-pass-card">
+                        ${subscription ? `
+                            <div class="pass-header">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="pass-status-badge error">
+                            <div class="pass-status-text">❌ ${message}</div>
+                        </div>
+
+                        ${details.reason ? `
+                            <div class="error-details">
+                                <div class="error-details-text">${details.reason}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            // INJECTION DANS LE PORTAIL UNIQUE
+            const fullCard = `
+                <div class="result-modal error-banner" style="display: flex;">
+                    <div class="result-content">
+                        <div class="result-details" style="display: block;">
+                            ${errorContent}
+                        </div>
+                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 16px; width: 100%;">
+                            SCANNER SUIVANT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            portal.innerHTML = fullCard;
+
+            invalidCount++;
+            totalCount++;
+            updateCounterValue('invalidCount', invalidCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([200, 100, 200]);
+        }
+
+        function showWarningCard(status, message, subscription, details = {}) {
+            // NETTOYAGE DU PORTAIL
+            const portal = document.getElementById('inspection-portal');
+            if (!portal) {
+                console.error('[EPscanT] ❌ Portail inspection-portal introuvable');
+                return;
+            }
+            portal.innerHTML = '';
+
+            let warningContent = '';
+
+            if (status === 'quota_exceeded') {
+                warningContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ LIMITE ATTEINTE</div>
+                        </div>
+
+                        <div class="warning-details">
+                            <div class="warning-details-text">
+                                ${details.scansToday}/2 trajets effectués aujourd'hui
+                                <br><br>
+                                Prochain trajet disponible demain
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (status === 'too_soon') {
+                const lastScanTime = new Date(details.lastScanTime);
+                const now = new Date();
+                const minutesSince = Math.floor((now - lastScanTime) / (1000 * 60));
+                const minutesRemaining = 30 - minutesSince;
+
+                warningContent = `
+                    <div class="sama-pass-card">
+                        <div class="pass-header">
+                            <div class="pass-photo">
+                                <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                            <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                        </div>
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ SCAN TROP RAPPROCHÉ</div>
+                        </div>
+
+                        <div class="warning-details">
+                            <div class="warning-details-text">
+                                Dernier scan : Il y a ${minutesSince} minutes
+                                <br><br>
+                                Veuillez patienter
+                            </div>
+                            <div class="warning-time">${minutesRemaining} minutes</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                warningContent = `
+                    <div class="sama-pass-card">
+                        ${subscription ? `
+                            <div class="pass-header">
+                                <div class="pass-photo">
+                                    <img src="${subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                                </div>
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ ${message}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // INJECTION DANS LE PORTAIL UNIQUE
+            const fullCard = `
+                <div class="result-modal" style="display: flex;">
+                    <div class="result-content">
+                        <div class="result-details" style="display: block;">
+                            ${warningContent}
+                        </div>
+                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 16px; width: 100%;">
+                            SCANNER SUIVANT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            portal.innerHTML = fullCard;
+
+            invalidCount++;
+            totalCount++;
+            updateCounterValue('invalidCount', invalidCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate([200, 100, 200]);
+        }
+
+        function showResult(type, title, message, details = null) {
+            // NETTOYAGE DU PORTAIL
+            const portal = document.getElementById('inspection-portal');
+            if (!portal) {
+                console.error('[EPscanT] ❌ Portail inspection-portal introuvable');
+                return;
+            }
+            portal.innerHTML = '';
+
+            const iconSymbol = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✗';
+            const iconColor = type === 'success' ? '#22C55E' : type === 'warning' ? '#FFC107' : '#EF4444';
+            const bannerClass = type === 'success' ? 'success-banner' : type === 'error' ? 'error-banner' : '';
+
+            const fullCard = `
+                <div class="result-modal ${bannerClass}" style="display: flex;">
+                    <div class="result-content">
+                        <div class="result-icon ${type}" style="display: flex;">${iconSymbol}</div>
+                        <div class="result-title" style="display: block; color: ${iconColor};">${title}</div>
+                        <div class="result-message" style="display: block;">${message}</div>
+                        ${details ? `<div class="result-details" style="display: block;">${details}</div>` : ''}
+                        <button class="result-button w-full" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;" style="margin-top: 16px; width: 100%;">
+                            SCANNER SUIVANT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            portal.innerHTML = fullCard;
+
+            if (type === 'success') {
+                validCount++;
+                totalCount++;
+                updateCounterValue('validCount', validCount);
+            } else {
+                invalidCount++;
+                totalCount++;
+                updateCounterValue('invalidCount', invalidCount);
+            }
+
+            updateCounterValue('personalCount', totalCount);
+
+            stats.validCount = validCount;
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
+
+            navigator.vibrate && navigator.vibrate(type === 'success' ? [100] : [200, 100, 200]);
+        }
+
+        // CONTINUER - géré directement par le bouton dans le portail
+
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            document.getElementById('exitDriver').textContent = driverName;
+            document.getElementById('exitTotal').textContent = totalCount;
+            document.getElementById('exitModal').style.display = 'flex';
+        });
+
+        document.getElementById('cancelExitBtn').addEventListener('click', () => {
+            document.getElementById('exitModal').style.display = 'none';
+        });
+
+        document.getElementById('confirmExitBtn').addEventListener('click', async () => {
+            await clearOfflineData();
+            localStorage.removeItem(sessionKey);
+            localStorage.removeItem('demdem_vehicle_session');
+            window.location.href = '/epscant-login.html';
+        });
+
+        async function onScanSuccess(decodedText) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            console.log('[EPscanT] 📱 Scan détecté:', decodedText);
+            console.log('[EPscanT] 🔍 Longueur QR:', decodedText.length);
+            console.log('[EPscanT] 🔍 Commence par SAMAPASS?', decodedText.startsWith('SAMAPASS'));
+
+            try {
+                let subscription = null;
+                let fromCache = false;
+
+                subscription = await getSubscriptionFromCache(decodedText);
+
+                if (subscription) {
+                    console.log('[EPscanT] ✅ Abonnement trouvé dans le cache:', subscription.passengerName);
+                    fromCache = true;
+                } else {
+                    const phone = extractPhoneFromQR(decodedText);
+                    console.log('[EPscanT] 📞 Téléphone extrait:', phone);
+                    if (phone) {
+                        subscription = await getSubscriptionByPhoneFromCache(phone);
+                        if (subscription) {
+                            console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (cache):', phone);
+                            fromCache = true;
+                        }
+                    }
+                }
+
+                if (!subscription && navigator.onLine) {
+                    console.log('[EPscanT] 🌐 Recherche en ligne...');
+                    try {
+                        const abonnementsRef = dbRef(rtdb, 'demdem/sama_passes');
+                        const abonnementsSnapshot = await rtdbGet(abonnementsRef);
+
+                        if (abonnementsSnapshot.exists()) {
+                            const allSubscriptions = abonnementsSnapshot.val();
+                            const totalSubs = Object.keys(allSubscriptions).length;
+                            console.log(`[EPscanT] 📊 ${totalSubs} abonnements dans la base`);
+
+                            let foundMatch = false;
+                            for (const [id, sub] of Object.entries(allSubscriptions)) {
+                                if (sub.qrCode === decodedText) {
+                                    subscription = { ...sub, id };
+                                    console.log('[EPscanT] ✅ Abonnement trouvé en ligne (QR exact):', subscription.passengerName);
+                                    foundMatch = true;
+                                    break;
+                                }
+                            }
+
+                            if (!foundMatch) {
+                                console.log('[EPscanT] ⚠️ Aucune correspondance QR exacte, recherche par téléphone...');
+                                const phone = extractPhoneFromQR(decodedText);
+                                if (phone) {
+                                    const now = Date.now();
+                                    console.log(`[EPscanT] 🔍 Recherche téléphone: ${phone}`);
+                                    for (const [id, sub] of Object.entries(allSubscriptions)) {
+                                        if (sub.passengerPhone === phone &&
+                                            sub.status === 'active' &&
+                                            sub.expiresAt > now) {
+                                            subscription = { ...sub, id };
+                                            console.log('[EPscanT] ✅ Abonnement trouvé par téléphone (en ligne):', phone);
+                                            console.log('[EPscanT] 📋 QR dans la base:', sub.qrCode);
+                                            console.log('[EPscanT] 📋 QR scanné:', decodedText);
+                                            console.log('[EPscanT] 📋 Correspondent?', sub.qrCode === decodedText);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log('[EPscanT] ⚠️ Collection demdem/sama_passes vide');
+                        }
+                    } catch (firebaseError) {
+                        console.error('[EPscanT] ❌ Erreur Firebase:', firebaseError);
+                        console.warn('[EPscanT] ⚠️ Utilisation du cache uniquement');
+                    }
+                }
+
+                if (!subscription) {
+                    console.log('[EPscanT] ❌ Abonnement introuvable après toutes les tentatives');
+                    console.log('[EPscanT] ❌ QR scanné:', decodedText);
+                    console.log('[EPscanT] ❌ Format reconnu?', decodedText.startsWith('SAMAPASS') ? 'OUI' : 'NON');
+                    showResult('error', 'PASS INVALIDE', `Code non reconnu: ${decodedText.substring(0, 30)}...`);
+                    return;
+                }
+
+                const now = Date.now();
+                const vehicleLineId = vehicleSession.lineId;
+
+                console.log('[EPscanT] 🔐 VALIDATION GËNAA WÓOR - Contrôles de sécurité');
+                console.log('[EPscanT] 🚍 Ligne véhicule:', vehicleLineId || 'NON DÉFINIE');
+                console.log('[EPscanT] 🎫 Ligne pass:', subscription.routeId || 'NON DÉFINIE');
+
+                if (subscription.status !== 'active') {
+                    console.log('[EPscanT] ❌ STATUT:', subscription.status);
+                    showErrorCard('invalid', `PASS ${subscription.status.toUpperCase()}`, subscription, {
+                        reason: 'Abonnement inactif'
+                    });
+                    return;
+                }
+
+                if (now > subscription.expiresAt) {
+                    const daysSinceExpiry = Math.floor((now - subscription.expiresAt) / (1000 * 60 * 60 * 24));
+                    console.log('[EPscanT] ⚠️ EXPIRÉ:', daysSinceExpiry, 'jours');
+
+                    if (daysSinceExpiry <= 2) {
+                        showErrorCard('expired', `PASS EXPIRÉ - ${daysSinceExpiry}j`, subscription, {
+                            reason: 'Renouvellement nécessaire'
+                        });
+                    } else {
+                        showErrorCard('expired', 'PASS EXPIRÉ', subscription, {
+                            reason: 'Abonnement non valide'
+                        });
+                    }
+                    return;
+                }
+
+                if (vehicleLineId && subscription.routeId && subscription.routeId !== vehicleLineId) {
+                    console.log('[EPscanT] ❌ ERREUR LIGNE');
+                    console.log('[EPscanT] ❌ Pass pour:', subscription.routeName);
+                    console.log('[EPscanT] ❌ Véhicule sur:', vehicleSession.lineName);
+                    showErrorCard('wrong_line', 'ERREUR LIGNE', subscription, {
+                        expectedLine: subscription.routeName
+                    });
+                    return;
+                }
+                console.log('[EPscanT] ✅ LIGNE: Correcte');
+
+                const today = new Date().toISOString().split('T')[0];
+                const dailyScansKey = `daily_scans_${today}_${subscription.id}`;
+                const dailyScansData = localStorage.getItem(dailyScansKey);
+                let scansToday = 0;
+                let lastScanTime = null;
+
+                if (dailyScansData) {
+                    const data = JSON.parse(dailyScansData);
+                    scansToday = data.count || 0;
+                    lastScanTime = data.lastScanTime;
+                }
+
+                console.log('[EPscanT] 📊 QUOTA:', scansToday, '/2 trajets aujourd\'hui');
+
+                if (scansToday >= 2) {
+                    console.log('[EPscanT] ⚠️ QUOTA ATTEINT');
+                    showWarningCard('quota_exceeded', 'LIMITE ATTEINTE', subscription, {
+                        scansToday: scansToday
+                    });
+                    return;
+                }
+
+                if (lastScanTime) {
+                    const lastScan = new Date(lastScanTime);
+                    const minutesSince = Math.floor((now - lastScan.getTime()) / (1000 * 60));
+                    console.log('[EPscanT] ⏱️ ANTI-PASSBACK: Dernier scan il y a', minutesSince, 'min');
+
+                    if (minutesSince < 30) {
+                        console.log('[EPscanT] ⚠️ SCAN TROP RAPPROCHÉ');
+                        showWarningCard('too_soon', 'SCAN TROP RAPPROCHÉ', subscription, {
+                            lastScanTime: lastScanTime
+                        });
+                        return;
+                    }
+                }
+
+                console.log('[EPscanT] ✅ TOUS LES CONTRÔLES PASSÉS');
+
+                localStorage.setItem(dailyScansKey, JSON.stringify({
+                    count: scansToday + 1,
+                    lastScanTime: new Date().toISOString()
+                }));
+
+                const scanData = {
+                    passengerPhone: subscription.passengerPhone,
+                    passengerName: subscription.passengerName,
+                    subscriptionType: subscription.subscriptionType,
+                    subscriptionTier: subscription.subscriptionTier,
+                    routeName: subscription.routeName,
+                    scanStatus: 'valid'
+                };
+
+                if (navigator.onLine && !fromCache) {
+                    try {
+                        const scanRef = dbRef(rtdb, `demdem/transport_scans/${Date.now()}`);
+                        await rtdbSet(scanRef, {
+                            vehicleId: vehicleId,
+                            timestamp: Date.now(),
+                            passId: subscription.id,
+                            passengerPhone: scanData.passengerPhone,
+                            passengerName: scanData.passengerName,
+                            subscriptionType: scanData.subscriptionType,
+                            subscriptionTier: scanData.subscriptionTier,
+                            routeName: scanData.routeName,
+                            scanStatus: scanData.scanStatus,
+                            dailyScansCount: scansToday + 1
+                        });
+                        console.log('[EPscanT] ✅ Scan enregistré en ligne pour:', subscription.passengerName);
+                    } catch (error) {
+                        console.warn('[EPscanT] ⚠️ Échec enregistrement en ligne, mise en queue');
+                        await addPendingScan({
+                            subscriptionId: subscription.id,
+                            vehicleId: vehicleId,
+                            timestamp: Date.now(),
+                            data: scanData
+                        });
+                    }
+                } else {
+                    await addPendingScan({
+                        subscriptionId: subscription.id,
+                        vehicleId: vehicleId,
+                        timestamp: Date.now(),
+                        data: scanData
+                    });
+                    console.log('[EPscanT] 📱 Scan mis en queue (mode hors-ligne)');
+                }
+
+                showPassCard(subscription, scansToday + 1);
+
+            } catch (error) {
+                console.error('[EPscanT] ❌ Erreur scan:', error);
+                showResult('error', 'ERREUR SYSTÈME', 'Impossible de vérifier ce QR code');
+            }
+        }
+
+        function extractPhoneFromQR(qrCode) {
+            // Format SAMAPASS-221771234567-xxx
+            const samaPassMatch = qrCode.match(/SAMAPASS-(\d+)-/);
+            if (samaPassMatch) {
+                return samaPassMatch[1];
+            }
+
+            // Format téléphone direct (77/78/76/70 + 7 chiffres)
+            const phoneMatch = qrCode.match(/^(77|78|76|70)\d{7}$/);
+            if (phoneMatch) {
+                return `221${qrCode}`;
+            }
+
+            // Format international (221...)
+            const intlMatch = qrCode.match(/^221(77|78|76|70)\d{7}$/);
+            if (intlMatch) {
+                return qrCode;
+            }
+
+            return null;
+        }
+
+        async function startScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("reader");
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    onScanSuccess
+                );
+
+                document.getElementById('startButton').style.display = 'none';
+                console.log('[EPscanT] Scanner démarré');
+            } catch (err) {
+                console.error('[EPscanT] Erreur caméra:', err);
+                document.getElementById('startButton').style.display = 'block';
+                document.getElementById('startButton').textContent = '📷 Activer la Caméra';
+            }
+        }
+
+        document.getElementById('startButton').addEventListener('click', startScanner);
+
+        setTimeout(() => {
+            startScanner();
+        }, 500);
+
+        console.log('[EPscanT] Ready for', driverName);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-epscant.js', { scope: '/' })
+                .then((registration) => {
+                    console.log('[EPscanT] Service Worker registered:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('[EPscanT] Service Worker registration failed:', error);
+                });
+        }
+    </script>
+</body>
+</html>
