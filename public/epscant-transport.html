@@ -918,6 +918,10 @@
             </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
         </div>
+        <div id="lineInfo" style="position: absolute; top: 60px; left: 0; right: 0; text-align: center; padding: 8px; background: rgba(0, 0, 0, 0.8); border-bottom: 1px solid rgba(14, 165, 233, 0.3); z-index: 5;">
+            <div style="font-size: 11px; color: rgba(250, 250, 250, 0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Ligne Active</div>
+            <div id="activeLineName" style="font-size: 14px; font-weight: 700; color: #0EA5E9;"></div>
+        </div>
         <div class="scan-frame">
             <div class="frame-border"></div>
             <div class="frame-corners">
@@ -970,9 +974,11 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="/epscant-line-sectorization.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
         import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
@@ -986,6 +992,11 @@
 
         const app = initializeApp(firebaseConfig);
         const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        // Exposer les modules Firebase pour le service de sectorisation
+        window.firebaseFirestore = { doc, getDoc };
+        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update: rtdbUpdate };
 
         let isFirebaseConnected = false;
         let offlineDB = null;
@@ -1402,6 +1413,17 @@
         document.getElementById('vehicleInfo').textContent = licensePlate || 'DEM-DEM EXPRESS';
         document.getElementById('driverInfo').textContent = `Chauffeur : ${driverName}`;
 
+        // AFFICHER LA LIGNE ACTIVE SI SESSION DE SECTORISATION EXISTE
+        const lineSession = window.LineSectorization.getLineSession();
+        if (lineSession) {
+            console.log('[EPscanT] ✅ Session de ligne active:', lineSession);
+            document.getElementById('activeLineName').textContent = lineSession.lineName || 'Ligne non définie';
+            document.getElementById('lineInfo').style.display = 'block';
+        } else {
+            console.warn('[EPscanT] ⚠️ Aucune session de ligne - Sectorisation désactivée');
+            document.getElementById('lineInfo').style.display = 'none';
+        }
+
         const sessionKey = `epscant_session_${vehicleId}`;
 
         function getSessionStats() {
@@ -1486,6 +1508,108 @@
         function formatDate(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function showLineUnauthorizedCard(subscription, validationResult) {
+            // AFFICHER UNE CARTE SAMA PASS AVEC ALERTE LIGNE NON AUTORISÉE
+            const portal = document.getElementById('inspection-portal');
+            if (!portal) return;
+            portal.innerHTML = '';
+
+            const tierLabel = subscription.subscriptionTier === 'prestige' ? 'PRESTIGE' : 'ECO';
+            const tierIcon = subscription.subscriptionTier === 'prestige' ? '💎' : '🎫';
+
+            const card = `
+                <div class="sama-pass-card">
+                    <!-- EN-TÊTE JAUNE -->
+                    <div class="sama-pass-header">
+                        <div class="sama-pass-title">SAMA PASS</div>
+                        <div class="sama-pass-icon">🚌</div>
+                    </div>
+
+                    <!-- CORPS BLEU -->
+                    <div class="sama-pass-body">
+                        <!-- IDENTITÉ -->
+                        <div class="sama-pass-identity">
+                            <div class="pass-photo">
+                                <img src="${subscription.photoUrl || subscription.photo_url || '/assets/demdem_icon_pwa.jpg'}" alt="Photo">
+                            </div>
+                            <div class="pass-identity-info">
+                                <div class="pass-name">${subscription.passengerName || subscription.full_name}</div>
+                                <div class="pass-phone">${formatPhone(subscription.passengerPhone || subscription.subscriber_phone)}</div>
+                            </div>
+                        </div>
+
+                        <!-- GRILLE D'INFORMATIONS -->
+                        <div class="sama-pass-info-grid">
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">🚌</div>
+                                <div class="pass-info-label">Ligne Pass</div>
+                                <div class="pass-info-value">${subscription.routeName || subscription.route_name}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">${tierIcon}</div>
+                                <div class="pass-info-label">Formule</div>
+                                <div class="pass-info-value">${tierLabel}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">📅</div>
+                                <div class="pass-info-label">Durée</div>
+                                <div class="pass-info-value">${formatDuration(subscription.subscriptionType || subscription.subscription_type)}</div>
+                            </div>
+
+                            <div class="pass-info-box">
+                                <div class="pass-info-icon">✅</div>
+                                <div class="pass-info-label">Valable jusqu'au</div>
+                                <div class="pass-info-value">${formatDate(subscription.expiresAt || subscription.end_date)}</div>
+                            </div>
+                        </div>
+
+                        <!-- ALERTE LIGNE NON AUTORISÉE -->
+                        <div class="pass-status-badge warning">
+                            <div class="pass-status-text">⚠️ ${validationResult.message}</div>
+                        </div>
+
+                        <div class="warning-details">
+                            <div class="warning-details-text">
+                                ${validationResult.details || ''}
+                            </div>
+                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 193, 7, 0.3);">
+                                <div style="font-size: 11px; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Ligne Contrôleur :</div>
+                                <div style="font-size: 13px; font-weight: 700; color: #FFC107;">${validationResult.lineInfo?.controllerLine || 'Non définie'}</div>
+                            </div>
+                        </div>
+
+                        <!-- BOUTON SUIVANT -->
+                        <button class="sama-pass-button" style="background: rgba(255, 193, 7, 0.2); color: #FFC107; border: 2px solid #FFC107;" onclick="document.getElementById('inspection-portal').innerHTML = ''; isProcessing = false;">
+                            SUIVANT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const fullCard = `
+                <div class="result-modal warning-banner" style="display: flex;">
+                    <div class="result-content">
+                        <div class="result-details" style="display: block;">
+                            ${card}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            portal.innerHTML = fullCard;
+
+            invalidCount++;
+            totalCount++;
+            updateCounterValue('invalidCount', invalidCount);
+            updateCounterValue('personalCount', totalCount);
+
+            stats.invalidCount = invalidCount;
+            stats.totalCount = totalCount;
+            saveSessionStats(stats);
         }
 
         function showPassCard(subscription, scansToday = 1) {
@@ -2001,46 +2125,36 @@
                 }
 
                 const now = Date.now();
-                const vehicleLineId = vehicleSession.lineId;
 
-                console.log('[EPscanT] 🔐 VALIDATION GËNAA WÓOR - Contrôles de sécurité');
-                console.log('[EPscanT] 🚍 Ligne véhicule:', vehicleLineId || 'NON DÉFINIE');
-                console.log('[EPscanT] 🎫 Ligne pass:', subscription.routeId || 'NON DÉFINIE');
+                console.log('[EPscanT] 🔐 VALIDATION AVEC SECTORISATION PAR CODE D\'ACCÈS');
 
-                if (subscription.status !== 'active') {
-                    console.log('[EPscanT] ❌ STATUT:', subscription.status);
-                    showErrorCard('invalid', `PASS ${subscription.status.toUpperCase()}`, subscription, {
-                        reason: 'Abonnement inactif'
+                // VALIDATION AVEC LE SERVICE DE SECTORISATION
+                const validationResult = await window.LineSectorization.validateSubscriptionForLine(
+                    subscription,
+                    rtdb
+                );
+
+                console.log('[EPscanT] 📋 Résultat validation:', validationResult);
+
+                // SI L'ABONNEMENT N'EST PAS VALIDE (expiré, inactif, etc.)
+                if (!validationResult.isValid) {
+                    console.log('[EPscanT] ❌ ABONNEMENT NON VALIDE:', validationResult.message);
+                    showErrorCard('invalid', validationResult.message, subscription, {
+                        reason: validationResult.message
                     });
                     return;
                 }
 
-                if (now > subscription.expiresAt) {
-                    const daysSinceExpiry = Math.floor((now - subscription.expiresAt) / (1000 * 60 * 60 * 24));
-                    console.log('[EPscanT] ⚠️ EXPIRÉ:', daysSinceExpiry, 'jours');
-
-                    if (daysSinceExpiry <= 2) {
-                        showErrorCard('expired', `PASS EXPIRÉ - ${daysSinceExpiry}j`, subscription, {
-                            reason: 'Renouvellement nécessaire'
-                        });
-                    } else {
-                        showErrorCard('expired', 'PASS EXPIRÉ', subscription, {
-                            reason: 'Abonnement non valide'
-                        });
-                    }
+                // SI L'ABONNEMENT EST VALIDE MAIS PAS AUTORISÉ SUR CETTE LIGNE
+                if (!validationResult.isAuthorized) {
+                    console.log('[EPscanT] ⚠️ LIGNE NON AUTORISÉE');
+                    console.log('[EPscanT] 📋 Pass pour:', validationResult.lineInfo?.subscriberLine);
+                    console.log('[EPscanT] 📋 Contrôleur sur:', validationResult.lineInfo?.controllerLine);
+                    showLineUnauthorizedCard(subscription, validationResult);
                     return;
                 }
 
-                if (vehicleLineId && subscription.routeId && subscription.routeId !== vehicleLineId) {
-                    console.log('[EPscanT] ❌ ERREUR LIGNE');
-                    console.log('[EPscanT] ❌ Pass pour:', subscription.routeName);
-                    console.log('[EPscanT] ❌ Véhicule sur:', vehicleSession.lineName);
-                    showErrorCard('wrong_line', 'ERREUR LIGNE', subscription, {
-                        expectedLine: subscription.routeName
-                    });
-                    return;
-                }
-                console.log('[EPscanT] ✅ LIGNE: Correcte');
+                console.log('[EPscanT] ✅ VALIDATION COMPLÈTE - Pass autorisé sur cette ligne');
 
                 const today = new Date().toISOString().split('T')[0];
                 const dailyScansKey = `daily_scans_${today}_${subscription.id}`;

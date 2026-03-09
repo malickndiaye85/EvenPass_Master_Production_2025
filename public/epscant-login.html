@@ -433,9 +433,12 @@
 
     <button class="help-button" id="helpButton" title="Aide">?</button>
 
+    <script src="/epscant-line-sectorization.js"></script>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
-        import { getDatabase, ref as dbRef, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, update } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
@@ -449,6 +452,11 @@
 
         const app = initializeApp(firebaseConfig);
         const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        // Exposer les modules Firebase pour le service de sectorisation
+        window.firebaseFirestore = { doc, getDoc };
+        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update };
 
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -511,62 +519,51 @@
             successMessage.classList.remove('show');
         }
 
-        async function authenticateVehicle(pinCode) {
-            console.log('[EPscanT Login] Authenticating with PIN:', pinCode);
+        async function authenticateVehicle(accessCode) {
+            console.log('[EPscanT Login] 🔐 Authentification avec code d\'accès:', accessCode);
 
             try {
-                const vehiclesRef = dbRef(rtdb, 'transport/vehicles');
-                const snapshot = await rtdbGet(vehiclesRef);
+                // UTILISER LE SERVICE DE SECTORISATION
+                const result = await window.LineSectorization.authenticateWithAccessCode(
+                    accessCode,
+                    firestore,
+                    rtdb
+                );
 
-                if (!snapshot.exists()) {
-                    console.warn('[EPscanT Login] No vehicles in database');
+                if (!result.success) {
+                    console.error('[EPscanT Login] ❌ Authentification échouée:', result.error);
                     return {
                         success: false,
-                        error: 'Aucun véhicule enregistré'
+                        error: result.error
                     };
                 }
 
-                const vehicles = snapshot.val();
-                let foundVehicle = null;
-                let foundVehicleId = null;
+                const session = result.session;
 
-                for (const [vehicleId, vehicleData] of Object.entries(vehicles)) {
-                    if (vehicleData.pin === pinCode && vehicleData.isActive) {
-                        foundVehicle = vehicleData;
-                        foundVehicleId = vehicleId;
-                        break;
-                    }
-                }
-
-                if (!foundVehicle) {
-                    return {
-                        success: false,
-                        error: 'Code d\'accès incorrect ou véhicule inactif'
-                    };
-                }
-
-                const sessionData = {
-                    vehicleId: foundVehicleId,
-                    driverName: foundVehicle.driverName,
-                    licensePlate: foundVehicle.licensePlate,
-                    loginTime: Date.now()
+                // SAUVEGARDER ÉGALEMENT L'ANCIENNE SESSION POUR LA COMPATIBILITÉ
+                const legacySessionData = {
+                    vehicleId: session.vehicleId,
+                    driverName: session.controllerName,
+                    licensePlate: session.vehiclePlate,
+                    loginTime: session.sessionStarted
                 };
 
-                localStorage.setItem('demdem_vehicle_session', JSON.stringify(sessionData));
+                localStorage.setItem('demdem_vehicle_session', JSON.stringify(legacySessionData));
 
-                const sessionRef = dbRef(rtdb, `transport/sessions/${foundVehicleId}`);
-                await rtdbGet(sessionRef);
-
-                console.log('[EPscanT Login] ✅ Authentication successful:', foundVehicle.driverName);
+                console.log('[EPscanT Login] ✅ Session établie:', session);
+                console.log('[EPscanT Login] 📍 Ligne active:', session.lineName);
+                console.log('[EPscanT Login] 🚍 Véhicule:', session.vehiclePlate);
 
                 return {
                     success: true,
-                    vehicleId: foundVehicleId,
-                    driverName: foundVehicle.driverName,
-                    licensePlate: foundVehicle.licensePlate
+                    vehicleId: session.vehicleId,
+                    driverName: session.controllerName,
+                    licensePlate: session.vehiclePlate,
+                    lineName: session.lineName,
+                    lineRoute: session.lineRoute
                 };
             } catch (error) {
-                console.error('[EPscanT Login] Firebase error:', error);
+                console.error('[EPscanT Login] ❌ Erreur:', error);
                 return {
                     success: false,
                     error: 'Erreur de connexion à la base de données'
@@ -589,7 +586,7 @@
                 const result = await authenticateVehicle(pin);
 
                 if (result.success) {
-                    showSuccess(`Bienvenue ${result.driverName} !`);
+                    showSuccess(`Ligne ${result.lineName} activée !`);
 
                     setTimeout(() => {
                         window.location.href = '/epscant-transport.html';
