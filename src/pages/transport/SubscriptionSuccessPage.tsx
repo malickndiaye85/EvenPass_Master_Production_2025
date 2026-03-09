@@ -44,7 +44,7 @@ export default function SubscriptionSuccessPage() {
 
   const saveToWallet = (data: SubscriptionData) => {
     const passData = {
-      id: `pass_${Date.now()}`,
+      id: data.subscription_id || `pass_${Date.now()}`,
       type: 'demdem_subscription',
       ...data,
       createdAt: new Date().toISOString()
@@ -59,7 +59,9 @@ export default function SubscriptionSuccessPage() {
     // Sauvegarder
     localStorage.setItem('demdem_passes', JSON.stringify(existingPasses));
 
-    console.log('[WALLET] Pass sauvegardé:', passData);
+    console.log('[WALLET] 💾 Pass sauvegardé avec QR Code Firebase:', passData.qr_code);
+    console.log('[WALLET] 🆔 Subscription ID:', passData.subscription_id);
+    console.log('[WALLET] 📱 Format QR:', passData.qr_code?.substring(0, 50) + '...');
   };
 
   if (!subscription) {
@@ -88,6 +90,11 @@ export default function SubscriptionSuccessPage() {
 
   // Utiliser le QR Code généré au format EPscanT
   const qrData = qr_code;
+
+  // LOG DE VÉRIFICATION DU QR CODE À L'ACHAT
+  console.log('[SUCCESS-PAGE] 🎫 QR Code généré à l\'achat:', qr_code);
+  console.log('[SUCCESS-PAGE] 🆔 Subscription ID:', subscription_id);
+  console.log('[SUCCESS-PAGE] 📱 Téléphone:', userData.phone);
 
   const handleSaveToPhone = async () => {
     if (!cardRef.current) return;

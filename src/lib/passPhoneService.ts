@@ -1,25 +1,24 @@
-import { firestore } from '../firebase';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
+import { db } from '../firebase';
+import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 
 export interface PassSubscription {
   id: string;
   phoneNumber: string;
   firstName: string;
   lastName: string;
-  type: 'weekly' | 'monthly';
+  type: 'weekly' | 'monthly' | 'quarterly';
   status: 'active' | 'expired' | 'cancelled';
   startDate: number;
   endDate: number;
   qrCode: string;
   createdAt: number;
   price: number;
+  passengerName?: string;
+  passengerPhone?: string;
+  routeName?: string;
+  subscriptionType?: string;
+  subscriptionTier?: string;
+  photoUrl?: string;
 }
 
 const CACHE_KEY_PREFIX = 'demdem_pass_';
@@ -27,32 +26,80 @@ const CACHE_KEY_PREFIX = 'demdem_pass_';
 export const passPhoneService = {
   async findSubscriptionByPhone(phoneNumber: string): Promise<PassSubscription | null> {
     try {
-      const cleanPhone = phoneNumber.replace(/\s+/g, '');
+      // Nettoyer et normaliser le téléphone
+      let cleanPhone = phoneNumber.replace(/[\s+]/g, '');
+
+      // S'assurer que le numéro commence par 221
+      if (!cleanPhone.startsWith('221')) {
+        cleanPhone = `221${cleanPhone}`;
+      }
 
       console.log('[PASS] 🔍 Recherche abonnement pour:', cleanPhone);
 
-      const subsRef = collection(firestore, 'subscriptions');
-      const q = query(
-        subsRef,
-        where('phoneNumber', '==', cleanPhone),
-        where('status', '==', 'active'),
-        where('endDate', '>', Date.now()),
-        orderBy('endDate', 'desc'),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        console.log('[PASS] ❌ Aucun abonnement actif trouvé pour:', cleanPhone);
+      if (!db) {
+        console.error('[PASS] ❌ Firebase Database non initialisée');
         return null;
       }
 
-      const doc = snapshot.docs[0];
-      const subscription = { id: doc.id, ...doc.data() } as PassSubscription;
+      // Chercher dans demdem/sama_passes
+      const samaPassesRef = ref(db, 'demdem/sama_passes');
+      const snapshot = await get(samaPassesRef);
 
-      console.log('[PASS] ✅ Abonnement trouvé:', subscription);
-      return subscription;
+      if (!snapshot.exists()) {
+        console.log('[PASS] ❌ Aucun SAMA PASS trouvé dans Firebase');
+        return null;
+      }
+
+      const allPasses = snapshot.val();
+      const now = Date.now();
+
+      // Chercher un pass actif pour ce numéro
+      let activeSubscription: PassSubscription | null = null;
+
+      for (const [id, passData] of Object.entries(allPasses)) {
+        const pass = passData as any;
+
+        // Vérifier le numéro de téléphone
+        const passPhone = pass.passengerPhone || pass.phoneNumber || '';
+
+        if (passPhone === cleanPhone &&
+            pass.status === 'active' &&
+            pass.expiresAt > now) {
+
+          // Extraire le prénom et nom depuis passengerName
+          const [firstName = '', lastName = ''] = (pass.passengerName || '').split(' ');
+
+          activeSubscription = {
+            id: pass.id || id,
+            phoneNumber: passPhone,
+            firstName,
+            lastName,
+            type: pass.subscriptionType || 'weekly',
+            status: pass.status,
+            startDate: pass.startDate || pass.createdAt,
+            endDate: pass.endDate || pass.expiresAt,
+            qrCode: pass.qrCode,
+            createdAt: pass.createdAt,
+            price: pass.amountPaid || 0,
+            passengerName: pass.passengerName,
+            passengerPhone: pass.passengerPhone,
+            routeName: pass.routeName,
+            subscriptionType: pass.subscriptionType,
+            subscriptionTier: pass.subscriptionTier,
+            photoUrl: pass.photoUrl
+          };
+
+          console.log('[PASS] ✅ SAMA PASS trouvé:', activeSubscription);
+          console.log('[PASS] 📱 QR Code Firebase:', pass.qrCode);
+          break;
+        }
+      }
+
+      if (!activeSubscription) {
+        console.log('[PASS] ❌ Aucun abonnement actif trouvé pour:', cleanPhone);
+      }
+
+      return activeSubscription;
     } catch (error) {
       console.error('[PASS] ❌ Erreur lors de la recherche:', error);
       return null;
