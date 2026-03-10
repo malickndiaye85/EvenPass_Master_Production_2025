@@ -1,75 +1,97 @@
-================================================================================
-  GITHUB PAGES DEPLOYMENT - FIX COMPLET
-================================================================================
+═══════════════════════════════════════════════════════════════════════════
+  🚨 CORRECTIF URGENT - PERMISSION DENIED CODE 898561
+═══════════════════════════════════════════════════════════════════════════
 
-DATE: 2026-03-10 17:35
-STATUT: ✅ PRÊT POUR DÉPLOIEMENT
+PROBLÈME CRITIQUE:
+------------------
+❌ Permission Denied sur fleet_indices/codes/898561
+❌ Permission Denied sur ops/transport/vehicles/
+❌ AUCUN BUS NE PEUT SE CONNECTER À EPSCANT
 
-================================================================================
-PROBLÈMES RÉSOLUS
-================================================================================
+CAUSE RACINE:
+-------------
+Les chemins suivants n'existent PAS dans database.rules.json:
+1. fleet_indices/codes/
+2. ops/transport/vehicles/
+3. ops/transport/lines/
 
-1. ✅ Export en double (MigrateAccessCodesToFirestore.tsx)
-2. ✅ Syntaxe YAML invalide (final_deploy.yml)
-3. ✅ Fichiers temporaires supprimés (vite.config.ts.timestamp-*)
-4. ✅ .gitignore mis à jour
+SOLUTION APPLIQUÉE:
+-------------------
 
-================================================================================
-BUILD LOCAL
-================================================================================
+1. AJOUT RÈGLES REALTIME DB (database.rules.json):
 
-npm run build
+   A. fleet_indices/codes/ → LECTURE PUBLIQUE
+      ".read": true
+      (Fallback pour authentification véhicule)
 
-✓ 2372 modules transformed
-✓ built in 16.39s
-✓ Copied 7 HTML files from public/ to dist/
-✓ Env injected in 20 files
+   B. ops/transport/vehicles/ → LECTURE PUBLIQUE
+      ".read": true
+      (Infos véhicule + ligne pour sectorisation)
 
-AUCUNE ERREUR
+   C. ops/transport/lines/ → LECTURE PUBLIQUE
+      ".read": true
+      (Infos ligne pour validation SAMA PASS)
 
-================================================================================
-FICHIERS MODIFIÉS
-================================================================================
+2. DEBUG AMÉLIORÉ (epscant-line-sectorization.js):
 
-✅ .github/workflows/final_deploy.yml
-✅ .gitignore
-✅ src/pages/admin/MigrateAccessCodesToFirestore.tsx
+   - ✅ Affiche chemin exact Firestore
+   - ✅ Affiche chemin exact Realtime DB
+   - ✅ Détails erreur PERMISSION_DENIED
+   - ✅ Code erreur + message + path
 
-NOUVEAUX FICHIERS:
-✅ public/migrate-access-codes.html
-✅ public/test-access-codes.html
+3. OUTIL DE DEBUG CRÉÉ:
 
-================================================================================
-PROCHAINE ÉTAPE
-================================================================================
+   /debug-firestore-codes.html
+   → Liste TOUS les codes Firestore
+   → Test recherche par Document ID
+   → Test recherche par Query
+   → Test Realtime DB avec affichage Permission Denied
 
-git add .
-git commit -m "fix: GitHub deployment errors + EPscanT access codes migration"
-git push origin main
+DÉPLOIEMENT OBLIGATOIRE:
+-------------------------
 
-================================================================================
-RÉSULTAT ATTENDU
-================================================================================
+firebase deploy --only database
 
-GitHub Actions: 2-3 minutes
-Point VERT dans Actions ✅
+OU
 
-================================================================================
-URLS APRÈS DÉPLOIEMENT
-================================================================================
+Console Firebase:
+https://console.firebase.google.com/project/evenpasssenegal/database/rules
 
-/migrate-access-codes.html
-/test-access-codes.html
-/epscant-login.html
-/epscant-transport.html
+VÉRIFICATION POST-DÉPLOIEMENT:
+-------------------------------
 
-================================================================================
-GUIDES COMPLETS
-================================================================================
+1. /debug-firestore-codes.html
+   → Cliquer "Vérifier fleet_indices/codes/"
+   → NE DOIT PLUS afficher "PERMISSION DENIED"
 
-README_DEPLOY.md                    (Résumé détaillé)
-FIX_GITHUB_DEPLOYMENT_2026-03-10.md (Corrections techniques)
-PUSH_INSTRUCTIONS.md                (Commandes de push)
-DEPLOYMENT_STATUS.md                (Status report)
+2. /test-code-898561.html
+   → Cliquer "Tester Code 898561"
+   → DOIT afficher "AUTHENTIFICATION RÉUSSIE"
 
-================================================================================
+3. /epscant-login.html
+   → Saisir 898561
+   → DOIT rediriger vers /epscant-transport.html
+
+FICHIERS MODIFIÉS:
+------------------
+1. database.rules.json (RÈGLES AJOUTÉES)
+2. public/epscant-line-sectorization.js (DEBUG AMÉLIORÉ)
+3. public/debug-firestore-codes.html (CRÉÉ)
+
+BUILD:
+------
+✅ npm run build → RÉUSSI (26.48s)
+
+STATUT:
+-------
+⚠️  CODE CORRIGÉ
+⚠️  BUILD RÉUSSI
+🚨 RÈGLES NON DÉPLOYÉES (ACTION REQUISE)
+
+ACTION IMMÉDIATE:
+-----------------
+firebase deploy --only database
+
+Date: 2026-03-10
+Priorité: 🔴 CRITIQUE - BLOQUANT PRODUCTION
+═══════════════════════════════════════════════════════════════════════════

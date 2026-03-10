@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Firestore Access Codes</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0F0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #0EA5E9;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #0F0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #0EA5E9;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        button {
+            background: #0EA5E9;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #0284C7;
+        }
+
+        .success {
+            color: #0F0;
+        }
+
+        .error {
+            color: #F00;
+        }
+
+        .warning {
+            color: #FF0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(0, 255, 0, 0.1);
+            color: #0EA5E9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 DEBUG FIRESTORE - ACCESS CODES</h1>
+
+        <div class="section">
+            <h2>1. Vérification Firebase</h2>
+            <div id="firebase-status">Initialisation...</div>
+        </div>
+
+        <div class="section">
+            <h2>2. Liste TOUS les Documents dans access_codes/</h2>
+            <button onclick="listAllAccessCodes()">📋 Lister Tous les Codes</button>
+            <div id="all-codes-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>3. Recherche Spécifique: 898561</h2>
+            <button onclick="searchCode('898561')">🔍 Chercher 898561</button>
+            <button onclick="searchCode('code_898561')">🔍 Chercher code_898561</button>
+            <button onclick="searchCode('vehicle_898561')">🔍 Chercher vehicle_898561</button>
+            <div id="specific-search-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>4. Recherche par Query (where code == 898561)</h2>
+            <button onclick="searchByCodeField()">🔍 Query where('code', '==', '898561')</button>
+            <div id="query-search-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>5. Vérification Realtime DB</h2>
+            <button onclick="checkRealtimeDB()">🔍 Vérifier fleet_indices/codes/</button>
+            <div id="rtdb-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>6. Console Logs</h2>
+            <pre id="console-logs"></pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, query as rtdbQuery, orderByChild } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        let logs = [];
+        function addLog(message) {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            logs.push(`[${timestamp}] ${message}`);
+            document.getElementById('console-logs').textContent = logs.join('\n');
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        window.firestore = firestore;
+        window.rtdb = rtdb;
+
+        addLog('✅ Firebase initialisé');
+        document.getElementById('firebase-status').innerHTML = '<span class="success">✅ Firebase initialisé</span>';
+
+        window.listAllAccessCodes = async function() {
+            const resultDiv = document.getElementById('all-codes-result');
+            resultDiv.innerHTML = '<div class="warning">⏳ Recherche en cours...</div>';
+            addLog('🔍 Listage de tous les documents dans access_codes/');
+
+            try {
+                const codesRef = collection(firestore, 'access_codes');
+                const snapshot = await getDocs(codesRef);
+
+                addLog(`📥 ${snapshot.size} documents trouvés`);
+
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ Aucun document dans access_codes/</div>';
+                    return;
+                }
+
+                let html = `<div class="success">✅ ${snapshot.size} documents trouvés</div>`;
+                html += '<table><tr><th>Document ID</th><th>Type</th><th>Vehicle ID</th><th>Active</th><th>Code Field</th></tr>';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `<tr>
+                        <td>${doc.id}</td>
+                        <td>${data.type || 'N/A'}</td>
+                        <td>${data.vehicleId || 'N/A'}</td>
+                        <td>${data.isActive ? '✅' : '❌'}</td>
+                        <td>${data.code || 'N/A'}</td>
+                    </tr>`;
+                    addLog(`📄 Doc: ${doc.id} | code: ${data.code} | type: ${data.type}`);
+                });
+
+                html += '</table>';
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                addLog(`❌ Erreur: ${error.message}`);
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+
+        window.searchCode = async function(codeId) {
+            const resultDiv = document.getElementById('specific-search-result');
+            resultDiv.innerHTML = `<div class="warning">⏳ Recherche du document "${codeId}"...</div>`;
+            addLog(`🔍 Recherche document: access_codes/${codeId}`);
+
+            try {
+                const docRef = doc(firestore, 'access_codes', codeId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    addLog(`✅ Document trouvé: ${codeId}`);
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Document trouvé: ${codeId}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    addLog(`❌ Document non trouvé: ${codeId}`);
+                    resultDiv.innerHTML = `<div class="error">❌ Document "${codeId}" n'existe pas</div>`;
+                }
+            } catch (error) {
+                addLog(`❌ Erreur: ${error.message}`);
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+
+        window.searchByCodeField = async function() {
+            const resultDiv = document.getElementById('query-search-result');
+            resultDiv.innerHTML = '<div class="warning">⏳ Recherche par query...</div>';
+            addLog('🔍 Query: where("code", "==", "898561")');
+
+            try {
+                const codesRef = collection(firestore, 'access_codes');
+                const q = query(codesRef, where('code', '==', '898561'));
+                const snapshot = await getDocs(q);
+
+                addLog(`📥 ${snapshot.size} documents trouvés par query`);
+
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ Aucun document avec code == "898561"</div>';
+                    return;
+                }
+
+                let html = `<div class="success">✅ ${snapshot.size} documents trouvés</div>`;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `
+                        <div><strong>Document ID:</strong> ${doc.id}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    addLog(`✅ Trouvé via query: ${doc.id}`);
+                });
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                addLog(`❌ Erreur: ${error.message}`);
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        };
+
+        window.checkRealtimeDB = async function() {
+            const resultDiv = document.getElementById('rtdb-result');
+            resultDiv.innerHTML = '<div class="warning">⏳ Vérification Realtime DB...</div>';
+            addLog('🔍 Vérification fleet_indices/codes/');
+
+            try {
+                const codesRef = dbRef(rtdb, 'fleet_indices/codes');
+                const snapshot = await rtdbGet(codesRef);
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const keys = Object.keys(data);
+                    addLog(`✅ ${keys.length} codes trouvés dans Realtime DB`);
+
+                    let html = `<div class="success">✅ ${keys.length} codes trouvés</div><table>`;
+                    html += '<tr><th>Code</th><th>Vehicle ID</th><th>Plaque</th><th>Active</th></tr>';
+
+                    keys.forEach(key => {
+                        const item = data[key];
+                        html += `<tr>
+                            <td>${key}</td>
+                            <td>${item.vehicleId || 'N/A'}</td>
+                            <td>${item.vehiclePlate || 'N/A'}</td>
+                            <td>${item.isActive ? '✅' : '❌'}</td>
+                        </tr>`;
+                        addLog(`📄 Code: ${key} | vehicle: ${item.vehicleId}`);
+                    });
+
+                    html += '</table>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    addLog('⚠️ Aucun code dans fleet_indices/codes/');
+                    resultDiv.innerHTML = '<div class="warning">⚠️ Aucun code dans fleet_indices/codes/</div>';
+                }
+            } catch (error) {
+                addLog(`❌ Erreur Realtime DB: ${error.message}`);
+                if (error.code === 'PERMISSION_DENIED') {
+                    resultDiv.innerHTML = `<div class="error">🔒 PERMISSION DENIED sur fleet_indices/codes/<br>Les règles de sécurité bloquent l'accès</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+                }
+            }
+        };
+
+        addLog('✅ Page de debug prête');
+    </script>
+</body>
+</html>
