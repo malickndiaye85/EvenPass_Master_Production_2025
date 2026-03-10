@@ -269,6 +269,23 @@
             50% { opacity: 0.6; }
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .scan-frame {
             position: absolute;
             top: 50%;
@@ -919,9 +936,10 @@
             </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
         </div>
-        <div id="lineInfo" style="position: absolute; top: 60px; left: 0; right: 0; text-align: center; padding: 8px; background: rgba(0, 0, 0, 0.8); border-bottom: 1px solid rgba(14, 165, 233, 0.3); z-index: 5;">
-            <div style="font-size: 11px; color: rgba(250, 250, 250, 0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Ligne Active</div>
-            <div id="activeLineName" style="font-size: 14px; font-weight: 700; color: #0EA5E9;"></div>
+        <div id="lineInfo" style="position: absolute; top: 60px; left: 0; right: 0; text-align: center; padding: 12px 20px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(6, 95, 170, 0.15) 100%); backdrop-filter: blur(10px); border-bottom: 2px solid rgba(14, 165, 233, 0.5); border-top: 1px solid rgba(14, 165, 233, 0.2); z-index: 5; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);">
+            <div style="font-size: 10px; color: rgba(250, 250, 250, 0.7); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 600;">🚌 LIGNE SECTORISÉE</div>
+            <div id="activeLineName" style="font-size: 16px; font-weight: 800; color: #FAFAFA; text-shadow: 0 2px 8px rgba(14, 165, 233, 0.4); letter-spacing: 0.5px;"></div>
+            <div id="activeLineRoute" style="font-size: 11px; color: rgba(14, 165, 233, 0.9); margin-top: 4px; font-weight: 600;"></div>
         </div>
         <div class="scan-frame">
             <div class="frame-border"></div>
@@ -1419,8 +1437,25 @@
         const lineSession = window.LineSectorization.getLineSession();
         if (lineSession) {
             console.log('[EPscanT] ✅ Session de ligne active:', lineSession);
-            document.getElementById('activeLineName').textContent = lineSession.lineName || 'Ligne non définie';
-            document.getElementById('lineInfo').style.display = 'block';
+
+            const lineInfoDiv = document.getElementById('lineInfo');
+            const isTestMode = lineSession.testMode || lineSession.lineId === 'all_lines';
+
+            if (isTestMode) {
+                // MODE TEST - Affichage orange avec badge
+                lineInfoDiv.style.background = 'linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)';
+                lineInfoDiv.style.borderBottomColor = 'rgba(255, 193, 7, 0.6)';
+                document.getElementById('activeLineName').innerHTML = `
+                    <span style="background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.5); padding: 4px 12px; border-radius: 20px; font-size: 11px; margin-right: 8px;">🧪 TEST</span>
+                    ${lineSession.lineName || 'Ligne non définie'}
+                `;
+            } else {
+                // MODE PRODUCTION - Affichage bleu normal
+                document.getElementById('activeLineName').textContent = lineSession.lineName || 'Ligne non définie';
+            }
+
+            document.getElementById('activeLineRoute').textContent = lineSession.lineRoute ? `📍 ${lineSession.lineRoute}` : '';
+            lineInfoDiv.style.display = 'block';
         } else {
             console.warn('[EPscanT] ⚠️ Aucune session de ligne - Sectorisation désactivée');
             document.getElementById('lineInfo').style.display = 'none';
@@ -1569,18 +1604,29 @@
                             </div>
                         </div>
 
-                        <!-- ALERTE LIGNE NON AUTORISÉE -->
-                        <div class="pass-status-badge warning">
-                            <div class="pass-status-text">⚠️ ${validationResult.message}</div>
+                        <!-- ALERTE LIGNE NON AUTORISÉE - VISIBLE & PROFESSIONNELLE -->
+                        <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%); border: 3px solid #FFC107; border-radius: 16px; padding: 20px; margin: 16px 0; text-align: center; box-shadow: 0 8px 24px rgba(255, 193, 7, 0.3); animation: pulse 2s infinite;">
+                            <div style="font-size: 48px; margin-bottom: 12px; animation: shake 0.5s;">⚠️</div>
+                            <div style="font-size: 16px; font-weight: 800; color: #FFC107; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">
+                                LIGNE NON AUTORISÉE
+                            </div>
                         </div>
 
-                        <div class="warning-details">
-                            <div class="warning-details-text">
-                                ${validationResult.details || ''}
+                        <div style="background: rgba(0, 0, 0, 0.4); border-radius: 12px; padding: 16px; margin: 16px 0; border-left: 4px solid #FFC107;">
+                            <div style="font-size: 13px; color: rgba(250, 250, 250, 0.9); line-height: 1.6; margin-bottom: 16px;">
+                                ${validationResult.details || 'Ce pass est valide pour une autre ligne'}
                             </div>
-                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 193, 7, 0.3);">
-                                <div style="font-size: 11px; color: rgba(250, 250, 250, 0.6); margin-bottom: 4px;">Ligne Contrôleur :</div>
-                                <div style="font-size: 13px; font-weight: 700; color: #FFC107;">${validationResult.lineInfo?.controllerLine || 'Non définie'}</div>
+
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 12px;">
+                                    <div style="font-size: 10px; color: rgba(250, 250, 250, 0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">📍 Ligne Passager</div>
+                                    <div style="font-size: 14px; font-weight: 700; color: #FFC107;">${validationResult.lineInfo?.subscriberLine || 'Non définie'}</div>
+                                </div>
+
+                                <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 8px; padding: 12px;">
+                                    <div style="font-size: 10px; color: rgba(250, 250, 250, 0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">🚌 Ligne Contrôleur</div>
+                                    <div style="font-size: 14px; font-weight: 700; color: #0EA5E9;">${validationResult.lineInfo?.controllerLine || 'Non définie'}</div>
+                                </div>
                             </div>
                         </div>
 

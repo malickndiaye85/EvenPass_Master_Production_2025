@@ -261,7 +261,25 @@ async function validateSubscriptionForLine(subscription, rtdb) {
         console.log('[SECTORISATION] 📋 Ligne contrôleur:', session.lineName);
         console.log('[SECTORISATION] 📋 Line ID contrôleur:', session.lineId);
 
-        // COMPARAISON STRICTE : L'ID de la ligne doit correspondre
+        // MODE TEST : Accepter toutes les lignes
+        const isTestMode = session.testMode || session.lineId === 'all_lines';
+        if (isTestMode) {
+            console.log('[SECTORISATION] 🧪 MODE TEST - Toutes lignes acceptées');
+            await incrementLineStats(session.lineId, session.vehicleId, rtdb);
+            return {
+                isValid: true,
+                isAuthorized: true,
+                message: 'VALIDE (MODE TEST)',
+                shouldDisplay: true,
+                subscription,
+                lineInfo: {
+                    subscriberLine: subscriberRouteName,
+                    controllerLine: session.lineName
+                }
+            };
+        }
+
+        // MODE PRODUCTION : COMPARAISON STRICTE - L'ID de la ligne doit correspondre
         const isLineMatch = subscriberRouteId === session.lineId;
 
         if (!isLineMatch) {
