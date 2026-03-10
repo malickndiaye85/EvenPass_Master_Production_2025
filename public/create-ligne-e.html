@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer Ligne E - Keur Massar</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .log .error { color: #ef4444; }
+        .log .success { color: #10b981; }
+        .log .info { color: #3b82f6; }
+        .line-info {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .line-info h3 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+        }
+        .line-info p {
+            margin: 5px 0;
+            color: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚍 Créer Ligne E - Keur Massar</h1>
+        <p class="subtitle">Initialiser la ligne dans Realtime Database</p>
+
+        <div class="line-info">
+            <h3>📋 Informations de la ligne</h3>
+            <p><strong>ID:</strong> Ligne E - Keur Massar - Garage Lat Dior</p>
+            <p><strong>Nom:</strong> Ligne E - Keur Massar</p>
+            <p><strong>Trajet:</strong> Keur Massar ⇄ Garage Lat Dior</p>
+            <p><strong>Prix Hebdo:</strong> 5000 FCFA</p>
+            <p><strong>Prix Mensuel:</strong> 18000 FCFA</p>
+            <p><strong>Prix Trimestriel:</strong> 50000 FCFA</p>
+        </div>
+
+        <button id="createBtn" onclick="createLigneE()">
+            🚀 Créer la Ligne E dans Firebase
+        </button>
+
+        <div id="log" class="log" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        if (window.FIREBASE_CONFIG) {
+            console.log('[PROD] Firebase config injected successfully');
+        } else {
+            console.error('[PROD] ❌ FIREBASE_CONFIG not found');
+        }
+
+        const firebaseConfig = window.FIREBASE_CONFIG || {
+            apiKey: "AIzaSyCWatPM1pWZUra8cIsetM3DYGLaPMz5vgg",
+            authDomain: "evenpasssenegal.firebaseapp.com",
+            databaseURL: "https://evenpasssenegal-default-rtdb.firebaseio.com",
+            projectId: "evenpasssenegal",
+            storageBucket: "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: "611731754859",
+            appId: "1:611731754859:web:94a2f44a72e13e98a08f44",
+            measurementId: "G-RH2KC45KYR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+
+        console.log('✅ Firebase initialisé');
+
+        window.createLigneE = async function() {
+            const logDiv = document.getElementById('log');
+            const btn = document.getElementById('createBtn');
+
+            logDiv.style.display = 'block';
+            logDiv.innerHTML = '';
+            btn.disabled = true;
+
+            function log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const line = document.createElement('div');
+                line.className = type;
+                line.textContent = `[${timestamp}] ${message}`;
+                logDiv.appendChild(line);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+
+            try {
+                log('🚀 Démarrage création Ligne E...', 'info');
+
+                const lineId = 'Ligne E - Keur Massar - Garage Lat Dior';
+                const lineRef = ref(rtdb, `transport_lines/${lineId}`);
+
+                log('📍 Vérification existence...', 'info');
+                const existingSnap = await get(lineRef);
+
+                if (existingSnap.exists()) {
+                    log('⚠️ La ligne existe déjà!', 'error');
+                    log('Données actuelles: ' + JSON.stringify(existingSnap.val(), null, 2), 'info');
+                    btn.disabled = false;
+                    return;
+                }
+
+                log('📝 Création des données...', 'info');
+
+                const lineData = {
+                    name: 'Ligne E - Keur Massar',
+                    route: 'Keur Massar ⇄ Garage Lat Dior',
+                    price_weekly: 5000,
+                    price_monthly: 18000,
+                    price_quarterly: 50000,
+                    has_confort: false,
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                log('💾 Écriture dans transport_lines/' + lineId, 'info');
+                await set(lineRef, lineData);
+
+                log('✅ Ligne E créée avec succès!', 'success');
+                log('📋 Données enregistrées:', 'success');
+                log(JSON.stringify(lineData, null, 2), 'info');
+
+                log('', 'info');
+                log('🎯 Action suivante: Tester login EPscanT avec code 898561', 'success');
+
+                btn.textContent = '✅ Ligne E créée!';
+                btn.style.background = '#10b981';
+
+            } catch (error) {
+                log('❌ Erreur: ' + error.message, 'error');
+                log('Stack: ' + error.stack, 'error');
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

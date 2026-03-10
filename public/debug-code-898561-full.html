@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Complet Code 898561</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 10px 0 0;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .section h2 {
+            margin: 0 0 15px 0;
+            color: #1f2937;
+            font-size: 18px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status.ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        .data-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .data-value {
+            color: #1f2937;
+            font-family: monospace;
+            text-align: right;
+        }
+        .log {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .log .error { color: #ef4444; }
+        .log .success { color: #10b981; }
+        .log .info { color: #60a5fa; }
+        .log .warning { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Complet - Code 898561</h1>
+        <p class="subtitle">Vérification complète de la chaîne d'authentification</p>
+
+        <div style="margin-bottom: 20px;">
+            <button onclick="runFullDiagnostic()">🚀 Lancer Diagnostic Complet</button>
+            <button onclick="fixMissingLine()" style="background: #f59e0b;">🔧 Créer Ligne E si manquante</button>
+        </div>
+
+        <div id="step1" class="section" style="display: none;">
+            <h2>1️⃣ Firestore: access_codes/898561</h2>
+            <div id="step1-content"></div>
+        </div>
+
+        <div id="step2" class="section" style="display: none;">
+            <h2>2️⃣ Realtime DB: fleet_indices/codes/898561</h2>
+            <div id="step2-content"></div>
+        </div>
+
+        <div id="step3" class="section" style="display: none;">
+            <h2>3️⃣ Realtime DB: ops/transport/vehicles/{vehicleId}</h2>
+            <div id="step3-content"></div>
+        </div>
+
+        <div id="step4" class="section" style="display: none;">
+            <h2>4️⃣ Realtime DB: transport_lines/{lineId}</h2>
+            <div id="step4-content"></div>
+        </div>
+
+        <div id="summary" class="section" style="display: none;">
+            <h2>📊 Résumé du Diagnostic</h2>
+            <div id="summary-content"></div>
+        </div>
+
+        <div id="log" class="log" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+        import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+        const firebaseConfig = window.FIREBASE_CONFIG || {
+            apiKey: "AIzaSyCWatPM1pWZUra8cIsetM3DYGLaPMz5vgg",
+            authDomain: "evenpasssenegal.firebaseapp.com",
+            databaseURL: "https://evenpasssenegal-default-rtdb.firebaseio.com",
+            projectId: "evenpasssenegal",
+            storageBucket: "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: "611731754859",
+            appId: "1:611731754859:web:94a2f44a72e13e98a08f44",
+            measurementId: "G-RH2KC45KYR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firestore = getFirestore(app);
+        const rtdb = getDatabase(app);
+
+        let diagnosticData = {};
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            logDiv.style.display = 'block';
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function showStatus(elementId, status, data = null) {
+            const section = document.getElementById(elementId);
+            const content = document.getElementById(`${elementId}-content`);
+            section.style.display = 'block';
+
+            if (status === 'ok') {
+                content.innerHTML = '<span class="status ok">✅ OK</span>';
+                if (data) {
+                    content.innerHTML += '<div class="log" style="margin-top: 10px; max-height: 150px;">' +
+                        JSON.stringify(data, null, 2) + '</div>';
+                }
+            } else if (status === 'error') {
+                content.innerHTML = '<span class="status error">❌ ERREUR</span>';
+                if (data) {
+                    content.innerHTML += '<div class="log error" style="margin-top: 10px;">' + data + '</div>';
+                }
+            } else if (status === 'warning') {
+                content.innerHTML = '<span class="status warning">⚠️ ATTENTION</span>';
+                if (data) {
+                    content.innerHTML += '<div class="log warning" style="margin-top: 10px;">' + data + '</div>';
+                }
+            }
+        }
+
+        window.runFullDiagnostic = async function() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('log').style.display = 'block';
+            diagnosticData = {};
+
+            log('🚀 Démarrage diagnostic complet...', 'info');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+
+            try {
+                // STEP 1: Firestore access_codes
+                log('1️⃣ Vérification Firestore access_codes/898561...', 'info');
+                const firestoreRef = doc(firestore, 'access_codes', '898561');
+                const firestoreSnap = await getDoc(firestoreRef);
+
+                if (firestoreSnap.exists()) {
+                    const data = firestoreSnap.data();
+                    diagnosticData.firestore = data;
+                    log('✅ Code trouvé dans Firestore', 'success');
+                    log(`   Vehicle ID: ${data.vehicleId}`, 'info');
+                    log(`   Is Active: ${data.isActive}`, 'info');
+                    showStatus('step1', 'ok', data);
+                } else {
+                    log('❌ Code NON trouvé dans Firestore', 'error');
+                    showStatus('step1', 'error', 'Document non trouvé');
+                    diagnosticData.firestore = null;
+                }
+
+                // STEP 2: Realtime DB fleet_indices
+                log('', 'info');
+                log('2️⃣ Vérification Realtime DB fleet_indices/codes/898561...', 'info');
+                const fleetRef = ref(rtdb, 'fleet_indices/codes/898561');
+                const fleetSnap = await get(fleetRef);
+
+                if (fleetSnap.exists()) {
+                    const data = fleetSnap.val();
+                    diagnosticData.fleet_indices = data;
+                    log('✅ Code trouvé dans fleet_indices', 'success');
+                    log(`   Vehicle ID: ${data.vehicleId}`, 'info');
+                    showStatus('step2', 'ok', data);
+                } else {
+                    log('❌ Code NON trouvé dans fleet_indices', 'error');
+                    showStatus('step2', 'error', 'Donnée non trouvée');
+                    diagnosticData.fleet_indices = null;
+                }
+
+                // STEP 3: Vehicle data
+                const vehicleId = diagnosticData.firestore?.vehicleId || diagnosticData.fleet_indices?.vehicleId;
+
+                if (vehicleId) {
+                    log('', 'info');
+                    log(`3️⃣ Vérification véhicule: ${vehicleId}...`, 'info');
+                    const vehicleRef = ref(rtdb, `ops/transport/vehicles/${vehicleId}`);
+                    const vehicleSnap = await get(vehicleRef);
+
+                    if (vehicleSnap.exists()) {
+                        const data = vehicleSnap.val();
+                        diagnosticData.vehicle = data;
+                        log('✅ Véhicule trouvé', 'success');
+                        log(`   Immat: ${data.license_plate}`, 'info');
+                        log(`   Chauffeur: ${data.driver_name}`, 'info');
+                        log(`   Line ID: ${data.line_id || 'NON ASSIGNÉ'}`, data.line_id ? 'info' : 'warning');
+                        showStatus('step3', 'ok', data);
+                    } else {
+                        log('❌ Véhicule NON trouvé', 'error');
+                        showStatus('step3', 'error', 'Véhicule non trouvé');
+                        diagnosticData.vehicle = null;
+                    }
+                } else {
+                    log('⚠️ Impossible de déterminer le vehicleId', 'warning');
+                    showStatus('step3', 'warning', 'Pas de vehicleId disponible');
+                }
+
+                // STEP 4: Transport line
+                const lineId = diagnosticData.vehicle?.line_id;
+
+                if (lineId) {
+                    log('', 'info');
+                    log(`4️⃣ Vérification ligne: ${lineId}...`, 'info');
+                    const lineRef = ref(rtdb, `transport_lines/${lineId}`);
+                    const lineSnap = await get(lineRef);
+
+                    if (lineSnap.exists()) {
+                        const data = lineSnap.val();
+                        diagnosticData.line = data;
+                        log('✅ Ligne trouvée', 'success');
+                        log(`   Nom: ${data.name}`, 'info');
+                        log(`   Route: ${data.route}`, 'info');
+                        log(`   Active: ${data.is_active}`, 'info');
+                        showStatus('step4', 'ok', data);
+                    } else {
+                        log('❌ Ligne NON trouvée dans transport_lines', 'error');
+                        log('⚠️ Cette ligne doit être créée!', 'warning');
+                        showStatus('step4', 'error', 'Ligne manquante - Utiliser le bouton "Créer Ligne E"');
+                        diagnosticData.line = null;
+                    }
+                } else {
+                    log('⚠️ Véhicule non assigné à une ligne', 'warning');
+                    showStatus('step4', 'warning', 'Pas de ligne assignée au véhicule');
+                }
+
+                // Summary
+                log('', 'info');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                log('📊 RÉSUMÉ DU DIAGNOSTIC', 'info');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+
+                const summaryDiv = document.getElementById('summary');
+                const summaryContent = document.getElementById('summary-content');
+                summaryDiv.style.display = 'block';
+
+                let summaryHTML = '';
+                let canLogin = true;
+
+                if (diagnosticData.firestore) {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Firestore</div><div class="data-value status ok">✅ OK</div></div>';
+                    log('✅ Firestore: OK', 'success');
+                } else {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Firestore</div><div class="data-value status error">❌ MANQUANT</div></div>';
+                    log('❌ Firestore: MANQUANT', 'error');
+                    canLogin = false;
+                }
+
+                if (diagnosticData.vehicle) {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Véhicule</div><div class="data-value status ok">✅ OK</div></div>';
+                    log('✅ Véhicule: OK', 'success');
+                } else {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Véhicule</div><div class="data-value status error">❌ MANQUANT</div></div>';
+                    log('❌ Véhicule: MANQUANT', 'error');
+                    canLogin = false;
+                }
+
+                if (diagnosticData.line) {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Ligne Transport</div><div class="data-value status ok">✅ OK</div></div>';
+                    log('✅ Ligne Transport: OK', 'success');
+                } else {
+                    summaryHTML += '<div class="data-row"><div class="data-label">Ligne Transport</div><div class="data-value status error">❌ MANQUANT</div></div>';
+                    log('❌ Ligne Transport: MANQUANT - Cliquer "Créer Ligne E"', 'error');
+                    canLogin = false;
+                }
+
+                summaryHTML += '<div style="margin-top: 20px; padding: 15px; background: ' +
+                    (canLogin ? '#d1fae5' : '#fee2e2') + '; border-radius: 8px;">';
+                summaryHTML += '<strong style="color: ' + (canLogin ? '#065f46' : '#991b1b') + ';">';
+                summaryHTML += canLogin ?
+                    '✅ Login EPscanT devrait fonctionner!' :
+                    '❌ Login EPscanT NE PEUT PAS fonctionner - Éléments manquants';
+                summaryHTML += '</strong></div>';
+
+                summaryContent.innerHTML = summaryHTML;
+
+                if (canLogin) {
+                    log('✅ DIAGNOSTIC RÉUSSI - Login possible', 'success');
+                } else {
+                    log('❌ DIAGNOSTIC ÉCHOUÉ - Corriger les erreurs', 'error');
+                }
+
+            } catch (error) {
+                log('❌ Erreur diagnostic: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        window.fixMissingLine = async function() {
+            log('🔧 Création Ligne E...', 'info');
+
+            try {
+                const lineId = 'Ligne E - Keur Massar - Garage Lat Dior';
+                const lineRef = ref(rtdb, `transport_lines/${lineId}`);
+
+                const existingSnap = await get(lineRef);
+                if (existingSnap.exists()) {
+                    log('✅ Ligne E existe déjà!', 'success');
+                    return;
+                }
+
+                const lineData = {
+                    name: 'Ligne E - Keur Massar',
+                    route: 'Keur Massar ⇄ Garage Lat Dior',
+                    price_weekly: 5000,
+                    price_monthly: 18000,
+                    price_quarterly: 50000,
+                    has_confort: false,
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                await set(lineRef, lineData);
+                log('✅ Ligne E créée avec succès!', 'success');
+                log('🔄 Relancer le diagnostic pour vérifier...', 'info');
+
+                setTimeout(() => {
+                    runFullDiagnostic();
+                }, 1000);
+
+            } catch (error) {
+                log('❌ Erreur création ligne: ' + error.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>
