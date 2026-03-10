@@ -22,11 +22,17 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
             throw new Error('Firestore non disponible');
         }
 
-        console.log('[SECTORISATION] 🔍 Recherche dans Firestore access_codes...');
+        const firestorePath = `access_codes/${codeStr}`;
+        console.log('[SECTORISATION] 🔍 Recherche dans Firestore...');
+        console.log('[SECTORISATION] 📍 Chemin Firestore:', firestorePath);
+        console.log('[SECTORISATION] 📍 Collection: access_codes');
+        console.log('[SECTORISATION] 📍 Document ID:', codeStr);
 
         const { doc: fsDoc, getDoc: fsGetDoc } = window.firebaseFirestore;
         const accessCodeRef = fsDoc(firestore, 'access_codes', codeStr);
+        console.log('[SECTORISATION] 🔧 Tentative getDoc()...');
         const accessCodeSnap = await fsGetDoc(accessCodeRef);
+        console.log('[SECTORISATION] 📥 Réponse Firestore reçue, exists():', accessCodeSnap.exists());
 
         if (accessCodeSnap.exists()) {
             accessData = accessCodeSnap.data();
@@ -51,14 +57,26 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
         }
     } catch (firestoreError) {
         console.error('[SECTORISATION] ❌ Erreur Firestore (tentative fallback):', firestoreError);
+        console.error('[SECTORISATION] 📋 Détails erreur Firestore:', {
+            code: firestoreError.code,
+            message: firestoreError.message,
+            name: firestoreError.name
+        });
     }
 
     if (!vehicleId && rtdb) {
+        const fallbackPath = `fleet_indices/codes/${codeStr}`;
         console.log('[SECTORISATION] 🔄 FALLBACK: Recherche dans Realtime Database...');
+        console.log('[SECTORISATION] 📍 Chemin exact:', fallbackPath);
+        console.log('[SECTORISATION] 📍 Code normalisé:', codeStr);
         try {
             const { ref: dbRef, get: rtdbGet } = window.firebaseDatabase;
-            const indexRef = dbRef(rtdb, `fleet_indices/codes/${codeStr}`);
+            console.log('[SECTORISATION] 🔧 Création référence Firebase...');
+            const indexRef = dbRef(rtdb, fallbackPath);
+            console.log('[SECTORISATION] 🔧 Référence créée:', indexRef.toString());
+            console.log('[SECTORISATION] 🔍 Tentative de lecture...');
             const indexSnap = await rtdbGet(indexRef);
+            console.log('[SECTORISATION] 📥 Réponse reçue, exists():', indexSnap.exists());
 
             if (indexSnap.exists()) {
                 const indexData = indexSnap.val();
@@ -87,6 +105,15 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
             }
         } catch (rtdbError) {
             console.error('[SECTORISATION] ❌ Erreur fallback Realtime DB:', rtdbError);
+            console.error('[SECTORISATION] 📋 Détails erreur:', {
+                code: rtdbError.code,
+                message: rtdbError.message,
+                path: fallbackPath
+            });
+            if (rtdbError.code === 'PERMISSION_DENIED') {
+                console.error('[SECTORISATION] 🔒 PERMISSION DENIED sur:', fallbackPath);
+                console.error('[SECTORISATION] 💡 Vérifiez les règles Realtime Database pour ce chemin');
+            }
             return { success: false, error: 'Code d\'accès invalide' };
         }
     }

@@ -138,6 +138,17 @@
       }
     },
 
+    "fleet_indices": {
+      "codes": {
+        ".read": true,
+        ".indexOn": ["isActive", "vehicleId"],
+        "$codeId": {
+          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".validate": "newData.hasChildren(['vehicleId', 'isActive']) && newData.child('vehicleId').isString()"
+        }
+      }
+    },
+
     "transport_lines": {
       ".read": true,
       "$lineId": {
@@ -257,6 +268,27 @@
         "$subscriptionId": {
           ".write": true,
           ".validate": "newData.hasChildren(['count', 'lastScanTime', 'updatedAt'])"
+        }
+      }
+    },
+
+    "ops": {
+      "transport": {
+        "vehicles": {
+          ".read": true,
+          ".indexOn": ["license_plate", "line_id", "isActive"],
+          "$vehicleId": {
+            ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+          }
+        },
+        "lines": {
+          ".read": true,
+          "$lineId": {
+            ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+            "stats": {
+              ".write": true
+            }
+          }
         }
       }
     },
