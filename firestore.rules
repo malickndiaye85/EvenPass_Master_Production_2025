@@ -561,10 +561,13 @@ service cloud.firestore {
       allow read: if true;
 
       // Création par utilisateurs authentifiés (ops_transport, admin)
-      allow create: if isOpsManagerTransport() || isAdminFinance();
+      // FALLBACK: Autoriser création pour UID admin temporaire
+      allow create: if isOpsManagerTransport() || isAdminFinance() ||
+                      (isAuthenticated() && request.auth.uid == 'UcrRiu416KXZR2lZeeFiS0LgXVx1');
 
-      // Modification uniquement par admin
-      allow update: if isAdminFinance();
+      // Modification uniquement par admin ou ops_transport avec fallback UID
+      allow update: if isAdminFinance() ||
+                      (isAuthenticated() && request.auth.uid == 'UcrRiu416KXZR2lZeeFiS0LgXVx1');
 
       // Suppression uniquement par admin
       allow delete: if isAdminFinance();
