@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIX AUTO - Code 898561</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #000 0%, #1a1a2e 100%);
+            color: #0F0;
+            padding: 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #0EA5E9;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+            font-size: 28px;
+        }
+
+        .section {
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #0F0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        h2 {
+            color: #0EA5E9;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+            white-space: pre-wrap;
+            border-left: 4px solid #0EA5E9;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .success {
+            color: #0F0;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .error {
+            color: #F00;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        .warning {
+            color: #FF0;
+            text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+        }
+
+        .info {
+            color: #0EA5E9;
+        }
+
+        .status-box {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: rgba(255, 255, 0, 0.1);
+            border: 2px solid #FF0;
+        }
+
+        .status-success {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #0F0;
+        }
+
+        .status-error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #F00;
+        }
+
+        .progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0EA5E9, #10B981);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 FIX AUTOMATIQUE - CODE 898561</h1>
+
+        <div class="section">
+            <h2>🎯 Mission</h2>
+            <p>Ce script va automatiquement :</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>✅ Chercher le véhicule avec le code 898561 dans fleet_vehicles</li>
+                <li>✅ Créer/Mettre à jour l'entrée dans Firestore access_codes/898561</li>
+                <li>✅ Créer/Mettre à jour l'index dans Realtime DB fleet_indices/codes/898561</li>
+                <li>✅ Créer/Mettre à jour le véhicule dans ops/transport/vehicles/{id}</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Lancement</h2>
+            <button id="start-btn" onclick="autoFix()">🔧 LANCER LE FIX AUTOMATIQUE</button>
+            <button onclick="location.reload()" style="background: #555;">🔄 Réinitialiser</button>
+        </div>
+
+        <div class="section">
+            <h2>📊 Progression</h2>
+            <div class="progress">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="status" class="status-box status-pending">
+                ⏳ En attente...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Logs Détaillés</h2>
+            <pre id="console-logs">Prêt à démarrer...</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        let logs = [];
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '📝';
+            logs.push(`[${timestamp}] ${prefix} ${message}`);
+            document.getElementById('console-logs').textContent = logs.join('\n');
+            document.getElementById('console-logs').scrollTop = document.getElementById('console-logs').scrollHeight;
+        }
+
+        function setProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function setStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status-box status-' + type;
+            statusDiv.textContent = message;
+        }
+
+        window.autoFix = async function() {
+            const btn = document.getElementById('start-btn');
+            btn.disabled = true;
+
+            logs = [];
+            setProgress(0);
+            setStatus('🔍 Démarrage du fix...', 'pending');
+            addLog('🚀 DÉMARRAGE DU FIX AUTOMATIQUE CODE 898561', 'info');
+
+            try {
+                // ÉTAPE 1: Recherche du véhicule
+                setProgress(10);
+                addLog('🔍 Recherche du véhicule avec code 898561...', 'info');
+
+                const fleetRef = dbRef(rtdb, 'fleet_vehicles');
+                const fleetSnap = await rtdbGet(fleetRef);
+
+                let vehicleId = null;
+                let vehicleData = null;
+
+                if (fleetSnap.exists()) {
+                    const vehicles = fleetSnap.val();
+                    for (const [id, data] of Object.entries(vehicles)) {
+                        if (data.access_code === '898561' || data.epscanv_pin === '898561') {
+                            vehicleId = id;
+                            vehicleData = data;
+                            addLog(`✅ Véhicule trouvé: ${id}`, 'success');
+                            addLog(`   Plaque: ${data.license_plate}`, 'info');
+                            addLog(`   Numéro: ${data.vehicle_number}`, 'info');
+                            break;
+                        }
+                    }
+                }
+
+                if (!vehicleId) {
+                    throw new Error('Aucun véhicule trouvé avec le code 898561 dans fleet_vehicles');
+                }
+
+                setProgress(25);
+
+                // ÉTAPE 2: Firestore access_codes
+                setProgress(30);
+                addLog('📝 Écriture Firestore access_codes/898561...', 'info');
+
+                const accessCodeDoc = doc(firestore, 'access_codes', '898561');
+                const firestorePayload = {
+                    code: '898561',
+                    type: 'vehicle',
+                    vehicleId: vehicleId,
+                    vehiclePlate: vehicleData.license_plate || 'N/A',
+                    isActive: true,
+                    createdBy: 'AUTO_FIX_SCRIPT',
+                    createdAt: new Date().toISOString(),
+                    staffName: `Véhicule ${vehicleData.vehicle_number || 'N/A'}`,
+                    usageCount: 0,
+                    fixedAt: new Date().toISOString()
+                };
+
+                await setDoc(accessCodeDoc, firestorePayload);
+                addLog('✅ Firestore access_codes/898561 créé avec succès', 'success');
+                setProgress(50);
+
+                // ÉTAPE 3: Realtime DB fleet_indices
+                setProgress(55);
+                addLog('📝 Écriture Realtime DB fleet_indices/codes/898561...', 'info');
+
+                const indexRef = dbRef(rtdb, 'fleet_indices/codes/898561');
+                const indexPayload = {
+                    vehicleId: vehicleId,
+                    vehiclePlate: vehicleData.license_plate || 'N/A',
+                    isActive: true,
+                    createdAt: new Date().toISOString(),
+                    createdBy: 'AUTO_FIX_SCRIPT',
+                    usageCount: 0,
+                    fixedAt: new Date().toISOString()
+                };
+
+                await rtdbSet(indexRef, indexPayload);
+                addLog('✅ Realtime DB fleet_indices/codes/898561 créé avec succès', 'success');
+                setProgress(75);
+
+                // ÉTAPE 4: Realtime DB ops/transport/vehicles
+                setProgress(80);
+                addLog('📝 Écriture Realtime DB ops/transport/vehicles...', 'info');
+
+                const opsVehicleRef = dbRef(rtdb, `ops/transport/vehicles/${vehicleId}`);
+                const opsPayload = {
+                    access_code: '898561',
+                    license_plate: vehicleData.license_plate || 'N/A',
+                    driver_name: vehicleData.driver_name || 'N/A',
+                    vehicle_number: vehicleData.vehicle_number || 'N/A',
+                    line_id: vehicleData.route || 'N/A',
+                    isActive: true,
+                    createdAt: new Date().toISOString(),
+                    fixedAt: new Date().toISOString()
+                };
+
+                await rtdbSet(opsVehicleRef, opsPayload);
+                addLog('✅ Realtime DB ops/transport/vehicles créé avec succès', 'success');
+                setProgress(100);
+
+                // SUCCÈS FINAL
+                addLog('', 'info');
+                addLog('🎉 FIX TERMINÉ AVEC SUCCÈS !', 'success');
+                addLog('', 'info');
+                addLog('✅ Firestore: access_codes/898561', 'success');
+                addLog('✅ Realtime DB: fleet_indices/codes/898561', 'success');
+                addLog(`✅ Realtime DB: ops/transport/vehicles/${vehicleId}`, 'success');
+                addLog('', 'info');
+                addLog('Le véhicule peut maintenant se connecter à EPscanT avec le code 898561', 'success');
+
+                setStatus('✅ FIX RÉUSSI ! Le code 898561 est maintenant opérationnel.', 'success');
+
+                alert(`✅ FIX RÉUSSI !\n\nLe code 898561 est maintenant enregistré dans:\n\n✅ Firestore: access_codes/898561\n✅ Realtime DB: fleet_indices/codes/898561\n✅ Realtime DB: ops/transport/vehicles/${vehicleId}\n\nLe véhicule peut se connecter à EPscanT.`);
+
+            } catch (error) {
+                addLog('', 'error');
+                addLog(`❌ ERREUR: ${error.message}`, 'error');
+                addLog(`Code: ${error.code || 'UNKNOWN'}`, 'error');
+                setStatus(`❌ ÉCHEC: ${error.message}`, 'error');
+                setProgress(0);
+
+                alert(`❌ ÉCHEC DU FIX\n\nErreur: ${error.message}\nCode: ${error.code || 'UNKNOWN'}\n\nVérifiez les logs pour plus de détails.`);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        addLog('✅ Firebase initialisé et prêt', 'success');
+        setStatus('✅ Prêt - Cliquez sur "LANCER LE FIX AUTOMATIQUE"', 'success');
+    </script>
+</body>
+</html>

@@ -422,6 +422,88 @@ const AdminOpsTransportPage: React.FC = () => {
     }
   };
 
+  const handleReEnrollVehicle = async (vehicle: FleetVehicle) => {
+    console.log('🔄 [RE-ENROLL] Démarrage ré-enrôlement forcé');
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert('❌ Session expirée. Reconnectez-vous.');
+      return;
+    }
+
+    const authUID = currentUser.uid;
+    const accessCode = vehicle.access_code || vehicle.epscanv_pin;
+
+    if (!accessCode) {
+      alert('❌ Aucun code d\'accès trouvé pour ce véhicule !');
+      return;
+    }
+
+    const confirmed = confirm(`🔄 RÉ-ENRÔLEMENT FORCÉ\n\nVéhicule: ${vehicle.license_plate}\nCode: ${accessCode}\n\nCette action va FORCER l'écriture du code dans:\n• Firestore: access_codes/${accessCode}\n• Realtime DB: fleet_indices/codes/${accessCode}\n• Realtime DB: ops/transport/vehicles/${vehicle.id}\n\nContinuer ?`);
+
+    if (!confirmed) return;
+
+    const loadingToastId = showToast('loading', '🔄 Ré-enrôlement en cours...');
+
+    try {
+      // 1. Firestore access_codes
+      console.log('📝 [RE-ENROLL] Écriture Firestore access_codes...');
+      const accessCodeDoc = doc(firestore, 'access_codes', accessCode);
+      await setDoc(accessCodeDoc, {
+        code: accessCode,
+        type: 'vehicle',
+        vehicleId: vehicle.id,
+        vehiclePlate: vehicle.license_plate || 'N/A',
+        isActive: true,
+        createdBy: authUID,
+        createdAt: new Date().toISOString(),
+        staffName: `Véhicule ${vehicle.vehicle_number || 'N/A'}`,
+        usageCount: 0,
+        reEnrolledAt: new Date().toISOString()
+      });
+      console.log('✅ [RE-ENROLL] Firestore OK');
+
+      // 2. Realtime DB fleet_indices
+      console.log('📝 [RE-ENROLL] Écriture Realtime DB fleet_indices...');
+      const pinIndexRef = ref(db, `fleet_indices/codes/${accessCode}`);
+      await set(pinIndexRef, {
+        vehicleId: vehicle.id,
+        vehiclePlate: vehicle.license_plate || 'N/A',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        createdBy: authUID,
+        usageCount: 0,
+        reEnrolledAt: new Date().toISOString()
+      });
+      console.log('✅ [RE-ENROLL] Realtime DB index OK');
+
+      // 3. Realtime DB ops/transport/vehicles
+      console.log('📝 [RE-ENROLL] Écriture Realtime DB ops/transport/vehicles...');
+      const opsVehicleRef = ref(db, `ops/transport/vehicles/${vehicle.id}`);
+      await set(opsVehicleRef, {
+        access_code: accessCode,
+        license_plate: vehicle.license_plate || 'N/A',
+        driver_name: vehicle.driver_name || 'N/A',
+        vehicle_number: vehicle.vehicle_number || 'N/A',
+        line_id: vehicle.route || 'N/A',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        reEnrolledAt: new Date().toISOString()
+      });
+      console.log('✅ [RE-ENROLL] Realtime DB ops/transport OK');
+
+      hideToast(loadingToastId);
+      showToast('success', `✅ Véhicule ${accessCode} ré-enrôlé avec succès !`, 5000);
+
+      alert(`✅ RÉ-ENRÔLEMENT RÉUSSI\n\nCode: ${accessCode}\n\n✅ Firestore: access_codes/${accessCode}\n✅ Realtime DB: fleet_indices/codes/${accessCode}\n✅ Realtime DB: ops/transport/vehicles/${vehicle.id}\n\nLe véhicule peut maintenant se connecter à EPscanT.`);
+
+    } catch (error: any) {
+      console.error('❌ [RE-ENROLL] Échec:', error);
+      hideToast(loadingToastId);
+      showToast('error', `❌ Échec ré-enrôlement: ${error.message}`, 8000);
+      alert(`❌ ÉCHEC RÉ-ENRÔLEMENT\n\nErreur: ${error.code || 'UNKNOWN'}\nMessage: ${error.message}\n\nVérifiez les permissions Firebase.`);
+    }
+  };
+
   const handleEnrollVehicle = async (vehicleData: Partial<FleetVehicle>) => {
     console.log('🚀 [ENROLL] Démarrage enrôlement véhicule');
 
@@ -524,6 +606,8 @@ const AdminOpsTransportPage: React.FC = () => {
         console.log('✅ [ENROLL] Index PIN créé dans Realtime DB:', `fleet_indices/codes/${accessCode}`);
       } catch (indexError: any) {
         console.warn('⚠️ [ENROLL] Impossible de créer l\'index PIN (non bloquant):', indexError);
+        alert(`⚠️ ALERTE - REALTIME DB INDEX\n\nL'index PIN dans Realtime DB a échoué !\n\nChemin: fleet_indices/codes/${accessCode}\n\nErreur: ${indexError.code || 'UNKNOWN'}\nMessage: ${indexError.message}\n\n⚠️ Le fallback de recherche ne fonctionnera PAS.\n\nVérifiez les règles Realtime Database.`);
+        showToast('error', `⚠️ Index Realtime DB échoué pour ${accessCode}`, 8000);
       }
 
       // 8. DOUBLE ÉCRITURE VERS transport/vehicles pour EPscanT
@@ -569,6 +653,8 @@ const AdminOpsTransportPage: React.FC = () => {
       } catch (firestoreError: any) {
         console.error('❌ [ENROLL] Échec synchro Firestore access_codes:', firestoreError);
         console.error('⚠️ EPscanT ne pourra pas authentifier ce véhicule !');
+        alert(`🚨 ALERTE CRITIQUE - FIRESTORE ACCESS_CODES\n\nL'écriture vers Firestore a ÉCHOUÉ !\n\nCode: ${accessCode}\nVehicle ID: ${vehicleId}\n\nErreur: ${firestoreError.code || 'UNKNOWN'}\nMessage: ${firestoreError.message}\n\n⚠️ EPscanT ne pourra PAS authentifier ce véhicule avec le code ${accessCode}.\n\nVérifiez les règles Firestore ou utilisez le bouton "Ré-enrôler" ci-dessous.`);
+        showToast('error', `🚨 Échec Firestore ! Code ${accessCode} non enregistré`, 10000);
       }
 
       console.log('🎉 [ENROLL] SUCCÈS TOTAL - PIN stocké + Synchro EPscanT + Firestore effectuée');
@@ -1061,6 +1147,13 @@ const AdminOpsTransportPage: React.FC = () => {
                                 <span>Localiser</span>
                               </button>
                               <div className="border-t border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => handleReEnrollVehicle(vehicle)}
+                                className="w-full px-4 py-2 text-left text-blue-400 hover:bg-blue-900/20 transition-colors flex items-center space-x-2 text-sm"
+                              >
+                                <Database size={14} className="text-blue-400" />
+                                <span>🔄 Ré-enrôler Code</span>
+                              </button>
                               <button
                                 onClick={() => handleDeleteVehicle(vehicle)}
                                 className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-900/20 transition-colors flex items-center space-x-2 text-sm"

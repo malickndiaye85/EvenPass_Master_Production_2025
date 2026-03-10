@@ -1,0 +1,155 @@
+═══════════════════════════════════════════════════════════════════════════
+  🔧 GUIDE RAPIDE - FIX CODE 898561
+═══════════════════════════════════════════════════════════════════════════
+
+SITUATION:
+----------
+Le code 898561 n'existe PAS dans Firestore ni Realtime Database.
+Les véhicules NE PEUVENT PAS se connecter à EPscanT.
+
+SOLUTIONS DISPONIBLES (3 options):
+-----------------------------------
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OPTION 1: RE-ENROLEMENT INTERFACE ADMIN (⭐ RECOMMANDÉ)                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Ouvrir: https://evenpasssenegal.web.app/admin/ops/transport
+2. Se connecter avec compte admin
+3. Trouver le véhicule avec code 898561 dans la liste
+4. Cliquer sur bouton "Actions" (à droite)
+5. Sélectionner "🔄 Ré-enrôler Code"
+6. Confirmer dans la popup
+7. Vérifier message de succès
+
+✅ Avantages:
+   - Interface visuelle
+   - Confirmation avant action
+   - Message de succès détaillé
+   - Peut être fait par n'importe quel admin
+
+⏱️ Durée: ~10 secondes
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OPTION 2: SCRIPT FIX AUTOMATIQUE                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Ouvrir: https://evenpasssenegal.web.app/fix-code-898561-auto.html
+2. Cliquer sur "🔧 LANCER LE FIX AUTOMATIQUE"
+3. Attendre progression 0% → 100%
+4. Vérifier message "✅ FIX RÉUSSI !"
+
+✅ Avantages:
+   - Automatique (un seul clic)
+   - Logs détaillés en temps réel
+   - Barre de progression visuelle
+   - Pas besoin de compte admin
+
+⏱️ Durée: ~15 secondes
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OPTION 3: MANUEL VIA CONSOLE FIREBASE (si 1 et 2 échouent)            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+A. Trouver le vehicleId:
+   1. Console Firebase → Realtime Database
+   2. Chercher dans fleet_vehicles/
+   3. Trouver véhicule avec access_code = "898561"
+   4. Noter le vehicleId (clé du véhicule)
+
+B. Créer access_codes dans Firestore:
+   1. Console Firebase → Firestore Database
+   2. Collection: access_codes
+   3. Document ID: 898561
+   4. Champs:
+      - code: "898561"
+      - type: "vehicle"
+      - vehicleId: "{vehicleId_noté}"
+      - vehiclePlate: "{plaque_du_véhicule}"
+      - isActive: true
+      - createdBy: "MANUAL_FIX"
+      - createdAt: "{timestamp_actuel}"
+      - staffName: "Véhicule {numéro}"
+      - usageCount: 0
+
+C. Créer index dans Realtime DB:
+   1. Realtime Database
+   2. Chemin: fleet_indices/codes/898561
+   3. Données:
+      {
+        "vehicleId": "{vehicleId_noté}",
+        "vehiclePlate": "{plaque}",
+        "isActive": true,
+        "createdAt": "{timestamp}",
+        "createdBy": "MANUAL_FIX",
+        "usageCount": 0
+      }
+
+D. Créer véhicule dans ops/transport:
+   1. Realtime Database
+   2. Chemin: ops/transport/vehicles/{vehicleId_noté}
+   3. Données:
+      {
+        "access_code": "898561",
+        "license_plate": "{plaque}",
+        "driver_name": "{nom_chauffeur}",
+        "vehicle_number": "{numéro}",
+        "line_id": "{ligne}",
+        "isActive": true,
+        "createdAt": "{timestamp}"
+      }
+
+⏱️ Durée: ~5 minutes
+
+VÉRIFICATION POST-FIX:
+----------------------
+
+1. Test Diagnostic:
+   → Ouvrir: /debug-firestore-codes.html
+   → Cliquer "🔍 Chercher 898561"
+   → Résultat attendu: ✅ Document trouvé
+
+2. Test Authentification:
+   → Ouvrir: /epscant-login.html
+   → Saisir code: 898561
+   → Cliquer "Se Connecter"
+   → Résultat attendu: ✅ Redirection vers /epscant-transport.html
+
+3. Vérification Console:
+   Console doit afficher:
+   ✅ [SECTORISATION] Code trouvé dans Firestore
+   ✅ [SECTORISATION] Véhicule ID: {vehicleId}
+   ✅ Authentification réussie
+
+DÉPANNAGE:
+----------
+
+Q: Le bouton "Ré-enrôler" n'apparaît pas
+A: Vider le cache du navigateur (Ctrl+Shift+R)
+
+Q: Message "Permission Denied"
+A: Vérifier que les règles Firebase sont déployées
+   → firebase deploy --only database
+
+Q: Le script automatique échoue
+A: Vérifier la console JavaScript (F12)
+   → Chercher erreurs Firebase
+   → Vérifier permissions Firestore
+
+Q: Code toujours introuvable après fix
+A: Attendre 10 secondes (propagation Firebase)
+   → Rafraîchir la page
+   → Vérifier dans Console Firebase
+
+NOTES IMPORTANTES:
+------------------
+
+⚠️ Le véhicule DOIT exister dans fleet_vehicles/ avec access_code = "898561"
+⚠️ Si le véhicule n'existe PAS, créer d'abord via /admin/ops/transport
+⚠️ Un seul des 3 fix suffit (pas besoin de faire les 3)
+⚠️ Privilégier Option 1 ou 2 (plus rapide et sûr)
+
+═══════════════════════════════════════════════════════════════════════════
+Date: 2026-03-10
+Version: 1.0
+═══════════════════════════════════════════════════════════════════════════
