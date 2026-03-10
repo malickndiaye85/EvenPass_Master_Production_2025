@@ -2045,7 +2045,10 @@
         });
 
         async function onScanSuccess(decodedText) {
-            if (isProcessing) return;
+            if (isProcessing) {
+                console.log('[EPscanT] ⏸️ SCAN IGNORÉ - Traitement en cours...');
+                return;
+            }
             isProcessing = true;
 
             console.log('[EPscanT] 📱 Scan détecté:', decodedText);
@@ -2132,6 +2135,10 @@
                     window.EPscanTAlerts.playErrorAlert();
 
                     showResult('error', 'PASS INVALIDE', `Code non reconnu: ${decodedText.substring(0, 30)}...`);
+
+                    // Débloquer IMMÉDIATEMENT
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (subscription not found)');
                     return;
                 }
 
@@ -2157,6 +2164,10 @@
                     showErrorCard('invalid', validationResult.message, subscription, {
                         reason: validationResult.message
                     });
+
+                    // Débloquer IMMÉDIATEMENT
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (not valid)');
                     return;
                 }
 
@@ -2170,6 +2181,10 @@
                     window.EPscanTAlerts.playWarningAlert();
 
                     showLineUnauthorizedCard(subscription, validationResult);
+
+                    // Débloquer IMMÉDIATEMENT
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (not authorized)');
                     return;
                 }
 
@@ -2198,6 +2213,10 @@
                     showWarningCard('quota_exceeded', 'LIMITE ATTEINTE', subscription, {
                         scansToday: scansToday
                     });
+
+                    // Débloquer IMMÉDIATEMENT
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (quota exceeded)');
                     return;
                 }
 
@@ -2215,6 +2234,10 @@
                         showWarningCard('too_soon', 'SCAN TROP RAPPROCHÉ', subscription, {
                             lastScanTime: lastScanTime
                         });
+
+                        // Débloquer IMMÉDIATEMENT
+                        isProcessing = false;
+                        console.log('[EPscanT] 🔓 Scanner débloqué (too soon)');
                         return;
                     }
                 }
@@ -2275,9 +2298,21 @@
 
                 showPassCard(subscription, scansToday + 1);
 
+                // Débloquer IMMÉDIATEMENT
+                isProcessing = false;
+                console.log('[EPscanT] 🔓 Scanner débloqué (success)');
+
             } catch (error) {
                 console.error('[EPscanT] ❌ Erreur scan:', error);
                 showResult('error', 'ERREUR SYSTÈME', 'Impossible de vérifier ce QR code');
+                isProcessing = false;
+                console.log('[EPscanT] 🔓 Scanner débloqué (erreur)');
+            } finally {
+                // TOUJOURS débloquer le scanner après 1 seconde
+                setTimeout(() => {
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (finally)');
+                }, 1000);
             }
         }
 
