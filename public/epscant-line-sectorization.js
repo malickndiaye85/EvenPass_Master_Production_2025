@@ -9,35 +9,92 @@ const SESSION_KEY = 'epscant_line_session';
  * Authentifie un contrôleur avec son code d'accès et établit la ligne active
  */
 async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
-    console.log('[SECTORISATION] 🔐 Authentification avec code:', accessCode);
+    const codeStr = String(accessCode).trim();
+    console.log('[SECTORISATION] 🔐 Authentification avec code:', codeStr);
+
+    let vehicleId = null;
+    let vehiclePlate = null;
+    let accessData = null;
 
     try {
-        // 1. VÉRIFIER LE CODE D'ACCÈS DANS FIRESTORE
+        if (!firestore) {
+            console.error('[SECTORISATION] ❌ Firestore non initialisé');
+            throw new Error('Firestore non disponible');
+        }
+
+        console.log('[SECTORISATION] 🔍 Recherche dans Firestore access_codes...');
+
         const { doc: fsDoc, getDoc: fsGetDoc } = window.firebaseFirestore;
-        const accessCodeRef = fsDoc(firestore, 'access_codes', accessCode);
+        const accessCodeRef = fsDoc(firestore, 'access_codes', codeStr);
         const accessCodeSnap = await fsGetDoc(accessCodeRef);
 
-        if (!accessCodeSnap.exists()) {
-            console.error('[SECTORISATION] ❌ Code d\'accès invalide');
+        if (accessCodeSnap.exists()) {
+            accessData = accessCodeSnap.data();
+            console.log('[SECTORISATION] ✅ Code trouvé dans Firestore:', accessData);
+
+            if (!accessData.isActive) {
+                console.error('[SECTORISATION] ❌ Code d\'accès désactivé');
+                return { success: false, error: 'Code d\'accès désactivé' };
+            }
+
+            if (accessData.type !== 'vehicle') {
+                console.error('[SECTORISATION] ❌ Ce code n\'est pas lié à un véhicule');
+                return { success: false, error: 'Ce code n\'est pas un code véhicule' };
+            }
+
+            vehicleId = accessData.vehicleId;
+            vehiclePlate = accessData.vehiclePlate;
+
+            console.log('[SECTORISATION] ✅ Code valide pour véhicule:', vehiclePlate);
+        } else {
+            console.warn('[SECTORISATION] ⚠️ Code non trouvé dans Firestore, tentative fallback Realtime DB...');
+        }
+    } catch (firestoreError) {
+        console.error('[SECTORISATION] ❌ Erreur Firestore (tentative fallback):', firestoreError);
+    }
+
+    if (!vehicleId && rtdb) {
+        console.log('[SECTORISATION] 🔄 FALLBACK: Recherche dans Realtime Database...');
+        try {
+            const { ref: dbRef, get: rtdbGet } = window.firebaseDatabase;
+            const indexRef = dbRef(rtdb, `fleet_indices/codes/${codeStr}`);
+            const indexSnap = await rtdbGet(indexRef);
+
+            if (indexSnap.exists()) {
+                const indexData = indexSnap.val();
+                console.log('[SECTORISATION] ✅ Code trouvé dans fleet_indices:', indexData);
+
+                if (!indexData.isActive) {
+                    console.error('[SECTORISATION] ❌ Code désactivé');
+                    return { success: false, error: 'Code d\'accès désactivé' };
+                }
+
+                vehicleId = indexData.vehicleId;
+                vehiclePlate = indexData.vehiclePlate || 'N/A';
+
+                accessData = {
+                    vehicleId,
+                    vehiclePlate,
+                    staffName: `Véhicule ${vehiclePlate}`,
+                    isActive: true,
+                    type: 'vehicle'
+                };
+
+                console.log('[SECTORISATION] ✅ FALLBACK réussi - Code valide pour véhicule:', vehiclePlate);
+            } else {
+                console.error('[SECTORISATION] ❌ Code invalide (absent de Firestore et Realtime DB)');
+                return { success: false, error: 'Code d\'accès invalide' };
+            }
+        } catch (rtdbError) {
+            console.error('[SECTORISATION] ❌ Erreur fallback Realtime DB:', rtdbError);
             return { success: false, error: 'Code d\'accès invalide' };
         }
+    }
 
-        const accessData = accessCodeSnap.data();
-
-        if (!accessData.isActive) {
-            console.error('[SECTORISATION] ❌ Code d\'accès désactivé');
-            return { success: false, error: 'Code d\'accès désactivé' };
-        }
-
-        if (accessData.type !== 'vehicle') {
-            console.error('[SECTORISATION] ❌ Ce code n\'est pas lié à un véhicule');
-            return { success: false, error: 'Ce code n\'est pas un code véhicule' };
-        }
-
-        const vehicleId = accessData.vehicleId;
-        const vehiclePlate = accessData.vehiclePlate;
-
-        console.log('[SECTORISATION] ✅ Code valide pour véhicule:', vehiclePlate);
+    if (!vehicleId) {
+        console.error('[SECTORISATION] ❌ Impossible de valider le code');
+        return { success: false, error: 'Code d\'accès invalide' };
+    }
 
         // 2. RÉCUPÉRER LE VÉHICULE ET SA LIGNE DANS FIREBASE REALTIME DATABASE
         const { ref: dbRef, get: rtdbGet } = window.firebaseDatabase;

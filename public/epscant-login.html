@@ -450,13 +450,24 @@
             appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
         };
 
+        console.log('[EPscanT Login] 🔧 Initialisation Firebase...');
+        console.log('[EPscanT Login] 📋 Firebase Config:', {
+            projectId: firebaseConfig.projectId,
+            authDomain: firebaseConfig.authDomain
+        });
+
         const app = initializeApp(firebaseConfig);
         const rtdb = getDatabase(app);
         const firestore = getFirestore(app);
 
-        // Exposer les modules Firebase pour le service de sectorisation
+        console.log('[EPscanT Login] ✅ Firebase App initialisé');
+        console.log('[EPscanT Login] ✅ Realtime Database:', rtdb ? 'OK' : 'ERREUR');
+        console.log('[EPscanT Login] ✅ Firestore:', firestore ? 'OK' : 'ERREUR');
+
         window.firebaseFirestore = { doc, getDoc };
         window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update };
+
+        console.log('[EPscanT Login] ✅ Modules Firebase exposés à window');
 
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -464,20 +475,20 @@
 
         (async function testFirebaseConnection() {
             try {
-                console.log('[EPscanT Login] Testing Firebase connection...');
+                console.log('[EPscanT Login] 🔍 Test connexion Firebase...');
                 const testRef = dbRef(rtdb, '_connection_test/test');
                 await rtdbGet(testRef);
                 isFirebaseConnected = true;
                 statusDot.classList.remove('disconnected');
                 statusDot.classList.add('connected');
                 statusText.textContent = 'Connecté';
-                console.log('[EPscanT Login] ✅ Firebase connected');
+                console.log('[EPscanT Login] ✅ Firebase connecté');
             } catch (error) {
                 isFirebaseConnected = false;
                 statusDot.classList.remove('connected');
                 statusDot.classList.add('disconnected');
                 statusText.textContent = 'Hors ligne';
-                console.error('[EPscanT Login] ❌ Firebase connection failed:', error);
+                console.error('[EPscanT Login] ❌ Échec connexion Firebase:', error);
             }
         })();
 
@@ -520,15 +531,42 @@
         }
 
         async function authenticateVehicle(accessCode) {
-            console.log('[EPscanT Login] 🔐 Authentification avec code d\'accès:', accessCode);
+            console.log('[EPscanT Login] 🔐 Authentification avec code:', String(accessCode).trim());
+
+            if (!firestore) {
+                console.error('[EPscanT Login] ❌ Firestore non initialisé!');
+                return {
+                    success: false,
+                    error: 'Firestore non disponible'
+                };
+            }
+
+            if (!rtdb) {
+                console.error('[EPscanT Login] ❌ Realtime Database non initialisée!');
+                return {
+                    success: false,
+                    error: 'Realtime Database non disponible'
+                };
+            }
+
+            if (!window.LineSectorization) {
+                console.error('[EPscanT Login] ❌ Module LineSectorization non chargé!');
+                return {
+                    success: false,
+                    error: 'Module de sectorisation non chargé'
+                };
+            }
 
             try {
-                // UTILISER LE SERVICE DE SECTORISATION
+                console.log('[EPscanT Login] 📞 Appel LineSectorization.authenticateWithAccessCode...');
+
                 const result = await window.LineSectorization.authenticateWithAccessCode(
                     accessCode,
                     firestore,
                     rtdb
                 );
+
+                console.log('[EPscanT Login] 📥 Résultat reçu:', result);
 
                 if (!result.success) {
                     console.error('[EPscanT Login] ❌ Authentification échouée:', result.error);

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Code 898561</title>
+    <script src="/env-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0F0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #0F0;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #0EA5E9;
+            text-align: center;
+        }
+
+        .test-section {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .test-title {
+            font-size: 18px;
+            color: #0EA5E9;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .test-result {
+            font-size: 14px;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 3px solid #0F0;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .success {
+            color: #0F0;
+        }
+
+        .error {
+            color: #F00;
+            border-left-color: #F00;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .warning {
+            color: #FF0;
+            border-left-color: #FF0;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        button {
+            background: #0EA5E9;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #0284C7;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 TEST CODE 898561 - EPscanT</h1>
+
+        <div class="test-section">
+            <div class="test-title">1. Vérification Firebase Initialization</div>
+            <div id="firebase-init" class="test-result">En attente...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">2. Vérification Firestore access_codes/898561</div>
+            <div id="firestore-check" class="test-result">En attente...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">3. Vérification Realtime DB fleet_indices/codes/898561</div>
+            <div id="rtdb-check" class="test-result">En attente...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">4. Test Authentification Complète</div>
+            <button onclick="testAuthentication()">🧪 Tester Code 898561</button>
+            <div id="auth-test" class="test-result" style="display:none;">En cours...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">5. Logs Console</div>
+            <pre id="console-logs"></pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+            authDomain: window.__FIREBASE_CONFIG__?.authDomain || "evenpasssenegal.firebaseapp.com",
+            databaseURL: window.__FIREBASE_CONFIG__?.databaseURL || "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: window.__FIREBASE_CONFIG__?.projectId || "evenpasssenegal",
+            storageBucket: window.__FIREBASE_CONFIG__?.storageBucket || "evenpasssenegal.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_CONFIG__?.messagingSenderId || "882782977052",
+            appId: window.__FIREBASE_CONFIG__?.appId || "1:882782977052:web:1f2ea147010066017cf3d9"
+        };
+
+        let logs = [];
+        function addLog(message) {
+            logs.push(`[${new Date().toISOString().split('T')[1].split('.')[0]}] ${message}`);
+            document.getElementById('console-logs').textContent = logs.join('\n');
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        window.firebaseFirestore = { doc, getDoc };
+        window.firebaseDatabase = { ref: dbRef, get: rtdbGet };
+
+        const CODE_TO_TEST = '898561';
+
+        async function checkFirebaseInit() {
+            const resultDiv = document.getElementById('firebase-init');
+            try {
+                if (app && rtdb && firestore) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        ✅ Firebase App: Initialisé<br>
+                        ✅ Realtime Database: ${rtdb ? 'OK' : 'ERREUR'}<br>
+                        ✅ Firestore: ${firestore ? 'OK' : 'ERREUR'}
+                    `;
+                    addLog('✅ Firebase initialisé avec succès');
+                    return true;
+                } else {
+                    throw new Error('Firebase non initialisé');
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+                addLog(`❌ Erreur Firebase init: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function checkFirestoreCode() {
+            const resultDiv = document.getElementById('firestore-check');
+            try {
+                addLog(`🔍 Recherche dans Firestore: access_codes/${CODE_TO_TEST}`);
+                const accessCodeRef = doc(firestore, 'access_codes', CODE_TO_TEST);
+                const accessCodeSnap = await getDoc(accessCodeRef);
+
+                if (accessCodeSnap.exists()) {
+                    const data = accessCodeSnap.data();
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        ✅ Code trouvé dans Firestore<br>
+                        📋 Type: ${data.type}<br>
+                        🚗 Vehicle ID: ${data.vehicleId}<br>
+                        🚙 Plaque: ${data.vehiclePlate}<br>
+                        🟢 Active: ${data.isActive ? 'Oui' : 'Non'}
+                    `;
+                    addLog(`✅ Code trouvé dans Firestore: ${JSON.stringify(data, null, 2)}`);
+                    return data;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ Code non trouvé dans Firestore';
+                    addLog('❌ Code non trouvé dans Firestore');
+                    return null;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ Erreur Firestore:<br>${error.message}`;
+                addLog(`❌ Erreur Firestore: ${error.message}`);
+                return null;
+            }
+        }
+
+        async function checkRTDBCode() {
+            const resultDiv = document.getElementById('rtdb-check');
+            try {
+                addLog(`🔍 Recherche dans Realtime DB: fleet_indices/codes/${CODE_TO_TEST}`);
+                const indexRef = dbRef(rtdb, `fleet_indices/codes/${CODE_TO_TEST}`);
+                const indexSnap = await rtdbGet(indexRef);
+
+                if (indexSnap.exists()) {
+                    const data = indexSnap.val();
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        ✅ Code trouvé dans Realtime DB<br>
+                        🚗 Vehicle ID: ${data.vehicleId}<br>
+                        🚙 Plaque: ${data.vehiclePlate}<br>
+                        🟢 Active: ${data.isActive ? 'Oui' : 'Non'}
+                    `;
+                    addLog(`✅ Code trouvé dans Realtime DB: ${JSON.stringify(data, null, 2)}`);
+                    return data;
+                } else {
+                    resultDiv.className = 'test-result warning';
+                    resultDiv.textContent = '⚠️ Code non trouvé dans Realtime DB (non critique si Firestore OK)';
+                    addLog('⚠️ Code non trouvé dans Realtime DB');
+                    return null;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = `⚠️ Erreur Realtime DB:<br>${error.message}`;
+                addLog(`⚠️ Erreur Realtime DB: ${error.message}`);
+                return null;
+            }
+        }
+
+        window.testAuthentication = async function() {
+            const resultDiv = document.getElementById('auth-test');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result';
+            resultDiv.textContent = '🔄 Test en cours...';
+
+            addLog('🧪 Démarrage test authentification complète');
+
+            try {
+                const codeStr = String(CODE_TO_TEST).trim();
+                addLog(`📝 Code normalisé: "${codeStr}"`);
+
+                let vehicleId = null;
+                let vehiclePlate = null;
+
+                addLog('🔍 Tentative Firestore...');
+                const accessCodeRef = doc(firestore, 'access_codes', codeStr);
+                const accessCodeSnap = await getDoc(accessCodeRef);
+
+                if (accessCodeSnap.exists()) {
+                    const accessData = accessCodeSnap.data();
+                    addLog('✅ Code trouvé dans Firestore');
+
+                    if (!accessData.isActive) {
+                        throw new Error('Code désactivé');
+                    }
+
+                    if (accessData.type !== 'vehicle') {
+                        throw new Error('Code non véhicule');
+                    }
+
+                    vehicleId = accessData.vehicleId;
+                    vehiclePlate = accessData.vehiclePlate;
+                    addLog(`✅ Véhicule: ${vehiclePlate} (${vehicleId})`);
+                } else {
+                    addLog('⚠️ Code non trouvé dans Firestore, tentative fallback...');
+
+                    const indexRef = dbRef(rtdb, `fleet_indices/codes/${codeStr}`);
+                    const indexSnap = await rtdbGet(indexRef);
+
+                    if (indexSnap.exists()) {
+                        const indexData = indexSnap.val();
+                        vehicleId = indexData.vehicleId;
+                        vehiclePlate = indexData.vehiclePlate;
+                        addLog(`✅ FALLBACK réussi: ${vehiclePlate}`);
+                    } else {
+                        throw new Error('Code invalide (absent de Firestore et Realtime DB)');
+                    }
+                }
+
+                if (!vehicleId) {
+                    throw new Error('Impossible de récupérer le véhicule');
+                }
+
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    ✅ AUTHENTIFICATION RÉUSSIE<br>
+                    🚗 Vehicle ID: ${vehicleId}<br>
+                    🚙 Plaque: ${vehiclePlate}<br>
+                    <br>
+                    Le code ${CODE_TO_TEST} fonctionne correctement !
+                `;
+                addLog('✅✅✅ AUTHENTIFICATION COMPLÈTE RÉUSSIE ✅✅✅');
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ AUTHENTIFICATION ÉCHOUÉE<br>${error.message}`;
+                addLog(`❌ ÉCHEC: ${error.message}`);
+            }
+        };
+
+        (async function runTests() {
+            addLog('🚀 Démarrage des tests automatiques...');
+            await checkFirebaseInit();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await checkFirestoreCode();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await checkRTDBCode();
+            addLog('✅ Tests automatiques terminés. Cliquez sur le bouton pour tester l\'authentification complète.');
+        })();
+    </script>
+</body>
+</html>
