@@ -143,7 +143,7 @@
         ".read": true,
         ".indexOn": ["isActive", "vehicleId"],
         "$codeId": {
-          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth.uid === 'UcrRiu416KXZR2lZeeFiS0LgXVx1')",
           ".validate": "newData.hasChildren(['vehicleId', 'isActive']) && newData.child('vehicleId').isString()"
         }
       }
@@ -214,7 +214,7 @@
         ".read": true,
         ".indexOn": ["pin", "licensePlate", "isActive"],
         "$vehicleId": {
-          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('admins').child(auth.uid).child('role').val() === 'super_admin' || root.child('admins').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')",
+          ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('admins').child(auth.uid).child('role').val() === 'super_admin' || root.child('admins').child(auth.uid).child('role').val() === 'ops_transport' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth.uid === 'UcrRiu416KXZR2lZeeFiS0LgXVx1')",
           ".validate": "newData.hasChildren(['pin', 'driverName', 'licensePlate', 'isActive']) && newData.child('pin').isString() && newData.child('pin').val().length === 6"
         }
       },
@@ -278,7 +278,7 @@
           ".read": true,
           ".indexOn": ["license_plate", "line_id", "isActive"],
           "$vehicleId": {
-            ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3')"
+            ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth.uid === 'UcrRiu416KXZR2lZeeFiS0LgXVx1')"
           }
         },
         "lines": {
