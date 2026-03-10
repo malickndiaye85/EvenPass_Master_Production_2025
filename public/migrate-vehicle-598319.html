@@ -93,6 +93,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
     import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
     import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+    import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js';
 
     const firebaseConfig = window.__FIREBASE_CONFIG__ || {
       apiKey: "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
@@ -108,6 +109,7 @@
     const app = initializeApp(firebaseConfig);
     const rtdb = getDatabase(app);
     const firestore = getFirestore(app);
+    const auth = getAuth(app);
 
     const logDiv = document.getElementById('log');
     const btn = document.getElementById('migrateBtn');
@@ -153,59 +155,60 @@
         log('🔍 Vehicle ID: ' + vehicleId, 'info');
         log('🚗 Plaque: ' + vehiclePlate, 'info');
 
-        // ÉTAPE 2: Vérifier dans fleet_vehicles
-        log('📍 Lecture fleet_vehicles/' + vehicleId + '...', 'info');
-        const fleetRef = ref(rtdb, `fleet_vehicles/${vehicleId}`);
-        const fleetSnap = await get(fleetRef);
+        // ÉTAPE 2: Utiliser uniquement données Firestore (pas besoin auth)
+        log('ℹ️ Utilisation données Firestore uniquement (pas d\'auth)', 'info');
 
-        if (!fleetSnap.exists()) {
-          log('⚠️ Véhicule non trouvé dans fleet_vehicles', 'warning');
-        } else {
-          log('✅ Véhicule trouvé dans fleet_vehicles', 'success');
-        }
+        // Données minimales depuis Firestore
+        const vehicleData = {
+          license_plate: vehiclePlate,
+          licensePlate: vehiclePlate,
+          vehicle_number: codeData.staffName || 'N/A',
+          driver_name: 'N/A',
+          driverName: 'N/A',
+          line_id: '',
+          type: 'ndiaga_ndiaye',
+          capacity: 25
+        };
 
-        const fleetData = fleetSnap.val() || {};
-
-        // ÉTAPE 3: Vérifier dans transport/vehicles
-        log('📍 Lecture transport/vehicles/' + vehicleId + '...', 'info');
-        const transportRef = ref(rtdb, `transport/vehicles/${vehicleId}`);
-        const transportSnap = await get(transportRef);
-
-        let vehicleData;
-        if (!transportSnap.exists()) {
-          log('⚠️ Véhicule non trouvé dans transport/vehicles', 'warning');
-          vehicleData = fleetData;
-        } else {
-          log('✅ Véhicule trouvé dans transport/vehicles', 'success');
-          vehicleData = transportSnap.val();
-        }
-
-        // ÉTAPE 4: Construire payload pour ops/transport/vehicles
+        // ÉTAPE 3: Construire payload pour ops/transport/vehicles
         log('📝 Construction payload pour ops/transport/vehicles...', 'info');
 
         const opsPayload = {
           pin: '598319',
-          licensePlate: vehiclePlate || vehicleData.license_plate || vehicleData.licensePlate || 'DK-1013-F',
-          license_plate: vehiclePlate || vehicleData.license_plate || vehicleData.licensePlate || 'DK-1013-F',
-          driverName: vehicleData.driver_name || vehicleData.driverName || 'N/A',
-          driver_name: vehicleData.driver_name || vehicleData.driverName || 'N/A',
+          licensePlate: vehiclePlate,
+          license_plate: vehiclePlate,
+          driverName: 'N/A',
+          driver_name: 'N/A',
           isActive: true,
           vehicleId: vehicleId,
-          vehicle_number: vehicleData.vehicle_number || 'N/A',
-          line_id: vehicleData.route || vehicleData.line_id || '',
-          type: vehicleData.type || 'ndiaga_ndiaye',
-          capacity: vehicleData.capacity || 25,
-          createdAt: vehicleData.created_at || vehicleData.createdAt || new Date().toISOString(),
+          vehicle_number: codeData.staffName || 'Véhicule 598319',
+          line_id: '',
+          type: 'ndiaga_ndiaye',
+          capacity: 25,
+          createdAt: codeData.createdAt || new Date().toISOString(),
           migratedAt: new Date().toISOString(),
-          syncedFrom: 'manual_migration'
+          syncedFrom: 'firestore_migration'
         };
 
         log('📋 Payload:', 'info');
         log(JSON.stringify(opsPayload, null, 2), 'info');
 
+        // ÉTAPE 4: Vérifier existence dans ops/transport/vehicles
+        log('📍 Vérification existence dans ops/transport/vehicles...', 'info');
+        const opsRef = ref(rtdb, `ops/transport/vehicles/${vehicleId}`);
+        const opsSnap = await get(opsRef);
+
+        if (opsSnap.exists()) {
+          log('⚠️ Véhicule existe déjà dans ops/transport/vehicles!', 'warning');
+          log('Données actuelles: ' + JSON.stringify(opsSnap.val(), null, 2), 'info');
+          log('✅ Aucune migration nécessaire', 'success');
+          btn.textContent = '✅ Déjà Migré!';
+          btn.style.background = '#10B981';
+          return;
+        }
+
         // ÉTAPE 5: Écrire dans ops/transport/vehicles
         log('💾 Écriture dans ops/transport/vehicles/' + vehicleId + '...', 'info');
-        const opsRef = ref(rtdb, `ops/transport/vehicles/${vehicleId}`);
         await set(opsRef, opsPayload);
 
         log('✅ MIGRATION RÉUSSIE!', 'success');

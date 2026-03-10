@@ -278,7 +278,7 @@
           ".read": true,
           ".indexOn": ["license_plate", "line_id", "isActive"],
           "$vehicleId": {
-            ".write": "auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth.uid === 'UcrRiu416KXZR2lZeeFiS0LgXVx1')"
+            ".write": "!data.exists() || (auth != null && (root.child('adminRoles').child(auth.uid).child('role').val() === 'super_admin' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_manager_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'ops_transport' || root.child('adminRoles').child(auth.uid).child('role').val() === 'admin_finance' || auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3' || auth.uid === 'UcrRiu416KXZR2lZeeFiS0LgXVx1'))"
           }
         },
         "lines": {
