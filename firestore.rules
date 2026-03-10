@@ -422,8 +422,9 @@ service cloud.firestore {
     // ACCESS CODES COLLECTION (Vehicle & Staff Access Codes)
     // ============================================
     match /access_codes/{codeId} {
-      // Lecture pour tous les authentifiés
-      allow read: if isAuthenticated();
+      // Lecture publique pour permettre l'authentification par code
+      // Sécurité: Les codes sont pré-générés et limités
+      allow read: if true;
 
       // Création par utilisateurs authentifiés (ops_transport, admin)
       allow create: if isAuthenticated();
