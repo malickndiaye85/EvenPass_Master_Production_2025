@@ -313,5 +313,3 @@ const MigrateAccessCodesToFirestore: React.FC = () => {
 };
 
 export default MigrateAccessCodesToFirestore;
-
-export default MigrateAccessCodesToFirestore
