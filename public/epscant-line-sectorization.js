@@ -137,46 +137,63 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
         const vehicleData = vehicleSnap.val();
         const lineId = vehicleData.line_id || vehicleData.lineId;
 
+        let session;
+
         if (!lineId) {
-            console.error('[SECTORISATION] ❌ Véhicule non assigné à une ligne');
-            return { success: false, error: 'Véhicule non assigné à une ligne' };
+            console.warn('[SECTORISATION] ⚠️ Véhicule non assigné à une ligne');
+            console.log('[SECTORISATION] 🌐 Mode "Toutes Lignes" activé (véhicule de test)');
+
+            // MODE "TOUTES LIGNES" - Véhicules de test sans ligne assignée
+            session = {
+                lineId: 'all_lines',
+                lineName: 'Toutes Lignes (Mode Test)',
+                lineRoute: 'Non sectorisé',
+                vehicleId,
+                vehiclePlate,
+                accessCode,
+                controllerName: accessData.staffName || 'Contrôleur',
+                sessionStarted: Date.now(),
+                testMode: true
+            };
+
+            console.log('[SECTORISATION] ✅ Session "Toutes Lignes" établie (test)');
+        } else {
+            console.log('[SECTORISATION] 🚍 Véhicule assigné à la ligne:', lineId);
+
+            // 3. RÉCUPÉRER LES INFOS DE LA LIGNE
+            const lineRef = dbRef(rtdb, `transport_lines/${lineId}`);
+            const lineSnap = await rtdbGet(lineRef);
+
+            if (!lineSnap.exists()) {
+                console.error('[SECTORISATION] ❌ Ligne non trouvée dans transport_lines');
+                return { success: false, error: 'Ligne non trouvée' };
+            }
+
+            const lineData = lineSnap.val();
+
+            if (!lineData.is_active) {
+                console.error('[SECTORISATION] ❌ Ligne désactivée');
+                return { success: false, error: 'Ligne désactivée' };
+            }
+
+            const lineName = lineData.name;
+            const lineRoute = lineData.route;
+
+            console.log('[SECTORISATION] ✅ Ligne active:', lineName);
+            console.log('[SECTORISATION] 📍 Trajet:', lineRoute);
+
+            // 4. CRÉER LA SESSION DE LIGNE
+            session = {
+                lineId,
+                lineName,
+                lineRoute,
+                vehicleId,
+                vehiclePlate,
+                accessCode,
+                controllerName: accessData.staffName || 'Contrôleur',
+                sessionStarted: Date.now()
+            };
         }
-
-        console.log('[SECTORISATION] 🚍 Véhicule assigné à la ligne:', lineId);
-
-        // 3. RÉCUPÉRER LES INFOS DE LA LIGNE
-        const lineRef = dbRef(rtdb, `transport_lines/${lineId}`);
-        const lineSnap = await rtdbGet(lineRef);
-
-        if (!lineSnap.exists()) {
-            console.error('[SECTORISATION] ❌ Ligne non trouvée dans transport_lines');
-            return { success: false, error: 'Ligne non trouvée' };
-        }
-
-        const lineData = lineSnap.val();
-
-        if (!lineData.is_active) {
-            console.error('[SECTORISATION] ❌ Ligne désactivée');
-            return { success: false, error: 'Ligne désactivée' };
-        }
-
-        const lineName = lineData.name;
-        const lineRoute = lineData.route;
-
-        console.log('[SECTORISATION] ✅ Ligne active:', lineName);
-        console.log('[SECTORISATION] 📍 Trajet:', lineRoute);
-
-        // 4. CRÉER LA SESSION DE LIGNE
-        const session = {
-            lineId,
-            lineName,
-            lineRoute,
-            vehicleId,
-            vehiclePlate,
-            accessCode,
-            controllerName: accessData.staffName || 'Contrôleur',
-            sessionStarted: Date.now()
-        };
 
         // 5. STOCKER LA SESSION LOCALEMENT
         saveLineSession(session);
