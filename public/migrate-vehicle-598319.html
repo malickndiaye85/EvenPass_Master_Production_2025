@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migration Véhicule 598319</title>
+  <script src="/env-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0A0A0B 0%, #1A1A1B 50%, #0A0A0B 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: #1E1E1E;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      color: #10B981;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .log {
+      background: #0A0A0B;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      min-height: 300px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+    .log-line {
+      margin-bottom: 8px;
+      padding: 4px;
+    }
+    .log-line.info { color: #60A5FA; }
+    .log-line.success { color: #10B981; font-weight: bold; }
+    .log-line.error { color: #EF4444; font-weight: bold; }
+    .log-line.warning { color: #F59E0B; }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Migration Véhicule 598319</h1>
+    <p class="subtitle">Correction emplacement Realtime Database</p>
+
+    <div id="log" class="log"></div>
+
+    <button id="migrateBtn" class="btn" onclick="migrate()">
+      🚀 Lancer Migration
+    </button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+    import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+
+    const firebaseConfig = window.__FIREBASE_CONFIG__ || {
+      apiKey: "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+      authDomain: "evenpasssenegal.firebaseapp.com",
+      databaseURL: "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "evenpasssenegal",
+      storageBucket: "evenpasssenegal.firebasestorage.app",
+      messagingSenderId: "882782977052",
+      appId: "1:882782977052:web:1f2ea147010066017cf3d9",
+      measurementId: "G-FVQTV8TMLJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const rtdb = getDatabase(app);
+    const firestore = getFirestore(app);
+
+    const logDiv = document.getElementById('log');
+    const btn = document.getElementById('migrateBtn');
+
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      const line = document.createElement('div');
+      line.className = `log-line ${type}`;
+      line.textContent = `[${timestamp}] ${message}`;
+      logDiv.appendChild(line);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    window.migrate = async function() {
+      btn.disabled = true;
+      logDiv.innerHTML = '';
+
+      try {
+        log('🚀 Début migration véhicule 598319', 'info');
+
+        // ÉTAPE 1: Récupérer données Firestore
+        log('📍 Lecture Firestore access_codes/598319...', 'info');
+        const codeDoc = await getDoc(doc(firestore, 'access_codes', '598319'));
+
+        if (!codeDoc.exists()) {
+          log('❌ Code 598319 introuvable dans Firestore!', 'error');
+          btn.disabled = false;
+          return;
+        }
+
+        const codeData = codeDoc.data();
+        log('✅ Code trouvé: ' + JSON.stringify(codeData, null, 2), 'success');
+
+        const vehicleId = codeData.vehicleId;
+        const vehiclePlate = codeData.vehiclePlate || codeData.vehiclePlate;
+
+        if (!vehicleId) {
+          log('❌ vehicleId manquant dans access_codes!', 'error');
+          btn.disabled = false;
+          return;
+        }
+
+        log('🔍 Vehicle ID: ' + vehicleId, 'info');
+        log('🚗 Plaque: ' + vehiclePlate, 'info');
+
+        // ÉTAPE 2: Vérifier dans fleet_vehicles
+        log('📍 Lecture fleet_vehicles/' + vehicleId + '...', 'info');
+        const fleetRef = ref(rtdb, `fleet_vehicles/${vehicleId}`);
+        const fleetSnap = await get(fleetRef);
+
+        if (!fleetSnap.exists()) {
+          log('⚠️ Véhicule non trouvé dans fleet_vehicles', 'warning');
+        } else {
+          log('✅ Véhicule trouvé dans fleet_vehicles', 'success');
+        }
+
+        const fleetData = fleetSnap.val() || {};
+
+        // ÉTAPE 3: Vérifier dans transport/vehicles
+        log('📍 Lecture transport/vehicles/' + vehicleId + '...', 'info');
+        const transportRef = ref(rtdb, `transport/vehicles/${vehicleId}`);
+        const transportSnap = await get(transportRef);
+
+        let vehicleData;
+        if (!transportSnap.exists()) {
+          log('⚠️ Véhicule non trouvé dans transport/vehicles', 'warning');
+          vehicleData = fleetData;
+        } else {
+          log('✅ Véhicule trouvé dans transport/vehicles', 'success');
+          vehicleData = transportSnap.val();
+        }
+
+        // ÉTAPE 4: Construire payload pour ops/transport/vehicles
+        log('📝 Construction payload pour ops/transport/vehicles...', 'info');
+
+        const opsPayload = {
+          pin: '598319',
+          licensePlate: vehiclePlate || vehicleData.license_plate || vehicleData.licensePlate || 'DK-1013-F',
+          license_plate: vehiclePlate || vehicleData.license_plate || vehicleData.licensePlate || 'DK-1013-F',
+          driverName: vehicleData.driver_name || vehicleData.driverName || 'N/A',
+          driver_name: vehicleData.driver_name || vehicleData.driverName || 'N/A',
+          isActive: true,
+          vehicleId: vehicleId,
+          vehicle_number: vehicleData.vehicle_number || 'N/A',
+          line_id: vehicleData.route || vehicleData.line_id || '',
+          type: vehicleData.type || 'ndiaga_ndiaye',
+          capacity: vehicleData.capacity || 25,
+          createdAt: vehicleData.created_at || vehicleData.createdAt || new Date().toISOString(),
+          migratedAt: new Date().toISOString(),
+          syncedFrom: 'manual_migration'
+        };
+
+        log('📋 Payload:', 'info');
+        log(JSON.stringify(opsPayload, null, 2), 'info');
+
+        // ÉTAPE 5: Écrire dans ops/transport/vehicles
+        log('💾 Écriture dans ops/transport/vehicles/' + vehicleId + '...', 'info');
+        const opsRef = ref(rtdb, `ops/transport/vehicles/${vehicleId}`);
+        await set(opsRef, opsPayload);
+
+        log('✅ MIGRATION RÉUSSIE!', 'success');
+        log('', 'info');
+        log('🎯 Véhicule disponible dans:', 'success');
+        log('  ✓ Firestore: access_codes/598319', 'info');
+        log('  ✓ Realtime DB: ops/transport/vehicles/' + vehicleId, 'info');
+        log('', 'info');
+        log('🧪 Test EPscanT:', 'info');
+        log('  1. Ouvrir /epscant-login.html', 'info');
+        log('  2. Saisir code: 598319', 'info');
+        log('  3. Login devrait réussir!', 'success');
+
+        btn.textContent = '✅ Migration Réussie!';
+        btn.style.background = '#10B981';
+
+      } catch (error) {
+        log('❌ Erreur: ' + error.message, 'error');
+        log('Stack: ' + error.stack, 'error');
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

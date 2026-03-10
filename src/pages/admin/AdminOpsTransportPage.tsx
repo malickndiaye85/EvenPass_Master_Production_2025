@@ -610,26 +610,41 @@ const AdminOpsTransportPage: React.FC = () => {
         showToast('error', `⚠️ Index Realtime DB échoué pour ${accessCode}`, 8000);
       }
 
-      // 8. DOUBLE ÉCRITURE VERS transport/vehicles pour EPscanT
-      console.log('🔄 [ENROLL] Double écriture vers transport/vehicles pour EPscanT...');
-      const transportVehicleRef = ref(db, `transport/vehicles/${vehicleId}`);
+      // 8. TRIPLE ÉCRITURE VERS transport/vehicles ET ops/transport/vehicles pour EPscanT
+      console.log('🔄 [ENROLL] Triple écriture vers transport/vehicles pour EPscanT...');
+
       const transportPayload = {
         pin: accessCode,
         licensePlate: vehicleData.license_plate || 'N/A',
         driverName: vehicleData.driver_name || 'N/A',
         isActive: true,
         vehicleId: vehicleId,
+        license_plate: vehicleData.license_plate || 'N/A',
+        line_id: vehicleData.route || '',
+        vehicle_number: vehicleData.vehicle_number || 'N/A',
         createdAt: new Date().toISOString(),
         syncedFrom: 'fleet_vehicles'
       };
 
       const cleanTransportPayload = JSON.parse(JSON.stringify(transportPayload));
 
+      // 8A. Écriture dans transport/vehicles/
+      const transportVehicleRef = ref(db, `transport/vehicles/${vehicleId}`);
       try {
         await set(transportVehicleRef, cleanTransportPayload);
-        console.log('✅ [ENROLL] Véhicule synchronisé vers transport/vehicles pour EPscanT');
+        console.log('✅ [ENROLL] Véhicule synchronisé vers transport/vehicles');
       } catch (transportError: any) {
         console.warn('⚠️ [ENROLL] Échec synchro transport/vehicles (non bloquant):', transportError);
+      }
+
+      // 8B. Écriture dans ops/transport/vehicles/ (requis par EPscanT)
+      const opsTransportVehicleRef = ref(db, `ops/transport/vehicles/${vehicleId}`);
+      try {
+        await set(opsTransportVehicleRef, cleanTransportPayload);
+        console.log('✅ [ENROLL] Véhicule synchronisé vers ops/transport/vehicles (EPscanT)');
+      } catch (opsError: any) {
+        console.error('❌ [ENROLL] ÉCHEC CRITIQUE ops/transport/vehicles:', opsError);
+        console.error('⚠️ EPscanT ne pourra PAS trouver ce véhicule !');
       }
 
       // 9. SYNCHRO FIRESTORE ACCESS_CODES pour EPscanT Login
