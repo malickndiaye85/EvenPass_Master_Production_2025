@@ -548,7 +548,30 @@ const AdminOpsTransportPage: React.FC = () => {
         console.warn('⚠️ [ENROLL] Échec synchro transport/vehicles (non bloquant):', transportError);
       }
 
-      console.log('🎉 [ENROLL] SUCCÈS TOTAL - PIN stocké + Synchro EPscanT effectuée');
+      // 9. SYNCHRO FIRESTORE ACCESS_CODES pour EPscanT Login
+      console.log('🔄 [ENROLL] Synchronisation vers Firestore access_codes...');
+      try {
+        const accessCodeDoc = doc(firestore, 'access_codes', accessCode);
+        const firestoreAccessCodePayload = {
+          code: accessCode,
+          type: 'vehicle',
+          vehicleId: vehicleId,
+          vehiclePlate: vehicleData.license_plate || 'N/A',
+          isActive: true,
+          createdBy: authUID,
+          createdAt: new Date().toISOString(),
+          staffName: `Véhicule ${vehicleData.vehicle_number || 'N/A'}`,
+          usageCount: 0
+        };
+
+        await setDoc(accessCodeDoc, firestoreAccessCodePayload);
+        console.log('✅ [ENROLL] Code d\'accès synchronisé vers Firestore:', `access_codes/${accessCode}`);
+      } catch (firestoreError: any) {
+        console.error('❌ [ENROLL] Échec synchro Firestore access_codes:', firestoreError);
+        console.error('⚠️ EPscanT ne pourra pas authentifier ce véhicule !');
+      }
+
+      console.log('🎉 [ENROLL] SUCCÈS TOTAL - PIN stocké + Synchro EPscanT + Firestore effectuée');
       hideToast(loadingToastId);
       showToast('success', `✅ Véhicule enrôlé! Code: ${accessCode}`, 5000);
       setShowEnrollModal(false);
