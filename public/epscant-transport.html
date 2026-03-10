@@ -901,6 +901,7 @@
 <body>
     <div class="glass-header">
         <button class="exit-btn" id="exitBtn">Exit</button>
+        <button class="exit-btn" id="testAlertsBtn" style="right: 100px; background: transparent; border-color: rgba(14, 165, 233, 0.4); color: #0EA5E9;" title="Tester les alertes sonores">🔊</button>
         <div class="vehicle-title" id="vehicleInfo">DEM-DEM EXPRESS</div>
         <div class="driver-info" id="driverInfo">Chauffeur : Chargement...</div>
         <div style="text-align: center;">
@@ -975,6 +976,7 @@
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/epscant-line-sectorization.js"></script>
+    <script src="/epscant-alerts.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
         import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
@@ -2030,6 +2032,11 @@
             document.getElementById('exitModal').style.display = 'none';
         });
 
+        document.getElementById('testAlertsBtn').addEventListener('click', () => {
+            console.log('[EPscanT] 🔊 Test des alertes audio/tactiles');
+            window.EPscanTAlerts.testAllAlerts();
+        });
+
         document.getElementById('confirmExitBtn').addEventListener('click', async () => {
             await clearOfflineData();
             localStorage.removeItem(sessionKey);
@@ -2120,6 +2127,10 @@
                     console.log('[EPscanT] ❌ Abonnement introuvable après toutes les tentatives');
                     console.log('[EPscanT] ❌ QR scanné:', decodedText);
                     console.log('[EPscanT] ❌ Format reconnu?', decodedText.startsWith('SAMAPASS') ? 'OUI' : 'NON');
+
+                    // ALERTE SONORE ET TACTILE - ERREUR
+                    window.EPscanTAlerts.playErrorAlert();
+
                     showResult('error', 'PASS INVALIDE', `Code non reconnu: ${decodedText.substring(0, 30)}...`);
                     return;
                 }
@@ -2139,6 +2150,10 @@
                 // SI L'ABONNEMENT N'EST PAS VALIDE (expiré, inactif, etc.)
                 if (!validationResult.isValid) {
                     console.log('[EPscanT] ❌ ABONNEMENT NON VALIDE:', validationResult.message);
+
+                    // ALERTE SONORE ET TACTILE - ERREUR
+                    window.EPscanTAlerts.playErrorAlert();
+
                     showErrorCard('invalid', validationResult.message, subscription, {
                         reason: validationResult.message
                     });
@@ -2150,6 +2165,10 @@
                     console.log('[EPscanT] ⚠️ LIGNE NON AUTORISÉE');
                     console.log('[EPscanT] 📋 Pass pour:', validationResult.lineInfo?.subscriberLine);
                     console.log('[EPscanT] 📋 Contrôleur sur:', validationResult.lineInfo?.controllerLine);
+
+                    // ALERTE SONORE ET TACTILE - AVERTISSEMENT
+                    window.EPscanTAlerts.playWarningAlert();
+
                     showLineUnauthorizedCard(subscription, validationResult);
                     return;
                 }
@@ -2172,6 +2191,10 @@
 
                 if (scansToday >= 2) {
                     console.log('[EPscanT] ⚠️ QUOTA ATTEINT');
+
+                    // ALERTE SONORE ET TACTILE - QUOTA
+                    window.EPscanTAlerts.playQuotaAlert();
+
                     showWarningCard('quota_exceeded', 'LIMITE ATTEINTE', subscription, {
                         scansToday: scansToday
                     });
@@ -2185,6 +2208,10 @@
 
                     if (minutesSince < 30) {
                         console.log('[EPscanT] ⚠️ SCAN TROP RAPPROCHÉ');
+
+                        // ALERTE SONORE ET TACTILE - ANTI-PASSBACK
+                        window.EPscanTAlerts.playAntiPassbackAlert();
+
                         showWarningCard('too_soon', 'SCAN TROP RAPPROCHÉ', subscription, {
                             lastScanTime: lastScanTime
                         });
@@ -2193,6 +2220,9 @@
                 }
 
                 console.log('[EPscanT] ✅ TOUS LES CONTRÔLES PASSÉS');
+
+                // ALERTE SONORE ET TACTILE - SUCCÈS
+                window.EPscanTAlerts.playSuccessAlert();
 
                 localStorage.setItem(dailyScansKey, JSON.stringify({
                     count: scansToday + 1,
