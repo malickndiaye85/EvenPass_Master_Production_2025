@@ -235,7 +235,7 @@
     },
 
     "accessCodes": {
-      ".read": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
+      ".read": true,
       ".indexOn": ["code", "type", "isActive"],
       "$codeId": {
         ".write": "auth.uid === 'Tnq8Isi0fATmidMwEuVrw1SAJkI3'",
