@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Access Codes - EPscanT</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #2a2a2a;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4ade80;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .test-card {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .test-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #666;
+        }
+        .status.success { background: #10b981; }
+        .status.error { background: #ef4444; }
+        .status.running { background: #f59e0b; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #000;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #4ade80;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .result.error { color: #ef4444; }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover { background: #2563eb; transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Access Codes - EPscanT</h1>
+        <p class="subtitle">Diagnostic de connectivité Realtime DB ↔ Firestore</p>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status1"></div>
+                <span>Test 1: Connexion Firebase</span>
+            </div>
+            <div class="result" id="result1">En attente...</div>
+        </div>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status2"></div>
+                <span>Test 2: Lecture Realtime DB (fleet_indices/codes)</span>
+            </div>
+            <div class="result" id="result2">En attente...</div>
+        </div>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status3"></div>
+                <span>Test 3: Lecture Realtime DB (fleet_vehicles)</span>
+            </div>
+            <div class="result" id="result3">En attente...</div>
+        </div>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status4"></div>
+                <span>Test 4: Lecture Firestore (access_codes)</span>
+            </div>
+            <div class="result" id="result4">En attente...</div>
+        </div>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status5"></div>
+                <span>Test 5: Vérification Code Spécifique (811384)</span>
+            </div>
+            <div class="result" id="result5">En attente...</div>
+        </div>
+
+        <div class="test-card">
+            <div class="test-title">
+                <div class="status" id="status6"></div>
+                <span>Test 6: Cohérence Realtime DB ↔ Firestore</span>
+            </div>
+            <div class="result" id="result6">En attente...</div>
+        </div>
+
+        <button onclick="runTests()" id="runBtn">Lancer les Tests</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0BGgk4gLwb8_nf-qCDAF_gjgkB1MH-9A",
+            authDomain: "evenpass-2026.firebaseapp.com",
+            databaseURL: "https://evenpass-2026-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "evenpass-2026",
+            storageBucket: "evenpass-2026.firebasestorage.app",
+            messagingSenderId: "612491936959",
+            appId: "1:612491936959:web:6be4dc7b1d3a959ab1e4d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        function setStatus(testNum, status) {
+            const statusEl = document.getElementById(`status${testNum}`);
+            statusEl.className = `status ${status}`;
+        }
+
+        function setResult(testNum, result, isError = false) {
+            const resultEl = document.getElementById(`result${testNum}`);
+            resultEl.textContent = result;
+            if (isError) resultEl.classList.add('error');
+            else resultEl.classList.remove('error');
+        }
+
+        window.runTests = async function() {
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            btn.textContent = 'Tests en cours...';
+
+            try {
+                // Test 1: Connexion Firebase
+                setStatus(1, 'running');
+                try {
+                    setResult(1, `✅ Firebase initialisé
+Project ID: ${app.options.projectId}
+Realtime DB: ${rtdb.app.options.databaseURL}
+Firestore: Connecté`);
+                    setStatus(1, 'success');
+                } catch (error) {
+                    setResult(1, `❌ Erreur: ${error.message}`, true);
+                    setStatus(1, 'error');
+                    throw error;
+                }
+
+                // Test 2: Realtime DB - fleet_indices/codes
+                setStatus(2, 'running');
+                try {
+                    const codesRef = ref(rtdb, 'fleet_indices/codes');
+                    const codesSnap = await get(codesRef);
+
+                    if (codesSnap.exists()) {
+                        const codes = codesSnap.val();
+                        const codesList = Object.keys(codes);
+                        setResult(2, `✅ ${codesList.length} codes trouvés dans fleet_indices/codes
+
+Exemples (5 premiers):
+${codesList.slice(0, 5).map(code => `  • ${code} → Véhicule: ${codes[code].vehiclePlate || 'N/A'}`).join('\n')}`);
+                        setStatus(2, 'success');
+                    } else {
+                        setResult(2, `⚠️ Collection fleet_indices/codes vide`, true);
+                        setStatus(2, 'error');
+                    }
+                } catch (error) {
+                    setResult(2, `❌ Erreur: ${error.message}`, true);
+                    setStatus(2, 'error');
+                }
+
+                // Test 3: Realtime DB - fleet_vehicles
+                setStatus(3, 'running');
+                try {
+                    const vehiclesRef = ref(rtdb, 'fleet_vehicles');
+                    const vehiclesSnap = await get(vehiclesRef);
+
+                    if (vehiclesSnap.exists()) {
+                        const vehicles = vehiclesSnap.val();
+                        const vehiclesList = Object.entries(vehicles);
+                        const withCodes = vehiclesList.filter(([_, v]) => v.access_code || v.epscanv_pin);
+
+                        setResult(3, `✅ ${vehiclesList.length} véhicules trouvés dans fleet_vehicles
+${withCodes.length} véhicules avec codes d'accès
+
+Exemples (5 premiers avec code):
+${withCodes.slice(0, 5).map(([id, v]) => `  • ${v.license_plate || 'N/A'} → Code: ${v.access_code || v.epscanv_pin}`).join('\n')}`);
+                        setStatus(3, 'success');
+                    } else {
+                        setResult(3, `⚠️ Collection fleet_vehicles vide`, true);
+                        setStatus(3, 'error');
+                    }
+                } catch (error) {
+                    setResult(3, `❌ Erreur: ${error.message}`, true);
+                    setStatus(3, 'error');
+                }
+
+                // Test 4: Firestore - access_codes
+                setStatus(4, 'running');
+                try {
+                    const accessCodesRef = collection(firestore, 'access_codes');
+                    const accessCodesSnap = await getDocs(accessCodesRef);
+
+                    if (!accessCodesSnap.empty) {
+                        const codes = accessCodesSnap.docs;
+                        setResult(4, `✅ ${codes.length} codes trouvés dans Firestore access_codes
+
+Exemples (5 premiers):
+${codes.slice(0, 5).map(doc => {
+    const data = doc.data();
+    return `  • ${doc.id} → Véhicule: ${data.vehiclePlate || 'N/A'} (Actif: ${data.isActive ? 'Oui' : 'Non'})`;
+}).join('\n')}`);
+                        setStatus(4, 'success');
+                    } else {
+                        setResult(4, `❌ PROBLÈME: Collection access_codes vide dans Firestore
+
+⚠️ C'est la cause de l'erreur EPscanT !
+
+Solution: Exécuter la migration
+→ /migrate-access-codes.html`, true);
+                        setStatus(4, 'error');
+                    }
+                } catch (error) {
+                    setResult(4, `❌ Erreur: ${error.message}
+
+Si "Missing or insufficient permissions":
+→ Déployer les règles Firestore depuis Firebase Console`, true);
+                    setStatus(4, 'error');
+                }
+
+                // Test 5: Code Spécifique (811384)
+                setStatus(5, 'running');
+                try {
+                    const specificCode = '811384';
+
+                    // Chercher dans Realtime DB
+                    const rtdbCodeRef = ref(rtdb, `fleet_indices/codes/${specificCode}`);
+                    const rtdbCodeSnap = await get(rtdbCodeRef);
+
+                    // Chercher dans Firestore
+                    const firestoreCodeRef = doc(firestore, 'access_codes', specificCode);
+                    const firestoreCodeSnap = await getDoc(firestoreCodeRef);
+
+                    const rtdbExists = rtdbCodeSnap.exists();
+                    const firestoreExists = firestoreCodeSnap.exists();
+
+                    if (rtdbExists && firestoreExists) {
+                        setResult(5, `✅ Code ${specificCode} présent dans les DEUX bases
+
+Realtime DB:
+${JSON.stringify(rtdbCodeSnap.val(), null, 2)}
+
+Firestore:
+${JSON.stringify(firestoreCodeSnap.data(), null, 2)}`);
+                        setStatus(5, 'success');
+                    } else if (rtdbExists && !firestoreExists) {
+                        setResult(5, `⚠️ Code ${specificCode} présent dans Realtime DB mais PAS dans Firestore
+
+Realtime DB: ${JSON.stringify(rtdbCodeSnap.val(), null, 2)}
+
+Firestore: Non trouvé
+
+⚠️ C'est la cause de l'erreur EPscanT !
+→ Exécuter /migrate-access-codes.html`, true);
+                        setStatus(5, 'error');
+                    } else if (!rtdbExists && firestoreExists) {
+                        setResult(5, `⚠️ Code ${specificCode} présent dans Firestore mais PAS dans Realtime DB
+
+Situation inhabituelle mais non bloquante pour EPscanT.`, true);
+                        setStatus(5, 'error');
+                    } else {
+                        setResult(5, `❌ Code ${specificCode} non trouvé dans aucune des deux bases
+
+Le code n'existe pas ou a été supprimé.`, true);
+                        setStatus(5, 'error');
+                    }
+                } catch (error) {
+                    setResult(5, `❌ Erreur: ${error.message}`, true);
+                    setStatus(5, 'error');
+                }
+
+                // Test 6: Cohérence globale
+                setStatus(6, 'running');
+                try {
+                    const codesRef = ref(rtdb, 'fleet_indices/codes');
+                    const codesSnap = await get(codesRef);
+
+                    const accessCodesRef = collection(firestore, 'access_codes');
+                    const accessCodesSnap = await getDocs(accessCodesRef);
+
+                    const rtdbCodes = codesSnap.exists() ? Object.keys(codesSnap.val()) : [];
+                    const firestoreCodes = accessCodesSnap.docs.map(doc => doc.id);
+
+                    const rtdbOnly = rtdbCodes.filter(code => !firestoreCodes.includes(code));
+                    const firestoreOnly = firestoreCodes.filter(code => !rtdbCodes.includes(code));
+                    const common = rtdbCodes.filter(code => firestoreCodes.includes(code));
+
+                    const coherenceRate = rtdbCodes.length > 0
+                        ? ((common.length / rtdbCodes.length) * 100).toFixed(1)
+                        : 0;
+
+                    if (coherenceRate === '100.0') {
+                        setResult(6, `✅ COHÉRENCE PARFAITE (100%)
+
+Realtime DB: ${rtdbCodes.length} codes
+Firestore: ${firestoreCodes.length} codes
+Communs: ${common.length} codes
+
+EPscanT peut fonctionner sans problème !`);
+                        setStatus(6, 'success');
+                    } else if (coherenceRate >= '80.0') {
+                        setResult(6, `⚠️ Cohérence partielle (${coherenceRate}%)
+
+Realtime DB: ${rtdbCodes.length} codes
+Firestore: ${firestoreCodes.length} codes
+Communs: ${common.length} codes
+
+Codes manquants dans Firestore: ${rtdbOnly.length}
+${rtdbOnly.length > 0 ? `\nExemples: ${rtdbOnly.slice(0, 5).join(', ')}` : ''}
+
+Recommandation: Exécuter la migration pour synchroniser`, true);
+                        setStatus(6, 'error');
+                    } else {
+                        setResult(6, `❌ INCOHÉRENCE MAJEURE (${coherenceRate}%)
+
+Realtime DB: ${rtdbCodes.length} codes
+Firestore: ${firestoreCodes.length} codes
+Communs: ${common.length} codes
+
+Codes manquants dans Firestore: ${rtdbOnly.length}
+
+⚠️ URGENT: Exécuter la migration !
+→ /migrate-access-codes.html`, true);
+                        setStatus(6, 'error');
+                    }
+                } catch (error) {
+                    setResult(6, `❌ Erreur: ${error.message}`, true);
+                    setStatus(6, 'error');
+                }
+
+            } catch (error) {
+                console.error('Erreur globale:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Relancer les Tests';
+            }
+        };
+    </script>
+</body>
+</html>

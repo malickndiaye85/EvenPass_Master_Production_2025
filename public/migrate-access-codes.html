@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration Access Codes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #2a2a2a;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid #3a3a3a;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #4ade80;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .info-box ul {
+            list-style: none;
+            color: #aaa;
+        }
+
+        .info-box li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #4ade80;
+        }
+
+        .code-path {
+            background: #0a0a0a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #4ade80;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        button.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid;
+        }
+
+        .stat-card.success {
+            border-color: #10b981;
+        }
+
+        .stat-card.warning {
+            border-color: #f59e0b;
+        }
+
+        .stat-card.error {
+            border-color: #ef4444;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .logs {
+            background: #0a0a0a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-line {
+            color: #aaa;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .log-line:last-child {
+            border-bottom: none;
+        }
+
+        .log-line.success {
+            color: #10b981;
+        }
+
+        .log-line.error {
+            color: #ef4444;
+        }
+
+        .log-line.warning {
+            color: #f59e0b;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            </svg>
+            Migration Access Codes
+        </h1>
+        <p class="subtitle">Realtime DB → Firestore</p>
+
+        <div class="info-box">
+            <h3>📋 Cette migration va synchroniser:</h3>
+            <ul>
+                <li>Tous les codes de <span class="code-path">fleet_indices/codes</span></li>
+                <li>Tous les codes de <span class="code-path">fleet_vehicles/*/access_code</span></li>
+                <li>Vers Firestore <span class="code-path">access_codes</span></li>
+            </ul>
+        </div>
+
+        <button class="primary" id="migrateBtn" onclick="startMigration()">
+            <span id="btnText">Démarrer la Migration</span>
+        </button>
+
+        <div class="status" id="status">
+            <div class="stats">
+                <div class="stat-card success">
+                    <div class="stat-label">Succès</div>
+                    <div class="stat-value" id="successCount">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Ignorés</div>
+                    <div class="stat-value" id="skippedCount">0</div>
+                </div>
+                <div class="stat-card error">
+                    <div class="stat-label">Échecs</div>
+                    <div class="stat-value" id="errorCount">0</div>
+                </div>
+            </div>
+            <div class="logs" id="logs"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+        import { getFirestore, doc, setDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // INJECTER LA CONFIG FIREBASE ICI (sera remplacé par le build)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0BGgk4gLwb8_nf-qCDAF_gjgkB1MH-9A",
+            authDomain: "evenpass-2026.firebaseapp.com",
+            databaseURL: "https://evenpass-2026-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "evenpass-2026",
+            storageBucket: "evenpass-2026.firebasestorage.app",
+            messagingSenderId: "612491936959",
+            appId: "1:612491936959:web:6be4dc7b1d3a959ab1e4d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
+
+        let stats = { success: 0, skipped: 0, error: 0 };
+
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logLine = document.createElement('div');
+            logLine.className = `log-line ${type}`;
+            logLine.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logsDiv.appendChild(logLine);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStats() {
+            document.getElementById('successCount').textContent = stats.success;
+            document.getElementById('skippedCount').textContent = stats.skipped;
+            document.getElementById('errorCount').textContent = stats.error;
+        }
+
+        window.startMigration = async function() {
+            const btn = document.getElementById('migrateBtn');
+            const btnText = document.getElementById('btnText');
+            const statusDiv = document.getElementById('status');
+
+            btn.disabled = true;
+            btnText.innerHTML = '<div class="spinner"></div> Migration en cours...';
+            statusDiv.classList.add('show');
+
+            stats = { success: 0, skipped: 0, error: 0 };
+            document.getElementById('logs').innerHTML = '';
+
+            try {
+                addLog('🚀 Démarrage de la migration...', 'info');
+
+                // 1. Récupérer tous les codes existants dans Firestore
+                addLog('📥 Récupération des codes existants dans Firestore...', 'info');
+                const firestoreCodesRef = collection(firestore, 'access_codes');
+                const firestoreSnapshot = await getDocs(firestoreCodesRef);
+                const existingCodes = new Set(firestoreSnapshot.docs.map(doc => doc.id));
+                addLog(`📊 ${existingCodes.size} codes déjà présents dans Firestore`, 'info');
+
+                // 2. Migrer depuis fleet_indices/codes
+                addLog('📥 Récupération des codes depuis fleet_indices/codes...', 'info');
+                const codesRef = ref(rtdb, 'fleet_indices/codes');
+                const codesSnapshot = await get(codesRef);
+
+                if (codesSnapshot.exists()) {
+                    const codes = codesSnapshot.val();
+                    const codeEntries = Object.entries(codes);
+                    addLog(`✅ ${codeEntries.length} codes trouvés dans fleet_indices/codes`, 'success');
+
+                    for (const [code, codeData] of codeEntries) {
+                        try {
+                            if (existingCodes.has(code)) {
+                                addLog(`⏭️ Code ${code} déjà présent, ignoré`, 'warning');
+                                stats.skipped++;
+                                updateStats();
+                                continue;
+                            }
+
+                            const firestorePayload = {
+                                code: code,
+                                type: 'vehicle',
+                                vehicleId: codeData.vehicleId || '',
+                                vehiclePlate: codeData.vehiclePlate || 'N/A',
+                                isActive: codeData.isActive !== false,
+                                createdBy: codeData.createdBy || 'migration',
+                                createdAt: codeData.createdAt || new Date().toISOString(),
+                                staffName: `Véhicule ${codeData.vehiclePlate || 'N/A'}`,
+                                usageCount: codeData.usageCount || 0
+                            };
+
+                            const docRef = doc(firestore, 'access_codes', code);
+                            await setDoc(docRef, firestorePayload);
+
+                            stats.success++;
+                            updateStats();
+                            existingCodes.add(code);
+                            addLog(`✅ Code ${code} migré (véhicule: ${codeData.vehiclePlate})`, 'success');
+                        } catch (error) {
+                            stats.error++;
+                            updateStats();
+                            addLog(`❌ Erreur pour code ${code}: ${error.message}`, 'error');
+                        }
+                    }
+                } else {
+                    addLog('⚠️ Aucun code trouvé dans fleet_indices/codes', 'warning');
+                }
+
+                // 3. Migrer depuis fleet_vehicles
+                addLog('📥 Récupération des véhicules depuis fleet_vehicles...', 'info');
+                const vehiclesRef = ref(rtdb, 'fleet_vehicles');
+                const vehiclesSnapshot = await get(vehiclesRef);
+
+                if (vehiclesSnapshot.exists()) {
+                    const vehicles = vehiclesSnapshot.val();
+                    const vehicleEntries = Object.entries(vehicles);
+                    addLog(`✅ ${vehicleEntries.length} véhicules trouvés`, 'success');
+
+                    for (const [vehicleId, vehicleData] of vehicleEntries) {
+                        try {
+                            const accessCode = vehicleData.access_code || vehicleData.epscanv_pin;
+
+                            if (!accessCode) {
+                                addLog(`⚠️ Véhicule ${vehicleId} sans code d'accès, ignoré`, 'warning');
+                                continue;
+                            }
+
+                            if (existingCodes.has(accessCode)) {
+                                addLog(`⏭️ Code ${accessCode} déjà migré, ignoré`, 'warning');
+                                stats.skipped++;
+                                updateStats();
+                                continue;
+                            }
+
+                            const firestorePayload = {
+                                code: accessCode,
+                                type: 'vehicle',
+                                vehicleId: vehicleId,
+                                vehiclePlate: vehicleData.license_plate || 'N/A',
+                                isActive: vehicleData.status !== 'retired',
+                                createdBy: vehicleData.created_by || 'migration',
+                                createdAt: vehicleData.created_at || new Date().toISOString(),
+                                staffName: `Véhicule ${vehicleData.vehicle_number || 'N/A'}`,
+                                usageCount: 0
+                            };
+
+                            const docRef = doc(firestore, 'access_codes', accessCode);
+                            await setDoc(docRef, firestorePayload);
+
+                            stats.success++;
+                            updateStats();
+                            existingCodes.add(accessCode);
+                            addLog(`✅ Code ${accessCode} du véhicule ${vehicleData.vehicle_number || vehicleId} migré`, 'success');
+                        } catch (error) {
+                            stats.error++;
+                            updateStats();
+                            addLog(`❌ Erreur pour véhicule ${vehicleId}: ${error.message}`, 'error');
+                        }
+                    }
+                } else {
+                    addLog('⚠️ Aucun véhicule trouvé dans fleet_vehicles', 'warning');
+                }
+
+                addLog('🎉 Migration terminée !', 'success');
+                addLog(`✅ Succès: ${stats.success} | ⏭️ Ignorés: ${stats.skipped} | ❌ Échecs: ${stats.error}`, 'info');
+
+                btnText.textContent = 'Migration Terminée ✓';
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+
+            } catch (error) {
+                addLog(`❌ ERREUR CRITIQUE: ${error.message}`, 'error');
+                btnText.textContent = 'Erreur - Réessayer';
+                btn.disabled = false;
+                btn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            }
+        };
+    </script>
+</body>
+</html>
