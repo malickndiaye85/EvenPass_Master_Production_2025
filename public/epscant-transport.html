@@ -2136,9 +2136,11 @@
 
                     showResult('error', 'PASS INVALIDE', `Code non reconnu: ${decodedText.substring(0, 30)}...`);
 
-                    // Débloquer IMMÉDIATEMENT
-                    isProcessing = false;
-                    console.log('[EPscanT] 🔓 Scanner débloqué (subscription not found)');
+                    // Débloquer après 1 seconde pour éviter double-scan
+                    setTimeout(() => {
+                        isProcessing = false;
+                        console.log('[EPscanT] 🔓 Scanner débloqué (subscription not found)');
+                    }, 1000);
                     return;
                 }
 
@@ -2165,9 +2167,11 @@
                         reason: validationResult.message
                     });
 
-                    // Débloquer IMMÉDIATEMENT
-                    isProcessing = false;
-                    console.log('[EPscanT] 🔓 Scanner débloqué (not valid)');
+                    // Débloquer après 1 seconde pour éviter double-scan
+                    setTimeout(() => {
+                        isProcessing = false;
+                        console.log('[EPscanT] 🔓 Scanner débloqué (not valid)');
+                    }, 1000);
                     return;
                 }
 
@@ -2182,9 +2186,11 @@
 
                     showLineUnauthorizedCard(subscription, validationResult);
 
-                    // Débloquer IMMÉDIATEMENT
-                    isProcessing = false;
-                    console.log('[EPscanT] 🔓 Scanner débloqué (not authorized)');
+                    // Débloquer après 1 seconde pour éviter double-scan
+                    setTimeout(() => {
+                        isProcessing = false;
+                        console.log('[EPscanT] 🔓 Scanner débloqué (not authorized)');
+                    }, 1000);
                     return;
                 }
 
@@ -2214,9 +2220,11 @@
                         scansToday: scansToday
                     });
 
-                    // Débloquer IMMÉDIATEMENT
-                    isProcessing = false;
-                    console.log('[EPscanT] 🔓 Scanner débloqué (quota exceeded)');
+                    // Débloquer après 1 seconde pour éviter double-scan
+                    setTimeout(() => {
+                        isProcessing = false;
+                        console.log('[EPscanT] 🔓 Scanner débloqué (quota exceeded)');
+                    }, 1000);
                     return;
                 }
 
@@ -2235,9 +2243,11 @@
                             lastScanTime: lastScanTime
                         });
 
-                        // Débloquer IMMÉDIATEMENT
-                        isProcessing = false;
-                        console.log('[EPscanT] 🔓 Scanner débloqué (too soon)');
+                        // Débloquer après 1 seconde pour éviter double-scan
+                        setTimeout(() => {
+                            isProcessing = false;
+                            console.log('[EPscanT] 🔓 Scanner débloqué (too soon)');
+                        }, 1000);
                         return;
                     }
                 }
@@ -2298,20 +2308,20 @@
 
                 showPassCard(subscription, scansToday + 1);
 
-                // Débloquer IMMÉDIATEMENT
-                isProcessing = false;
-                console.log('[EPscanT] 🔓 Scanner débloqué (success)');
+                // Débloquer après 1 seconde pour éviter double-scan
+                setTimeout(() => {
+                    isProcessing = false;
+                    console.log('[EPscanT] 🔓 Scanner débloqué (success)');
+                }, 1000);
 
             } catch (error) {
                 console.error('[EPscanT] ❌ Erreur scan:', error);
                 showResult('error', 'ERREUR SYSTÈME', 'Impossible de vérifier ce QR code');
-                isProcessing = false;
-                console.log('[EPscanT] 🔓 Scanner débloqué (erreur)');
-            } finally {
-                // TOUJOURS débloquer le scanner après 1 seconde
+
+                // Débloquer après 1 seconde pour éviter double-scan
                 setTimeout(() => {
                     isProcessing = false;
-                    console.log('[EPscanT] 🔓 Scanner débloqué (finally)');
+                    console.log('[EPscanT] 🔓 Scanner débloqué (erreur)');
                 }, 1000);
             }
         }
