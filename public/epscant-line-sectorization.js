@@ -96,6 +96,7 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
         return { success: false, error: 'Code d\'accès invalide' };
     }
 
+    try {
         // 2. RÉCUPÉRER LE VÉHICULE ET SA LIGNE DANS FIREBASE REALTIME DATABASE
         const { ref: dbRef, get: rtdbGet } = window.firebaseDatabase;
         const vehicleRef = dbRef(rtdb, `ops/transport/vehicles/${vehicleId}`);
