@@ -765,11 +765,26 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         });
         console.log('[SECTORISATION] ✅ Événement ajouté au Live Feed');
 
+        // 🚨 TEST DE FORCE BRUTE - VÉRIFIER LA CONNEXION FIREBASE
+        console.log('[SECTORISATION] 🔥 TEST DE FORCE BRUTE : test_connexion');
+        try {
+            const testRef = dbRef(rtdb, 'test_connexion');
+            await update(testRef, { status: 'OK', timestamp: Date.now() });
+            console.log('[SECTORISATION] ✅ TEST FORCE BRUTE RÉUSSI - La connexion Firebase fonctionne !');
+            alert('✅ CONNEXION FIREBASE OK !');
+        } catch (testError) {
+            console.error('[SECTORISATION] 💥 TEST FORCE BRUTE ÉCHOUÉ:', testError);
+            alert('💥 CONNEXION FIREBASE BLOQUÉE: ' + testError.message);
+            throw testError;
+        }
+
         // 11. METTRE À JOUR TRANSPORT_STATS/LINES/{LINEID}/STATS - CRITIQUE POUR RÈGLES FIREBASE
         console.log('[SECTORISATION] 📊 Étape 11/11 : transport_stats/lines (RÈGLES FIREBASE)');
         const transportStatsPath = `transport_stats/lines/${lineId}/stats`;
         console.log('[SECTORISATION] 🔍 CHEMIN COMPLET:', transportStatsPath);
-        alert('🔍 CHEMIN: ' + transportStatsPath);
+        console.log('[SECTORISATION] 🔍 lineId type:', typeof lineId, '- valeur:', lineId, '- longueur:', lineId?.length);
+        console.log('[SECTORISATION] 🔍 PATH CARACTÈRE PAR CARACTÈRE:', transportStatsPath.split('').map((c, i) => `[${i}]=${c}`).join(' '));
+        alert('🔍 PATH EXACT: transport_stats/lines/' + lineId + '/stats');
 
         const transportStatsLineRef = dbRef(rtdb, transportStatsPath);
         const transportStatsLineSnap = await rtdbGet(transportStatsLineRef);
