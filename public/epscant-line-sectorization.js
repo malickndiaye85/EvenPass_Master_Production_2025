@@ -743,7 +743,7 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         console.log('[SECTORISATION] ✅ Analytics Ligne C mise à jour: +1 passager');
 
         // 10. CRÉER ÉVÉNEMENT DANS /OPS/TRANSPORT/LIVE_FEED (VUE TERRAIN)
-        console.log('[SECTORISATION] 📊 Étape 10/10 : live_feed pour Vue Terrain');
+        console.log('[SECTORISATION] 📊 Étape 10/11 : live_feed pour Vue Terrain');
         const liveFeedRef = dbRef(rtdb, 'ops/transport/live_feed');
         const liveFeedEvent = {
             timestamp: timestamp,
@@ -765,6 +765,43 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         });
         console.log('[SECTORISATION] ✅ Événement ajouté au Live Feed');
 
+        // 11. METTRE À JOUR TRANSPORT_STATS/LINES/{LINEID}/STATS - CRITIQUE POUR RÈGLES FIREBASE
+        console.log('[SECTORISATION] 📊 Étape 11/11 : transport_stats/lines (RÈGLES FIREBASE)');
+        const transportStatsPath = `transport_stats/lines/${lineId}/stats`;
+        console.log('[SECTORISATION] 🔍 CHEMIN COMPLET:', transportStatsPath);
+        alert('🔍 CHEMIN: ' + transportStatsPath);
+
+        const transportStatsLineRef = dbRef(rtdb, transportStatsPath);
+        const transportStatsLineSnap = await rtdbGet(transportStatsLineRef);
+
+        const currentTransportStats = transportStatsLineSnap.exists() ? transportStatsLineSnap.val() : {};
+        const eco_count = (currentTransportStats.eco_count || 0) + 1;
+        const comfort_count = currentTransportStats.comfort_count || 0;
+        const premium_count = currentTransportStats.premium_count || 0;
+        const total_scans_line = eco_count + comfort_count + premium_count;
+
+        console.log('[SECTORISATION] 📊 Valeurs actuelles transport_stats/lines:', currentTransportStats);
+        console.log('[SECTORISATION] 📊 Nouvelles valeurs:', { eco_count, comfort_count, premium_count, total_scans_line });
+
+        await update(transportStatsLineRef, {
+            eco_count: eco_count,
+            comfort_count: comfort_count,
+            premium_count: premium_count,
+            total_scans: total_scans_line,
+            last_scan: timestamp,
+            last_scan_date: today
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update transport_stats/lines:', err);
+            console.error('[SECTORISATION] 💥 Chemin:', transportStatsPath);
+            console.error('[SECTORISATION] 💥 Code erreur:', err.code);
+            console.error('[SECTORISATION] 💥 Message:', err.message);
+            alert('💥 ERREUR CRITIQUE transport_stats/lines: ' + err.message);
+            throw err;
+        });
+
+        console.log('[SECTORISATION] ✅ transport_stats/lines mis à jour avec succès !');
+        alert('✅ TEST RÉUSSI !');
+
         console.log('[SECTORISATION] 🎉 TOUTES LES STATS MISES À JOUR AVEC SUCCÈS');
         console.log('[SECTORISATION] 📊 Résumé complet:');
         console.log('[SECTORISATION]    - Ligne total_scans:', totalScans);
@@ -772,6 +809,7 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         console.log('[SECTORISATION]    - fleet_vehicles usageCount: +1');
         console.log('[SECTORISATION]    - scan_history: enregistré');
         console.log('[SECTORISATION]    - transport_stats/global: mis à jour ✨');
+        console.log('[SECTORISATION]    - transport_stats/lines: mis à jour ✨✨✨');
         console.log('[SECTORISATION]    - scan_events véhicule: enregistré ✨');
         console.log('[SECTORISATION]    - stats/daily KPIs: mis à jour ✨');
         console.log('[SECTORISATION]    - voyage/express analytics: mis à jour ✨');
