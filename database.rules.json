@@ -274,6 +274,11 @@
 
     "ops": {
       "transport": {
+        "live_feed": {
+          ".read": true,
+          ".write": true,
+          ".indexOn": ["timestamp", "type", "lineId"]
+        },
         "vehicles": {
           ".read": true,
           ".indexOn": ["license_plate", "line_id", "isActive"],
@@ -307,6 +312,28 @@
       "global": {
         ".read": true,
         ".write": true
+      }
+    },
+
+    "stats": {
+      "daily": {
+        ".read": true,
+        "$date": {
+          ".write": true
+        }
+      }
+    },
+
+    "voyage": {
+      "express": {
+        ".read": true,
+        "$lineId": {
+          "stats": {
+            "realtime": {
+              ".write": true
+            }
+          }
+        }
       }
     },
 

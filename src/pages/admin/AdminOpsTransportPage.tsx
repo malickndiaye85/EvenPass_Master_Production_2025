@@ -73,7 +73,7 @@ const AdminOpsTransportPage: React.FC = () => {
 
     const vehiclesRef = ref(db, 'fleet_vehicles');
     const subscribersRef = ref(db, 'pass_subscribers');
-    const scansRef = ref(db, 'scan_events');
+    const scansRef = ref(db, 'ops/transport/live_feed');
     const linesRef = ref(db, 'transport_lines');
     const driversRef = ref(db, 'drivers');
 
@@ -127,7 +127,16 @@ const AdminOpsTransportPage: React.FC = () => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const scansArray = Object.keys(data)
-          .map(key => ({ id: key, ...data[key] }))
+          .map(key => ({
+            id: key,
+            ...data[key],
+            scan_time: data[key].datetime || data[key].timestamp,
+            location: data[key].vehicleId || 'Véhicule inconnu',
+            route: data[key].lineName || 'Ligne inconnue',
+            passenger_count: 1,
+            subscription_type: 'SAMA PASS',
+            controller_name: 'EPscanT'
+          }))
           .sort((a, b) => new Date(b.scan_time).getTime() - new Date(a.scan_time).getTime())
           .slice(0, 10);
         setScanEvents(scansArray);
@@ -175,6 +184,40 @@ const AdminOpsTransportPage: React.FC = () => {
         setDrivers(driversArray);
       } else {
         setDrivers([]);
+      }
+    });
+
+    // LISTENER POUR VOYAGE/EXPRESS (ANALYTICS LIGNE C)
+    const ligneExpressRef = ref(db, 'voyage/express');
+    const unsubLigneExpress = onValue(ligneExpressRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const expressLinesArray = Object.keys(data).map(lineId => {
+          const lineData = data[lineId];
+          const statsRealtime = lineData.stats?.realtime || {};
+
+          return {
+            route_id: lineId,
+            route_name: lineId === 'ligne-c' ? 'Ligne C (Dakar ↔ Keur Massar)' : lineId,
+            trips_today: statsRealtime.passengers_today || 0,
+            average_occupancy_rate: statsRealtime.occupancy_rate || 0,
+            total_revenue: statsRealtime.revenue_today || 0,
+            peak_hours: [],
+            active_vehicles: 0,
+            required_vehicles: 0,
+            passengers_this_hour: statsRealtime.passengers_today || 0
+          };
+        });
+
+        setLineAnalytics(prev => {
+          const existingIds = new Set(prev.map(l => l.route_id));
+          const newLines = expressLinesArray.filter(l => !existingIds.has(l.route_id));
+          const updated = prev.map(l => {
+            const express = expressLinesArray.find(e => e.route_id === l.route_id);
+            return express || l;
+          });
+          return [...updated, ...newLines];
+        });
       }
     });
 
@@ -243,6 +286,7 @@ const AdminOpsTransportPage: React.FC = () => {
       unsubScans();
       unsubLines();
       unsubDrivers();
+      unsubLigneExpress();
       unsubGlobalStats();
       clearInterval(scanInterval);
     };

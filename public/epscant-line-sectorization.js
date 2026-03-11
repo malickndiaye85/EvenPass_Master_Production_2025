@@ -616,7 +616,7 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         console.log('[SECTORISATION] ✅ Scan enregistré dans scan_history');
 
         // 6. METTRE À JOUR TRANSPORT_STATS/GLOBAL (POUR LE DASHBOARD)
-        console.log('[SECTORISATION] 📊 Étape 6/6 : transport_stats/global (Dashboard)');
+        console.log('[SECTORISATION] 📊 Étape 6/10 : transport_stats/global (Dashboard)');
         const globalStatsRef = dbRef(rtdb, 'transport_stats/global');
         const globalStatsSnap = await rtdbGet(globalStatsRef);
 
@@ -636,7 +636,7 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         console.log('[SECTORISATION] 📊 Global scans_today:', currentGlobalScansToday, '→', currentGlobalScansToday + 1);
 
         // 7. CRÉER ÉVÉNEMENT DE SCAN DANS SCAN_EVENTS (POUR LE DASHBOARD PAR VÉHICULE)
-        console.log('[SECTORISATION] 📊 Étape 7/7 : scan_events pour le véhicule');
+        console.log('[SECTORISATION] 📊 Étape 7/10 : scan_events pour le véhicule');
         const scanEventsRef = dbRef(rtdb, `ops/transport/vehicles/${vehicleId}/scan_events`);
         const scanEventRecord = {
             timestamp: new Date().toISOString(),
@@ -650,14 +650,67 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         await push(scanEventsRef, scanEventRecord);
         console.log('[SECTORISATION] ✅ Événement scan créé dans scan_events du véhicule');
 
+        // 8. METTRE À JOUR /STATS/DAILY/{DATE}/TOTAL_SCANS (KPI GLOBAUX COMMAND CENTER)
+        console.log('[SECTORISATION] 📊 Étape 8/10 : stats/daily pour KPIs globaux');
+        const dailyStatsRef = dbRef(rtdb, `stats/daily/${today}`);
+        const dailyStatsSnap = await rtdbGet(dailyStatsRef);
+        const currentDailyScans = dailyStatsSnap.exists() ? (dailyStatsSnap.val().total_scans || 0) : 0;
+
+        await update(dailyStatsRef, {
+            total_scans: currentDailyScans + 1,
+            last_updated: timestamp,
+            date: today
+        });
+        console.log('[SECTORISATION] ✅ KPI journalier mis à jour:', currentDailyScans, '→', currentDailyScans + 1);
+
+        // 9. METTRE À JOUR /VOYAGE/EXPRESS/{LINEID}/STATS/REALTIME (ANALYTICS LIGNE)
+        console.log('[SECTORISATION] 📊 Étape 9/10 : voyage/express analytics pour Ligne', lineId);
+        const lineStatsRef = dbRef(rtdb, `voyage/express/${lineId}/stats/realtime`);
+        const lineStatsSnap = await rtdbGet(lineStatsRef);
+        const currentLineData = lineStatsSnap.exists() ? lineStatsSnap.val() : {};
+        const currentLinePassengers = currentLineData.passengers_today || 0;
+        const currentLineRevenue = currentLineData.revenue_today || 0;
+
+        await update(lineStatsRef, {
+            passengers_today: currentLinePassengers + 1,
+            total_passengers: (currentLineData.total_passengers || 0) + 1,
+            revenue_today: currentLineRevenue + 250, // Prix moyen SAMA PASS
+            last_scan: timestamp,
+            last_scan_date: today,
+            occupancy_rate: occupancyRate
+        });
+        console.log('[SECTORISATION] ✅ Analytics Ligne C mise à jour: +1 passager');
+
+        // 10. CRÉER ÉVÉNEMENT DANS /OPS/TRANSPORT/LIVE_FEED (VUE TERRAIN)
+        console.log('[SECTORISATION] 📊 Étape 10/10 : live_feed pour Vue Terrain');
+        const liveFeedRef = dbRef(rtdb, 'ops/transport/live_feed');
+        const liveFeedEvent = {
+            timestamp: timestamp,
+            datetime: new Date().toISOString(),
+            type: 'scan',
+            vehicleId: vehicleId,
+            lineId: lineId,
+            lineName: 'Ligne C (Dakar ↔ Keur Massar)',
+            status: 'valid',
+            passengerId: subscriptionData?.phoneNumber || 'anonymous',
+            message: `✅ Passager validé sur ${vehicleId} - Ligne C`,
+            occupancyRate: occupancyRate
+        };
+
+        await push(liveFeedRef, liveFeedEvent);
+        console.log('[SECTORISATION] ✅ Événement ajouté au Live Feed');
+
         console.log('[SECTORISATION] 🎉 TOUTES LES STATS MISES À JOUR AVEC SUCCÈS');
-        console.log('[SECTORISATION] 📊 Résumé:');
+        console.log('[SECTORISATION] 📊 Résumé complet:');
         console.log('[SECTORISATION]    - Ligne total_scans:', totalScans);
         console.log('[SECTORISATION]    - Véhicule total_scans:', vehicleTotalScans);
         console.log('[SECTORISATION]    - fleet_vehicles usageCount: +1');
         console.log('[SECTORISATION]    - scan_history: enregistré');
         console.log('[SECTORISATION]    - transport_stats/global: mis à jour ✨');
         console.log('[SECTORISATION]    - scan_events véhicule: enregistré ✨');
+        console.log('[SECTORISATION]    - stats/daily KPIs: mis à jour ✨');
+        console.log('[SECTORISATION]    - voyage/express analytics: mis à jour ✨');
+        console.log('[SECTORISATION]    - live_feed Vue Terrain: événement créé ✨');
 
     } catch (error) {
         console.error('[SECTORISATION] ❌ Erreur mise à jour stats:', error);
