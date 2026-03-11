@@ -52,6 +52,22 @@
             text-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
         }
 
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(14, 165, 233, 0.2);
+            border: 1px solid rgba(14, 165, 233, 0.5);
+            color: #0EA5E9;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            z-index: 9999;
+            letter-spacing: 1px;
+        }
+
         .driver-info {
             font-size: 15px;
             color: rgba(250, 250, 250, 0.8);
@@ -916,6 +932,9 @@
     </style>
 </head>
 <body>
+    <!-- 🚨 VERSION BADGE POUR FORCE REFRESH -->
+    <div class="version-badge">v486-FORCE</div>
+
     <div class="glass-header">
         <button class="exit-btn" id="exitBtn">Exit</button>
         <button class="exit-btn" id="testAlertsBtn" style="right: 100px; background: transparent; border-color: rgba(14, 165, 233, 0.4); color: #0EA5E9;" title="Tester les alertes sonores">🔊</button>
@@ -1009,6 +1028,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
         import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, push as rtdbPush } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
         import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: window.__FIREBASE_CONFIG__?.apiKey || "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
@@ -1023,10 +1043,28 @@
         const app = initializeApp(firebaseConfig);
         const rtdb = getDatabase(app);
         const firestore = getFirestore(app);
+        const auth = getAuth(app);
+
+        // 🚨 AFFICHER L'URL DE LA BASE DE DONNÉES POUR VÉRIFICATION
+        console.log('[EPscanT] 🔥 DATABASE URL:', rtdb._delegate._repoInternal.repoInfo_.host);
+        alert('🔥 DATABASE URL: ' + rtdb._delegate._repoInternal.repoInfo_.host);
+
+        // 🚨 AUTHENTIFICATION ANONYME POUR DÉBLOQUER LES RÈGLES FIREBASE
+        console.log('[EPscanT] 🔐 Authentification anonyme en cours...');
+        signInAnonymously(auth)
+            .then(() => {
+                console.log('[EPscanT] ✅ Authentification anonyme réussie');
+                alert('✅ AUTH ANONYME OK - UID: ' + auth.currentUser.uid);
+            })
+            .catch((error) => {
+                console.error('[EPscanT] ❌ Échec auth anonyme:', error);
+                alert('❌ ÉCHEC AUTH ANONYME: ' + error.message);
+            });
 
         // Exposer les modules Firebase pour le service de sectorisation
         window.firebaseFirestore = { doc, getDoc };
         window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update: rtdbUpdate, push: rtdbPush };
+        window.firebaseAuth = auth;
 
         let isFirebaseConnected = false;
         let offlineDB = null;
