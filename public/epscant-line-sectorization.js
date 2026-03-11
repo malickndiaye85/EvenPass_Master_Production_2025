@@ -300,8 +300,8 @@ async function validateSubscriptionForLine(subscription, rtdb) {
         }
 
         // VÉRIFIER LA SECTORISATION PAR LIGNE
-        const subscriberRouteId = subscription.routeId;
-        const subscriberRouteName = subscription.routeName;
+        const subscriberRouteId = subscription.routeId || '';
+        const subscriberRouteName = subscription.routeName || '';
 
         console.log('[SECTORISATION] 📋 Ligne abonné:', subscriberRouteName);
         console.log('[SECTORISATION] 📋 Route ID abonné:', subscriberRouteId);
@@ -326,15 +326,97 @@ async function validateSubscriptionForLine(subscription, rtdb) {
             };
         }
 
-        // MODE PRODUCTION : COMPARAISON STRICTE - L'ID Firebase doit correspondre
-        console.log('[SECTORISATION] 🔐 VALIDATION STRICTE:');
+        // MODE PRODUCTION : VALIDATION INTELLIGENTE MULTI-NIVEAUX
+        console.log('[SECTORISATION] 🔐 VALIDATION INTELLIGENTE:');
         console.log('[SECTORISATION]    Pass routeId:', subscriberRouteId);
         console.log('[SECTORISATION]    Scanner lineId:', session.lineId);
 
-        const isLineMatch = subscriberRouteId === session.lineId;
+        // FONCTION DE NORMALISATION POUR COMPARAISON
+        function normalizeForComparison(str) {
+            if (!str) return '';
+            return str
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Enlever accents
+                .replace(/[^a-z0-9]/g, '_') // Remplacer caractères spéciaux par _
+                .replace(/_+/g, '_') // Remplacer multiples _ par un seul
+                .replace(/^_|_$/g, ''); // Enlever _ au début/fin
+        }
+
+        // FONCTION D'EXTRACTION DU TERME PRINCIPAL (ex: "Ligne C")
+        function extractMainTerm(str) {
+            if (!str) return '';
+            // Chercher "Ligne X" ou "ligne X"
+            const ligneMatch = str.match(/ligne\s+([a-z0-9]+)/i);
+            if (ligneMatch) return ligneMatch[1].toLowerCase();
+
+            // Chercher premier mot significatif
+            const words = str.split(/[\s\-⇄]+/).filter(w => w.length > 2);
+            return words[0] ? words[0].toLowerCase() : '';
+        }
+
+        let isLineMatch = false;
+        let matchMethod = '';
+
+        // NIVEAU 1 : Comparaison stricte des IDs Firebase
+        if (subscriberRouteId && session.lineId && subscriberRouteId === session.lineId) {
+            isLineMatch = true;
+            matchMethod = 'ID exact Firebase';
+            console.log('[SECTORISATION] ✅ NIVEAU 1 : Match ID exact');
+        }
+        // NIVEAU 2 : Comparaison normalisée des IDs
+        else if (subscriberRouteId && session.lineId) {
+            const normalizedSubscriberId = normalizeForComparison(subscriberRouteId);
+            const normalizedSessionId = normalizeForComparison(session.lineId);
+
+            if (normalizedSubscriberId === normalizedSessionId) {
+                isLineMatch = true;
+                matchMethod = 'ID normalisé';
+                console.log('[SECTORISATION] ✅ NIVEAU 2 : Match ID normalisé');
+                console.log('[SECTORISATION]    Normalisé abonné:', normalizedSubscriberId);
+                console.log('[SECTORISATION]    Normalisé scanner:', normalizedSessionId);
+            }
+            // NIVEAU 3 : L'un contient l'autre (partial match)
+            else if (normalizedSubscriberId.includes(normalizedSessionId) || normalizedSessionId.includes(normalizedSubscriberId)) {
+                isLineMatch = true;
+                matchMethod = 'ID partiel';
+                console.log('[SECTORISATION] ✅ NIVEAU 3 : Match ID partiel');
+            }
+        }
+
+        // NIVEAU 4 : Comparaison par noms de lignes
+        if (!isLineMatch && subscriberRouteName && session.lineName) {
+            const normalizedSubscriberName = normalizeForComparison(subscriberRouteName);
+            const normalizedSessionName = normalizeForComparison(session.lineName);
+
+            if (normalizedSubscriberName === normalizedSessionName) {
+                isLineMatch = true;
+                matchMethod = 'Nom normalisé';
+                console.log('[SECTORISATION] ✅ NIVEAU 4 : Match nom normalisé');
+            }
+            // NIVEAU 5 : Partial match sur les noms
+            else if (normalizedSubscriberName.includes(normalizedSessionName) || normalizedSessionName.includes(normalizedSubscriberName)) {
+                isLineMatch = true;
+                matchMethod = 'Nom partiel';
+                console.log('[SECTORISATION] ✅ NIVEAU 5 : Match nom partiel');
+            }
+        }
+
+        // NIVEAU 6 : Extraction du terme principal (ex: "Ligne C")
+        if (!isLineMatch) {
+            const subscriberMainTerm = extractMainTerm(subscriberRouteName || subscriberRouteId);
+            const sessionMainTerm = extractMainTerm(session.lineName || session.lineId);
+
+            if (subscriberMainTerm && sessionMainTerm && subscriberMainTerm === sessionMainTerm) {
+                isLineMatch = true;
+                matchMethod = 'Terme principal';
+                console.log('[SECTORISATION] ✅ NIVEAU 6 : Match terme principal');
+                console.log('[SECTORISATION]    Terme abonné:', subscriberMainTerm);
+                console.log('[SECTORISATION]    Terme scanner:', sessionMainTerm);
+            }
+        }
 
         if (!isLineMatch) {
-            console.warn('[SECTORISATION] ⚠️ LIGNE NON AUTORISÉE - IDs ne correspondent pas');
+            console.warn('[SECTORISATION] ⚠️ LIGNE NON AUTORISÉE - Aucun match trouvé');
             console.warn('[SECTORISATION] ⚠️ Pass valide pour:', subscriberRouteName, '(ID:', subscriberRouteId + ')');
             console.warn('[SECTORISATION] ⚠️ Scanner sur:', session.lineName, '(ID:', session.lineId + ')');
 
@@ -352,7 +434,7 @@ async function validateSubscriptionForLine(subscription, rtdb) {
             };
         }
 
-        console.log('[SECTORISATION] ✅ MATCH PARFAIT - routeId === lineId');
+        console.log('[SECTORISATION] ✅ VALIDATION RÉUSSIE - Méthode:', matchMethod);
         console.log('[SECTORISATION] ✅ Pass autorisé sur cette ligne');
 
         // VALIDATION RÉUSSIE - INCRÉMENTER LES STATS
