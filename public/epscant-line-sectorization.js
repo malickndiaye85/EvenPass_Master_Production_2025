@@ -312,7 +312,7 @@ async function validateSubscriptionForLine(subscription, rtdb) {
         const isTestMode = session.testMode || session.lineId === 'all_lines';
         if (isTestMode) {
             console.log('[SECTORISATION] 🧪 MODE TEST - Toutes lignes acceptées');
-            await incrementLineStats(session.lineId, session.vehicleId, rtdb);
+            await incrementLineStats(session.lineId, session.vehicleId, rtdb, subscription);
             return {
                 isValid: true,
                 isAuthorized: true,
@@ -437,9 +437,16 @@ async function validateSubscriptionForLine(subscription, rtdb) {
         console.log('[SECTORISATION] ✅ VALIDATION RÉUSSIE - Méthode:', matchMethod);
         console.log('[SECTORISATION] ✅ Pass autorisé sur cette ligne');
 
-        // VALIDATION RÉUSSIE - INCRÉMENTER LES STATS
-        console.log('[SECTORISATION] ✅ Ligne autorisée - Mise à jour des stats');
-        await incrementLineStats(session.lineId, session.vehicleId, rtdb);
+        // VALIDATION RÉUSSIE - INCRÉMENTER LES STATS (CRITIQUE POUR PAIEMENT)
+        console.log('[SECTORISATION] ✅ Ligne autorisée - Mise à jour des stats pour paiement');
+        console.log('[SECTORISATION] 📊 Données abonnement:', {
+            phoneNumber: subscription.phoneNumber,
+            routeId: subscription.routeId,
+            routeName: subscription.routeName,
+            id: subscription.id
+        });
+
+        await incrementLineStats(session.lineId, session.vehicleId, rtdb, subscription);
 
         return {
             isValid: true,
@@ -466,15 +473,19 @@ async function validateSubscriptionForLine(subscription, rtdb) {
 
 /**
  * Incrémente les statistiques de la ligne et du véhicule
+ * CRITIQUE : Cette fonction met à jour les compteurs pour le paiement des transporteurs
  */
-async function incrementLineStats(lineId, vehicleId, rtdb) {
+async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = null) {
     console.log('[SECTORISATION] 📊 Mise à jour stats ligne:', lineId);
+    console.log('[SECTORISATION] 📊 Mise à jour stats véhicule:', vehicleId);
 
     try {
-        const { ref: dbRef, get: rtdbGet, update } = window.firebaseDatabase;
+        const { ref: dbRef, get: rtdbGet, update, push } = window.firebaseDatabase;
         const today = new Date().toISOString().split('T')[0];
+        const timestamp = Date.now();
 
-        // 1. INCRÉMENTER LES STATS DE LA LIGNE
+        // 1. INCRÉMENTER LES STATS DE LA LIGNE dans ops/transport/lines
+        console.log('[SECTORISATION] 📊 Étape 1/5 : Stats ligne ops/transport/lines');
         const lineStatsRef = dbRef(rtdb, `ops/transport/lines/${lineId}/stats`);
         const lineStatsSnap = await rtdbGet(lineStatsRef);
 
@@ -485,13 +496,14 @@ async function incrementLineStats(lineId, vehicleId, rtdb) {
         await update(lineStatsRef, {
             scans_today: scansToday,
             total_scans: totalScans,
-            last_scan: Date.now(),
+            last_scan: timestamp,
             last_scan_date: today
         });
 
         console.log('[SECTORISATION] ✅ Stats ligne mises à jour:', { scansToday, totalScans });
 
-        // 2. INCRÉMENTER LES STATS DU VÉHICULE
+        // 2. INCRÉMENTER LES STATS DU VÉHICULE dans ops/transport/vehicles
+        console.log('[SECTORISATION] 📊 Étape 2/5 : Stats véhicule ops/transport/vehicles');
         const vehicleStatsRef = dbRef(rtdb, `ops/transport/vehicles/${vehicleId}/stats`);
         const vehicleStatsSnap = await rtdbGet(vehicleStatsRef);
 
@@ -502,13 +514,35 @@ async function incrementLineStats(lineId, vehicleId, rtdb) {
         await update(vehicleStatsRef, {
             scans_today: vehicleScansToday,
             total_scans: vehicleTotalScans,
-            last_scan: Date.now(),
+            last_scan: timestamp,
             last_scan_date: today
         });
 
         console.log('[SECTORISATION] ✅ Stats véhicule mises à jour:', { vehicleScansToday, vehicleTotalScans });
 
-        // 3. CALCULER LE TAUX D'OCCUPATION (estimation)
+        // 3. INCRÉMENTER usageCount dans fleet_vehicles (CRITIQUE pour paiement)
+        console.log('[SECTORISATION] 📊 Étape 3/5 : usageCount dans fleet_vehicles');
+        const fleetVehicleRef = dbRef(rtdb, `fleet_vehicles/${vehicleId}`);
+        const fleetVehicleSnap = await rtdbGet(fleetVehicleRef);
+
+        if (fleetVehicleSnap.exists()) {
+            const fleetData = fleetVehicleSnap.val();
+            const currentUsageCount = fleetData.usageCount || 0;
+            const newUsageCount = currentUsageCount + 1;
+
+            await update(fleetVehicleRef, {
+                usageCount: newUsageCount,
+                lastUsed: timestamp,
+                lastUsedDate: today
+            });
+
+            console.log('[SECTORISATION] ✅ usageCount fleet_vehicles:', currentUsageCount, '→', newUsageCount);
+        } else {
+            console.warn('[SECTORISATION] ⚠️ fleet_vehicles/' + vehicleId + ' n\'existe pas');
+        }
+
+        // 4. CALCULER LE TAUX D'OCCUPATION (estimation)
+        console.log('[SECTORISATION] 📊 Étape 4/5 : Taux d\'occupation');
         const capacity = 50; // Capacité par défaut
         const occupancyRate = Math.min(100, Math.round((vehicleScansToday / capacity) * 100));
 
@@ -517,8 +551,36 @@ async function incrementLineStats(lineId, vehicleId, rtdb) {
         });
 
         console.log('[SECTORISATION] 📊 Taux d\'occupation:', occupancyRate + '%');
+
+        // 5. CRÉER JOURNAL DE SCAN dans scan_history (PREUVE DE TRANSPORT)
+        console.log('[SECTORISATION] 📊 Étape 5/5 : Journal scan_history');
+        const scanHistoryRef = dbRef(rtdb, 'scan_history');
+        const scanRecord = {
+            vehicleId: vehicleId,
+            lineId: lineId,
+            timestamp: timestamp,
+            date: today,
+            scanType: 'SAMA_PASS',
+            status: 'VALID',
+            passengerId: subscriptionData?.phoneNumber || 'anonymous',
+            subscriptionId: subscriptionData?.id || null,
+            routeId: subscriptionData?.routeId || null,
+            routeName: subscriptionData?.routeName || null
+        };
+
+        await push(scanHistoryRef, scanRecord);
+        console.log('[SECTORISATION] ✅ Scan enregistré dans scan_history');
+
+        console.log('[SECTORISATION] 🎉 TOUTES LES STATS MISES À JOUR AVEC SUCCÈS');
+        console.log('[SECTORISATION] 📊 Résumé:');
+        console.log('[SECTORISATION]    - Ligne total_scans:', totalScans);
+        console.log('[SECTORISATION]    - Véhicule total_scans:', vehicleTotalScans);
+        console.log('[SECTORISATION]    - fleet_vehicles usageCount: +1');
+        console.log('[SECTORISATION]    - scan_history: enregistré');
+
     } catch (error) {
         console.error('[SECTORISATION] ❌ Erreur mise à jour stats:', error);
+        console.error('[SECTORISATION] ❌ Stack:', error.stack);
     }
 }
 
