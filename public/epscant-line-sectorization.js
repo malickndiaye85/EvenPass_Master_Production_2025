@@ -615,12 +615,49 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
         await push(scanHistoryRef, scanRecord);
         console.log('[SECTORISATION] ✅ Scan enregistré dans scan_history');
 
+        // 6. METTRE À JOUR TRANSPORT_STATS/GLOBAL (POUR LE DASHBOARD)
+        console.log('[SECTORISATION] 📊 Étape 6/6 : transport_stats/global (Dashboard)');
+        const globalStatsRef = dbRef(rtdb, 'transport_stats/global');
+        const globalStatsSnap = await rtdbGet(globalStatsRef);
+
+        const currentGlobalStats = globalStatsSnap.exists() ? globalStatsSnap.val() : {};
+        const currentGlobalScansToday = currentGlobalStats.total_scans_today || 0;
+        const currentGlobalTotalScans = currentGlobalStats.total_scans || 0;
+
+        await update(globalStatsRef, {
+            total_scans_today: currentGlobalScansToday + 1,
+            total_scans: currentGlobalTotalScans + 1,
+            last_scan: timestamp,
+            last_scan_date: today,
+            average_occupancy_rate: occupancyRate
+        });
+
+        console.log('[SECTORISATION] ✅ Stats globales mises à jour');
+        console.log('[SECTORISATION] 📊 Global scans_today:', currentGlobalScansToday, '→', currentGlobalScansToday + 1);
+
+        // 7. CRÉER ÉVÉNEMENT DE SCAN DANS SCAN_EVENTS (POUR LE DASHBOARD PAR VÉHICULE)
+        console.log('[SECTORISATION] 📊 Étape 7/7 : scan_events pour le véhicule');
+        const scanEventsRef = dbRef(rtdb, `ops/transport/vehicles/${vehicleId}/scan_events`);
+        const scanEventRecord = {
+            timestamp: new Date().toISOString(),
+            scanStatus: 'valid',
+            passengerId: subscriptionData?.phoneNumber || 'anonymous',
+            subscriptionId: subscriptionData?.id || null,
+            routeId: subscriptionData?.routeId || null,
+            lineId: lineId
+        };
+
+        await push(scanEventsRef, scanEventRecord);
+        console.log('[SECTORISATION] ✅ Événement scan créé dans scan_events du véhicule');
+
         console.log('[SECTORISATION] 🎉 TOUTES LES STATS MISES À JOUR AVEC SUCCÈS');
         console.log('[SECTORISATION] 📊 Résumé:');
         console.log('[SECTORISATION]    - Ligne total_scans:', totalScans);
         console.log('[SECTORISATION]    - Véhicule total_scans:', vehicleTotalScans);
         console.log('[SECTORISATION]    - fleet_vehicles usageCount: +1');
         console.log('[SECTORISATION]    - scan_history: enregistré');
+        console.log('[SECTORISATION]    - transport_stats/global: mis à jour ✨');
+        console.log('[SECTORISATION]    - scan_events véhicule: enregistré ✨');
 
     } catch (error) {
         console.error('[SECTORISATION] ❌ Erreur mise à jour stats:', error);
