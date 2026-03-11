@@ -952,6 +952,16 @@
             <div class="scan-line"></div>
         </div>
         <button class="start-button" id="startButton">Démarrer le scanner</button>
+
+        <!-- 🔧 DEBUG OVERLAY MOBILE -->
+        <div id="debugOverlay" style="position: absolute; bottom: 80px; left: 10px; right: 10px; background: rgba(0, 0, 0, 0.92); border: 2px solid #10B981; border-radius: 12px; padding: 12px; z-index: 1000; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6; color: #10B981; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); max-height: 200px; overflow-y: auto;">
+            <div style="font-weight: bold; margin-bottom: 8px; color: #FFF; border-bottom: 1px solid #10B981; padding-bottom: 4px;">🔧 DEBUG MONITOR</div>
+            <div id="debugBusId" style="margin-bottom: 4px;"><strong>Bus ID:</strong> <span style="color: #FFF;">-</span></div>
+            <div id="debugLineId" style="margin-bottom: 4px;"><strong>Line ID:</strong> <span style="color: #FFF;">-</span></div>
+            <div id="debugStatus" style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: #FCD34D;">⏸ Attente de scan</span></div>
+            <div id="debugLogs" style="border-top: 1px solid rgba(16, 185, 129, 0.3); padding-top: 8px; font-size: 10px; color: #A0AEC0;"></div>
+            <button onclick="testManualScan()" style="margin-top: 8px; width: 100%; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">🧪 SIMULER SCAN SUCCÈS</button>
+        </div>
     </div>
 
     <div class="stats-footer">
@@ -2423,6 +2433,180 @@
         }, 500);
 
         console.log('[EPscanT] Ready for', driverName);
+
+        // ============================================================
+        // 🔧 DEBUG OVERLAY - SYSTÈME DE MONITORING MOBILE
+        // ============================================================
+
+        function updateDebugOverlay() {
+            const lineSession = window.LineSectorization?.getLineSession();
+
+            if (lineSession) {
+                document.getElementById('debugBusId').innerHTML = `<strong>Bus ID:</strong> <span style="color: #FFF;">${lineSession.vehicleId || 'N/A'}</span>`;
+                document.getElementById('debugLineId').innerHTML = `<strong>Line ID:</strong> <span style="color: #FFF;">${lineSession.lineId || 'N/A'}</span>`;
+            } else {
+                document.getElementById('debugBusId').innerHTML = `<strong>Bus ID:</strong> <span style="color: #EF4444;">NON CONFIGURÉ</span>`;
+                document.getElementById('debugLineId').innerHTML = `<strong>Line ID:</strong> <span style="color: #EF4444;">NON CONFIGURÉ</span>`;
+            }
+        }
+
+        function debugLog(message, type = 'info') {
+            const debugLogsDiv = document.getElementById('debugLogs');
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            const colors = {
+                info: '#60A5FA',
+                success: '#10B981',
+                error: '#EF4444',
+                warning: '#F59E0B'
+            };
+
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type] || colors.info;
+            logEntry.style.marginBottom = '4px';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+
+            debugLogsDiv.insertBefore(logEntry, debugLogsDiv.firstChild);
+
+            // Garder seulement les 5 derniers logs
+            while (debugLogsDiv.children.length > 5) {
+                debugLogsDiv.removeChild(debugLogsDiv.lastChild);
+            }
+        }
+
+        function updateDebugStatus(status, type = 'info') {
+            const statusSpan = document.querySelector('#debugStatus span');
+            const icons = {
+                idle: '⏸',
+                processing: '⚡',
+                success: '✅',
+                error: '❌'
+            };
+            const colors = {
+                idle: '#FCD34D',
+                processing: '#60A5FA',
+                success: '#10B981',
+                error: '#EF4444'
+            };
+
+            statusSpan.style.color = colors[type] || colors.idle;
+            statusSpan.innerHTML = `${icons[type] || '•'} ${status}`;
+        }
+
+        // Fonction de test manuel
+        window.testManualScan = async function() {
+            try {
+                debugLog('🧪 Test manuel déclenché', 'info');
+                updateDebugStatus('Test en cours...', 'processing');
+
+                // Vérifier que LineSectorization est chargé
+                if (!window.LineSectorization) {
+                    const errorMsg = '❌ MODULE LineSectorization NON CHARGÉ';
+                    debugLog(errorMsg, 'error');
+                    updateDebugStatus('Module manquant', 'error');
+                    alert(errorMsg);
+                    return;
+                }
+
+                const lineSession = window.LineSectorization.getLineSession();
+
+                if (!lineSession) {
+                    const errorMsg = '❌ SESSION NON INITIALISÉE';
+                    debugLog(errorMsg, 'error');
+                    updateDebugStatus('Session manquante', 'error');
+                    alert(errorMsg);
+                    return;
+                }
+
+                debugLog(`Bus: ${lineSession.vehicleId}`, 'info');
+                debugLog(`Ligne: ${lineSession.lineId}`, 'info');
+
+                // QR Code de test SAMA PASS Ligne C (Genaa Woor)
+                const testQRCode = 'SAMA-PASS-221782345678-LINEAA-2026-03';
+
+                debugLog(`QR Test: ${testQRCode}`, 'info');
+
+                // Créer un abonnement de test
+                const testSubscription = {
+                    id: testQRCode,
+                    qrCode: testQRCode,
+                    passengerName: 'TEST MANUEL',
+                    passengerPhone: '+221782345678',
+                    status: 'active',
+                    subscriptionType: 'genaa_woor',
+                    subscriptionTier: 'eco',
+                    routeName: 'Ligne C - Keur Massar',
+                    lineId: 'lineaa',
+                    startDate: Date.now() - (7 * 24 * 60 * 60 * 1000), // Il y a 7 jours
+                    endDate: Date.now() + (23 * 24 * 60 * 60 * 1000), // Dans 23 jours
+                    expiresAt: Date.now() + (23 * 24 * 60 * 60 * 1000)
+                };
+
+                debugLog('Validation du pass...', 'info');
+
+                const validationResult = await window.LineSectorization.validateSubscriptionForLine(
+                    testSubscription,
+                    rtdb
+                );
+
+                debugLog(`Valid: ${validationResult.isValid}`, validationResult.isValid ? 'success' : 'error');
+                debugLog(`Auth: ${validationResult.isAuthorized}`, validationResult.isAuthorized ? 'success' : 'error');
+
+                if (!validationResult.isValid) {
+                    const errorMsg = `❌ VALIDATION ÉCHOUÉE: ${validationResult.message}`;
+                    debugLog(errorMsg, 'error');
+                    updateDebugStatus('Validation échouée', 'error');
+                    alert(errorMsg);
+                    return;
+                }
+
+                if (!validationResult.isAuthorized) {
+                    const errorMsg = `❌ LIGNE NON AUTORISÉE: ${validationResult.message}`;
+                    debugLog(errorMsg, 'error');
+                    updateDebugStatus('Ligne non autorisée', 'error');
+                    alert(errorMsg);
+                    return;
+                }
+
+                debugLog('✅ Validation OK', 'success');
+                debugLog('Incrémentation stats...', 'info');
+
+                // Incrémenter les stats
+                await window.LineSectorization.incrementLineStats(
+                    testSubscription,
+                    rtdb
+                );
+
+                debugLog('✅ STATS MISES À JOUR', 'success');
+                updateDebugStatus('Test réussi !', 'success');
+
+                alert('✅ TEST RÉUSSI !\n\nVérifiez Firebase Console pour voir les stats mises à jour.');
+
+                // Réinitialiser après 3 secondes
+                setTimeout(() => {
+                    updateDebugStatus('Attente de scan', 'idle');
+                }, 3000);
+
+            } catch (error) {
+                const errorMsg = `💥 ERREUR TEST: ${error.message}`;
+                console.error('[EPscanT TEST]', error);
+                debugLog(errorMsg, 'error');
+                updateDebugStatus('Erreur test', 'error');
+                alert(errorMsg + '\n\nDétails dans la console');
+            }
+        };
+
+        // Mettre à jour l'overlay au démarrage
+        setTimeout(() => {
+            updateDebugOverlay();
+            debugLog('Debug Overlay initialisé', 'success');
+        }, 1000);
+
+        // Mettre à jour toutes les 5 secondes
+        setInterval(updateDebugOverlay, 5000);
+
+        // ============================================================
+        // FIN DEBUG OVERLAY
+        // ============================================================
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw-epscant.js', { scope: '/' })
