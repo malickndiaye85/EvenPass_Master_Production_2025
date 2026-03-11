@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Debug Transport Stats</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e27;
+      color: #00ff41;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #00ff41; margin-bottom: 20px; }
+    .section {
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid #00ff41;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .status { font-weight: bold; }
+    .success { color: #00ff41; }
+    .error { color: #ff0040; }
+    .warning { color: #ffa500; }
+    button {
+      background: #00ff41;
+      color: #0a0e27;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 10px 10px 0;
+    }
+    button:hover { background: #00cc33; }
+    pre {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Debug Transport Stats Firebase</h1>
+
+  <div class="section">
+    <h2>📊 Vérification Chemins Firebase</h2>
+    <button onclick="checkAllPaths()">🔍 Vérifier Tous les Chemins</button>
+    <button onclick="injectTestData()">💉 Injecter Données de Test</button>
+    <button onclick="clearConsole()">🧹 Nettoyer Console</button>
+    <div id="results"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
+    import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDPsWVCA_Czs64wxiBOqUCSWwbkLMPNjJo",
+      authDomain: "evenpasssenegal.firebaseapp.com",
+      databaseURL: "https://evenpasssenegal-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "evenpasssenegal",
+      storageBucket: "evenpasssenegal.firebasestorage.app",
+      messagingSenderId: "882782977052",
+      appId: "1:882782977052:web:1f2ea147010066017cf3d9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const rtdb = getDatabase(app);
+
+    window.rtdb = rtdb;
+    window.rtdbRef = ref;
+    window.rtdbGet = get;
+    window.rtdbSet = set;
+    window.rtdbUpdate = update;
+
+    console.log('✅ Firebase initialisé');
+
+    window.checkAllPaths = async function() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<h3>🔍 Vérification en cours...</h3>';
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const paths = [
+        { name: 'transport_stats/global', path: 'transport_stats/global' },
+        { name: 'stats/daily (aujourd\'hui)', path: `stats/daily/${today}` },
+        { name: 'voyage/express/ligne-c', path: 'voyage/express/ligne-c/stats/realtime' },
+        { name: 'ops/transport/live_feed', path: 'ops/transport/live_feed' },
+        { name: 'scan_history', path: 'scan_history' },
+        { name: 'fleet_vehicles', path: 'fleet_vehicles' },
+        { name: 'ops/transport/vehicles', path: 'ops/transport/vehicles' },
+        { name: 'ops/transport/lines', path: 'ops/transport/lines' }
+      ];
+
+      let html = '<h3>📊 Résultats de Vérification</h3>';
+
+      for (const item of paths) {
+        console.log(`🔍 Vérification: ${item.name}`);
+        try {
+          const snapshot = await get(ref(rtdb, item.path));
+          const exists = snapshot.exists();
+          const data = snapshot.val();
+
+          if (exists) {
+            const keys = Object.keys(data || {});
+            html += `<div style="margin: 10px 0;">`;
+            html += `<div class="success">✅ ${item.name}</div>`;
+            html += `<div style="margin-left: 20px; color: #aaa;">`;
+            html += `Chemin: ${item.path}<br>`;
+            html += `Nombre de clés: ${keys.length}<br>`;
+            if (keys.length > 0 && keys.length <= 5) {
+              html += `Clés: ${keys.join(', ')}<br>`;
+            }
+            html += `<pre>${JSON.stringify(data, null, 2).substring(0, 500)}${JSON.stringify(data, null, 2).length > 500 ? '...' : ''}</pre>`;
+            html += `</div></div>`;
+            console.log(`✅ ${item.name}:`, data);
+          } else {
+            html += `<div style="margin: 10px 0;">`;
+            html += `<div class="error">❌ ${item.name}</div>`;
+            html += `<div style="margin-left: 20px; color: #666;">Chemin: ${item.path} - VIDE</div>`;
+            html += `</div>`;
+            console.warn(`❌ ${item.name} est vide`);
+          }
+        } catch (error) {
+          html += `<div style="margin: 10px 0;">`;
+          html += `<div class="error">💥 ${item.name}</div>`;
+          html += `<div style="margin-left: 20px; color: #ff0040;">Erreur: ${error.message}</div>`;
+          html += `</div>`;
+          console.error(`💥 Erreur ${item.name}:`, error);
+        }
+      }
+
+      resultsDiv.innerHTML = html;
+    };
+
+    window.injectTestData = async function() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<h3>💉 Injection en cours...</h3>';
+
+      const today = new Date().toISOString().split('T')[0];
+      const timestamp = Date.now();
+
+      try {
+        // 1. transport_stats/global
+        console.log('💉 Injection transport_stats/global...');
+        await set(ref(rtdb, 'transport_stats/global'), {
+          total_scans_today: 42,
+          total_scans: 156,
+          last_scan: timestamp,
+          last_scan_date: today,
+          average_occupancy_rate: 65
+        });
+        console.log('✅ transport_stats/global OK');
+
+        // 2. stats/daily
+        console.log('💉 Injection stats/daily...');
+        await set(ref(rtdb, `stats/daily/${today}`), {
+          total_scans: 42,
+          last_updated: timestamp,
+          date: today
+        });
+        console.log('✅ stats/daily OK');
+
+        // 3. voyage/express/ligne-c
+        console.log('💉 Injection voyage/express/ligne-c...');
+        await set(ref(rtdb, 'voyage/express/ligne-c/stats/realtime'), {
+          passengers_today: 28,
+          total_passengers: 156,
+          revenue_today: 7000,
+          last_scan: timestamp,
+          last_scan_date: today,
+          occupancy_rate: 65
+        });
+        console.log('✅ voyage/express/ligne-c OK');
+
+        // 4. fleet_vehicles/DK-2019-M
+        console.log('💉 Injection fleet_vehicles/DK-2019-M...');
+        await set(ref(rtdb, 'fleet_vehicles/DK-2019-M'), {
+          vehicle_number: 'DK-2019-M',
+          type: 'Tata',
+          capacity: 50,
+          status: 'active',
+          usageCount: 28,
+          lastUsed: timestamp,
+          lastUsedDate: today
+        });
+        console.log('✅ fleet_vehicles/DK-2019-M OK');
+
+        // 5. ops/transport/vehicles/DK-2019-M
+        console.log('💉 Injection ops/transport/vehicles/DK-2019-M...');
+        await set(ref(rtdb, 'ops/transport/vehicles/DK-2019-M/stats'), {
+          scans_today: 28,
+          total_scans: 156,
+          last_scan: timestamp,
+          occupancy_rate: 65
+        });
+        console.log('✅ ops/transport/vehicles/DK-2019-M/stats OK');
+
+        // 6. ops/transport/lines/ligne-c
+        console.log('💉 Injection ops/transport/lines/ligne-c...');
+        await set(ref(rtdb, 'ops/transport/lines/ligne-c/stats'), {
+          scans_today: 28,
+          total_scans: 156,
+          last_scan: timestamp,
+          last_scan_date: today
+        });
+        console.log('✅ ops/transport/lines/ligne-c/stats OK');
+
+        resultsDiv.innerHTML = `
+          <h3 class="success">✅ Injection Terminée !</h3>
+          <div style="margin-top: 20px;">
+            <p>✅ transport_stats/global → 42 scans</p>
+            <p>✅ stats/daily → 42 scans</p>
+            <p>✅ voyage/express/ligne-c → 28 passagers</p>
+            <p>✅ fleet_vehicles/DK-2019-M → créé</p>
+            <p>✅ ops/transport/vehicles/DK-2019-M/stats → créé</p>
+            <p>✅ ops/transport/lines/ligne-c/stats → créé</p>
+            <p style="margin-top: 20px; color: #ffa500;">
+              🔄 Maintenant, recharge la page Command Center et vérifie les compteurs !
+            </p>
+          </div>
+        `;
+
+        console.log('🎉 INJECTION TERMINÉE !');
+
+      } catch (error) {
+        resultsDiv.innerHTML = `
+          <h3 class="error">❌ Erreur lors de l'injection</h3>
+          <pre>${error.message}\n${error.stack}</pre>
+        `;
+        console.error('💥 Erreur injection:', error);
+      }
+    };
+
+    window.clearConsole = function() {
+      console.clear();
+      document.getElementById('results').innerHTML = '';
+    };
+  </script>
+</body>
+</html>
