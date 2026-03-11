@@ -124,8 +124,10 @@ const AdminOpsTransportPage: React.FC = () => {
     });
 
     const unsubScans = onValue(scansRef, (snapshot) => {
+      console.log('[ADMIN-OPS-TRANSPORT] 📡 Live Feed listener triggered');
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log('[ADMIN-OPS-TRANSPORT] ✅ Live Feed data:', data);
         const scansArray = Object.keys(data)
           .map(key => ({
             id: key,
@@ -139,8 +141,10 @@ const AdminOpsTransportPage: React.FC = () => {
           }))
           .sort((a, b) => new Date(b.scan_time).getTime() - new Date(a.scan_time).getTime())
           .slice(0, 10);
+        console.log('[ADMIN-OPS-TRANSPORT] 📊 Scan events processed:', scansArray.length);
         setScanEvents(scansArray);
       } else {
+        console.log('[ADMIN-OPS-TRANSPORT] ⚠️ Live Feed is empty (no data)');
         setScanEvents([]);
       }
     });
@@ -190,8 +194,10 @@ const AdminOpsTransportPage: React.FC = () => {
     // LISTENER POUR VOYAGE/EXPRESS (ANALYTICS LIGNE C)
     const ligneExpressRef = ref(db, 'voyage/express');
     const unsubLigneExpress = onValue(ligneExpressRef, (snapshot) => {
+      console.log('[ADMIN-OPS-TRANSPORT] 📊 voyage/express listener triggered');
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log('[ADMIN-OPS-TRANSPORT] ✅ voyage/express data:', data);
         const expressLinesArray = Object.keys(data).map(lineId => {
           const lineData = data[lineId];
           const statsRealtime = lineData.stats?.realtime || {};
@@ -209,6 +215,8 @@ const AdminOpsTransportPage: React.FC = () => {
           };
         });
 
+        console.log('[ADMIN-OPS-TRANSPORT] 📈 Analytics lines processed:', expressLinesArray);
+
         setLineAnalytics(prev => {
           const existingIds = new Set(prev.map(l => l.route_id));
           const newLines = expressLinesArray.filter(l => !existingIds.has(l.route_id));
@@ -218,6 +226,8 @@ const AdminOpsTransportPage: React.FC = () => {
           });
           return [...updated, ...newLines];
         });
+      } else {
+        console.log('[ADMIN-OPS-TRANSPORT] ⚠️ voyage/express is empty (no data)');
       }
     });
 
@@ -263,18 +273,23 @@ const AdminOpsTransportPage: React.FC = () => {
     // LISTENER POUR LES STATS GLOBALES (SCANS AUJOURD'HUI + TAUX D'OCCUPATION)
     const globalStatsRef = ref(db, 'transport_stats/global');
     const unsubGlobalStats = onValue(globalStatsRef, (snapshot) => {
+      console.log('[ADMIN-OPS-TRANSPORT] 📊 transport_stats/global listener triggered');
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log('[ADMIN-OPS-TRANSPORT] ✅ Global stats data:', data);
         const today = new Date().toISOString().split('T')[0];
 
         // Compteur de scans aujourd'hui depuis scan_events
         const scansToday = data.total_scans_today || 0;
+        console.log('[ADMIN-OPS-TRANSPORT] 📊 Total scans today:', scansToday);
         setTotalScansToday(scansToday);
 
         // Taux d'occupation global
         const occupancyRate = data.average_occupancy_rate || 0;
+        console.log('[ADMIN-OPS-TRANSPORT] 📊 Occupancy rate:', occupancyRate);
         setGlobalOccupancyRate(occupancyRate);
       } else {
+        console.log('[ADMIN-OPS-TRANSPORT] ⚠️ transport_stats/global is empty (no data)');
         setTotalScansToday(0);
         setGlobalOccupancyRate(0);
       }

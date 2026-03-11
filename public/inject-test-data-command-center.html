@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💉 Injecter Données Test Command Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 32px;
+      background: linear-gradient(135deg, #10B981, #3B82F6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .warning {
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .warning h2 {
+      color: #FBB F24;
+      margin-bottom: 10px;
+    }
+    button {
+      background: linear-gradient(135deg, #10B981, #3B82F6);
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 20px;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .log {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .log-success { color: #10B981; }
+    .log-error { color: #EF4444; }
+    .log-info { color: #3B82F6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💉 Injecter Données Test</h1>
+
+    <div class="warning">
+      <h2>⚠️ Environnement de Test</h2>
+      <p>Ce script va créer des données de test dans Firebase pour vérifier l'affichage du Command Center.</p>
+      <p><strong>Ne pas utiliser en production !</strong></p>
+    </div>
+
+    <button id="injectBtn">🚀 Injecter Données de Test</button>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="/env-config.js"></script>
+
+  <script>
+    const logEl = document.getElementById('log');
+
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      const className = `log-${type}`;
+      logEl.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(message);
+    }
+
+    // Initialiser Firebase
+    firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    const db = firebase.database();
+
+    async function injectTestData() {
+      const btn = document.getElementById('injectBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Injection en cours...';
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const timestamp = Date.now();
+        const datetime = new Date().toISOString();
+
+        log('🚀 Démarrage de l\'injection de données...', 'info');
+
+        // 1. stats/daily/{date}
+        log('📊 Injection stats/daily...', 'info');
+        await db.ref(`stats/daily/${today}`).set({
+          total_scans: 42,
+          last_updated: timestamp,
+          date: today
+        });
+        log('✅ stats/daily OK', 'success');
+
+        // 2. voyage/express/ligne-c
+        log('📊 Injection voyage/express/ligne-c...', 'info');
+        await db.ref('voyage/express/ligne-c/stats/realtime').set({
+          passengers_today: 87,
+          total_passengers: 1523,
+          revenue_today: 21750,
+          occupancy_rate: 75,
+          last_scan: timestamp,
+          last_scan_date: today
+        });
+        log('✅ voyage/express/ligne-c OK', 'success');
+
+        // 3. ops/transport/live_feed
+        log('📊 Injection ops/transport/live_feed...', 'info');
+        for (let i = 0; i < 5; i++) {
+          await db.ref('ops/transport/live_feed').push({
+            timestamp: timestamp - (i * 60000),
+            datetime: new Date(Date.now() - (i * 60000)).toISOString(),
+            type: 'scan',
+            vehicleId: `DK-${2019 + i}-M`,
+            lineId: 'ligne-c',
+            lineName: 'Ligne C (Dakar ↔ Keur Massar)',
+            status: 'valid',
+            passengerId: `+22177123456${i}`,
+            message: `✅ Passager validé sur DK-${2019 + i}-M - Ligne C`,
+            occupancyRate: 70 + (i * 2)
+          });
+        }
+        log('✅ ops/transport/live_feed OK (5 événements)', 'success');
+
+        // 4. transport_stats/global
+        log('📊 Injection transport_stats/global...', 'info');
+        await db.ref('transport_stats/global').set({
+          total_scans_today: 142,
+          total_scans: 8475,
+          last_scan: timestamp,
+          last_scan_date: today,
+          average_occupancy_rate: 75
+        });
+        log('✅ transport_stats/global OK', 'success');
+
+        // 5. fleet_vehicles (un véhicule test)
+        log('📊 Injection fleet_vehicles...', 'info');
+        await db.ref('fleet_vehicles/DK-2019-M').set({
+          vehicle_number: 'DK-2019-M',
+          type: 'Ndiaga Ndiaye',
+          capacity: 25,
+          status: 'en_service',
+          line_id: 'ligne-c',
+          usageCount: 45,
+          total_revenue_today: 11250,
+          average_occupancy_rate: 75,
+          stats: {
+            total_scans: 45,
+            last_scan: timestamp
+          }
+        });
+        log('✅ fleet_vehicles OK', 'success');
+
+        // 6. ops/transport/vehicles
+        log('📊 Injection ops/transport/vehicles...', 'info');
+        await db.ref('ops/transport/vehicles/DK-2019-M').set({
+          license_plate: 'DK-2019-M',
+          line_id: 'ligne-c',
+          isActive: true,
+          stats: {
+            total_scans: 45,
+            scans_today: 9,
+            last_scan: timestamp
+          }
+        });
+        log('✅ ops/transport/vehicles OK', 'success');
+
+        // 7. ops/transport/lines
+        log('📊 Injection ops/transport/lines...', 'info');
+        await db.ref('ops/transport/lines/ligne-c').set({
+          name: 'Ligne C (Dakar ↔ Keur Massar)',
+          route_name: 'Ligne C',
+          stats: {
+            total_scans: 857,
+            scans_today: 87,
+            last_scan: timestamp
+          }
+        });
+        log('✅ ops/transport/lines OK', 'success');
+
+        // 8. scan_history (quelques scans)
+        log('📊 Injection scan_history...', 'info');
+        for (let i = 0; i < 3; i++) {
+          await db.ref('scan_history').push({
+            vehicleId: `DK-${2019 + i}-M`,
+            lineId: 'ligne-c',
+            timestamp: timestamp - (i * 60000),
+            date: today,
+            scanType: 'SAMA_PASS',
+            status: 'VALID',
+            passengerId: `+22177123456${i}`
+          });
+        }
+        log('✅ scan_history OK (3 scans)', 'success');
+
+        log('', 'info');
+        log('🎉 INJECTION TERMINÉE AVEC SUCCÈS !', 'success');
+        log('', 'info');
+        log('📋 Données injectées:', 'info');
+        log(`  - stats/daily/${today} → 42 scans`, 'info');
+        log('  - voyage/express/ligne-c → 87 passagers', 'info');
+        log('  - ops/transport/live_feed → 5 événements', 'info');
+        log('  - transport_stats/global → 142 scans', 'info');
+        log('  - fleet_vehicles/DK-2019-M → Véhicule actif', 'info');
+        log('  - ops/transport/vehicles/DK-2019-M → Stats OK', 'info');
+        log('  - ops/transport/lines/ligne-c → Ligne active', 'info');
+        log('  - scan_history → 3 scans', 'info');
+        log('', 'info');
+        log('👉 Allez sur /admin/ops/transport et rechargez la page (F5)', 'success');
+        log('👉 Les compteurs devraient maintenant afficher des valeurs > 0', 'success');
+
+        btn.textContent = '✅ Injection Réussie !';
+        btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+
+      } catch (error) {
+        log('❌ ERREUR:', 'error');
+        log(error.message, 'error');
+        log(error.stack, 'error');
+
+        btn.disabled = false;
+        btn.textContent = '🚀 Réessayer l\'Injection';
+      }
+    }
+
+    document.getElementById('injectBtn').addEventListener('click', injectTestData);
+
+    log('✅ Firebase initialisé', 'success');
+    log('👉 Cliquez sur le bouton pour injecter les données', 'info');
+  </script>
+</body>
+</html>
