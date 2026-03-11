@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Vérification Command Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 32px;
+      background: linear-gradient(135deg, #10B981, #3B82F6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .test-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .test-card h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .status.pending { background: #FFA500; }
+    .status.success { background: #10B981; animation: none; }
+    .status.error { background: #EF4444; animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .result {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .result.success { border-left: 4px solid #10B981; }
+    .result.error { border-left: 4px solid #EF4444; }
+    button {
+      background: linear-gradient(135deg, #10B981, #3B82F6);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 30px;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .summary {
+      background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(59,130,246,0.2));
+      border: 1px solid rgba(16,185,129,0.5);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .summary h2 { margin-bottom: 10px; }
+    .summary .score {
+      font-size: 48px;
+      font-weight: 900;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Vérification Command Center</h1>
+
+    <button id="runTests">🚀 Lancer la Vérification Complète</button>
+
+    <div id="summary" class="summary" style="display: none;">
+      <h2>📊 Résultat Global</h2>
+      <div class="score" id="score">0/10</div>
+      <div id="verdict"></div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status1"></span>
+        1. Connexion Firebase
+      </h2>
+      <div class="result" id="result1">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status2"></span>
+        2. stats/daily/{date}
+      </h2>
+      <div class="result" id="result2">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status3"></span>
+        3. voyage/express/ligne-c
+      </h2>
+      <div class="result" id="result3">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status4"></span>
+        4. ops/transport/live_feed
+      </h2>
+      <div class="result" id="result4">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status5"></span>
+        5. transport_stats/global
+      </h2>
+      <div class="result" id="result5">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status6"></span>
+        6. fleet_vehicles (véhicules)
+      </h2>
+      <div class="result" id="result6">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status7"></span>
+        7. scan_history
+      </h2>
+      <div class="result" id="result7">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status8"></span>
+        8. ops/transport/vehicles/scan_events
+      </h2>
+      <div class="result" id="result8">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status9"></span>
+        9. ops/transport/lines
+      </h2>
+      <div class="result" id="result9">En attente...</div>
+    </div>
+
+    <div class="test-card">
+      <h2>
+        <span class="status pending" id="status10"></span>
+        10. Cohérence des compteurs
+      </h2>
+      <div class="result" id="result10">En attente...</div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="/env-config.js"></script>
+
+  <script>
+    let testResults = [];
+
+    // Initialiser Firebase
+    firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    const db = firebase.database();
+
+    function setStatus(testNum, status, message) {
+      const statusEl = document.getElementById(`status${testNum}`);
+      const resultEl = document.getElementById(`result${testNum}`);
+
+      statusEl.className = `status ${status}`;
+      resultEl.className = `result ${status}`;
+      resultEl.textContent = message;
+
+      testResults[testNum - 1] = status === 'success';
+    }
+
+    async function runTest1() {
+      try {
+        const ref = db.ref('_connection_test');
+        await ref.once('value');
+        setStatus(1, 'success', '✅ Connexion Firebase réussie\nURL: ' + db.ref().toString());
+      } catch (error) {
+        setStatus(1, 'error', '❌ Erreur de connexion:\n' + error.message);
+      }
+    }
+
+    async function runTest2() {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const ref = db.ref(`stats/daily/${today}`);
+        const snapshot = await ref.once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(2, 'error', `❌ Chemin inexistant: stats/daily/${today}\n\n⚠️ Aucun scan n'a encore été enregistré aujourd'hui.`);
+          return;
+        }
+
+        const data = snapshot.val();
+        const message = `✅ Données trouvées:\n\n${JSON.stringify(data, null, 2)}\n\n📊 Total scans: ${data.total_scans || 0}`;
+        setStatus(2, 'success', message);
+      } catch (error) {
+        setStatus(2, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest3() {
+      try {
+        const ref = db.ref('voyage/express/ligne-c/stats/realtime');
+        const snapshot = await ref.once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(3, 'error', '❌ Chemin inexistant: voyage/express/ligne-c\n\n⚠️ Aucun scan n\'a encore été enregistré pour la Ligne C.');
+          return;
+        }
+
+        const data = snapshot.val();
+        const message = `✅ Analytics Ligne C:\n\n${JSON.stringify(data, null, 2)}\n\n🚶 Passagers aujourd'hui: ${data.passengers_today || 0}\n💰 Revenus: ${data.revenue_today || 0} FCFA`;
+        setStatus(3, 'success', message);
+      } catch (error) {
+        setStatus(3, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest4() {
+      try {
+        const ref = db.ref('ops/transport/live_feed');
+        const snapshot = await ref.limitToLast(5).once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(4, 'error', '❌ Chemin vide: ops/transport/live_feed\n\n⚠️ Aucun événement dans le Live Feed.');
+          return;
+        }
+
+        const events = [];
+        snapshot.forEach(child => {
+          events.push(child.val());
+        });
+
+        const message = `✅ Live Feed actif (${events.length} événements récents):\n\n${JSON.stringify(events, null, 2)}`;
+        setStatus(4, 'success', message);
+      } catch (error) {
+        setStatus(4, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest5() {
+      try {
+        const ref = db.ref('transport_stats/global');
+        const snapshot = await ref.once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(5, 'error', '❌ Chemin inexistant: transport_stats/global\n\n⚠️ Aucune statistique globale enregistrée.');
+          return;
+        }
+
+        const data = snapshot.val();
+        const message = `✅ Stats globales:\n\n${JSON.stringify(data, null, 2)}\n\n📊 Scans aujourd'hui: ${data.total_scans_today || 0}\n📈 Total scans: ${data.total_scans || 0}`;
+        setStatus(5, 'success', message);
+      } catch (error) {
+        setStatus(5, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest6() {
+      try {
+        const ref = db.ref('fleet_vehicles');
+        const snapshot = await ref.limitToFirst(5).once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(6, 'error', '❌ Aucun véhicule: fleet_vehicles\n\n⚠️ La flotte est vide.');
+          return;
+        }
+
+        const vehicles = [];
+        snapshot.forEach(child => {
+          vehicles.push({ id: child.key, ...child.val() });
+        });
+
+        const message = `✅ ${vehicles.length} véhicule(s) trouvé(s):\n\n${vehicles.map(v => `- ${v.id}: ${v.vehicle_number || 'N/A'} (${v.status || 'N/A'})`).join('\n')}`;
+        setStatus(6, 'success', message);
+      } catch (error) {
+        setStatus(6, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest7() {
+      try {
+        const ref = db.ref('scan_history');
+        const snapshot = await ref.limitToLast(5).once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(7, 'error', '❌ Historique vide: scan_history\n\n⚠️ Aucun scan enregistré dans l\'historique.');
+          return;
+        }
+
+        const scans = [];
+        snapshot.forEach(child => {
+          scans.push(child.val());
+        });
+
+        const message = `✅ ${scans.length} scan(s) récent(s):\n\n${JSON.stringify(scans, null, 2)}`;
+        setStatus(7, 'success', message);
+      } catch (error) {
+        setStatus(7, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest8() {
+      try {
+        const vehiclesRef = db.ref('ops/transport/vehicles');
+        const vehiclesSnapshot = await vehiclesRef.limitToFirst(1).once('value');
+
+        if (!vehiclesSnapshot.exists()) {
+          setStatus(8, 'error', '❌ Aucun véhicule: ops/transport/vehicles\n\n⚠️ Aucun véhicule opérationnel.');
+          return;
+        }
+
+        let firstVehicleId = null;
+        vehiclesSnapshot.forEach(child => {
+          firstVehicleId = child.key;
+        });
+
+        const scanEventsRef = db.ref(`ops/transport/vehicles/${firstVehicleId}/scan_events`);
+        const scanEventsSnapshot = await scanEventsRef.limitToLast(3).once('value');
+
+        if (!scanEventsSnapshot.exists()) {
+          setStatus(8, 'error', `❌ Aucun scan_event pour ${firstVehicleId}\n\n⚠️ Ce véhicule n'a pas encore scanné de passagers.`);
+          return;
+        }
+
+        const events = [];
+        scanEventsSnapshot.forEach(child => {
+          events.push(child.val());
+        });
+
+        const message = `✅ Véhicule ${firstVehicleId} - ${events.length} événement(s):\n\n${JSON.stringify(events, null, 2)}`;
+        setStatus(8, 'success', message);
+      } catch (error) {
+        setStatus(8, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest9() {
+      try {
+        const ref = db.ref('ops/transport/lines');
+        const snapshot = await ref.once('value');
+
+        if (!snapshot.exists()) {
+          setStatus(9, 'error', '❌ Aucune ligne: ops/transport/lines\n\n⚠️ Aucune ligne de transport configurée.');
+          return;
+        }
+
+        const lines = [];
+        snapshot.forEach(child => {
+          lines.push({ id: child.key, ...child.val() });
+        });
+
+        const message = `✅ ${lines.length} ligne(s) configurée(s):\n\n${lines.map(l => `- ${l.id}: ${l.name || 'N/A'}`).join('\n')}`;
+        setStatus(9, 'success', message);
+      } catch (error) {
+        setStatus(9, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runTest10() {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Récupérer les 3 sources de compteurs
+        const [dailySnap, globalSnap, ligneSnap] = await Promise.all([
+          db.ref(`stats/daily/${today}`).once('value'),
+          db.ref('transport_stats/global').once('value'),
+          db.ref('voyage/express/ligne-c/stats/realtime').once('value')
+        ]);
+
+        const daily = dailySnap.val();
+        const global = globalSnap.val();
+        const ligne = ligneSnap.val();
+
+        const dailyScans = daily?.total_scans || 0;
+        const globalScans = global?.total_scans_today || 0;
+        const lignePassengers = ligne?.passengers_today || 0;
+
+        let message = `📊 Comparaison des compteurs:\n\n`;
+        message += `stats/daily: ${dailyScans} scans\n`;
+        message += `transport_stats/global: ${globalScans} scans\n`;
+        message += `voyage/express/ligne-c: ${lignePassengers} passagers\n\n`;
+
+        if (dailyScans === globalScans) {
+          message += `✅ Compteurs cohérents (daily == global)`;
+          setStatus(10, 'success', message);
+        } else {
+          message += `⚠️ Incohérence détectée:\n`;
+          message += `  - Différence: ${Math.abs(dailyScans - globalScans)} scans\n`;
+          message += `  - Cela peut être normal si des scans sont en cours.`;
+          setStatus(10, 'success', message);
+        }
+      } catch (error) {
+        setStatus(10, 'error', '❌ Erreur:\n' + error.message);
+      }
+    }
+
+    async function runAllTests() {
+      const button = document.getElementById('runTests');
+      button.disabled = true;
+      button.textContent = '⏳ Vérification en cours...';
+
+      testResults = [];
+
+      await runTest1();
+      await runTest2();
+      await runTest3();
+      await runTest4();
+      await runTest5();
+      await runTest6();
+      await runTest7();
+      await runTest8();
+      await runTest9();
+      await runTest10();
+
+      const successCount = testResults.filter(r => r === true).length;
+      const totalCount = testResults.length;
+
+      const summary = document.getElementById('summary');
+      const score = document.getElementById('score');
+      const verdict = document.getElementById('verdict');
+
+      score.textContent = `${successCount}/${totalCount}`;
+
+      if (successCount === totalCount) {
+        verdict.innerHTML = '🎉 <strong>COMMAND CENTER OPÉRATIONNEL !</strong><br>Tous les tests sont passés avec succès.';
+      } else if (successCount >= 7) {
+        verdict.innerHTML = '⚠️ <strong>PARTIELLEMENT OPÉRATIONNEL</strong><br>Certains chemins sont vides (normal si aucun scan récent).';
+      } else {
+        verdict.innerHTML = '❌ <strong>PROBLÈME DÉTECTÉ</strong><br>Plusieurs chemins Firebase sont manquants ou vides.';
+      }
+
+      summary.style.display = 'block';
+
+      button.disabled = false;
+      button.textContent = '🔄 Relancer la Vérification';
+    }
+
+    document.getElementById('runTests').addEventListener('click', runAllTests);
+  </script>
+</body>
+</html>
