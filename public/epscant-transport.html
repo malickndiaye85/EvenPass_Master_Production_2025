@@ -997,7 +997,7 @@
     <script src="/epscant-alerts.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
-        import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, push as rtdbPush } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
         import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
 
         const firebaseConfig = {
@@ -1016,7 +1016,7 @@
 
         // Exposer les modules Firebase pour le service de sectorisation
         window.firebaseFirestore = { doc, getDoc };
-        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update: rtdbUpdate };
+        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update: rtdbUpdate, push: rtdbPush };
 
         let isFirebaseConnected = false;
         let offlineDB = null;

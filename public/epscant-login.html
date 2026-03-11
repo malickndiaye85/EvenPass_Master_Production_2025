@@ -437,7 +437,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
-        import { getDatabase, ref as dbRef, get as rtdbGet, update } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
+        import { getDatabase, ref as dbRef, get as rtdbGet, update, push as rtdbPush } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js';
         import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js';
 
         const firebaseConfig = {
@@ -465,7 +465,7 @@
         console.log('[EPscanT Login] ✅ Firestore:', firestore ? 'OK' : 'ERREUR');
 
         window.firebaseFirestore = { doc, getDoc };
-        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update };
+        window.firebaseDatabase = { ref: dbRef, get: rtdbGet, update, push: rtdbPush };
 
         console.log('[EPscanT Login] ✅ Modules Firebase exposés à window');
 
