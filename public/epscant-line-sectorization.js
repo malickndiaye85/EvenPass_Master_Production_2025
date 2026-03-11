@@ -611,6 +611,10 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
                 usageCount: newUsageCount,
                 lastUsed: timestamp,
                 lastUsedDate: today
+            }).catch(err => {
+                console.error('[SECTORISATION] 💥 ÉCHEC update fleet_vehicles:', err);
+                alert('❌ ÉCHEC fleet_vehicles: ' + err.message);
+                throw err;
             });
 
             console.log('[SECTORISATION] ✅ usageCount fleet_vehicles:', currentUsageCount, '→', newUsageCount);
@@ -625,6 +629,10 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
 
         await update(vehicleStatsRef, {
             occupancy_rate: occupancyRate
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update occupancy_rate:', err);
+            alert('❌ ÉCHEC occupancy_rate: ' + err.message);
+            throw err;
         });
 
         console.log('[SECTORISATION] 📊 Taux d\'occupation:', occupancyRate + '%');
@@ -688,7 +696,11 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             lineId: lineId
         };
 
-        await push(scanEventsRef, scanEventRecord);
+        await push(scanEventsRef, scanEventRecord).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC push scan_events:', err);
+            alert('❌ ÉCHEC scan_events: ' + err.message);
+            throw err;
+        });
         console.log('[SECTORISATION] ✅ Événement scan créé dans scan_events du véhicule');
 
         // 8. METTRE À JOUR /STATS/DAILY/{DATE}/TOTAL_SCANS (KPI GLOBAUX COMMAND CENTER)
@@ -701,24 +713,32 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             total_scans: currentDailyScans + 1,
             last_updated: timestamp,
             date: today
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update stats/daily:', err);
+            alert('❌ ÉCHEC stats/daily: ' + err.message);
+            throw err;
         });
         console.log('[SECTORISATION] ✅ KPI journalier mis à jour:', currentDailyScans, '→', currentDailyScans + 1);
 
         // 9. METTRE À JOUR /VOYAGE/EXPRESS/{LINEID}/STATS/REALTIME (ANALYTICS LIGNE)
         console.log('[SECTORISATION] 📊 Étape 9/10 : voyage/express analytics pour Ligne', lineId);
-        const lineStatsRef = dbRef(rtdb, `voyage/express/${lineId}/stats/realtime`);
-        const lineStatsSnap = await rtdbGet(lineStatsRef);
-        const currentLineData = lineStatsSnap.exists() ? lineStatsSnap.val() : {};
+        const voyageLineStatsRef = dbRef(rtdb, `voyage/express/${lineId}/stats/realtime`);
+        const voyageLineStatsSnap = await rtdbGet(voyageLineStatsRef);
+        const currentLineData = voyageLineStatsSnap.exists() ? voyageLineStatsSnap.val() : {};
         const currentLinePassengers = currentLineData.passengers_today || 0;
         const currentLineRevenue = currentLineData.revenue_today || 0;
 
-        await update(lineStatsRef, {
+        await update(voyageLineStatsRef, {
             passengers_today: currentLinePassengers + 1,
             total_passengers: (currentLineData.total_passengers || 0) + 1,
             revenue_today: currentLineRevenue + 250, // Prix moyen SAMA PASS
             last_scan: timestamp,
             last_scan_date: today,
             occupancy_rate: occupancyRate
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update voyage/express:', err);
+            alert('❌ ÉCHEC voyage/express: ' + err.message);
+            throw err;
         });
         console.log('[SECTORISATION] ✅ Analytics Ligne C mise à jour: +1 passager');
 
