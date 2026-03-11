@@ -6,8 +6,8 @@ import { join } from 'path';
 const buildTimestamp = Date.now();
 
 /**
- * Plugin pour copier les fichiers HTML statiques de public/ vers dist/
- * Nécessaire pour les scans EPscanV et les accès contrôleurs
+ * Plugin pour copier les fichiers HTML et JS statiques de public/ vers dist/
+ * Nécessaire pour les scans EPscanV/EPscanT et les accès contrôleurs
  */
 const copyPublicHtmlPlugin = (): Plugin => {
   return {
@@ -27,6 +27,12 @@ const copyPublicHtmlPlugin = (): Plugin => {
         'test-ticket.html'
       ];
 
+      const jsFilesToCopy = [
+        'epscant-line-sectorization.js',
+        'epscant-alerts.js',
+        'ops-events-scanner.js'
+      ];
+
       let copiedCount = 0;
       htmlFilesToCopy.forEach(file => {
         const srcPath = join(publicPath, file);
@@ -37,7 +43,16 @@ const copyPublicHtmlPlugin = (): Plugin => {
         }
       });
 
-      console.log(`✓ Copied ${copiedCount} HTML files from public/ to dist/`);
+      jsFilesToCopy.forEach(file => {
+        const srcPath = join(publicPath, file);
+        const destPath = join(distPath, file);
+        if (existsSync(srcPath)) {
+          copyFileSync(srcPath, destPath);
+          copiedCount++;
+        }
+      });
+
+      console.log(`✓ Copied ${copiedCount} HTML/JS files from public/ to dist/`);
     }
   };
 };
