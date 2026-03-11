@@ -490,6 +490,12 @@ async function validateSubscriptionForLine(subscription, rtdb) {
             id: subscription.id
         });
 
+        console.log('[SECTORISATION] 🚨 APPEL incrementLineStats avec:', {
+            lineId: session.lineId,
+            vehicleId: session.vehicleId
+        });
+        alert('🚨 APPEL incrementLineStats MAINTENANT !');
+
         await incrementLineStats(session.lineId, session.vehicleId, rtdb, subscription);
 
         return {
@@ -520,13 +526,32 @@ async function validateSubscriptionForLine(subscription, rtdb) {
  * CRITIQUE : Cette fonction met à jour les compteurs pour le paiement des transporteurs
  */
 async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = null) {
+    console.log('[SECTORISATION] 📊 🚨 FONCTION incrementLineStats APPELÉE !');
     console.log('[SECTORISATION] 📊 Mise à jour stats ligne:', lineId);
     console.log('[SECTORISATION] 📊 Mise à jour stats véhicule:', vehicleId);
+
+    // 🚨 HARDCODING TEST : Si vehicleId est vide ou invalide, forcer DK-2019-M
+    if (!vehicleId || vehicleId === 'undefined' || vehicleId === 'null') {
+        console.warn('[SECTORISATION] ⚠️ vehicleId invalide, HARDCODING → DK-2019-M');
+        vehicleId = 'DK-2019-M';
+        alert('⚠️ vehicleId était vide ! Hardcoding DK-2019-M');
+    }
+
+    // 🚨 HARDCODING TEST : Si lineId est vide, forcer ligne-c
+    if (!lineId || lineId === 'undefined' || lineId === 'null') {
+        console.warn('[SECTORISATION] ⚠️ lineId invalide, HARDCODING → ligne-c');
+        lineId = 'ligne-c';
+        alert('⚠️ lineId était vide ! Hardcoding ligne-c');
+    }
+
+    console.log('[SECTORISATION] 📊 ✅ IDs validés - lineId:', lineId, 'vehicleId:', vehicleId);
 
     try {
         const { ref: dbRef, get: rtdbGet, update, push } = window.firebaseDatabase;
         const today = new Date().toISOString().split('T')[0];
         const timestamp = Date.now();
+
+        console.log('[SECTORISATION] 📊 Date du jour:', today, 'Timestamp:', timestamp);
 
         // 1. INCRÉMENTER LES STATS DE LA LIGNE dans ops/transport/lines
         console.log('[SECTORISATION] 📊 Étape 1/5 : Stats ligne ops/transport/lines');
@@ -542,6 +567,10 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             total_scans: totalScans,
             last_scan: timestamp,
             last_scan_date: today
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update ligne:', err);
+            alert('❌ ÉCHEC update ligne: ' + err.message);
+            throw err;
         });
 
         console.log('[SECTORISATION] ✅ Stats ligne mises à jour:', { scansToday, totalScans });
@@ -560,6 +589,10 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             total_scans: vehicleTotalScans,
             last_scan: timestamp,
             last_scan_date: today
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update véhicule:', err);
+            alert('❌ ÉCHEC update véhicule: ' + err.message);
+            throw err;
         });
 
         console.log('[SECTORISATION] ✅ Stats véhicule mises à jour:', { vehicleScansToday, vehicleTotalScans });
@@ -612,7 +645,11 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             routeName: subscriptionData?.routeName || null
         };
 
-        await push(scanHistoryRef, scanRecord);
+        await push(scanHistoryRef, scanRecord).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC push scan_history:', err);
+            alert('❌ ÉCHEC scan_history: ' + err.message);
+            throw err;
+        });
         console.log('[SECTORISATION] ✅ Scan enregistré dans scan_history');
 
         // 6. METTRE À JOUR TRANSPORT_STATS/GLOBAL (POUR LE DASHBOARD)
@@ -630,6 +667,10 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             last_scan: timestamp,
             last_scan_date: today,
             average_occupancy_rate: occupancyRate
+        }).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC update transport_stats/global:', err);
+            alert('❌ ÉCHEC transport_stats/global: ' + err.message);
+            throw err;
         });
 
         console.log('[SECTORISATION] ✅ Stats globales mises à jour');
@@ -697,7 +738,11 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
             occupancyRate: occupancyRate
         };
 
-        await push(liveFeedRef, liveFeedEvent);
+        await push(liveFeedRef, liveFeedEvent).catch(err => {
+            console.error('[SECTORISATION] 💥 ÉCHEC push live_feed:', err);
+            alert('❌ ÉCHEC live_feed: ' + err.message);
+            throw err;
+        });
         console.log('[SECTORISATION] ✅ Événement ajouté au Live Feed');
 
         console.log('[SECTORISATION] 🎉 TOUTES LES STATS MISES À JOUR AVEC SUCCÈS');
@@ -715,6 +760,7 @@ async function incrementLineStats(lineId, vehicleId, rtdb, subscriptionData = nu
     } catch (error) {
         console.error('[SECTORISATION] ❌ Erreur mise à jour stats:', error);
         console.error('[SECTORISATION] ❌ Stack:', error.stack);
+        alert('💥 ERREUR CRITIQUE incrementLineStats: ' + error.message);
     }
 }
 
