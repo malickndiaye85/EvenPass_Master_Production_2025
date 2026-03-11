@@ -12,8 +12,8 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
     const codeStr = String(accessCode).trim();
     console.log('[SECTORISATION] 🔐 Authentification avec code:', codeStr);
 
-    // Importer les fonctions Firebase
-    const { ref: dbRef, get: rtdbGet, set: rtdbSet } = window.firebaseDatabase;
+    // Importer les fonctions Firebase (READ-ONLY: Scanner ne doit JAMAIS écrire)
+    const { ref: dbRef, get: rtdbGet } = window.firebaseDatabase;
     const { doc, getDoc } = window.firebaseFirestore;
 
     let vehicleId = null;
@@ -162,64 +162,76 @@ async function authenticateWithAccessCode(accessCode, firestore, rtdb) {
         } else {
             console.log('[SECTORISATION] 🚍 Véhicule assigné à la ligne:', lineId);
 
-            // NORMALISATION : Si lineId est un nom (contient espaces/caractères spéciaux), le normaliser
-            let normalizedLineId = lineId;
-            let originalLineName = lineId;
+            // 3. CHERCHER LA LIGNE DANS transport_lines (Source: /voyage/express)
+            console.log('[SECTORISATION] 🔍 Recherche dans transport_lines (créées via /admin/transversal)...');
 
-            // Si le lineId contient des espaces ou caractères spéciaux, c'est un nom, pas un ID
-            if (lineId.includes(' ') || lineId.includes('⇄') || lineId.includes('-')) {
-                console.warn('[SECTORISATION] ⚠️ lineId ressemble à un nom, normalisation...');
-                normalizedLineId = lineId
-                    .toLowerCase()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Enlever accents
-                    .replace(/[^a-z0-9]/g, '_') // Remplacer caractères spéciaux par _
-                    .replace(/_+/g, '_') // Remplacer multiples _ par un seul
-                    .replace(/^_|_$/g, ''); // Enlever _ au début/fin
-                console.log('[SECTORISATION] 🔄 ID normalisé:', normalizedLineId);
+            let lineData = null;
+            let lineKey = null;
+
+            // D'abord essayer de récupérer par ID direct
+            const directLineRef = dbRef(rtdb, `transport_lines/${lineId}`);
+            const directLineSnap = await rtdbGet(directLineRef);
+
+            if (directLineSnap.exists()) {
+                // Ligne trouvée avec l'ID exact
+                lineData = directLineSnap.val();
+                lineKey = lineId;
+                console.log('[SECTORISATION] ✅ Ligne trouvée par ID Firebase:', lineKey);
+            } else {
+                // Si pas trouvé par ID, chercher par nom/route
+                console.log('[SECTORISATION] 📋 Ligne non trouvée par ID, scan par nom...');
+                console.log('[SECTORISATION] 🔍 Nom recherché:', lineId);
+
+                const allLinesRef = dbRef(rtdb, 'transport_lines');
+                const allLinesSnap = await rtdbGet(allLinesRef);
+
+                if (allLinesSnap.exists()) {
+                    const allLines = allLinesSnap.val();
+
+                    // Chercher la ligne dont le name ou route correspond
+                    for (const [key, line] of Object.entries(allLines)) {
+                        // Comparaison exacte du nom complet
+                        if (line.name === lineId || line.route === lineId) {
+                            lineData = line;
+                            lineKey = key;
+                            console.log('[SECTORISATION] ✅ Ligne trouvée par nom/route');
+                            console.log('[SECTORISATION] 🆔 ID Firebase réel:', lineKey);
+                            console.log('[SECTORISATION] 📛 Nom ligne:', line.name);
+                            break;
+                        }
+                    }
+                }
             }
 
-            // 3. RÉCUPÉRER LES INFOS DE LA LIGNE
-            let lineRef = dbRef(rtdb, `transport_lines/${normalizedLineId}`);
-            let lineSnap = await rtdbGet(lineRef);
-
-            // Si ligne non trouvée avec ID normalisé, créer automatiquement
-            if (!lineSnap.exists()) {
-                console.warn('[SECTORISATION] ⚠️ Ligne non trouvée:', normalizedLineId);
-                console.log('[SECTORISATION] 🔧 Auto-création de la ligne...');
-
-                const newLineData = {
-                    name: originalLineName,
-                    route: originalLineName,
-                    is_active: true,
-                    price_weekly: 10000,
-                    price_monthly: 19000,
-                    created_at: new Date().toISOString(),
-                    created_by: 'auto_sectorization'
+            // Si ligne toujours non trouvée - ERREUR (pas d'auto-création)
+            if (!lineData || !lineKey) {
+                console.error('[SECTORISATION] ❌ Ligne non trouvée dans transport_lines');
+                console.error('[SECTORISATION] 📋 Nom/ID recherché:', lineId);
+                console.error('[SECTORISATION] 💡 Action requise: Créer la ligne dans /admin/transversal');
+                console.error('[SECTORISATION] 💡 Source données: /voyage/express');
+                return {
+                    success: false,
+                    error: `Erreur : La ligne "${lineId}" n'est pas configurée dans Voyage Express`
                 };
-
-                await rtdbSet(lineRef, newLineData);
-                console.log('[SECTORISATION] ✅ Ligne créée automatiquement:', normalizedLineId);
-
-                // Relire la ligne
-                lineSnap = await rtdbGet(lineRef);
             }
 
-            const lineData = lineSnap.val();
-
+            // Vérifier que la ligne est active
             if (!lineData.is_active) {
                 console.error('[SECTORISATION] ❌ Ligne désactivée');
                 return { success: false, error: 'Ligne désactivée' };
             }
 
-            const lineName = lineData.name || originalLineName;
-            const lineRoute = lineData.route || originalLineName;
+            const lineName = lineData.name || lineId;
+            const lineRoute = lineData.route || lineId;
 
             console.log('[SECTORISATION] ✅ Ligne active:', lineName);
             console.log('[SECTORISATION] 📍 Trajet:', lineRoute);
+            console.log('[SECTORISATION] 🆔 ID Firebase pour validation QR:', lineKey);
+            console.log('[SECTORISATION] 💡 Les SAMA PASS doivent avoir routeId === "' + lineKey + '"');
 
             // 4. CRÉER LA SESSION DE LIGNE
             session = {
-                lineId: normalizedLineId, // Utiliser l'ID normalisé
+                lineId: lineKey, // ✅ ID FIREBASE RÉEL pour matcher routeId des SAMA PASS
                 lineName,
                 lineRoute,
                 vehicleId,
@@ -314,13 +326,17 @@ async function validateSubscriptionForLine(subscription, rtdb) {
             };
         }
 
-        // MODE PRODUCTION : COMPARAISON STRICTE - L'ID de la ligne doit correspondre
+        // MODE PRODUCTION : COMPARAISON STRICTE - L'ID Firebase doit correspondre
+        console.log('[SECTORISATION] 🔐 VALIDATION STRICTE:');
+        console.log('[SECTORISATION]    Pass routeId:', subscriberRouteId);
+        console.log('[SECTORISATION]    Scanner lineId:', session.lineId);
+
         const isLineMatch = subscriberRouteId === session.lineId;
 
         if (!isLineMatch) {
-            console.warn('[SECTORISATION] ⚠️ Ligne non autorisée');
-            console.warn('[SECTORISATION] ⚠️ Abonné sur:', subscriberRouteName);
-            console.warn('[SECTORISATION] ⚠️ Contrôleur sur:', session.lineName);
+            console.warn('[SECTORISATION] ⚠️ LIGNE NON AUTORISÉE - IDs ne correspondent pas');
+            console.warn('[SECTORISATION] ⚠️ Pass valide pour:', subscriberRouteName, '(ID:', subscriberRouteId + ')');
+            console.warn('[SECTORISATION] ⚠️ Scanner sur:', session.lineName, '(ID:', session.lineId + ')');
 
             return {
                 isValid: true,
@@ -335,6 +351,9 @@ async function validateSubscriptionForLine(subscription, rtdb) {
                 }
             };
         }
+
+        console.log('[SECTORISATION] ✅ MATCH PARFAIT - routeId === lineId');
+        console.log('[SECTORISATION] ✅ Pass autorisé sur cette ligne');
 
         // VALIDATION RÉUSSIE - INCRÉMENTER LES STATS
         console.log('[SECTORISATION] ✅ Ligne autorisée - Mise à jour des stats');
