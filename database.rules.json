@@ -312,6 +312,16 @@
       "global": {
         ".read": true,
         ".write": true
+      },
+      "lines": {
+        ".read": true,
+        "$lineId": {
+          ".write": true,
+          "stats": {
+            ".read": true,
+            ".write": true
+          }
+        }
       }
     },
 
