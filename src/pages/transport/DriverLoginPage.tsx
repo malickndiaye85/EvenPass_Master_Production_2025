@@ -164,11 +164,11 @@ export const DriverLoginPage: React.FC = () => {
         }
 
       } catch (firebaseAuthError: any) {
-        console.error('[DRIVER LOGIN] ❌ Erreur Firebase Auth:', firebaseAuthError.code);
+        console.error('[DRIVER LOGIN] ❌ Erreur authentification:', firebaseAuthError.code);
 
-        // Si compte Firebase Auth introuvable, essayer migration automatique
+        // Si compte Auth introuvable, essayer migration automatique
         if (firebaseAuthError.code === 'auth/user-not-found' || firebaseAuthError.code === 'auth/invalid-credential') {
-          console.log('[DRIVER LOGIN] 🔄 Compte Firebase Auth introuvable, tentative de migration...');
+          console.log('[DRIVER LOGIN] 🔄 Compte introuvable, tentative de migration...');
 
           try {
             // Rechercher dans Firestore avec l'ancienne méthode
