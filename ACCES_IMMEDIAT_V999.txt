@@ -1,0 +1,146 @@
+═══════════════════════════════════════════════════════════
+   🚀 EPscanT V999-CLEAN - ACCÈS IMMÉDIAT
+═══════════════════════════════════════════════════════════
+
+✅ BUILD TERMINÉ - FICHIERS PRÊTS À DÉPLOYER
+
+───────────────────────────────────────────────────────────
+📍 ÉTAPE 1: VIDER CACHE SUR VOTRE SMARTPHONE
+───────────────────────────────────────────────────────────
+
+OPTION A - NAVIGATION PRIVÉE (Le plus rapide):
+   1. Ouvrir Chrome/Safari en mode privé/incognito
+   2. Aller sur: https://demdem.sn/force-refresh-epscant.html
+   3. Cliquer "Vider Cache + SW"
+   4. Puis "Aller à EPscanT V999"
+
+OPTION B - VIA PARAMÈTRES:
+   Android Chrome:
+   - Menu (⋮) → Paramètres → Confidentialité
+   - Effacer données de navigation
+   - Cocher "Images et fichiers en cache"
+   - Période: "Toutes les périodes"
+   - Effacer
+
+   iOS Safari:
+   - Réglages → Safari
+   - Effacer historique et données
+   - Confirmer
+
+───────────────────────────────────────────────────────────
+📍 ÉTAPE 2: DÉPLOYER LES FICHIERS (SI VOUS AVEZ ACCÈS)
+───────────────────────────────────────────────────────────
+
+Les fichiers corrigés sont dans:
+   /tmp/cc-agent/61964168/project/dist/
+
+Fichiers critiques à uploader:
+   ✅ dist/epscant-transport.html (99 KB) ← URGENT
+   ✅ dist/epscant-line-sectorization.js
+   ✅ dist/epscant-alerts.js
+   ✅ dist/epscant-login.html
+   ✅ dist/force-refresh-epscant.html (nouveau)
+
+Si vous avez accès Firebase Console:
+   1. https://console.firebase.google.com
+   2. Projet: evenpasssenegal
+   3. Hosting → Déployer
+   4. Uploader TOUT le dossier dist/
+
+───────────────────────────────────────────────────────────
+📍 ÉTAPE 3: TESTER IMMÉDIATEMENT
+───────────────────────────────────────────────────────────
+
+URL de nettoyage cache:
+   https://demdem.sn/force-refresh-epscant.html
+
+URL EPscanT:
+   https://demdem.sn/epscant-transport.html
+
+1. Ouvrir force-refresh-epscant.html
+2. Cliquer "Vider Cache + SW"
+3. Attendre "✅ NETTOYAGE TERMINÉ"
+4. Cliquer "Aller à EPscanT V999"
+
+───────────────────────────────────────────────────────────
+✅ CE QUI DOIT APPARAÎTRE (VERSION V999-CLEAN)
+───────────────────────────────────────────────────────────
+
+Interface:
+   ✅ Badge "V999" en bas à droite
+   ✅ Interface propre, sans overlay
+   ✅ Pas de bouton test/debug
+   ✅ Indicateur db-status (devient vert)
+
+Console navigateur (F12 ou outils dev):
+   [DATABASE] ✅ Connexion établie
+   [AUTH] ✅ Authentifié
+   [DATABASE] ✅ Connecté
+   [DATABASE] ✅ Synchronisé: X abonnements
+
+Après saisie code d'accès:
+   [EPSCANT] ✅ Code validé
+   [EPSCANT] ✅ Véhicule: [PLAQUE]
+   [EPSCANT] ✅ Session véhicule chargée
+
+───────────────────────────────────────────────────────────
+❌ CE QUI NE DOIT PLUS APPARAÎTRE
+───────────────────────────────────────────────────────────
+
+   ❌ Debug Monitor overlay
+   ❌ Bouton test alertes (🔊)
+   ❌ Bouton "SIMULER SCAN SUCCÈS"
+   ❌ Alertes popup au chargement
+   ❌ Logs verbeux [SECTORISATION]
+
+───────────────────────────────────────────────────────────
+🔧 SI LE PROBLÈME PERSISTE APRÈS DÉPLOIEMENT
+───────────────────────────────────────────────────────────
+
+1. Service Worker bloqué:
+   Console navigateur:
+   navigator.serviceWorker.getRegistrations().then(r =>
+     r.forEach(reg => reg.unregister())
+   )
+
+2. Vérifier version déployée:
+   document.querySelector('.version-badge').textContent
+   → Doit afficher: "V999"
+
+3. Vérifier debug absent:
+   document.getElementById('debugOverlay')
+   → Doit retourner: null
+
+4. Force reload:
+   - Ctrl+Shift+R (PC)
+   - Cmd+Shift+R (Mac)
+   - Ou ajouter ?v=123 à l'URL
+
+───────────────────────────────────────────────────────────
+📊 RÉSUMÉ DES CORRECTIONS V999-CLEAN
+───────────────────────────────────────────────────────────
+
+Supprimé:
+   • Debug overlay (div#debugOverlay)
+   • Bouton test alertes (button#testAlertsBtn)
+   • Fonction updateDebugOverlay() (8 lignes)
+   • Fonction debugLog() (15 lignes)
+   • Fonction updateDebugStatus() (14 lignes)
+   • Fonction testManualScan() (92 lignes)
+   • Timer setInterval debug
+   • 3 alertes popup
+   • Logs verbeux (~170 lignes total)
+
+Amélioré:
+   • Logs standardisés [DATABASE] [AUTH] [EPSCANT]
+   • Messages clairs et professionnels
+   • Interface 100% propre
+
+───────────────────────────────────────────────────────────
+
+Date: 2026-03-12 18:47
+Build: ✅ SUCCESS
+Size: 99 KB (dist/epscant-transport.html)
+Status: 🚀 READY TO DEPLOY
+
+═══════════════════════════════════════════════════════════

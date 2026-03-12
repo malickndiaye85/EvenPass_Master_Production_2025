@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Refresh EPscanT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #10B981;
+        }
+
+        .version {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+        }
+
+        .status {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .status-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #10B981;
+        }
+
+        .status-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        button {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            color: #10B981;
+        }
+
+        .log-entry.error {
+            color: #EF4444;
+        }
+
+        .log-entry.success {
+            color: #10B981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Force Refresh EPscanT</h1>
+        <div class="version">Version V999-CLEAN</div>
+
+        <div class="status">
+            <div class="status-title" id="statusTitle">🔍 Vérification en cours...</div>
+            <div class="status-text" id="statusText">Analyse du cache et Service Worker...</div>
+        </div>
+
+        <div id="logs" class="log"></div>
+
+        <button id="clearBtn" onclick="clearAllCache()">🗑️ Vider Cache + SW</button>
+        <button id="reloadBtn" onclick="goToEPscanT()" style="display: none;">✅ Aller à EPscanT V999</button>
+    </div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.insertBefore(entry, logsDiv.firstChild);
+        }
+
+        async function checkCurrentState() {
+            addLog('🔍 Vérification du cache...', 'info');
+
+            // Vérifier Service Workers
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                addLog(`📦 ${registrations.length} Service Worker(s) trouvé(s)`, 'info');
+
+                registrations.forEach((reg, i) => {
+                    addLog(`   SW ${i + 1}: ${reg.scope}`, 'info');
+                });
+            }
+
+            // Vérifier localStorage
+            const keys = Object.keys(localStorage);
+            addLog(`💾 ${keys.length} clés dans localStorage`, 'info');
+
+            // Vérifier si debug overlay existe encore
+            if (localStorage.getItem('epscant_debug_mode')) {
+                addLog('⚠️ Mode debug détecté dans localStorage', 'error');
+            }
+
+            document.getElementById('statusTitle').textContent = '⚠️ Cache détecté';
+            document.getElementById('statusText').textContent = `${registrations.length} Service Worker actifs. Cliquez pour tout nettoyer.`;
+        }
+
+        async function clearAllCache() {
+            addLog('🗑️ DÉBUT DU NETTOYAGE', 'success');
+
+            try {
+                // 1. Désinscrire tous les Service Workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    addLog(`🔧 Suppression de ${registrations.length} Service Worker(s)...`, 'info');
+
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        addLog(`✅ SW désinscrit: ${registration.scope}`, 'success');
+                    }
+                }
+
+                // 2. Vider localStorage
+                addLog('🔧 Nettoyage localStorage...', 'info');
+                const beforeCount = Object.keys(localStorage).length;
+                localStorage.clear();
+                addLog(`✅ ${beforeCount} clés supprimées de localStorage`, 'success');
+
+                // 3. Vider sessionStorage
+                addLog('🔧 Nettoyage sessionStorage...', 'info');
+                sessionStorage.clear();
+                addLog('✅ sessionStorage vidé', 'success');
+
+                // 4. Vider tous les caches
+                if ('caches' in window) {
+                    addLog('🔧 Suppression des caches...', 'info');
+                    const cacheNames = await caches.keys();
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        addLog(`✅ Cache supprimé: ${cacheName}`, 'success');
+                    }
+                }
+
+                // 5. Vider IndexedDB
+                if ('indexedDB' in window) {
+                    addLog('🔧 Suppression IndexedDB...', 'info');
+                    const databases = await indexedDB.databases();
+                    for (let db of databases) {
+                        indexedDB.deleteDatabase(db.name);
+                        addLog(`✅ DB supprimée: ${db.name}`, 'success');
+                    }
+                }
+
+                addLog('✅ NETTOYAGE TERMINÉ', 'success');
+
+                document.getElementById('statusTitle').textContent = '✅ Cache vidé !';
+                document.getElementById('statusText').textContent = 'Tout le cache a été supprimé. Vous pouvez maintenant recharger EPscanT.';
+
+                document.getElementById('clearBtn').style.display = 'none';
+                document.getElementById('reloadBtn').style.display = 'block';
+
+            } catch (error) {
+                addLog(`❌ ERREUR: ${error.message}`, 'error');
+                document.getElementById('statusTitle').textContent = '❌ Erreur';
+                document.getElementById('statusText').textContent = error.message;
+            }
+        }
+
+        function goToEPscanT() {
+            addLog('🚀 Redirection vers EPscanT V999-CLEAN...', 'success');
+
+            // Force le navigateur à ne pas utiliser le cache
+            window.location.href = '/epscant-transport.html?v=' + Date.now();
+        }
+
+        // Exécuter au chargement
+        checkCurrentState();
+    </script>
+</body>
+</html>
