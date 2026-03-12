@@ -553,13 +553,13 @@ const AdminOpsTransportPage: React.FC = () => {
       hideToast(loadingToastId);
       showToast('success', `✅ Véhicule ${accessCode} ré-enrôlé avec succès !`, 5000);
 
-      alert(`✅ RÉ-ENRÔLEMENT RÉUSSI\n\nCode: ${accessCode}\n\n✅ Firestore: access_codes/${accessCode}\n✅ Realtime DB: fleet_indices/codes/${accessCode}\n✅ Realtime DB: ops/transport/vehicles/${vehicle.id}\n\nLe véhicule peut maintenant se connecter à EPscanT.`);
+      alert(`✅ RÉ-ENRÔLEMENT RÉUSSI\n\nCode: ${accessCode}\n\nLe véhicule est enregistré et peut maintenant se connecter à EPscanT.`);
 
     } catch (error: any) {
       console.error('❌ [RE-ENROLL] Échec:', error);
       hideToast(loadingToastId);
       showToast('error', `❌ Échec ré-enrôlement: ${error.message}`, 8000);
-      alert(`❌ ÉCHEC RÉ-ENRÔLEMENT\n\nErreur: ${error.code || 'UNKNOWN'}\nMessage: ${error.message}\n\nVérifiez les permissions Firebase.`);
+      alert(`❌ ÉCHEC RÉ-ENRÔLEMENT\n\nErreur: ${error.code || 'UNKNOWN'}\nMessage: ${error.message}\n\nVérifiez votre connexion et réessayez.`);
     }
   };
 

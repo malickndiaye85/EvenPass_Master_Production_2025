@@ -111,7 +111,7 @@ export async function authenticateVehicleByPIN(pinCode: string): Promise<{
 
     return {
       success: false,
-      error: `Erreur Firebase: ${error?.message || 'Erreur inconnue'}`
+      error: `Erreur système: ${error?.message || 'Erreur inconnue'}`
     };
   }
 }

@@ -25,7 +25,7 @@ const MigrateAccessCodesToFirestore: React.FC = () => {
 
   const migrateAccessCodes = async () => {
     if (!db || !firestore) {
-      alert('Firebase non initialisé');
+      alert('Base de données non initialisée');
       return;
     }
 

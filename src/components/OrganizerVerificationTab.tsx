@@ -187,15 +187,15 @@ export default function OrganizerVerificationTab() {
         name: error.name,
       });
 
-      const errorMessage = `❌ ERREUR FIRESTORE
+      const errorMessage = `❌ ERREUR SYSTÈME
 
 Code: ${error.code || 'unknown'}
 Message: ${error.message || 'Erreur inconnue'}
 
 Vérifiez :
-1. Les règles Firestore
-2. La connexion Firebase
-3. Les permissions du compte
+1. Votre connexion internet
+2. Les permissions de votre compte
+3. Réessayez dans quelques instants
 
 Stack: ${error.stack?.substring(0, 200) || 'N/A'}`;
 
@@ -203,7 +203,7 @@ Stack: ${error.stack?.substring(0, 200) || 'N/A'}`;
 
       setErrorModal({
         isOpen: true,
-        title: 'Erreur Firebase',
+        title: 'Erreur système',
         message: errorMessage,
       });
     } finally {

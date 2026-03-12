@@ -124,7 +124,7 @@ export default function DemDemExpressPage() {
         console.log('[DEMDEM-EXPRESS] 🎫 ID Firebase:', firebaseId);
         console.log('[DEMDEM-EXPRESS] 📱 QR Code final:', finalQrCode);
       } catch (firebaseError) {
-        console.error('[DEMDEM-EXPRESS] ⚠️ Erreur Firebase:', firebaseError);
+        console.error('[DEMDEM-EXPRESS] ⚠️ Erreur base de données:', firebaseError);
         // En cas d'erreur, utiliser un ID temporaire
         firebaseId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         finalQrCode = `SAMAPASS-${cleanPhone}-${firebaseId}`;

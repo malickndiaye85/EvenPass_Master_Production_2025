@@ -72,8 +72,8 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
 
     try {
       if (!firestore) {
-        console.error('[Ticket Generator] ❌ Firebase not initialized');
-        alert('Erreur: Firebase non configuré. Impossible de créer le billet.');
+        console.error('[Ticket Generator] ❌ Database not initialized');
+        alert('Erreur: Base de données non configurée. Impossible de créer le billet.');
         setIsGenerating(false);
         return;
       }
@@ -115,8 +115,8 @@ export const PremiumTicketGenerator: React.FC<PremiumTicketGeneratorProps> = ({
         console.log('[Ticket Generator] ✅ VERIFICATION SUCCESS: Ticket exists in Firestore');
         console.log('[Ticket Generator] Verified data:', verifyDoc.data());
       } else {
-        console.error('[Ticket Generator] ❌ VERIFICATION FAILED: Ticket NOT found in Firestore');
-        alert('ERREUR: Le billet n\'a pas été enregistré dans Firebase. Vérifiez les règles Firestore.');
+        console.error('[Ticket Generator] ❌ VERIFICATION FAILED: Ticket NOT found in database');
+        alert('ERREUR: Le billet n\'a pas été enregistré. Veuillez réessayer.');
         setIsGenerating(false);
         return;
       }

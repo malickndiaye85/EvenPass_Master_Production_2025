@@ -36,17 +36,17 @@ if (isFirebaseConfigured) {
   auth = getAuth(app);
   analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
 
-  console.log('[FIREBASE] ✅ Firebase initialized successfully');
+  console.log('[DATABASE] ✅ Database initialized successfully');
 
   setPersistence(auth, browserLocalPersistence)
     .then(() => {
-      console.log('[FIREBASE] ✅ Auth persistence enabled (browserLocalPersistence)');
+      console.log('[AUTH] ✅ Auth persistence enabled');
     })
     .catch((error) => {
-      console.error('[FIREBASE] ❌ Error setting persistence:', error);
+      console.error('[AUTH] ❌ Error setting persistence:', error);
     });
 } else {
-  console.warn('[FIREBASE] Configuration incomplete. Firebase services disabled. Please configure Firebase environment variables in .env file.');
+  console.warn('[DATABASE] Configuration incomplete. Database services disabled. Please check environment variables.');
 }
 
 export { app, db, firestore, storage, auth, analytics };
