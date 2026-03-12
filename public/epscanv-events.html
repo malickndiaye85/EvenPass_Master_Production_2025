@@ -243,7 +243,7 @@
             letter-spacing: 0.5px;
         }
 
-        .firebase-status {
+        .db-status {
             display: inline-block;
             width: 12px;
             height: 12px;
@@ -252,12 +252,12 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        .firebase-status.connected {
+        .db-status.connected {
             background: #22C55E;
             box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
         }
 
-        .firebase-status.disconnected {
+        .db-status.disconnected {
             background: #EF4444;
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
@@ -766,7 +766,7 @@
         <div id="reader"></div>
         <div class="scanner-overlay-top">
             <div class="overlay-info">
-                <span class="firebase-status disconnected" id="firebaseStatus"></span>
+                <span class="db-status disconnected" id="dbStatus"></span>
                 ACTIF
             </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
@@ -850,7 +850,7 @@
         const rtdb = getDatabase(app);
 
         let isFirebaseConnected = false;
-        const firebaseStatusEl = document.getElementById('firebaseStatus');
+        const dbStatusEl = document.getElementById('dbStatus');
 
         (async function testFirebaseConnection() {
             try {
@@ -864,13 +864,13 @@
                 await getDoc(testRef);
 
                 isFirebaseConnected = true;
-                firebaseStatusEl.classList.remove('disconnected');
-                firebaseStatusEl.classList.add('connected');
+                dbStatusEl.classList.remove('disconnected');
+                dbStatusEl.classList.add('connected');
                 console.log('[EPscanV] ✅ Firebase Firestore connected successfully');
             } catch (error) {
                 isFirebaseConnected = false;
-                firebaseStatusEl.classList.remove('connected');
-                firebaseStatusEl.classList.add('disconnected');
+                dbStatusEl.classList.remove('connected');
+                dbStatusEl.classList.add('disconnected');
                 console.error('[EPscanV] ❌ Firebase connection failed:', error);
                 console.error('[EPscanV] Error details:', {
                     code: error.code,

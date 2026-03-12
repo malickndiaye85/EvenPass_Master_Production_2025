@@ -261,7 +261,7 @@
             letter-spacing: 0.5px;
         }
 
-        .firebase-status {
+        .db-status {
             display: inline-block;
             width: 12px;
             height: 12px;
@@ -270,12 +270,12 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        .firebase-status.connected {
+        .db-status.connected {
             background: #22C55E;
             box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
         }
 
-        .firebase-status.disconnected {
+        .db-status.disconnected {
             background: #EF4444;
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
@@ -950,7 +950,7 @@
         <div id="reader"></div>
         <div class="scanner-overlay-top">
             <div class="overlay-info">
-                <span class="firebase-status disconnected" id="firebaseStatus"></span>
+                <span class="db-status disconnected" id="dbStatus"></span>
                 <span id="connectionText">Hors Ligne</span>
             </div>
             <div class="overlay-info" id="sessionTime">00:00:00</div>
@@ -1068,7 +1068,7 @@
 
         let isFirebaseConnected = false;
         let offlineDB = null;
-        const firebaseStatusEl = document.getElementById('firebaseStatus');
+        const dbStatusEl = document.getElementById('dbStatus');
         const connectionTextEl = document.getElementById('connectionText');
 
         const DB_NAME = 'epscant_offline_db';
@@ -1418,8 +1418,8 @@
                 const testRef = dbRef(rtdb, '_connection_test/test');
                 await rtdbGet(testRef);
                 isFirebaseConnected = true;
-                firebaseStatusEl.classList.remove('disconnected');
-                firebaseStatusEl.classList.add('connected');
+                dbStatusEl.classList.remove('disconnected');
+                dbStatusEl.classList.add('connected');
                 connectionTextEl.textContent = 'En Ligne';
                 console.log('[EPscanT] ✅ Firebase connected');
 
@@ -1430,8 +1430,8 @@
                 updateOfflineInfo();
             } catch (error) {
                 isFirebaseConnected = false;
-                firebaseStatusEl.classList.remove('connected');
-                firebaseStatusEl.classList.add('disconnected');
+                dbStatusEl.classList.remove('connected');
+                dbStatusEl.classList.add('disconnected');
                 connectionTextEl.textContent = 'Hors Ligne';
                 console.error('[EPscanT] ❌ Firebase connection failed:', error);
 
@@ -1444,8 +1444,8 @@
         window.addEventListener('online', async () => {
             console.log('[EPscanT] 🌐 Connexion rétablie');
             isFirebaseConnected = true;
-            firebaseStatusEl.classList.remove('disconnected');
-            firebaseStatusEl.classList.add('connected');
+            dbStatusEl.classList.remove('disconnected');
+            dbStatusEl.classList.add('connected');
             connectionTextEl.textContent = 'En Ligne';
 
             await syncSubscriptionsFromFirebase();
@@ -1456,8 +1456,8 @@
         window.addEventListener('offline', () => {
             console.log('[EPscanT] 📴 Mode hors-ligne');
             isFirebaseConnected = false;
-            firebaseStatusEl.classList.remove('connected');
-            firebaseStatusEl.classList.add('disconnected');
+            dbStatusEl.classList.remove('connected');
+            dbStatusEl.classList.add('disconnected');
             connectionTextEl.textContent = 'Hors Ligne';
             updateOfflineInfo();
         });
