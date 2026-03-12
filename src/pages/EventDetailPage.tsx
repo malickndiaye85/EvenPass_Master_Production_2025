@@ -230,10 +230,12 @@ export default function EventDetailPage() {
             booking_id: bookingRef.id,
             event_id: event.id,
             ticket_type_id: cartItem.ticket_type.id,
+            category: cartItem.ticket_type.name || 'VIP_CARRE_OR',
             holder_name: checkoutForm.customer_name,
             holder_email: checkoutForm.customer_email,
             price_paid: cartItem.ticket_type.price,
-            status: 'pending',
+            status: 'valid',
+            used: false,
             created_at: Timestamp.now(),
             updated_at: Timestamp.now(),
           });
@@ -305,22 +307,6 @@ export default function EventDetailPage() {
           status: 'confirmed',
           updated_at: Timestamp.now(),
         });
-
-        for (const ticket of ticketsToCreate) {
-          const ticketsRef = collection(firestore, 'tickets');
-          const ticketQuery = query(
-            ticketsRef,
-            where('booking_id', '==', bookingRef.id),
-            where('qr_code', '==', ticket.qr_code)
-          );
-          const ticketSnapshot = await getDocs(ticketQuery);
-          if (!ticketSnapshot.empty) {
-            await updateDoc(doc(firestore, 'tickets', ticketSnapshot.docs[0].id), {
-              status: 'valid',
-              updated_at: Timestamp.now(),
-            });
-          }
-        }
 
         navigate(`/success?booking=${bookingNumber}`);
       }
