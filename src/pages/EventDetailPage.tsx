@@ -23,6 +23,8 @@ const generateQRCode = () => {
   return `QR-${Date.now()}-${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
 };
 
+const DEMO_MODE = true;
+
 export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -244,6 +246,32 @@ export default function EventDetailPage() {
 
       for (const ticket of ticketsToCreate) {
         await addDoc(collection(firestore, 'tickets'), ticket);
+      }
+
+      if (DEMO_MODE) {
+        console.log('🎬 MODE DÉMO ACTIVÉ - Bypass paiement');
+
+        await addDoc(collection(firestore, 'payments'), {
+          booking_id: bookingRef.id,
+          payment_reference: `DEMO-${Date.now()}`,
+          payment_method: 'demo',
+          amount: totalAmount,
+          currency: 'XOF',
+          phone_number: checkoutForm.customer_phone,
+          status: 'completed',
+          paid_at: Timestamp.now(),
+          created_at: Timestamp.now(),
+          updated_at: Timestamp.now(),
+        });
+
+        await updateDoc(doc(firestore, 'bookings', bookingRef.id), {
+          status: 'confirmed',
+          updated_at: Timestamp.now(),
+        });
+
+        console.log('✅ Billets générés - Redirection vers Success Page');
+        navigate(`/success?booking=${bookingNumber}`);
+        return;
       }
 
       if (checkoutForm.payment_method === 'wave') {

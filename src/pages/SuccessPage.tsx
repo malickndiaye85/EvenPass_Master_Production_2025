@@ -4,6 +4,7 @@ import { CheckCircle, Download, Mail, MessageCircle, Calendar, MapPin, Ticket, H
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import DynamicLogo from '../components/DynamicLogo';
+import QRCode from 'react-qr-code';
 
 export default function SuccessPage() {
   const [searchParams] = useSearchParams();
@@ -189,6 +190,56 @@ export default function SuccessPage() {
                       </li>
                     </ul>
                   </div>
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                  <Ticket className="w-7 h-7 text-[#FF5F05]" />
+                  Vos Billets
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {booking.tickets.map((ticket: any, index: number) => (
+                    <div key={ticket.id} className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] rounded-3xl p-6 border-2 border-[#FF5F05]/30 hover:border-[#FF5F05] transition-all hover:shadow-lg hover:shadow-[#FF5F05]/20">
+                      <div className="bg-white p-4 rounded-2xl mb-4">
+                        <QRCode
+                          value={ticket.qr_code}
+                          size={200}
+                          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                          viewBox={`0 0 200 200`}
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between pb-3 border-b border-[#2A2A2A]">
+                          <span className="text-sm text-[#B5B5B5]">Billet #{index + 1}</span>
+                          <span className="px-3 py-1 bg-green-500/20 rounded-lg text-xs font-bold text-green-400 border border-green-500/30">
+                            VALIDE
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-[#B5B5B5] mb-1">Titulaire</p>
+                          <p className="text-base font-bold text-white">{ticket.holder_name}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-[#B5B5B5] mb-1">Catégorie</p>
+                          <p className="text-base font-bold text-[#FF5F05]">{ticket.category}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-[#B5B5B5] mb-1">Prix</p>
+                          <p className="text-lg font-black text-green-400">{ticket.price_paid.toLocaleString()} FCFA</p>
+                        </div>
+
+                        <div className="pt-3 border-t border-[#2A2A2A]">
+                          <p className="text-xs text-[#B5B5B5] mb-1">N° Billet</p>
+                          <p className="text-xs font-mono text-white/70">{ticket.ticket_number}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
